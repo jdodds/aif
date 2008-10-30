@@ -1,0 +1,6 @@
+this is a library-ized version of the 'real' arch linux install scripts
+code. (/arch/setup and /arch/quickinst)
+I took the code from git, and just split it up in files and functions so it's more
+reusable.  I couldn't find what license the code is under, but I assume this
+is okay.. if not let me know.
+http://projects.archlinux.org/?p=archboot.git;a=tree;f=installer;hb=HEAD
