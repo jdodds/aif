@@ -22,7 +22,7 @@ You can also take parts from different profiles (installation procedures) and co
 together to come up with the installation procedure of your liking.
 
 
-** Notes **
-all files (profiles, package lists,...) used by/for this script should be stored in /home/arch/fifa in the
-live environment.  Put fifa.sh wherever you want, but putting it together
-with the other installers (in /arch) seems the most obvious to me.
+** File locations (on the install CD): **
+* fifa.sh -> /arch/fifa.sh (together with the default archboot scripts)
+* libraries (eg lib-archboot) -> /arch/lib-archboot
+* all other files (profiles, package lists,...) used by/for this script -> /home/arch/fifa
