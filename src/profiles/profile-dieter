@@ -1,0 +1,22 @@
+#!/bin/bash
+var_RUNTIME_PACKAGES="svn"
+
+phase_package_list ()
+{
+	# install svn. export list
+	true
+}
+
+
+phase_configure_home ()
+{
+	#checkout from svn
+	true
+}
+
+
+phase_install_bootloader ()
+{
+	install-grub /dev/sda
+}
+

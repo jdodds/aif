@@ -1,0 +1,6 @@
+* instead of using the 'base' profile and letting other profiles override,
+  we should have even more flexibilty to take parts from different profiles.
+  especially because some profiles could be about _what_ (desktop,server),
+  others are about _how_ (autodetection, asking user,...)
+* make some sensible default profiles (eg desktop, server, ...)
+* make it work

@@ -1,0 +1,80 @@
+#!/bin/bash
+
+var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
+var_DESTDIR="/mnt"
+var_RUNTIME_PACKAGES=
+
+
+
+###### Phases ( can be overridden by more specific profiles) ######
+
+phase_preparation ()
+{
+	execute worker runtime_packages
+}
+
+
+phase_basics ()
+{
+	execute worker prepare_disks
+}	
+
+
+phase_system ()
+{
+	execute worker package_list    
+	execute worker install_packages
+	execute worker install_bootloader
+}
+
+
+phase_finish ()
+{
+	execute worker configure_home
+}
+
+
+
+###### Workers ( can be overridden by more specific profiles) ######
+worker_runtime_packages ()
+{
+	for pkg in $RUNTIME_PACKAGES
+	do
+		pacman -Sy $pkg
+	done
+}
+
+
+worker_prepare_disks ()
+{
+
+}
+
+
+# Put the list of packages to be installed in /home/arch/automatic-package-list
+worker_package_list ()
+{
+	#TODO: sensible list of packages
+	echo "No actions specified"
+}
+
+
+worker_install_packages ()
+{
+	#TODO: installation of the packages
+	echo "No actions specified"
+}
+
+
+worker_install_bootlader ()
+{
+	#TODO: autodetection or whatever
+	echo "No actions specified"
+}
+
+
+worker_configure_home ()
+{
+	echo "No actions specified"
+}
+
