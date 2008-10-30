@@ -41,10 +41,20 @@ die_error ()
 
 load_profile()
 {
+	[ -z "$1" ] && die_error "load_profile needs a profile argument"
 	#TODO: http support
 	echo "Loading profile $1 ..."
-	profile=/home/arch/fifa/profile-"$1"
+	profile=/home/arch/fifa/profile-$1
 	[ -f "$profile" ] && source "$profile" || die_error "Something went wrong while sourcing profile $profile"
+}
+
+
+load_library ()
+{
+	[ -z "$1" ] && die_error "load_library needs a library argument"
+	echo "Loading library $1 ..."
+	library=/arch/$1
+	source $library*.sh || die_error "Something went wrong while sourcing library $library*.sh"
 }
 
 
@@ -72,6 +82,9 @@ echo "Welcome to $TITLE"
 [ -z "$1" ] && usage && exit 1
 
 mount -o remount,rw / &>/dev/null 
+
+load_library lib-archboot/setup
+load_library lib-archboot/quickinst
 
 [ "$1" != base ] && load_profile base
 load_profile $1
