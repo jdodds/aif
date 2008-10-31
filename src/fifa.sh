@@ -4,8 +4,9 @@
 ###### Set some default variables or get them from the setup script ######
 TITLE="Flexible Installer Framework for Arch linux"
 eval `grep ^LOG= /arch/setup`
-PACMAN_RUNTIME=pacman
-PACMAN="pacman --root $DESTDIR --config /tmp/pacman.conf --noconfirm"
+# flags like --noconfirm should not be specified here.  it's up to the profile to decide the interactivity
+PACMAN=pacman
+PACMAN_TARGET="pacman --root $TARGET_DIR --config /tmp/pacman.conf"
 
 
 
@@ -57,9 +58,11 @@ load_profile()
 load_library ()
 {
 	[ -z "$1" ] && die_error "load_library needs a library argument"
-	echo "Loading library $1 ..."
-	library=/arch/$1
-	source $library*.sh || die_error "Something went wrong while sourcing library $library*.sh"
+	for library in $@
+	do
+		echo "Loading library $library ..."
+		source $library || die_error "Something went wrong while sourcing library $library"
+	done
 }
 
 
@@ -88,8 +91,7 @@ echo "Welcome to $TITLE"
 
 mount -o remount,rw / &>/dev/null 
 
-load_library lib-archboot/setup
-load_library lib-archboot/quickinst
+load_library lib/lib-*.sh
 
 [ "$1" != base ] && load_profile base
 load_profile $1
