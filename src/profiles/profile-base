@@ -38,7 +38,7 @@ phase_finish ()
 ###### Workers ( can be overridden by more specific profiles) ######
 worker_runtime_packages ()
 {
-	for pkg in $RUNTIME_PACKAGES
+	for pkg in $var_RUNTIME_PACKAGES
 	do
 		pacman -Sy $pkg
 	done
