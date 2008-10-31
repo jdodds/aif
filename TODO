@@ -1,4 +1,3 @@
-* fix runtime packages
 * instead of using the 'base' profile and letting other profiles override,
   we should have even more flexibilty to take parts from different profiles.
 * fix crossconcerns: some procedures could be about _what_ (desktop,server),
@@ -6,3 +5,4 @@
   'mode' ?)
 * make some sensible default profiles (eg desktop, server, ...)
 * make it work
+* someday.. make a script '/arch/setup' that calls '/arch/fifa.sh interactive'
