@@ -18,6 +18,7 @@ phase_preparation ()
 	echo -n "Enter your svn password: "
 	read SVN_PASSWORD
 	stty echo 
+	echo
 	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	SVN_BASE=https://192.168.1.2/svn/repos
 	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
@@ -27,7 +28,11 @@ phase_preparation ()
         execute worker runtime_packages
 }
 
-
+worker_prepare_disks ()
+{
+	#TODO : use existing functions to do this + fix encryption and stuff
+	true	
+}
 
 worker_package_list ()
 {
