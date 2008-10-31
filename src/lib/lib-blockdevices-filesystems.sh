@@ -12,6 +12,7 @@ target_special_fs ()
 		! [ -d $TARGET_DIR/proc ] && mkdir $TARGET_DIR/proc
 		! [ -d $TARGET_DIR/sys ] && mkdir $TARGET_DIR/sys
 		! [ -d $TARGET_DIR/dev ] && mkdir $TARGET_DIR/dev
+		#TODO: check mtab if not mounted already
 		mount -t proc none $TARGET_DIR/proc || die_error "Could not mount $TARGET_DIR/proc" #NOTE:  setup script uses mount -t proc proc ? what's best?
 		mount -t sysfs none $TARGET_DIR/sys || die_error "Could not mount $TARGET_DIR/sys" # NOTE: setup script uses mount -t sysfs sysfs ? what's best?
 		mount -o bind /dev $TARGET_DIR/dev  || die_error "Could not mount $TARGET_DIR/dev"
