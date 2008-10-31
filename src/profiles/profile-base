@@ -47,7 +47,7 @@ worker_runtime_packages ()
 
 worker_prepare_disks ()
 {
-
+	partition # use lib-archboot function by default
 }
 
 
