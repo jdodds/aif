@@ -3,8 +3,9 @@
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_DESTDIR="/mnt"
 var_RUNTIME_PACKAGES=
-
-
+var_PKG_SOURCE_TYPE='cd'
+var_FILE_URL="file:///src/core/pkg"
+var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 
 ###### Phases ( can be overridden by more specific profiles) ######
 
@@ -40,7 +41,7 @@ worker_runtime_packages ()
 {
 	for pkg in $var_RUNTIME_PACKAGES
 	do
-		pacman -Sy --noconfirm --needed $pkg
+		$PACMAN -Sy --noconfirm --needed $pkg
 	done
 }
 
@@ -61,8 +62,9 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	#TODO: installation of the packages
-	echo "No actions specified"
+	target_special_fs on
+	$PACMAN_TARGET -Sy $PKGLIST || die_error "Package installation FAILED."
+	target_special_fs off
 }
 
 
