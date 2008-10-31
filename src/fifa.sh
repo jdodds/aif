@@ -91,7 +91,7 @@ echo "Welcome to $TITLE"
 
 mount -o remount,rw / &>/dev/null 
 
-load_library lib/lib-*.sh
+load_library /home/arch/fifa/lib/lib-*.sh
 
 [ "$1" != base ] && load_profile base
 load_profile $1
