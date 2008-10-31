@@ -1,21 +1,40 @@
 #!/bin/bash
 var_RUNTIME_PACKAGES="svn"
 
-phase_package_list ()
+phase_preparation ()
 {
-	# install svn. export list
-	true
+	# All things that need to be done manually first
+	donetwork #configure network by using lib-archboot function.
+	SVN_USERNAME=dieter
+	stty -echo
+	echo -n "Enter your svn password: "
+	read SVN_PASSWORD
+	stty echo 
+	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
+	SVN_BASE=https://192.168.1.2/svn/repos
+	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
+
+	echo "**** From now on. everything will be automatic. Enjoy the show!"
+
+        execute worker runtime_packages
 }
 
 
-phase_configure_home ()
+
+worker_package_list ()
+{
+	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/package-list /home/arch/fifa/package-list
+}
+
+
+worker_configure_home ()
 {
 	#checkout from svn
 	true
 }
 
 
-phase_install_bootloader ()
+worker_install_bootloader ()
 {
 	install-grub /dev/sda
 }
