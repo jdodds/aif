@@ -42,9 +42,14 @@ die_error ()
 load_profile()
 {
 	[ -z "$1" ] && die_error "load_profile needs a profile argument"
-	#TODO: http support
 	echo "Loading profile $1 ..."
-	profile=/home/arch/fifa/profile-$1
+	if [[ $1 =~ ^http:// ]]
+	then
+		profile=/home/arch/fifa/profile-downloaded-`basename $1`
+		wget $1 -q -O $profile >/dev/null || die_error "Could not download profile $1" 
+	else
+		profile=/home/arch/fifa/profile-$1
+	fi
 	[ -f "$profile" ] && source "$profile" || die_error "Something went wrong while sourcing profile $profile"
 }
 
