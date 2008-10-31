@@ -58,4 +58,34 @@ gui_ask_bootloader()
         "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
 	cat $ANSWER
 }
-        
+
+
+# ask the user a password. return is stored in $PASSWORD or $PASSWORD_TYPE
+# $1 type (optional.  eg 'svn', 'ssh').
+cli_ask_password ()
+{
+	if [ -n "$1" ]
+	then
+		true
+	fi		
+}
+
+cli_ask_yesno ()
+{
+}
+
+cli_ask_string ()   
+{
+}
+
+
+cli_ask_number ()
+{
+}
+
+
+cli_ask_option ()
+{
+}
+
+     

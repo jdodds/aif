@@ -7,6 +7,7 @@ var_PKG_SOURCE_TYPE='cd'
 var_PKG_FILE=/home/arch/fifa/package-list
 var_FILE_URL="file:///src/core/pkg"
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
+var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific profiles) ######
 
@@ -57,7 +58,7 @@ worker_prepare_disks ()
 worker_package_list ()
 {
 	#TODO: sensible list of packages
-	echo "No actions specified"
+	true
 }
 
 
@@ -75,12 +76,12 @@ worker_install_packages ()
 worker_install_bootlader ()
 {
 	#TODO: autodetection or whatever
-	echo "No actions specified"
+	true
 }
 
 
 worker_configure_home ()
 {
-	echo "No actions specified"
+	notify "No actions specified"
 }
 

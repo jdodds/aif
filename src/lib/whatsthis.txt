@@ -1,7 +1,7 @@
 This directory contains several useful functions and scripts, ready to be
 used by fifa and it's profiles.
 
-Right now, all this code is taken (and modified) from the 'real' arch linux install scripts
+Most of this code is taken (and modified) from the 'real' arch linux install scripts
 code. (/arch/setup and /arch/quickinst). the modifications are mostly done
 to make the code more useable and to separate backend code from the user
 interface (which was tightly coupled in the original scripts)
@@ -11,4 +11,5 @@ I couldn't find what license the code is under, but I assume this
 is okay.. if not let me know.
 The original code is at http://projects.archlinux.org/?p=installer.git;a=summary
 
-Later on, maybe other code can be put here too.
+I also wrote a few functions myself that I didn't find in the official
+scripts (mostly separate ui functions)

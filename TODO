@@ -1,5 +1,7 @@
-* global variable that says if we're in cli or dialog mode, check that in
-  all functions and act accordingly
+* process and fix libraries
+* fix to use $var_UI_TYPE where needed
+* write the ui functions for asking questions etc for both cli and dialog,
+and port all code to use it. 
 * instead of using the 'base' profile and letting other profiles override,
   we should have even more flexibilty to take parts from different profiles.
 * fix crossconcerns: some procedures could be about _what_ (desktop,server),

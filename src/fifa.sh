@@ -14,36 +14,63 @@ PACMAN_TARGET="pacman --root $TARGET_DIR --config /tmp/pacman.conf"
 
 usage ()
 {
-	echo "$0 <profilename>"
-	echo "If the profilename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a profile file like /home/arch/fifa/profile-<profilename>"
-	echo "If you wrote your own profile, you can also save it yourself as /home/arch/fifa/profile-custom or something like that"
-	echo "Available profiles:"
-	ls -l /home/arch/fifa/profile-*
-	echo "Extra info:"
-	echo "There is a very basic but powerfull workflow defined by variables, phases and workers.  Depending on the profile you choose (or write yourself), these will differ."
-	echo "they are very recognizable and are named like this:"
-	echo " - variable -> var_<foo>"
-	echo " - phase    -> phase_<bar> (a function that calls workers and maybe does some stuff by itself.  There are 4 phases: preparation, basics, system, finish. (executed in that order)"
-	echo " - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic. eg runtime_packages, prepare_disks, package_list etc)"
-	echo "If you specify a profile name other then base, the base profile will be sourced first, then the specific profile.  This way you only need to override specific things."
-	echo "Notes:"
-	echo " - you _can_ override _all_ variables and functions in this script, but you should be able to achieve your goals by overriding things of these 3 classes)"
-	echo " - you _must_ specify a profile, to avoid errors. take 'base' if unsure"
-	echo " - don't edit the base profile (or any other that comes by default), rather make your own"
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		#TODO: do this
+		true
+	else
+		echo "$0 <profilename>"
+		echo "If the profilename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a profile file like /home/arch/fifa/profile-<profilename>"
+		echo "If you wrote your own profile, you can also save it yourself as /home/arch/fifa/profile-custom or something like that"
+		echo "Available profiles:"
+		ls -l /home/arch/fifa/profile-*
+		echo "Extra info:"
+		echo "There is a very basic but powerfull workflow defined by variables, phases and workers.  Depending on the profile you choose (or write yourself), these will differ."
+		echo "they are very recognizable and are named like this:"
+		echo " - variable -> var_<foo>"
+		echo " - phase    -> phase_<bar> (a function that calls workers and maybe does some stuff by itself.  There are 4 phases: preparation, basics, system, finish. (executed in that order)"
+		echo " - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic. eg runtime_packages, prepare_disks, package_list etc)"
+		echo "If you specify a profile name other then base, the base profile will be sourced first, then the specific profile.  This way you only need to override specific things."
+		echo "Notes:"
+		echo " - you _can_ override _all_ variables and functions in this script, but you should be able to achieve your goals by overriding things of these 3 classes)"
+		echo " - you _must_ specify a profile, to avoid errors. take 'base' if unsure"
+		echo " - don't edit the base profile (or any other that comes by default), rather make your own"
+	fi
 }
 
 
+##### "These functions would fit more in lib-ui, but we need them immediately" functions ######
+
 die_error ()
 {
-	echo "ERROR: $@"
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		DIALOG --msgbox "Error: $@" 0 0
+	else
+		echo "ERROR: $@"
+	fi
 	exit 2
 }
 
 
+notify ()
+{
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		#TODO: implement this
+		true
+	else
+		echo "$@"
+	fi
+}
+
+
+###### Core functions ######
+
 load_profile()
 {
 	[ -z "$1" ] && die_error "load_profile needs a profile argument"
-	echo "Loading profile $1 ..."
+	notify "Loading profile $1 ..."
 	if [[ $1 =~ ^http:// ]]
 	then
 		profile=/home/arch/fifa/profile-downloaded-`basename $1`
@@ -60,7 +87,7 @@ load_library ()
 	[ -z "$1" ] && die_error "load_library needs a library argument"
 	for library in $@
 	do
-		echo "Loading library $library ..."
+		notify "Loading library $library ..."
 		source $library || die_error "Something went wrong while sourcing library $library"
 	done
 }
@@ -70,8 +97,8 @@ execute ()
 {
 	[ -z "$1" -o -z "$2" ] && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
 	[ "$1" != phase -a "$1" != worker ] && die_error "execute's first argument must be a valid type (phase/worker)"
-	[ "$1" = phase ]  && echo "******* Executing phase $2"
-	[ "$1" = worker ] && echo "*** Executing worker $2"
+	[ "$1" = phase ]  && notify "******* Executing phase $2"
+	[ "$1" = worker ] && notify "*** Executing worker $2"
 	if type -t $1_$2 | grep -q function
 	then
 		PWD_BACKUP=`pwd`
@@ -81,7 +108,6 @@ execute ()
 		die_error "$1 $2 is not defined!"
 	fi
 }
-
 
 
 

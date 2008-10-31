@@ -4,7 +4,7 @@ var_RUNTIME_PACKAGES="svn"
 phase_preparation ()
 {
 	# All things that need to be done manually first
-	echo "A few manual things need to happen first..."
+	notify "A few manual things need to happen first..."
 	echo -n "Do you want to (re)-configure your networking? (y/*)"
 	read answer
 	if [ "$answer" = y ]
@@ -25,7 +25,7 @@ phase_preparation ()
 
 	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help
 
-	echo "**** From now on. everything will be automatic. Enjoy the show!"
+	notify "**** From now on. everything will be automatic. Enjoy the show!"
 
         execute worker runtime_packages
 }
