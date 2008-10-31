@@ -4,7 +4,15 @@ var_RUNTIME_PACKAGES="svn"
 phase_preparation ()
 {
 	# All things that need to be done manually first
-	donetwork #configure network by using lib-archboot function.
+	echo "A few manual things need to happen first..."
+	echo -n "Do you want to (re)-configure your networking? (y/*)"
+	read answer
+	if [ "$answer" = y ]
+	then
+		donetwork #configure network by using lib-archboot function.
+	else
+		echo "Ok. skipping network config"
+	fi
 	SVN_USERNAME=dieter
 	stty -echo
 	echo -n "Enter your svn password: "
