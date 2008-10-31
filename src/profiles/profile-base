@@ -51,7 +51,7 @@ worker_prepare_disks ()
 }
 
 
-# Put the list of packages to be installed in /home/arch/automatic-package-list
+# Put the list of packages to be installed in /home/arch/fifa/package-list
 worker_package_list ()
 {
 	#TODO: sensible list of packages
