@@ -7,9 +7,6 @@ You can copy-paste the code below when logged in to the install cd
 # when network works, quit installer
 pacman -Sy git
 git clone git://github.com/Dieterbe/fifa.git /home/arch/tmp
-cp -ax /home/arch/tmp/src/fifa.sh      /arch/fifa.sh
-cp -ax /home/arch/tmp/src/lib-archboot /arch/lib-archboot
-mkdir /home/arch/fifa/
-cp -ax /home/arch/tmp/src/profiles/*   /home/arch/fifa/
+/home/arch/tmp/src/patch-install-cd.sh
 
 /arch/fifa.sh #you can skip networking
