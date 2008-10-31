@@ -37,6 +37,7 @@ gui_geteditor() {
     esac
 }
 
+
 # Get a list of available disks for use in the "Available disks" dialogs. This
 # will print the disks as follows, getting size info from hdparm:
 #   /dev/sda: 640133 MBytes (640 GB)
@@ -45,5 +46,16 @@ gui_getavaildisks()
 {
     # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
     for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
+}
+
+
+# taken from setup code. edited to echo the choice, not perform it
+gui_ask_bootloader()
+{
+    DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" \
+        10 65 2 \
+        "GRUB" "Use the GRUB bootloader (default)" \
+        "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
+	cat $ANSWER
 }
         

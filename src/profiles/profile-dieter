@@ -23,6 +23,8 @@ phase_preparation ()
 	SVN_BASE=https://192.168.1.2/svn/repos
 	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
 
+	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help
+
 	echo "**** From now on. everything will be automatic. Enjoy the show!"
 
         execute worker runtime_packages
