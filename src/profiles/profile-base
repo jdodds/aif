@@ -40,7 +40,7 @@ worker_runtime_packages ()
 {
 	for pkg in $var_RUNTIME_PACKAGES
 	do
-		pacman -Sy --noconfirm $pkg
+		pacman -Sy --noconfirm --needed $pkg
 	done
 }
 
