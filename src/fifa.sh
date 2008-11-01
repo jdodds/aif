@@ -120,6 +120,15 @@ execute ()
 }
 
 
+start_process ()
+{
+	execute phase preparation
+	execute phase basics
+	execute phase system
+	execute phase finish
+}
+
+
 
 ###### perform actual logic ######
 echo "Welcome to $TITLE"
@@ -137,8 +146,4 @@ load_profile $1
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
-execute phase preparation
-execute phase basics
-execute phase system
-execute phase finish
-
+start_process

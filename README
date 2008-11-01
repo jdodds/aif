@@ -54,3 +54,4 @@ Notes:
                 overriding things of these 3 classes
  - you _must_ specify a profile, to avoid errors. take 'base' if unsure
  - don't edit the base profile (or any other that comes by default), rather make your own. It's easy!
+ - The phases are started by the start_process function.  You can also override this function to take flow control in your own hands (eg iterative, menu-based installer)
