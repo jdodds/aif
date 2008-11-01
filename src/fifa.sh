@@ -3,7 +3,7 @@
 
 ###### Set some default variables or get them from the setup script ######
 TITLE="Flexible Installer Framework for Arch linux"
-eval `grep ^LOG= /arch/setup`
+LOG="/dev/tty7"
 # flags like --noconfirm should not be specified here.  it's up to the profile to decide the interactivity
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $TARGET_DIR --config /tmp/pacman.conf"
