@@ -78,6 +78,35 @@ mainmenu()
     esac
 }
 
+partition() {
+    if [ "$S_MKFSAUTO" = "1" ]; then
+        DIALOG --msgbox "You have already prepared your filesystems with Auto-prepare" 0 0
+        return 0
+    fi
+
+    _umountall
+
+    # Select disk to partition
+    DISCS=$(finddisks _)
+    DISCS="$DISCS OTHER - DONE +"
+    DIALOG --msgbox "Available Disks:\n\n$(_getavaildisks)\n" 0 0
+    DISC=""
+    while true; do
+        # Prompt the user with a list of known disks
+        DIALOG --menu "Select the disk you want to partition (select DONE when finished)" 14 55 7 $DISCS 2>$ANSWER || return 1
+        DISC=$(cat $ANSWER)
+        if [ "$DISC" = "OTHER" ]; then
+            DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
+            DISC=$(cat $ANSWER)
+        fi
+        # Leave our loop if the user is done partitioning
+        [ "$DISC" = "DONE" ] && break
+        # Partition disc
+        DIALOG --msgbox "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.  NOTE: cfdisk may ttell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2." 18 70 
+        cfdisk $DISC
+    done
+    S_PART=1
+}
 
 #####################
 ## begin execution ##
