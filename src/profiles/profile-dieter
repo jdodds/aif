@@ -5,20 +5,14 @@ phase_preparation ()
 {
 	# All things that need to be done manually first
 	notify "A few manual things need to happen first..."
-	echo -n "Do you want to (re)-configure your networking? (y/*)"
-	read answer
-	if [ "$answer" = y ]
+	if `ask_yesno "Do you want to (re)-configure your networking?"`
 	then
-		donetwork #configure network by using lib-archboot function.
+		donetwork #configure network by using library
 	else
-		echo "Ok. skipping network config"
+		notify "Ok. skipping network config"
 	fi
 	SVN_USERNAME=dieter
-	stty -echo
-	echo -n "Enter your svn password: "
-	read SVN_PASSWORD
-	stty echo 
-	echo
+	ask_password svn
 	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	SVN_BASE=https://192.168.1.2/svn/repos
 	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
