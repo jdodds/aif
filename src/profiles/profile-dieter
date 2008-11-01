@@ -25,6 +25,12 @@ phase_preparation ()
         execute worker runtime_packages
 }
 
+phase_finish ()
+{
+	execute worker configure_home
+}
+
+
 worker_prepare_disks ()
 {
 	#TODO: integrate this stuff into the functions in the libs + do error checking and handling

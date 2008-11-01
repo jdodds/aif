@@ -147,3 +147,5 @@ PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
 start_process
+
+exit 0

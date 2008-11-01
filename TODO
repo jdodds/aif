@@ -1,12 +1,18 @@
 * process and fix libraries
 * fix to use $var_UI_TYPE where needed
-* write the ui functions for asking questions etc for both cli and dialog,
-and port all code to use it. 
+* write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
 * instead of using the 'base' profile and letting other profiles override,
   we should have even more flexibilty to take parts from different profiles.
+  eg dieter profile maybe wants to use something interactive. or base
+  profile wants to do something interactive. interactive functions maybe
+  dont belong in a profile?
+
+* base profile idea: it should just tell you what to do? -> less
+  implementation work in base profile, more in other profiles...
 * fix crossconcerns: some procedures could be about _what_ (desktop,server),
   others are about _how_ (autodetection, asking user,...) (profile vs...
   'mode' ?)
+* port classic installer so it works with fifa
 * make some sensible default profiles (eg desktop, server, ...)
 * make it work
 * someday.. make a script '/arch/setup' that calls '/arch/fifa.sh interactive'

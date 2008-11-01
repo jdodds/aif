@@ -3,22 +3,21 @@
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt"
 var_RUNTIME_PACKAGES=
-var_PKG_SOURCE_TYPE='cd'
 var_PKG_FILE=/home/arch/fifa/package-list
-var_FILE_URL="file:///src/core/pkg"
-var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific profiles) ######
 
 phase_preparation ()
 {
+	execute worker select_source
 	execute worker runtime_packages
 }
 
 
 phase_basics ()
 {
+	execute worker set_clock
 	execute worker prepare_disks
 }	
 
@@ -27,18 +26,33 @@ phase_system ()
 {
 	execute worker package_list    
 	execute worker install_packages
+	execute worker auto_fstab   #TODO: exact names of these 3
+	execute worker auto_network
+	execute worker auto_locale
+	execute worker configure_system
+	execute worker mkinitcpio
+	execute worker locales
 	execute worker install_bootloader
 }
 
 
 phase_finish ()
 {
-	execute worker configure_home
+	true
 }
 
 
 
 ###### Workers ( can be overridden by more specific profiles) ######
+worker_select_source ()
+{
+	var_PKG_SOURCE_TYPE='cd'
+	var_FILE_URL="file:///src/core/pkg"
+	var_MIRRORLIST="/etc/pacman.d/mirrorlist"
+	# if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
+}
+
+
 worker_runtime_packages ()
 {
 	for pkg in $var_RUNTIME_PACKAGES
@@ -48,9 +62,16 @@ worker_runtime_packages ()
 }
 
 
+worker_set_clock ()
+{
+	true
+}
+
+
 worker_prepare_disks ()
 {
 	partition # use lib-archboot function by default
+	# in official installer: autoprepare or diy first partitions, then mountpoints
 }
 
 
@@ -74,15 +95,41 @@ worker_install_packages ()
 }
 
 
+worker_auto_fstab ()
+{
+}
+
+
+worker_auto_network ()
+{
+}
+
+
+worker_auto_locale ()
+{
+
+}
+
+
+worker_configure_system ()
+{
+	#TODO: what to do here?
+	true
+}
+
+
+worker_mkinitcpio ()
+{
+}
+
+
+worker_locales ()
+{
+}
+
+
 worker_install_bootlader ()
 {
 	#TODO: ask which disk, install grub on it
 	true
 }
-
-
-worker_configure_home ()
-{
-	notify "No actions specified"
-}
-
