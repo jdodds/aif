@@ -46,9 +46,9 @@ target_write_pacman_conf ()
 		cp $PKG_SOURCE/packages.txt /tmp/packages.txt
 		echo "Server = file://$PKGARG" >>/tmp/pacman.conf
 	fi
-	mkdir -p $TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman &>/dev/null
+	mkdir -p $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman &>/dev/null
 	rm -f /var/cache/pacman/pkg &>/dev/null
-	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && ln -sf $TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman/pkg &>/dev/null
+	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && ln -sf $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman/pkg &>/dev/null
 	[ "$var_PKG_SOURCE_TYPE" = "cd" ]  && ln -sf $PKGARG                       /var/cache/pacman/pkg &>/dev/null
 }
 
@@ -65,7 +65,7 @@ target_prepare_pacman() {
 	# Setup a pacman.conf in /tmp
 	cat << EOF > /tmp/pacman.conf
 [options]
-CacheDir = ${TARGET_DIR}/var/cache/pacman/pkg
+CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg
 CacheDir = /src/core/pkg
 
 [core]
@@ -73,8 +73,8 @@ Server = ${serverurl}
 EOF
 
 	# Set up the necessary directories for pacman use
-	[ ! -d "${TARGET_DIR}/var/cache/pacman/pkg" ] && mkdir -m 755 -p "${TARGET_DIR}/var/cache/pacman/pkg"
-	[ ! -d "${TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${TARGET_DIR}/var/lib/pacman"
+	[ ! -d "${var_TARGET_DIR}/var/cache/pacman/pkg" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/cache/pacman/pkg"
+	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
 
 	notify "Refreshing package database..."
 	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1
@@ -92,7 +92,7 @@ pacman_what_is_this_for ()
 		nm=${i%-*-*}
 		PKGLIST="$PKGLIST $nm"
 	done
-	! [ -d $TARGET_DIR/var/lib/pacman ] && mkdir -p $TARGET_DIR/var/lib/pacman
+	! [ -d $var_TARGET_DIR/var/lib/pacman ] && mkdir -p $var_TARGET_DIR/var/lib/pacman
 	! [ -d /var/lib/pacman ] && mkdir -p /var/lib/pacman
 }
 

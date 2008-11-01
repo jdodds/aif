@@ -4,9 +4,6 @@
 ###### Set some default variables or get them from the setup script ######
 TITLE="Flexible Installer Framework for Arch linux"
 LOG="/dev/tty7"
-# flags like --noconfirm should not be specified here.  it's up to the profile to decide the interactivity
-PACMAN=pacman
-PACMAN_TARGET="pacman --root $TARGET_DIR --config /tmp/pacman.conf"
 
 
 
@@ -134,6 +131,11 @@ load_library /home/arch/fifa/lib/lib-*.sh
 
 [ "$1" != base ] && load_profile base
 load_profile $1
+
+# Set pacman vars.  allow profiles to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)
+# flags like --noconfirm should not be specified here.  it's up to the profile to decide the interactivity
+PACMAN=pacman
+PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
 execute phase preparation
 execute phase basics

@@ -803,6 +803,18 @@ EOF
     S_GRUB=1
 }
 
+
+   # exit if network wasn't configured in installer
+    if [ $S_NET -eq 0 ]; then
+        return 1
+    fi
+
+    ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
+
+    if [ $S_DHCP -ne 1 ]; then
+	auto_network
+fi
+
         
 #####################
 ## begin execution ##

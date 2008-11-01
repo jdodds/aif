@@ -43,10 +43,10 @@ EOF
 	lvcreate -L 10G  -n home cryptpool
 	lvcreate -L 10G  -n root cryptpool
 	lvcreate -L 3G   -n var  cryptpool
-	mke2fs -j /dev/cryptpool/home && mount /dev/cryptpool/home $TARGET_DIR/home
-	mke2fs -j /dev/cryptpool/root
-	mke2fs -j /dev/cryptpool/tmp
-	mke2fs -j /dev/cryptpool/var
+	for i in home root tmp var
+	do
+		mke2fs -j /dev/cryptpool/$i && mount /dev/cryptpool/$i $var_TARGET_DIR/$i
+	done
 
 	#TODO fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	
@@ -74,7 +74,7 @@ worker_install_bootloader ()
 _accept_ssl_cert ()
 {
 	mkdir -p /root/.subversion/auth/svn.ssl.server
-	cat /root/.subversion/auth/svn.ssl.server/1123d3c8b27895efee3848cc779e526a << EOF
+	cat > /root/.subversion/auth/svn.ssl.server/1123d3c8b27895efee3848cc779e526a << EOF
 K 10
 ascii_cert
 V 716

@@ -9,18 +9,18 @@ target_special_fs ()
 	if [ "$1" = on ]
 	then
 		# mount proc/sysfs first, so mkinitrd can use auto-detection if it wants
-		! [ -d $TARGET_DIR/proc ] && mkdir $TARGET_DIR/proc
-		! [ -d $TARGET_DIR/sys ] && mkdir $TARGET_DIR/sys
-		! [ -d $TARGET_DIR/dev ] && mkdir $TARGET_DIR/dev
+		! [ -d $var_TARGET_DIR/proc ] && mkdir $var_TARGET_DIR/proc
+		! [ -d $var_TARGET_DIR/sys ] && mkdir $var_TARGET_DIR/sys
+		! [ -d $var_TARGET_DIR/dev ] && mkdir $var_TARGET_DIR/dev
 		#mount, if not mounted yet
-		mount | grep -q "$TARGET_DIR/proc" || mount -t proc none $TARGET_DIR/proc || die_error "Could not mount $TARGET_DIR/proc" #NOTE:  setup script uses mount -t proc proc ? what's best?
-		mount | grep -q "$TARGET_DIR/sys"  || mount -t sysfs none $TARGET_DIR/sys || die_error "Could not mount $TARGET_DIR/sys" # NOTE: setup script uses mount -t sysfs sysfs ? what's best?
-		mount | grep -q "$TARGET_DIR/dev"  || mount -o bind /dev $TARGET_DIR/dev  || die_error "Could not mount $TARGET_DIR/dev"
+		mount | grep -q "$var_TARGET_DIR/proc" || mount -t proc none $var_TARGET_DIR/proc || die_error "Could not mount $var_TARGET_DIR/proc" #NOTE:  setup script uses mount -t proc proc ? what's best?
+		mount | grep -q "$var_TARGET_DIR/sys"  || mount -t sysfs none $var_TARGET_DIR/sys || die_error "Could not mount $var_TARGET_DIR/sys" # NOTE: setup script uses mount -t sysfs sysfs ? what's best?
+		mount | grep -q "$var_TARGET_DIR/dev"  || mount -o bind /dev $var_TARGET_DIR/dev  || die_error "Could not mount $var_TARGET_DIR/dev"
 	elif [ "$1" = off ]
 	then
-		umount $TARGET_DIR/proc || die_error "Could not umount $TARGET_DIR/proc"
-		umount $TARGET_DIR/sys  || die_error "Could not umount $TARGET_DIR/sys"
-		umount $TARGET_DIR/dev  || die_error "Could not umount $TARGET_DIR/dev"
+		umount $var_TARGET_DIR/proc || die_error "Could not umount $var_TARGET_DIR/proc"
+		umount $var_TARGET_DIR/sys  || die_error "Could not umount $var_TARGET_DIR/sys"
+		umount $var_TARGET_DIR/dev  || die_error "Could not umount $var_TARGET_DIR/dev"
 	fi
 }
 
@@ -32,8 +32,8 @@ target_umountall()
 {
 	notify "Disabling swapspace, unmounting already mounted disk devices..."
 	swapoff -a >/dev/null 2>&1
-	umount $(mount | grep -v "${TARGET_DIR} " | grep "${TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
-	umount $(mount | grep "${TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
+	umount $(mount | grep -v "${var_TARGET_DIR} " | grep "${var_TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
+	umount $(mount | grep "${var_TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
 }
 
 
@@ -153,7 +153,7 @@ findpartitions() {
 # taken from setup
 get_grub_map() {
 	rm /tmp/dev.map
-	$TARGET_DIR/sbin/grub --no-floppy --device-map /tmp/dev.map >/tmp/grub.log 2>&1 <<EOF
+	$var_TARGET_DIR/sbin/grub --no-floppy --device-map /tmp/dev.map >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
 }
@@ -277,9 +277,9 @@ auto_fstab()
     if [ "$S_MKFS" = "1" -o "$S_MKFSAUTO" = "1" ]; then
         if [ -f /tmp/.fstab ]; then
             # comment out stray /dev entries
-            sed -i 's/^\/dev/#\/dev/g' $TARGET_DIR/etc/fstab
+            sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab
             # append entries from new configuration
-            sort /tmp/.fstab >>$TARGET_DIR/etc/fstab
+            sort /tmp/.fstab >>$var_TARGET_DIR/etc/fstab
         fi
     fi
 }

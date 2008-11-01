@@ -7,7 +7,7 @@ run_mkinitcpio()
 {
 	target_special_fs on
 
-	run_background mkinitcpio "chroot $TARGET_DIR /sbin/mkinitcpio -p kernel26" /tmp/mkinitcpio.log
+	run_background mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" /tmp/mkinitcpio.log
 	follow_progress "Rebuilding initcpio images ..." /tmp/mkinitcpio.log
 	wait_for mkinitcpio
 
@@ -26,38 +26,32 @@ installpkg() {
 	run_background pacman-installpkg "$PACMAN_TARGET -S $PACKAGES" /tmp/pacman.log
 	follow_progress " Installing... Please Wait " /tmp/pacman.log
 
-        if [ $(cat /tmp/.pacman-retcode) -ne 0 ]; then
-            echo -e "\nPackage Installation FAILED." >>/tmp/pacman.log
-        else
-            echo -e "\nPackage Installation Complete." >>/tmp/pacman.log
-        fi
-        rm /tmp/setup-pacman-running
-
 	wait_for pacman-installpkg
-	
-    local _result=''
-    if [ $(cat /tmp/.pacman-retcode) -ne 0 ]; then
-        _result="Installation Failed (see errors below)"
-    else
-        _result="Installation Complete"
-    fi
-    rm /tmp/.pacman-retcode
+        
+	local _result=''
+	if [ $(cat /tmp/.pacman-retcode) -ne 0 ]; then
+		_result="Installation Failed (see errors below)"
+		echo -e "\nPackage Installation FAILED." >>/tmp/pacman.log
+	else
+		_result="Installation Complete"
+		echo -e "\nPackage Installation Complete." >>/tmp/pacman.log
+	fi
+	rm /tmp/.pacman-retcode
 
-    DIALOG --title "$_result" --exit-label "Continue" \
-        --textbox "/tmp/pacman.log" 18 70 || return 1     
+	show_warning "$_result" "/tmp/pacman.log" text || return 1     
 
-    target_specialfs off
+	target_specialfs off
 
-    sync
+	sync
 }
 
 # auto_locale(). taken from setup
 # enable glibc locales from rc.conf and build initial locale DB
 auto_locale() 
 {
-    for i in $(grep "^LOCALE" ${TARGET_DIR}/etc/rc.conf | sed -e 's/.*="//g' -e's/\..*//g'); do
-        sed -i -e "s/^#$i/$i/g" ${TARGET_DIR}/etc/locale.gen
+    for i in $(grep "^LOCALE" ${var_TARGET_DIR}/etc/rc.conf | sed -e 's/.*="//g' -e's/\..*//g'); do
+        sed -i -e "s/^#$i/$i/g" ${var_TARGET_DIR}/etc/locale.gen
     done
     DIALOG --infobox "Generating glibc base locales..." 4 40
-    chroot ${TARGET_DIR} locale-gen >/dev/null
+    chroot ${var_TARGET_DIR} locale-gen >/dev/null
 }
