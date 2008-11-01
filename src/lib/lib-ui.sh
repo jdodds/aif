@@ -37,7 +37,7 @@ ask_yesno ()
 # returns 1 if the user cancelled, 0 otherwise
 ask_string ()
 {
-	[ -z "$1"] && die_error "ask_string needs a question!"
+	[ -z "$1" ] && die_error "ask_string needs a question!"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string $@ ; return $? }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string $@ ; return $? }
 }
@@ -51,7 +51,7 @@ ask_string ()
 # returns 1 if the user cancelled or did not enter a numeric, 0 otherwise 
 ask_number ()
 {
-	[ -z "$1"] && die_error "ask_number needs a question!"
+	[ -z "$1" ] && die_error "ask_number needs a question!"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number $@ ; return $? }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number $@ ; return $? }
 }
@@ -66,7 +66,16 @@ ask_option ()
 }  
 
 
-
+# follow the progress of something by showing it's log, updating real-time
+# $1 title
+# $2 logfile
+follow_progress ()
+{
+	[ -z "$1" ] && die_error "follow_progress needs a title!"
+	[ -z "$2" ] && die_error "follow_progress needs a logfile to follow!"
+	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress $@ ; return $? }
+	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress $@ ; return $? }
+}
 
 
 # taken from setup
@@ -137,6 +146,13 @@ _dia_ask_bootloader()
 }
 
 
+_dia_follow_progress ()
+{
+	title=$1
+	logfile=$2
+}
+
+
 _cli_ask_password ()
 {
 	if [ -n "$1" ]
@@ -183,4 +199,33 @@ _cli_ask_option ()
 {
 }
 
-     
+
+_cli_follow_progress ()
+{
+	title=$1
+	logfile=$2
+	echo "Title: $1"
+	tail -f $2
+}
+
+    ( \
+        touch /tmp/setup-mkinitcpio-running
+        echo "mkinitcpio progress ..." > /tmp/mkinitcpio.log; \
+        echo >> /tmp/mkinitcpio.log; \
+        chroot "$TARGET_DIR" /sbin/mkinitcpio -p kernel26 >>/tmp/mkinitcpio.log 2>&1
+        echo $? > /tmp/.mkinitcpio-retcode
+        echo >> /tmp/mkinitcpio.log
+        rm -f /tmp/setup-mkinitcpio-running
+    ) &
+
+    sleep 2
+
+    DIALOG --title "Rebuilding initcpio images ..." \
+        --no-kill --tailboxbg "/tmp/mkinitcpio.log" 18 70 2>$ANSWER
+    while [ -f /tmp/setup-mkinitcpio-running ]; do
+        sleep 1
+    done
+    kill $(cat $ANSWER)
+
+
+}

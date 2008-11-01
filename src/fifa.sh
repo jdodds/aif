@@ -31,6 +31,8 @@ usage ()
 
 ##### "These functions would fit more in lib-ui, but we need them immediately" functions ######
 
+
+# display error message and die
 die_error ()
 {
 	if [ "$var_UI_TYPE" = dia ]
@@ -43,6 +45,28 @@ die_error ()
 }
 
 
+# display warning message
+# $1 title
+# $2 item to show
+# $3 type of item.  msg or text if it's a file. (optional. defaults to msg)
+show_warning ()
+{
+	[ -z "$1" ] && die_error "show_warning needs a title"
+	[ -z "$2" ] && die_error "show_warning needs an item to show"
+	[ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
+	[ -z "$3" ] && 3=msg
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		dialog --title "$1" --exit-label "Continue" --$3box "$2" 18 70 || die_error "dialog could not show --$3box $2. often this means a file does not exist"
+	else
+		echo "WARNING: $1"
+		[ "$3" = msg ] && echo $2
+		[ "$3" = text ] && cat $2 || die_error "Could not cat $2"
+	fi
+}
+
+
+#notify user
 notify ()
 {
 	if [ "$var_UI_TYPE" = dia ]
