@@ -33,7 +33,7 @@ worker_prepare_disks ()
 ,,L
 EOF
 	modprobe dm-crypt || die_error "Cannot modprobe dm-crypt"
-	modprobe -Q aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
+	modprobe -q aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
 	cryptsetup -c aes-xts-plain -y -s 512 luksFormat /dev/sda2
 	cryptsetup luksOpen /dev/sda2 sda2_crypt
 	pvcreate /dev/mapper/sda2_crypt
