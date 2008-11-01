@@ -65,6 +65,7 @@ worker_package_list ()
 worker_install_packages ()
 {
 	target_special_fs on
+	target_prepare_pacman
 	[ ! -f $var_PKG_FILE ] && die_error "No package file available!"
 	PKGLIST=`cat $var_PKG_FILE`
 	#TODO: what if $var_PKG_FILE is empty? we should die_error because that's probably not what the user wants.. or can it?  will pacman complain?

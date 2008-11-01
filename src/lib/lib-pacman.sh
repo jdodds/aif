@@ -59,8 +59,8 @@ target_write_pacman_conf ()
 # params: none
 # returns: 1 on error
 target_prepare_pacman() {   
-	[ "$var_PKG_SOURCE_TYPE" = "cd" ] && local serverurl="${FILE_URL}"
-	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && local serverurl="${SYNC_URL}"
+	[ "$var_PKG_SOURCE_TYPE" = "cd" ] && local serverurl="${var_FILE_URL}"
+	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && local serverurl="${var_SYNC_URL}"
 
 	# Setup a pacman.conf in /tmp
 	cat << EOF > /tmp/pacman.conf
@@ -99,7 +99,7 @@ pacman_what_is_this_for ()
 
 
 # select_mirror(). taken from setup.  TODO: get the UI code out of here
-# Prompt user for preferred mirror and set $SYNC_URL
+# Prompt user for preferred mirror and set $var_SYNC_URL
 #
 # args: none
 # returns: nothing
@@ -114,15 +114,15 @@ select_mirror() {
     if [ "${_server}" = "Custom" ]; then
         _dia_DIALOG --inputbox "Enter the full URL to core repo." 8 65 \
                 "ftp://ftp.archlinux.org/core/os/i686" 2>$ANSWER || return 1
-        SYNC_URL=$(cat $ANSWER)
+        var_SYNC_URL=$(cat $ANSWER)
     else
         # Form the full URL for our mirror by grepping for the server name in
         # our mirrorlist and pulling the full URL out. Substitute 'core' in  
         # for the repository name, and ensure that if it was listed twice we
         # only return one line for the mirror.
-        SYNC_URL=$(egrep -o "${_server}.*" "${MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
+        var_SYNC_URL=$(egrep -o "${_server}.*" "${MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
     fi
-    echo "Using mirror: $SYNC_URL" >$LOG
+    echo "Using mirror: $var_SYNC_URL" >$LOG
 }
 
 # select_source(). taken from setup.  TODO: decouple ui
