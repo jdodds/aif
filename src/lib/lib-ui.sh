@@ -21,7 +21,7 @@ ask_password ()
 
 # ask a yes/no question. 
 # $1 question
-# returns 0 if response is Y or y.  1 otherwise
+# returns 0 if response is yes/y (case insensitive).  1 otherwise
 # TODO: support for default answer 
 ask_yesno ()
 {
@@ -154,6 +154,12 @@ _dia_follow_progress ()
 }
 
 
+_dia_ask_yesno ()
+{
+	dialog --yesno "$1" 10 55 # returns 0 for yes, 1 for no
+}
+
+
 _cli_ask_password ()
 {
 	if [ -n "$1" ]
@@ -177,7 +183,8 @@ _cli_ask_yesno ()
 {
 	echo -n "$1 (y/n)"
 	read answer
-	if [ "$answer" = y -o "$answer" = Y ]
+	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
+	if [ "$answer" = y -o "$answer" = yes ]
 	then
 		return 0
 	else

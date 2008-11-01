@@ -108,6 +108,170 @@ partition() {
     S_PART=1
 }
 
+
+configure_system()
+{
+    ## PREPROCESSING ##
+    # only done on first invocation of configure_system
+    if [ $S_CONFIG -eq 0 ]; then
+
+        # /etc/pacman.d/mirrorlist
+        # add installer-selected mirror to the top of the mirrorlist
+        if [ "$MODE" = "ftp" -a "${SYNC_URL}" != "" ]; then
+            awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${TARGET_DIR}/etc/pacman.d/mirrorlist"
+        fi
+
+        # /etc/rc.conf
+        # insert timezone and utc info
+        sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"$TIMEZONE\"/g" \
+               -e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
+               ${TARGET_DIR}/etc/rc.conf
+    fi
+
+    ## END PREPROCESS ##
+
+    [ "$EDITOR" ] || geteditor
+    FILE=""
+
+    # main menu loop
+    while true; do
+        if [ -n "$FILE" ]; then
+            DEFAULT="--default-item $FILE"
+        else
+            DEFAULT=""
+        fi
+
+        DIALOG $DEFAULT --menu "Configuration" 17 70 10 \
+            "/etc/rc.conf"              "System Config" \
+            "/etc/fstab"                "Filesystem Mountpoints" \
+            "/etc/mkinitcpio.conf"      "Initramfs Config" \
+            "/etc/modprobe.conf"        "Kernel Modules" \
+            "/etc/resolv.conf"          "DNS Servers" \
+            "/etc/hosts"                "Network Hosts" \
+            "/etc/hosts.deny"           "Denied Network Services" \
+            "/etc/hosts.allow"          "Allowed Network Services" \
+            "/etc/locale.gen"           "Glibc Locales" \
+            "/etc/pacman.d/mirrorlist"  "Pacman Mirror List" \
+            "Root-Password"             "Set the root password" \
+            "Return"        "Return to Main Menu" 2>$ANSWER || FILE="Return"
+        FILE="$(cat $ANSWER)"
+ if [ "$FILE" = "Return" -o -z "$FILE" ]; then       # exit
+            break
+        elif [ "$FILE" = "Root-Password" ]; then            # non-file
+            while true; do
+                chroot ${TARGET_DIR} passwd root && break
+            done
+        else                                                #regular file
+            $EDITOR ${TARGET_DIR}${FILE}
+        fi
+    done  
+
+    ## POSTPROCESSING ##
+
+    # /etc/initcpio.conf
+    #
+    run_mkinitcpio
+
+    # /etc/locale.gen
+    #
+    chroot ${TARGET_DIR} locale-gen
+
+    ## END POSTPROCESSING ##
+
+    S_CONFIG=1
+}
+
+
+prepare_harddrive()
+{
+    S_MKFSAUTO=0
+    S_MKFS=0
+    DONE=0
+    NEXTITEM=""
+    while [ "$DONE" = "0" ]; do
+        if [ -n "$NEXTITEM" ]; then
+            DEFAULT="--default-item $NEXTITEM"
+        else
+            DEFAULT=""
+        fi
+        DIALOG $DEFAULT --menu "Prepare Hard Drive" 12 60 5 \
+            "1" "Auto-Prepare (erases the ENTIRE hard drive)" \
+            "2" "Partition Hard Drives" \
+            "3" "Set Filesystem Mountpoints" \
+            "4" "Return to Main Menu" 2>$ANSWER
+        NEXTITEM="$(cat $ANSWER)"
+        case $(cat $ANSWER) in
+            "1")
+                autoprepare ;;
+            "2")
+                partition ;;
+            "3")
+                PARTFINISH=""
+                mountpoints ;;
+            *)
+                DONE=1 ;;
+        esac
+    done
+    NEXTITEM="1"
+}
+
+
+# set_clock()
+# prompts user to set hardware clock and timezone
+#
+# params: none
+# returns: 1 on failure
+set_clock()   
+{
+    # utc or local?
+    DIALOG --menu "Is your hardware clock in UTC or local time?" 10 50 2 \
+        "UTC" " " \
+        "local" " " \
+        2>$ANSWER || return 1
+    HARDWARECLOCK=$(cat $ANSWER)
+
+    # timezone?
+    tzselect > $ANSWER || return 1
+    TIMEZONE=$(cat $ANSWER)
+
+    # set system clock from hwclock - stolen from rc.sysinit
+    local HWCLOCK_PARAMS=""
+    if [ "$HARDWARECLOCK" = "UTC" ]; then
+        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
+    else
+        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
+    fi  
+    if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]; then
+        /bin/rm -f /etc/localtime
+        /bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+    fi
+    /sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
+
+    # display and ask to set date/time
+    dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
+    local _date="$(cat $ANSWER)"
+    dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
+    local _time="$(cat $ANSWER)"
+    echo "date: $_date time: $_time" >$LOG
+
+    # save the time
+    # DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss
+    local _datetime="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
+    echo "setting date to: $_datetime" >$LOG
+    date -s "$_datetime" 2>&1 >$LOG
+    /sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
+
+    S_CLOCK=1
+}
+
+[ $S_SELECT -eq 0 ] && install_pkg && S_INSTALL=1 # user must first select, then install
+# automagic time!
+# any automatic configuration should go here
+notify "Writing base configuration..."        
+auto_fstab
+auto_network
+auto_locale 
+        
 #####################
 ## begin execution ##
 

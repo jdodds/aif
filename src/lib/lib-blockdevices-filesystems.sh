@@ -260,3 +260,20 @@ _mkfs() {
     fi
 }
 
+
+# auto_fstab(). taken from setup
+# preprocess fstab file
+# comments out old fields and inserts new ones
+# according to partitioning/formatting stage
+#
+auto_fstab()
+{
+    if [ "$S_MKFS" = "1" -o "$S_MKFSAUTO" = "1" ]; then
+        if [ -f /tmp/.fstab ]; then
+            # comment out stray /dev entries
+            sed -i 's/^\/dev/#\/dev/g' $TARGET_DIR/etc/fstab
+            # append entries from new configuration
+            sort /tmp/.fstab >>$TARGET_DIR/etc/fstab
+        fi
+    fi
+}
