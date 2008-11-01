@@ -43,6 +43,7 @@ ask_string ()
 }
 
 
+# TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?
 # ask for a number.
 # $1 question
 # $2 lower limit (optional)
@@ -52,6 +53,8 @@ ask_string ()
 ask_number ()
 {
 	[ -z "$1" ] && die_error "ask_number needs a question!"
+	[ -n "$2" ] && [[ $2 = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
+	[ -n "$3" ] && [[ $3 = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number $@ ; return $? }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number $@ ; return $? }
 }
@@ -195,16 +198,41 @@ _cli_ask_yesno ()
 
 _cli_ask_string ()   
 {
+	echo "$@"
+	read answ
+	echo "$answ"
+	[ -z "$answ" ] && return 1
+	return 0
 }
 
 
 _cli_ask_number ()
 {
+	#TODO: i'm not entirely sure this works perfectly. what if user doesnt give anything or wants to abort?
+	while true
+	do
+		str="$1"
+		[ -n "$2" ] && str2="min $2"
+		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n "$str2" ] && str="$str ( $str2 )"
+		echo "$str"
+		read answ
+		if [[ $answ = *[^0-9]* ]]
+		then
+			show_warning "$answ is not a number! try again."
+		else
+			break
+		fi
+	done
+	echo "$answ"
+	[ -z "$answ" ] && return 1
+	return 0
 }
-
+	
 
 _cli_ask_option ()
 {
+	die_error "_cli_ask_option Not yet implemented"
 }
 
 

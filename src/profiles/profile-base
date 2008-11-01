@@ -75,7 +75,7 @@ worker_install_packages ()
 
 worker_install_bootlader ()
 {
-	#TODO: autodetection or whatever
+	#TODO: ask which disk, install grub on it
 	true
 }
 

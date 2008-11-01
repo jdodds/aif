@@ -28,10 +28,12 @@ S_CONFIG=0      # configuration editing
 S_GRUB=0        # TODO: kill this - if using grub
 S_BOOT=""       # bootloader installed (set to loader name instead of 1)
 
-
-DIALOG --infobox "Generating GRUB device map...\nThis could take a while.\n\n Please be patient." 0 0
-get_grub_map
-
+phase_preparation ()
+{
+	execute worker runtime_packages
+	notify "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
+	get_grub_map
+}
 
 mainmenu()  
 {
