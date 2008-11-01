@@ -184,7 +184,7 @@ _cli_ask_password ()
 
 _cli_ask_yesno ()
 {
-	echo -n "$1 (y/n)"
+	echo -n "$1 (y/n): "
 	read answer
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
 	if [ "$answer" = y -o "$answer" = yes ]
@@ -198,7 +198,7 @@ _cli_ask_yesno ()
 
 _cli_ask_string ()   
 {
-	echo "$@"
+	echo -n "$@: "
 	read answ
 	echo "$answ"
 	[ -z "$answ" ] && return 1
