@@ -111,8 +111,8 @@ _dia_DIALOG()
 # sets EDITOR global variable
 #
 # TODO: clean this up
-_dia_geteditor() {
-    DIALOG --menu "Select a Text Editor to Use" 10 35 3 \
+_dia_get_editor() {
+    _dia_DIALOG --menu "Select a Text Editor to Use" 10 35 3 \
         "1" "nano (easier)" \
         "2" "vi" 2>$ANSWER   
     case $(cat $ANSWER) in   
@@ -138,7 +138,7 @@ _dia_getavaildisks()
 # TODO: also an ugly function
 _dia_ask_bootloader()
 {
-    DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" \
+    _dia_DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" \
         10 65 2 \
         "GRUB" "Use the GRUB bootloader (default)" \
         "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
@@ -150,6 +150,7 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
+	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 18 70 2>$ANSWER
 }
 
 
@@ -208,24 +209,3 @@ _cli_follow_progress ()
 	tail -f $2
 }
 
-    ( \
-        touch /tmp/setup-mkinitcpio-running
-        echo "mkinitcpio progress ..." > /tmp/mkinitcpio.log; \
-        echo >> /tmp/mkinitcpio.log; \
-        chroot "$TARGET_DIR" /sbin/mkinitcpio -p kernel26 >>/tmp/mkinitcpio.log 2>&1
-        echo $? > /tmp/.mkinitcpio-retcode
-        echo >> /tmp/mkinitcpio.log
-        rm -f /tmp/setup-mkinitcpio-running
-    ) &
-
-    sleep 2
-
-    DIALOG --title "Rebuilding initcpio images ..." \
-        --no-kill --tailboxbg "/tmp/mkinitcpio.log" 18 70 2>$ANSWER
-    while [ -f /tmp/setup-mkinitcpio-running ]; do
-        sleep 1
-    done
-    kill $(cat $ANSWER)
-
-
-}
