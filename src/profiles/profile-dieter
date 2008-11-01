@@ -32,7 +32,7 @@ worker_prepare_disks ()
 
 worker_package_list ()
 {
-	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/package-list /home/arch/fifa/package-list
+	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/package-list /home/arch/fifa/package-list || die_error "Could not export package list!"
 }
 
 
