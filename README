@@ -25,4 +25,5 @@ together to come up with the installation procedure of your liking.
 ** File locations (on the install CD): **
 * fifa.sh -> /arch/fifa.sh (together with the default installer scripts)
 * libraries -> /home/arch/fifa/lib
-* all other files (profiles, package lists,...) used by/for this script -> /home/arch/fifa
+* docs -> /home/arch/fifa/docs
+* all other files (profiles, package lists, ...) used by/for this script -> /home/arch/fifa
