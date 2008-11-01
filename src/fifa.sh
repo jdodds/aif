@@ -16,25 +16,15 @@ usage ()
 {
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		#TODO: do this
-		true
+		DIALOG --msgbox "$0 <profilename>\n
+		If the profilename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a profile saved on disk.  See README\n
+		Available profiles:\n
+		`ls -l /home/arch/fifa/profile-*`" 14 65
 	else
 		echo "$0 <profilename>"
-		echo "If the profilename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a profile file like /home/arch/fifa/profile-<profilename>"
-		echo "If you wrote your own profile, you can also save it yourself as /home/arch/fifa/profile-custom or something like that"
+		echo "If the profilename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a profile saved on disk.  See README"
 		echo "Available profiles:"
 		ls -l /home/arch/fifa/profile-*
-		echo "Extra info:"
-		echo "There is a very basic but powerfull workflow defined by variables, phases and workers.  Depending on the profile you choose (or write yourself), these will differ."
-		echo "they are very recognizable and are named like this:"
-		echo " - variable -> var_<foo>"
-		echo " - phase    -> phase_<bar> (a function that calls workers and maybe does some stuff by itself.  There are 4 phases: preparation, basics, system, finish. (executed in that order)"
-		echo " - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic. eg runtime_packages, prepare_disks, package_list etc)"
-		echo "If you specify a profile name other then base, the base profile will be sourced first, then the specific profile.  This way you only need to override specific things."
-		echo "Notes:"
-		echo " - you _can_ override _all_ variables and functions in this script, but you should be able to achieve your goals by overriding things of these 3 classes)"
-		echo " - you _must_ specify a profile, to avoid errors. take 'base' if unsure"
-		echo " - don't edit the base profile (or any other that comes by default), rather make your own"
 	fi
 }
 
@@ -57,8 +47,7 @@ notify ()
 {
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		#TODO: implement this
-		true
+		DIALOG --msgbox "$@" 20 50
 	else
 		echo "$@"
 	fi

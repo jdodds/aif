@@ -23,7 +23,34 @@ together to come up with the installation procedure of your liking.
 
 
 ** File locations (on the install CD): **
-* fifa.sh -> /arch/fifa.sh (together with the default installer scripts)
+Basically fifa.sh is put in /arch (together with the default installer scripts), while all other fifa-related files belong in /home/arch/fifa
+
+* fifa.sh   -> /arch/fifa.sh
 * libraries -> /home/arch/fifa/lib
-* docs -> /home/arch/fifa/docs
-* all other files (profiles, package lists, ...) used by/for this script -> /home/arch/fifa
+* docs      -> /home/arch/fifa/docs
+* profiles  -> /home/arch/fifa/profiles
+* pkg list  -> /home/arch/fifa/packages-list (can be overridden)
+
+
+** Workflow **
+Profiles are stored like /home/arch/fifa/profiles/profile-*
+You can put your custom profiles there too. Give them a recognizable name
+that doesn't exist yet.
+
+There is a very basic but powerful workflow defined by variables, phases and workers.
+Depending on the profile you choose (or write yourself), these will differ
+In the code, they are very recognizable and are named like this:
+ - variable -> var_<foo>
+ - phase    -> phase_<bar> (a function that calls workers and maybe does some stuff by itself.) 
+               There are 4 phases: preparation, basics, system, finish. (executed in that order)
+ - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic.
+               eg runtime_packages, prepare_disks, package_list etc)
+
+If you specify a profile name other then base, the base profile will be sourced first, then the specific
+profile.  This way you only need to override specific things.
+
+Notes:
+ - you _can_ override _all_ variables and functions in profiles, but you should be able to achieve your goals by
+                overriding things of these 3 classes
+ - you _must_ specify a profile, to avoid errors. take 'base' if unsure
+ - don't edit the base profile (or any other that comes by default), rather make your own. It's easy!
