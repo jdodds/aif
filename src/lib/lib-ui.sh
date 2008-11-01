@@ -14,8 +14,8 @@ ANSWER="/tmp/.setup"
 # $1 type (optional.  eg 'svn', 'ssh').
 ask_password ()
 {
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_password $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_password $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_password "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_password "$@" ; return $? ; }
 }
 
 
@@ -26,8 +26,8 @@ ask_password ()
 ask_yesno ()
 {
 	[ -z "$1" ] && die_error "ask_yesno needs a question!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_yesno $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_yesno $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_yesno "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_yesno "$@" ; return $? ; }
 }
 
 
@@ -38,8 +38,8 @@ ask_yesno ()
 ask_string ()
 {
 	[ -z "$1" ] && die_error "ask_string needs a question!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$@" ; return $? ; }
 }
 
 
@@ -55,8 +55,8 @@ ask_number ()
 	[ -z "$1" ] && die_error "ask_number needs a question!"
 	[ -n "$2" ] && [[ $2 = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
 	[ -n "$3" ] && [[ $3 = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" "$2" "$3" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" "$2" "$3" ; return $? ; }
 }
  
   
@@ -64,8 +64,8 @@ ask_number ()
 # TODO: exact implementation, which arguments etc?
 ask_option ()
 {
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_option $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_option "$@" ; return $? ; }
 }  
 
 
@@ -76,8 +76,8 @@ follow_progress ()
 {
 	[ -z "$1" ] && die_error "follow_progress needs a title!"
 	[ -z "$2" ] && die_error "follow_progress needs a logfile to follow!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress $@ ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress $@ ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress "$1" "$2" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$1" "$2" ; return $? ; }
 }
 
 
