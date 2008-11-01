@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# procedural code from quickinst functionized.  
+# procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
 # NOTE: why were the functions in the setup called CHROOT_mount/umount? this is not chrooting ?
 target_special_fs ()
@@ -189,7 +189,7 @@ mapdev() {
 # Create and mount filesystems in our destination system directory.
 #
 # args:
-#  $1 domk: Whether to make the filesystem or use what is already there  
+#  $1 domk: Whether to make the filesystem or use what is already there  (yes/no)
 #  $2 device: Device filesystem is on
 #  $3 fstype: type of filesystem located at the device (or what to create)
 #  $4 dest: Mounting location for the destination system
@@ -217,7 +217,7 @@ _mkfs() {
             [ "${_fstype}" = "${fs}" ] && knownfs=1 && break
         done
         
-        [ $knownfs -eq 0 ] && DIALOG --msgbox "unknown fstype ${_fstype} for ${_device}" 0 0 && return 1
+        [ $knownfs -eq 0 ] && show_warning "unknown fstype ${_fstype} for ${_device}"  && return 1
         # if we were tasked to create the filesystem, do so
         if [ "${_domk}" = "yes" ]; then
             local ret
@@ -230,20 +230,14 @@ _mkfs() {
                 vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
                 # don't handle anything else here, we will error later
             esac
-            if [ $ret != 0 ]; then
-                DIALOG --msgbox "Error creating filesystem ${_fstype} on ${_device}" 0 0
-                return 1
-            fi
+            [ $ret != 0 ] && show_warning "Error creating filesystem ${_fstype} on ${_device}" && return 1
             sleep 2
         fi
         # create our mount directory
         mkdir -p ${_dest}${_mountpoint}
         # mount the bad boy
         mount -t ${_fstype} ${_device} ${_dest}${_mountpoint} >$LOG 2>&1
-        if [ $? != 0 ]; then
-            DIALOG --msgbox "Error mounting ${_dest}${_mountpoint}" 0 0
-            return 1
-        fi
+	[ $? != 0 ] && show_warning "Error mounting ${_dest}${_mountpoint}" && return 1
     fi
 
     # add to temp fstab

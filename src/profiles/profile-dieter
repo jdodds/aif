@@ -7,6 +7,7 @@ phase_preparation ()
 	notify "A few manual things need to happen first..."
 	if ask_yesno "Do you want to (re)-configure your networking?"
 	then
+		#TODO: which function do i need here?
 		donetwork #configure network by using library
 	else
 		notify "Ok. skipping network config"
@@ -19,18 +20,35 @@ phase_preparation ()
 
 	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help
 
-	notify "**** From now on. everything will be automatic. Enjoy the show!"
+	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: svn will complain about ssl cert + you need pass for dm_crypt
 
         execute worker runtime_packages
 }
 
 worker_prepare_disks ()
 {
-	#TODO: fix all this, using the libs
-	#cfdisk
-	#encrypt lvm
-	#make fs
-	#mount, where? /mnt?
+	#TODO: integrate this stuff into the functions in the libs + do error checking and handling
+	sfdisk /dev/sda << EOF
+,10,L,*
+,,L
+EOF
+	modprobe dm-crypt || die_error "Cannot modprobe dm-crypt"
+	modprobe aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
+	cryptsetup -c aes-xts-plain -y -s 512 luksFormat /dev/sda2
+	cryptsetup luksOpen /dev/sda2 sda2_crypt
+	pvcreate /dev/mapper/sda2_crypt
+	vgcreate cryptpool /dev/mapper/sda2_crypt
+	lvcreate -L 2G   -n swap cryptpool
+	lvcreate -L 500M -n tmp  cryptpool
+	lvcreate -L 10G  -n home cryptpool
+	lvcreate -L 10G  -n root cryptpool
+	lvcreate -L 3G   -n var  cryptpool
+	mke2fs -j /dev/cryptpool/home && mount /dev/cryptpool/home $TARGET_DIR/home
+	mke2fs -j /dev/cryptpool/root
+	mke2fs -j /dev/cryptpool/tmp
+	mke2fs -j /dev/cryptpool/var
+
+	#TODO fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	
 }
 
