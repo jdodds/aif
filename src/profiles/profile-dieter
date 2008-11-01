@@ -28,12 +28,12 @@ phase_preparation ()
 worker_prepare_disks ()
 {
 	#TODO: integrate this stuff into the functions in the libs + do error checking and handling
-	sfdisk /dev/sda << EOF
+	sfdisk /dev/sda 2>&1 | grep -v 'not have an msdos signature' << EOF
 ,10,L,*
 ,,L
 EOF
 	modprobe dm-crypt || die_error "Cannot modprobe dm-crypt"
-	modprobe aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
+	modprobe -q aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
 	cryptsetup -c aes-xts-plain -y -s 512 luksFormat /dev/sda2
 	cryptsetup luksOpen /dev/sda2 sda2_crypt
 	pvcreate /dev/mapper/sda2_crypt
