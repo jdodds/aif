@@ -30,10 +30,10 @@ target_special_fs ()
 # the destination root partition last!
 target_umountall()
 {
-    DIALOG --infobox "Disabling swapspace, unmounting already mounted disk devices..." 0 0
-    swapoff -a >/dev/null 2>&1
-    umount $(mount | grep -v "${TARGET_DIR} " | grep "${TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
-    umount $(mount | grep "${TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
+	notify "Disabling swapspace, unmounting already mounted disk devices..."
+	swapoff -a >/dev/null 2>&1
+	umount $(mount | grep -v "${TARGET_DIR} " | grep "${TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
+	umount $(mount | grep "${TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
 }
 
 
@@ -91,51 +91,62 @@ getuuid()
 
 # taken from setup. slightly optimized. TODO: fix identation + can be improved more
 findpartitions() {
-    workdir="$PWD"
-    for devpath in $(finddisks); do
-        disk=$(echo $devpath | sed 's|.*/||')
-        cd /sys/block/$disk   
-        for part in $disk*; do
-            # check if not already assembled to a raid device
-		if ! [ "$(cat /proc/mdstat 2>/dev/null | grep $part)" -o "$(fstype 2>/dev/null </dev/$part | grep "lvm2")" \ 
-		    -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
-		    then
-              	      if [ -d $part ]; then  
-                    echo "/dev/$part"  
-                    [ "$1" ] && echo $1
-                fi
-            fi
-        done
-    done
-    # include any mapped devices
-    for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control); do
-        echo "/dev/mapper/$devpath"
-        [ "$1" ] && echo $1
-    done
-    # include any raid md devices
-    for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null); do
-        if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g'); then
-        echo "$devpath"
-        [ "$1" ] && echo $1
-        fi
-    done
-    # inlcude cciss controllers
-    if [ -d /dev/cciss ] ; then
-        cd /dev/cciss
-        for dev in $(ls | egrep 'p'); do
-            echo "/dev/cciss/$dev"
-            [ "$1" ] && echo $1
-        done
-    fi
-    # inlcude Smart 2 controllers
-    if [ -d /dev/ida ] ; then
-        cd /dev/ida
-        for dev in $(ls | egrep 'p'); do
-            echo "/dev/ida/$dev"
-            [ "$1" ] && echo $1
-        done
-    fi
- cd "$workdir"
+	workdir="$PWD"
+	for devpath in $(finddisks)
+	do
+		disk=$(echo $devpath | sed 's|.*/||')
+		cd /sys/block/$disk   
+		for part in $disk*
+		do
+			# check if not already assembled to a raid device
+			if ! [ "$(cat /proc/mdstat 2>/dev/null | grep $part)" -o "$(fstype 2>/dev/null </dev/$part | grep "lvm2")" \ 
+			    -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
+			then
+				if [ -d $part ]
+				then  
+					echo "/dev/$part"  
+					[ "$1" ] && echo $1
+				fi
+			fi
+		done
+	done
+	# include any mapped devices
+	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
+	do
+		echo "/dev/mapper/$devpath"
+		[ "$1" ] && echo $1
+	done
+	# include any raid md devices
+	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
+	do
+		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
+		then
+			echo "$devpath"
+			[ "$1" ] && echo $1
+		fi
+	done
+	# inlcude cciss controllers
+	if [ -d /dev/cciss ]
+	then
+		cd /dev/cciss
+		for dev in $(ls | egrep 'p')
+		do
+			echo "/dev/cciss/$dev"
+			[ "$1" ] && echo $1
+		done
+	fi
+	# inlcude Smart 2 controllers
+	if [ -d /dev/ida ]
+	then
+		cd /dev/ida
+		for dev in $(ls | egrep 'p')
+		do
+			echo "/dev/ida/$dev"
+			[ "$1" ] && echo $1
+		done
+	fi
+	
+	cd "$workdir"
 }
 
 
@@ -148,6 +159,7 @@ EOF
 }
 
 
+# TODO: $1 is what??
 # taken from setup. slightly edited.
 mapdev() {
     partition_flag=0
@@ -185,7 +197,7 @@ mapdev() {
     fi
 }
 
-# _mkfs() taken from setup code and slightly improved.  TODO: decouple GUI code, improve more
+# _mkfs() taken from setup code and slightly improved.
 # Create and mount filesystems in our destination system directory.
 #
 # args:
@@ -207,9 +219,9 @@ _mkfs() {
     if [ "${_fstype}" = "swap" ]; then
         swapoff ${_device} >/dev/null 2>&1
         if [ "${_domk}" = "yes" ]; then
-            mkswap ${_device} >$LOG 2>&1 || DIALOG --msgbox "Error creating swap: mkswap ${_device}" 0 0 && return 1
+            mkswap ${_device} >$LOG 2>&1 || show_warning "Error creating swap: mkswap ${_device}" && return 1
         fi
-        swapon ${_device} >$LOG 2>&1 || DIALOG --msgbox "Error activating swap: swapon ${_device}" 0 0 &&  return 1
+        swapon ${_device} >$LOG 2>&1 || show_warning "Error activating swap: swapon ${_device}"  &&  return 1
     else
         # make sure the fstype is one we can handle
         local knownfs=0

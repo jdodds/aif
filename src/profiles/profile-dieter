@@ -18,8 +18,8 @@ phase_preparation ()
 	SVN_BASE=https://192.168.1.2/svn/repos
 	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
 
-	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help
-
+	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help. also the timeout on the 'accept cert' is frustrating
+	_accept_ssl_cert
 	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: svn will complain about ssl cert + you need pass for dm_crypt
 
         execute worker runtime_packages
@@ -68,4 +68,26 @@ worker_configure_home ()
 worker_install_bootloader ()
 {
 	install-grub /dev/sda
+}
+
+
+_accept_ssl_cert ()
+{
+	mkdir -p /root/.subversion/auth/svn.ssl.server
+	cat /root/.subversion/auth/svn.ssl.server/1123d3c8b27895efee3848cc779e526a << EOF
+K 10
+ascii_cert
+V 716
+MIICFTCCAX6gAwIBAgIBAjANBgkqhkiG9w0BAQQFADBVMRswGQYDVQQKExJBcGFjaGUgSFRUUCBTZXJ2ZXIxIjAgBgNVBAsTGUZvciB0ZXN0aW5nIHB1cnBvc2VzIG9ubHkxEjAQBgNVBAMTCWxvY2FsaG9zdDAeFw0wNjA3MjQxMjUwMzdaFw0wNzA3MjQxMjUwMzdaMEwxGzAZBgNVBAoTEkFwYWNoZSBIVFRQIFNlcnZlcjEZMBcGA1UECxMQVGVzdCBDZXJ0aWZpY2F0ZTESMBAGA1UEAxMJbG9jYWxob3N0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDF5PB1NnUve2jkisDTGsxKC9qzpnl+eX8UIR/1s+yX2ZIPNnIryeqTc6sS3cBHz2/AufIr0xbpXkTa4V5Es5bXA7W1D7+ZzuFHjjyi4E2eqYVkhkv1sRL5TpAovfjAA+96iaFHp3yKYiuw/nWwQTSW9M1VrDEym4ODxyJOtNdgQQIDAQABMA0GCSqGSIb3DQEBBAUAA4GBABY0bnBf9tL1WMC1sLxB1eDXvs5qNY96mny+EKGAbyQROPaXwsRQB0HrAkuWfHzQlgIdD6AfGsd+YMcEuqSPzIz6t6mA45jl++WvI6we9t3eYChtdPD2xjgHti0aSiDyVLTJbXPnkdgzKvIjYZcXBwbmbQSrg0STO5m+cSYt3chx
+K 8
+failures
+V 2
+14
+K 15
+svn:realmstring
+V 23
+https://192.168.1.2:443
+END
+EOF
+
 }
