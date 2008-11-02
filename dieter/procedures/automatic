@@ -20,9 +20,8 @@ phase_preparation ()
 	SVN_BASE=https://192.168.1.2/svn/repos
 	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
 
-	#TODO: find something against svn's interactive ssl cert checking.  http://www.7php.net/svn-client-certificate-authentication-cache/ might help. also the timeout on the 'accept cert' is frustrating
 	_accept_ssl_cert
-	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: svn will complain about ssl cert + you need pass for dm_crypt
+	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
 
         execute worker runtime_packages
         #TODO: i should have extra,community,.. (actually even yaourt/aur) available
