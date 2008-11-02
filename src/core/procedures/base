@@ -3,10 +3,10 @@
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt"
 var_RUNTIME_PACKAGES=
-var_PKG_FILE=/home/arch/fifa/package-list
+var_PKG_FILE=/home/arch/fifa/runtime/package-list
 var_UI_TYPE="cli" # set to cli or dia for dialog
 
-###### Phases ( can be overridden by more specific profiles) ######
+###### Phases ( can be overridden by more specific procedures) ######
 
 phase_preparation ()
 {
@@ -43,7 +43,7 @@ phase_finish ()
 
 
 
-###### Workers ( can be overridden by more specific profiles) ######
+###### Workers ( can be overridden by more specific procedures) ######
 worker_select_source ()
 {
 	var_PKG_SOURCE_TYPE='cd'

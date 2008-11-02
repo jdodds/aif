@@ -1,18 +1,4 @@
-* each profile can have libs for
-- ui (most stuff goes into lib-ui however, only very specific custom things
-  not)
-- backend (eg dieters automatic stuff is custom for dieter. but can have
-different installation procedures using the same custom backend code)
-- implementation (what a profile is right now) -> rename profile to
-procedure
-* the above requires now file layout: all 'core' things must be separate
-from user things
-- core: all stuff that should be on install cd for all users
-- user: specific libs (whether ui, backend,...) and procedures.
-* it should also be possible that one user creates multiple procedures, using
-the same - custom - libraries, (a very basic dependency check? eg need
-lib_dieter, which checks user/lib/lib-dieter)
-* base profile wordt implementatie van alles wat auto gaat uit setup script,
+* base procedure wordt implementatie van alles wat auto gaat uit setup script,
 other steps warning 'not implemented'
 * in automatic-dieter: health check using svn info /<hostname> 
 * in elke phase een lege worker die te overriden valt zoda we geen phases
@@ -20,17 +6,18 @@ other steps warning 'not implemented'
 * process and fix libraries
 * fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
-* instead of using the 'base' profile and letting other profiles override,
-  we should have even more flexibilty to take parts from different profiles.
-  eg dieter profile maybe wants to use something interactive. or base
-  profile wants to do something interactive. interactive functions maybe
-  dont belong in a profile?
+* instead of using the 'base' procedure and letting other procedures override,
+  we should have even more flexibilty to take parts from different procedures.
+  eg dieter procedure maybe wants to use something interactive. or base
+  procedure wants to do something interactive. interactive functions maybe
+  dont belong in a procedure?
 
-* base profile idea: it should just tell you what to do? -> less
-  implementation work in base profile, more in other profiles...
-* fix crossconcerns: some procedures could be about _what_ (desktop,server),
-  others are about _how_ (autodetection, asking user,...) (profile vs...
-  'mode' ?)
+* base procedure idea: it should just tell you what to do? -> less
+  implementation work in base procedure, more in other procedures...
+* fix crossconcerns: procedures are about _how_ (autodetection, asking user,...)
+  what about _what_ (desktop,server) --> 'mode'? 'profile'? procedures
+  define for themselves how much they care about the 'profile'. for some
+  it's a key thing, for others it could be just another list of defaults
 * port classic installer so it works with fifa
 * make some sensible default profiles (eg desktop, server, ...)
 * make it work

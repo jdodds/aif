@@ -9,4 +9,4 @@ pacman -Sy git
 git clone git://github.com/Dieterbe/fifa.git /home/arch/tmp
 /home/arch/tmp/src/patch-install-cd.sh
 
-/arch/fifa.sh <profilename> #you can skip networking
+/arch/fifa.sh <procedurename> #you can skip networking.  See readme on howto specify procedures
