@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# auto_network(). taken from setup
+# auto_network(). taken from setup. edited
 # configures network on host system according to installer
 # settings if user wishes to do so
-#
-auto_network()
+# $1 dhcp/fixed
+# $2 http proxy (optional. defaults to '')
+# $3 ftp proxy (optional. defaults to '')
+# TODO: autonetwork must be a wrapper that checks $PROXY_HTTP, $PROXY_FTP and $S_DHCP and calls this function
+target_configure_network()
 {
-	if [ $S_DHCP -ne 1 ]; then
+	[ "$1" != dhcp -a "$1" != fixed ] && die_error "target_configure_network \$1 must be 'dhcp' or 'fixed'"
+	PROXY_HTTP="$2"
+	PROXY_FTP="$3"
+	if [ "$1" = fixed ]; then
 		sed -i "s#eth0=\"eth0#$INTERFACE=\"$INTERFACE#g" ${var_TARGET_DIR}/etc/rc.conf
 		sed -i "s# 192.168.0.2 # $IPADDR #g" ${var_TARGET_DIR}/etc/rc.conf
 		sed -i "s# 255.255.255.0 # $SUBNET #g" ${var_TARGET_DIR}/etc/rc.conf
