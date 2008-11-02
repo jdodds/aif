@@ -1,3 +1,22 @@
+* each profile can have libs for
+- ui (most stuff goes into lib-ui however, only very specific custom things
+  not)
+- backend (eg dieters automatic stuff is custom for dieter. but can have
+different installation procedures using the same custom backend code)
+- implementation (what a profile is right now) -> rename profile to
+procedure
+* the above requires now file layout: all 'core' things must be separate
+from user things
+- core: all stuff that should be on install cd for all users
+- user: specific libs (whether ui, backend,...) and procedures.
+* it should also be possible that one user creates multiple procedures, using
+the same - custom - libraries, (a very basic dependency check? eg need
+lib_dieter, which checks user/lib/lib-dieter)
+* base profile wordt implementatie van alles wat auto gaat uit setup script,
+other steps warning 'not implemented'
+* in automatic-dieter: health check using svn info /<hostname> 
+* in elke phase een lege worker die te overriden valt zoda we geen phases
+  moeten overriden
 * process and fix libraries
 * fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
