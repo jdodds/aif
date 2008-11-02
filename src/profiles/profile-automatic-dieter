@@ -23,6 +23,7 @@ phase_preparation ()
 	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: svn will complain about ssl cert + you need pass for dm_crypt
 
         execute worker runtime_packages
+        #TODO: i should have extra,community,.. (actually even yaourt/aur) available
 }
 
 phase_finish ()

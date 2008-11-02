@@ -64,7 +64,15 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
-	true
+	HARDWARECLOCK=utc
+	TIMEZONE=`tzselect`
+	HWCLOCK_PARAMS=" --utc"
+	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+	then
+		cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+	fi
+	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
+	#TODO: user must set date/time and store it   
 }
 
 
