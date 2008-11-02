@@ -291,13 +291,13 @@ set_clock()
     S_CLOCK=1
 }
 
-[ $S_SELECT -eq 0 ] && install_pkg && S_INSTALL=1 # user must first select, then install
+#[ $S_SELECT -eq 0 ] && install_pkg && S_INSTALL=1 # user must first select, then install
 # automagic time!
 # any automatic configuration should go here
-notify "Writing base configuration..."        
-auto_fstab
-auto_network
-auto_locale 
+#notify "Writing base configuration..."        
+#auto_fstab
+#auto_network
+#auto_locale 
 
 autoprepare()
 {
@@ -829,14 +829,14 @@ EOF
 }
 
 
-   # exit if network wasn't configured in installer
-    if [ $S_NET -eq 0 ]; then
-        return 1
-    fi
+# exit if network wasn't configured in installer
+#  if [ $S_NET -eq 0 ]; then
+#      return 1
+# fi
 
-    ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
+# ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
 
-    if [ $S_DHCP -ne 1 ]; then
-	auto_network
-fi
+#if [ $S_DHCP -ne 1 ]; then
+#	auto_network
+#fi
     
