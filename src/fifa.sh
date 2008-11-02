@@ -86,7 +86,7 @@ load_module ()
 	path=/home/arch/fifa/user/"$1"
 	[ "$1" = core ] && path=/home/arch/fifa/core
 	
-	for submodule in lib procedure
+	for submodule in lib #procedure don't load procedures automatically!
 	do	
 		if [ ! -d "$path/${submodule}s" ]
 		then
@@ -160,6 +160,12 @@ depend_module ()
 }
 
 
+depend_procedure ()
+{
+	load_procedure "$1" "$2"
+}
+
+
 start_process ()
 {
 	execute phase preparation
@@ -194,7 +200,6 @@ fi
 load_module core
 [ "$module" != core -a "$module" != http ] && load_module "$module"
 
-[ "$module" != core -o "$procedure" != base ] && load_procedure core base
 load_procedure "$module" "$procedure"
 
 # Set pacman vars.  allow procedures to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)

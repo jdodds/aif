@@ -43,8 +43,8 @@ In the code, they are very recognizable and are named like this:
  - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic.
                eg runtime_packages, prepare_disks, package_list etc)
 
-If you specify a procedure name other then base, the base procedure will be sourced first, then the specific
-procedure.  This way you only need to override specific things.
+You can depend on whatever procedure you like (like core/base), to save
+yourself some work (you only need to override a few things)
 
 Notes:
  - The phases are started by the start_process function.  You can also override this function to take flow control in your own hands (eg iterative, menu-based installer)
@@ -71,10 +71,13 @@ Note that if you load a module and a library has the same function names as
 the core module, it will override the functions from core.
 This means you can 'inject' new backend code into core procedures, but you
 can also write your own procedures that use your own, or the core libraries.
-
+If you load a module, you actually load it's libraries, not it's procedures!
+Procedures are only loaded when needed (because you request them because
+of dependencies)
 
 If you need a library from another user contributed module, execute
-'depend_module <modulename>' for each module.
+'depend_module <modulename>' for each module.  This way you load all the
+libs of that module (not the procedures, use depend_procedure for that)
 (very basic dependencies, no version checking etc)
 
 You can specify a core procedure on the command line by specifying

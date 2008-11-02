@@ -10,8 +10,9 @@ other steps warning 'not implemented'
   we should have even more flexibilty to take parts from different procedures.
   eg dieter procedure maybe wants to use something interactive. or base
   procedure wants to do something interactive. interactive functions maybe
-  dont belong in a procedure?
-
+  dont belong in a procedure?  -> depend_procedure good enough? or do we
+  need more fine-grained dependencies (take function foo from procedure bar
+  from module baz). for now let's try like this..
 * base procedure idea: it should just tell you what to do? -> less
   implementation work in base procedure, more in other procedures...
 * fix crossconcerns: procedures are about _how_ (autodetection, asking user,...)

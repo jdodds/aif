@@ -1,5 +1,6 @@
 #!/bin/bash
 var_RUNTIME_PACKAGES="svn"
+depend_procedure core base
 
 phase_preparation ()
 {
