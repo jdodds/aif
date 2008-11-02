@@ -62,7 +62,7 @@ EOF
 
 worker_package_list ()
 {
-	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/package-list /home/arch/fifa/package-list || die_error "Could not export package list!"
+	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/package-list $var_PKG_FILE || die_error "Could not export package list!"
 }
 
 
