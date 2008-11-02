@@ -1,6 +1,5 @@
-* base procedure wordt implementatie van alles wat auto gaat uit setup script,
-other steps warning 'not implemented'
-* in automatic-dieter: health check using svn info /<hostname> 
+* base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
+* port all flow control from /arch/setup into the interactive procedure
 * in elke phase een lege worker die te overriden valt zoda we geen phases
   moeten overriden
 * process and fix libraries
@@ -12,7 +11,10 @@ other steps warning 'not implemented'
   procedure wants to do something interactive. interactive functions maybe
   dont belong in a procedure?  -> depend_procedure good enough? or do we
   need more fine-grained dependencies (take function foo from procedure bar
-  from module baz). for now let's try like this..
+  from module baz). for now let's try like this.. -> we can call explicit
+  functions from libraries from modules.. so then just stick it in a lib ->
+  lots of stuff can go into lib-ui, making the procedure itself just the
+  'execution plan'.. sounds good actually.
 * base procedure idea: it should just tell you what to do? -> less
   implementation work in base procedure, more in other procedures...
 * fix crossconcerns: procedures are about _how_ (autodetection, asking user,...)

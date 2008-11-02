@@ -52,6 +52,12 @@ target_configure_inital_locale()
     for i in $(grep "^LOCALE" ${var_TARGET_DIR}/etc/rc.conf | sed -e 's/.*="//g' -e's/\..*//g'); do
         sed -i -e "s/^#$i/$i/g" ${var_TARGET_DIR}/etc/locale.gen
     done
-    notify "Generating glibc base locales..." 4 40
-    chroot ${var_TARGET_DIR} locale-gen >/dev/null
+    target_locale-gen
+}
+
+
+target_locale-gen ()
+{
+	notify "Generating glibc base locales..."
+	chroot ${var_TARGET_DIR} locale-gen >/dev/null
 }

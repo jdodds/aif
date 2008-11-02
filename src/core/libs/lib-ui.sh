@@ -3,7 +3,7 @@
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables?
-ANSWER="/tmp/.setup"
+ANSWER="/home/arch/fifa/runtime/.dialog-answer"
 
 
 

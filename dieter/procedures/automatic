@@ -15,10 +15,10 @@ phase_preparation ()
 		notify "Ok. skipping network config"
 	fi
 	SVN_USERNAME=dieter
-	ask_password svn
+	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
 	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	SVN_BASE=https://192.168.1.2/svn/repos
-	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument
+	TARGET_HOST=mbp-santa-rosa #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
 
 	_accept_ssl_cert
 	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
