@@ -1,6 +1,7 @@
 #!/bin/bash
-var_RUNTIME_PACKAGES="svn"
 depend_procedure core base
+
+var_RUNTIME_PACKAGES="svn"
 
 phase_preparation ()
 {
@@ -73,6 +74,13 @@ worker_configure_home ()
 	true
 }
 
+
+worker_set_clock ()
+{
+	#timezone="Europe/Brussels"
+	#Not doing anything. hwclock is set already and configs are coming from svn anyway..
+	true
+}
 
 worker_install_bootloader ()
 {

@@ -100,7 +100,7 @@ mainmenu()
             echo ""
             exit 0 ;;
         *)
-            DIALOG --yesno "Abort Installation?" 6 40 && exit 0
+            ask_yesno "Abort Installation?" && exit 0
             ;;
     esac
 }

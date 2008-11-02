@@ -77,7 +77,9 @@ of dependencies)
 
 If you need a library from another user contributed module, execute
 'depend_module <modulename>' for each module.  This way you load all the
-libs of that module (not the procedures, use depend_procedure for that)
+libs of that module (not the procedures, use depend_procedure for that. 
+keep in mind that the position of the depend_procedure statement defines
+where your variables/functions might be overridden...)
 (very basic dependencies, no version checking etc)
 
 You can specify a core procedure on the command line by specifying
