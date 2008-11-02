@@ -14,9 +14,9 @@ usage ()
 	msg="$0 <procedurename>\n
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree\n
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
-Available procedures:\n
-`ls -l /home/arch/fifa/core/procedures`\n
-`ls -l /home/arch/fifa/user/*/procedures`" 
+Available procedures on the filesystem:\n
+`find /home/arch/fifa/core/procedures -type f`\n
+`find /home/arch/fifa/user/*/procedures -type f`" 
 	if [ "$var_UI_TYPE" = dia ]
 	then
 		DIALOG --msgbox "$msg" 14 65
