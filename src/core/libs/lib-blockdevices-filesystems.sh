@@ -272,14 +272,13 @@ _mkfs() {
 # comments out old fields and inserts new ones
 # according to partitioning/formatting stage
 #
-auto_fstab()
+target_configure_fstab()
 {
-    if [ "$S_MKFS" = "1" -o "$S_MKFSAUTO" = "1" ]; then
-        if [ -f /tmp/.fstab ]; then
-            # comment out stray /dev entries
-            sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab
-            # append entries from new configuration
-            sort /tmp/.fstab >>$var_TARGET_DIR/etc/fstab
-        fi
-    fi
+	if [ -f /home/arch/fifa/runtime/.fstab ]
+	then
+		# comment out stray /dev entries
+		sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab
+		# append entries from new configuration
+		sort /home/arch/fifa/runtime/.fstab >>$var_TARGET_DIR/etc/fstab
+	fi
 }

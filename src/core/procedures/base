@@ -105,17 +105,22 @@ worker_install_packages ()
 
 worker_auto_fstab ()
 {
+	if [ "$S_MKFS" = "1" -o "$S_MKFSAUTO" = "1" ]; then
+		target_configure_fstab
+	fi
 }
 
 
 worker_auto_network ()
 {
+	[ "$S_DHCP" = 1 ] && target_configure_network dhcp "$PROXY_HTTP" "$PROXY_FTP"
+	[ "$S_DHCP" != 1 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP"
 }
 
 
 worker_auto_locale ()
 {
-
+	target_configure_inital_locale
 }
 
 
@@ -128,11 +133,15 @@ worker_configure_system ()
 
 worker_mkinitcpio ()
 {
+	#TODO:check that this is the right command when projects.archlinux.org is back up
+	run_mkinitcpio
 }
 
 
 worker_locales ()
 {
+	#TODO:what to do here? didn't we already do them?
+	true
 }
 
 
