@@ -16,7 +16,7 @@ If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's a
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
 Available procedures on the filesystem:
 `find /home/arch/fifa/core/procedures -type f`\n
-`find /home/arch/fifa/user/*/procedures -type f`" 
+`find /home/arch/fifa/user/*/procedures -type f 2>/dev/null`" 
 	echo -e "$msg"
 
 }
