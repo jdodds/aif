@@ -67,12 +67,12 @@ mainmenu()
 	ask_option $default "MAIN MENU" \
 	"0" "Select Source" \
 	"1" "Set Clock" \
-	"2" "Prepare Hard Drive" \
-	"3" "Select Packages" \
-	"4" "Install Packages" \
-	"5" "Configure System" \
-	"6" "Install Bootloader" \
-	"7" "Exit Install"
+        "2" "Prepare Hard Drive" \
+        "3" "Select Packages" \
+        "4" "Install Packages" \
+        "5" "Configure System" \
+        "6" "Install Bootloader" \
+        "7" "Exit Install"
 	NEXTITEM="$(cat $ANSWER)"
 	case $(cat $ANSWER) in
         "0")
