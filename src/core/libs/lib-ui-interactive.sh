@@ -391,11 +391,7 @@ interactive_select_packages() {
 
     # set up our install location if necessary and sync up
     # so we can get package lists
-    target_prepare_pacman
-    if [ $? -ne 0 ]; then
-        notify "Pacman preparation failed! Check $LOG for errors."
-        return 1
-    fi
+    target_prepare_pacman || ( notify "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
     # show group listing for group selection
     local _catlist="base ^ ON"
@@ -644,17 +640,13 @@ interactive_select_source()
         var_SYNC_URL=
         var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 
-    _dia_DIALOG --menu "Please select an installation source" 10 35 3 \
+	ask_option no "Please select an installation source" \
     "1" "CD-ROM or OTHER SOURCE" \
-    "2" "FTP/HTTP" 2>$ANSWER
+    "2" "FTP/HTTP" 
 
-    case $(cat $ANSWER) in
-        "1")
-            var_PKG_SOURCE_TYPE="cd"
-            ;;
-        "2")  
-            var_PKG_SOURCE_TYPE="ftp"
-            ;;
+    case $ANSWER_OPTION in
+        "1") var_PKG_SOURCE_TYPE="cd" ;;
+        "2") var_PKG_SOURCE_TYPE="ftp" ;;
     esac
 
     if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
