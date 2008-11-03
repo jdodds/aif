@@ -80,7 +80,7 @@ mainmenu()
     NEXTITEM="$(cat $ANSWER)"
     case $(cat $ANSWER) in
         "0")
-            execute worker select_source ; ret=$?
+            execute worker select_source; ret=$?
 		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
 			while true; do
 				DIALOG --menu "FTP Installation" 10 35 3 \
@@ -205,23 +205,11 @@ set_clock()
 	interactive_set_clock
 }
 
-#[ $S_SELECT -eq 0 ] && install_pkg && S_INSTALL=1 # user must first select, then install
-# automagic time!
-# any automatic configuration should go here
-#notify "Writing base configuration..."        
-#auto_fstab
-#auto_network
-#auto_locale 
 
 worker_select_source ()
 {
-	#TODO: integrate setup-like source selecter here
-        var_PKG_SOURCE_TYPE=
-        var_FILE_URL="file:///src/core/pkg"
-        var_SYNC_URL=
-        var_MIRRORLIST="/etc/pacman.d/mirrorlist"
-        # if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
-	interactive_select_source && S_SRC=1 && return 0
+	#TODO: how to handle user going here again? discard previous settings, warn him that he already done it?
+	interactive_select_source && return 0
 	return 1
 }
 
@@ -249,7 +237,7 @@ worker_package_list() {
 worker_install_packages ()
 {
 	if [ $S_SELECT -eq 0 ]; then
-		DIALOG --msgbox "You must select packages first." 0 0
+		notify "You must select packages first."
 		return 1
 	fi
 	installpkg && return 0
@@ -280,14 +268,12 @@ worker_install_bootloader ()
 	[ "$1" != grub ] && S_BOOT="$1"
 }
 
-# exit if network wasn't configured in installer
-#  if [ $S_NET -eq 0 ]; then
-#      return 1
-# fi
+worker_auto_network ()
+{
+	[ $S_NET -eq 0 ] && return 1
 
-# ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
+	ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
 
-#if [ $S_DHCP -ne 1 ]; then
-#	auto_network
-#fi
-    
+        [ "$S_DHCP" = 1 ] && target_configure_network dhcp "$PROXY_HTTP" "$PROXY_FTP"
+        [ "$S_DHCP" != 1 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP"
+}

@@ -641,6 +641,11 @@ EOF
 # returns: nothing
 interactive_select_source()   
 {
+	var_PKG_SOURCE_TYPE=
+        var_FILE_URL="file:///src/core/pkg"
+        var_SYNC_URL=
+        var_MIRRORLIST="/etc/pacman.d/mirrorlist"
+
     DIALOG --menu "Please select an installation source" 10 35 3 \
     "1" "CD-ROM or OTHER SOURCE" \
     "2" "FTP/HTTP" 2>$ANSWER
