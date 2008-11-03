@@ -223,7 +223,7 @@ _cli_ask_option ()
 # will print the disks as follows, getting size info from hdparm:
 #   /dev/sda: 640133 MBytes (640 GB)
 #   /dev/sdb: 640135 MBytes (640 GB)
-_dia_getavaildisks()
+_getavaildisks()
 {
     # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
     for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
