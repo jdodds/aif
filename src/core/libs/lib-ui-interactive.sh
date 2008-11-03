@@ -7,7 +7,7 @@ interactive_partition() {
     # Select disk to partition
     DISCS=$(finddisks _)
     DISCS="$DISCS OTHER - DONE +"
-    _dia_DIALOG --msgbox "Available Disks:\n\n$(_getavaildisks)\n" 0 0
+    notify "Available Disks:\n\n$(_getavaildisks)\n" 0 0
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
@@ -121,7 +121,7 @@ interactive_autoprepare()
 {
     DISCS=$(finddisks)
     if [ $(echo $DISCS | wc -w) -gt 1 ]; then
-        _dia_DIALOG --msgbox "Available Disks:\n\n$(_getavaildisks)\n" 0 0
+        notify "Available Disks:\n\n$(_getavaildisks)\n" 0 0
         _dia_DIALOG --menu "Select the hard drive to use" 14 55 7 $(finddisks _) 2>$ANSWER || return 1
         DISC=$(cat $ANSWER)
     else
@@ -143,10 +143,10 @@ interactive_autoprepare()
             _dia_DIALOG --inputbox "Enter the size (MB) of your /boot partition.  Minimum value is 16.\n\nDisk space left: $DISC_SIZE MB" 8 65 "32" 2>$ANSWER || return 1
             BOOT_PART_SIZE="$(cat $ANSWER)"
             if [ "$BOOT_PART_SIZE" = "" ]; then
-                _dia_DIALOG --msgbox "ERROR: You have entered an invalid size, please enter again." 0 0
+                notify "ERROR: You have entered an invalid size, please enter again." 0 0
             else
                 if [ "$BOOT_PART_SIZE" -ge "$DISC_SIZE" -o "$BOOT_PART_SIZE" -lt "16" -o "$SBOOT_PART_SIZE" = "$DISC_SIZE" ]; then
-                    _dia_DIALOG --msgbox "ERROR: You have entered a too large size, please enter again." 0 0
+                    notify "ERROR: You have entered a too large size, please enter again." 0 0
                 else
                     BOOT_PART_SET=1
                 fi
@@ -157,10 +157,10 @@ interactive_autoprepare()
             _dia_DIALOG --inputbox "Enter the size (MB) of your swap partition.  Minimum value is > 0.\n\nDisk space left: $DISC_SIZE MB" 8 65 "256" 2>$ANSWER || return 1
             SWAP_PART_SIZE=$(cat $ANSWER)
             if [ "$SWAP_PART_SIZE" = "" -o  "$SWAP_PART_SIZE" -le "0" ]; then
-                _dia_DIALOG --msgbox "ERROR: You have entered an invalid size, please enter again." 0 0
+                notify "ERROR: You have entered an invalid size, please enter again." 0 0
             else
                 if [ "$SWAP_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    _dia_DIALOG --msgbox "ERROR: You have entered a too large size, please enter again." 0 0
+                    notify "ERROR: You have entered a too large size, please enter again." 0 0
                 else
                     SWAP_PART_SET=1
                 fi
@@ -171,19 +171,19 @@ interactive_autoprepare()
             _dia_DIALOG --inputbox "Enter the size (MB) of your / partition.  The /home partition will use the remaining space.\n\nDisk space left:  $DISC_SIZE MB" 8 65 "7500" 2>$ANSWER || return 1
             ROOT_PART_SIZE=$(cat $ANSWER)
             if [ "$ROOT_PART_SIZE" = "" -o "$ROOT_PART_SIZE" -le "0" ]; then
-                _dia_DIALOG --msgbox "ERROR: You have entered an invalid size, please enter again." 0 0
+                notify "ERROR: You have entered an invalid size, please enter again." 0 0
             else
                 if [ "$ROOT_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    _dia_DIALOG --msgbox "ERROR: You have entered a too large size, please enter again." 0 0
+                    notify "ERROR: You have entered a too large size, please enter again." 0 0
                 else
-                    _dia_DIALOG --yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" 0 0 && ROOT_PART_SET=1
+                    ask_yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" 0 0 && ROOT_PART_SET=1
                 fi
             fi
         done
         while [ "$CHOSEN_FS" = "" ]; do
             _dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
             FSTYPE=$(cat $ANSWER)
-            _dia_DIALOG --yesno "$FSTYPE will be used for / and /home. Is this OK?" 0 0 && CHOSEN_FS=1
+            ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" 0 0 && CHOSEN_FS=1
         done
         SET_DEFAULTFS=1
     done
@@ -199,25 +199,25 @@ interactive_autoprepare()
     PART_ROOT="${DEVICE}3"
 
     if [ "$S_MKFS" = "1" ]; then
-        _dia_DIALOG --msgbox "You have already prepared your filesystems manually" 0 0
+        notify "You have already prepared your filesystems manually" 0 0
         return 0
     fi
 
     # validate DEVICE
     if [ ! -b "$DEVICE" ]; then
-      _dia_DIALOG --msgbox "Device '$DEVICE' is not valid" 0 0
+      notify "Device '$DEVICE' is not valid" 0 0
       return 1
     fi
 
     # validate DEST
     if [ ! -d "$TARGET_DIR" ]; then
-        _dia_DIALOG --msgbox "Destination directory '$TARGET_DIR' is not valid" 0 0
+        notify "Destination directory '$TARGET_DIR' is not valid" 0 0
         return 1
     fi
 
     # / required
     if [ $(echo $FSSPECS | grep '/:' | wc -l) -ne 1 ]; then
-        _dia_DIALOG --msgbox "Need exactly one root partition" 0 0
+        notify "Need exactly one root partition" 0 0
         return 1
     fi
 
@@ -251,12 +251,12 @@ interactive_autoprepare()
 
     # invoke sfdisk
     printk off
-    _dia_DIALOG --infobox "Partitioning $DEVICE" 0 0
+    infofy "Partitioning $DEVICE" 0 0
     sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
     if [ $? -gt 0 ]; then
-        _dia_DIALOG --msgbox "Error partitioning $DEVICE (see $LOG for details)" 0 0
+        notify "Error partitioning $DEVICE (see $LOG for details)" 0 0
         printk on
         return 1
     fi
@@ -284,7 +284,7 @@ EOF
         part=$(($part + 1))
     done
 
-    _dia_DIALOG --msgbox "Auto-prepare was successful" 0 0
+    notify "Auto-prepare was successful" 0 0
     return 0
 }
 
@@ -302,14 +302,14 @@ interactive_mountpoints() {
         [ "$(which mkfs.vfat 2>/dev/null)" ]  && FSOPTS="$FSOPTS vfat VFAT"
 
         # Select mountpoints
-        _dia_DIALOG --msgbox "Available Disks:\n\n$(_getavaildisks)\n" 0 0
+        notify "Available Disks:\n\n$(_getavaildisks)\n" 0 0
         PARTS=$(findpartitions _)
         _dia_DIALOG --menu "Select the partition to use as swap" 21 50 13 NONE - $PARTS 2>$ANSWER || return 1
         PART=$(cat $ANSWER)
         PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
         if [ "$PART" != "NONE" ]; then
             DOMKFS="no"
-            _dia_DIALOG --yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
             echo "$PART:swap:swap:$DOMKFS" >>/tmp/.parts
         fi
 
@@ -321,7 +321,7 @@ interactive_mountpoints() {
         _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
         FSTYPE=$(cat $ANSWER)
         DOMKFS="no"
-        _dia_DIALOG --yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+        ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
         echo "$PART:$FSTYPE:/:$DOMKFS" >>/tmp/.parts
 
         #
@@ -339,17 +339,17 @@ interactive_mountpoints() {
                 _dia_DIALOG --inputbox "Enter the mountpoint for $PART" 8 65 "/boot" 2>$ANSWER || return 1
                 MP=$(cat $ANSWER)
                 if grep ":$MP:" /tmp/.parts; then
-                    _dia_DIALOG --msgbox "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint." 8 65
+                    notify "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint." 8 65
                     MP=""
                 fi
             done
             DOMKFS="no"
-            _dia_DIALOG --yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
             echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/tmp/.parts
             _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
             PART=$(cat $ANSWER)
         done
-        _dia_DIALOG --yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)" 18 0 && PARTFINISH="DONE"
+        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)" 18 0 && PARTFINISH="DONE"
     done
 
     _umountall
@@ -362,16 +362,16 @@ interactive_mountpoints() {
         umount ${TARGET_DIR}${MP}
         if [ "$DOMKFS" = "yes" ]; then
             if [ "$FSTYPE" = "swap" ]; then
-                _dia_DIALOG --infobox "Creating and activating swapspace on $PART" 0 0
+                infofy "Creating and activating swapspace on $PART" 0 0
             else
-                _dia_DIALOG --infobox "Creating $FSTYPE on $PART, mounting to ${TARGET_DIR}${MP}" 0 0
+                infofy "Creating $FSTYPE on $PART, mounting to ${TARGET_DIR}${MP}" 0 0
             fi
             _mkfs yes $PART $FSTYPE $TARGET_DIR $MP || return 1
         else
             if [ "$FSTYPE" = "swap" ]; then
-                _dia_DIALOG --infobox "Activating swapspace on $PART" 0 0
+                infofy "Activating swapspace on $PART" 0 0
             else
-                _dia_DIALOG --infobox "Mounting $PART to ${TARGET_DIR}${MP}" 0 0
+                infofy "Mounting $PART to ${TARGET_DIR}${MP}" 0 0
             fi
             _mkfs no $PART $FSTYPE $TARGET_DIR $MP || return 1
         fi
@@ -389,13 +389,13 @@ interactive_mountpoints() {
 # returns: 1 on error
 interactive_select_packages() {
 
-    _dia_DIALOG --msgbox "Package selection is split into two stages.  First you will select package categories that contain packages you may be interested in.  Then you will be presented with a full list of packages for each category, allowing you to fine-tune.\n\n" 15 70
+    notify "Package selection is split into two stages.  First you will select package categories that contain packages you may be interested in.  Then you will be presented with a full list of packages for each category, allowing you to fine-tune.\n\n" 15 70
 
     # set up our install location if necessary and sync up
     # so we can get package lists
-    prepare_pacman
+    target_prepare_pacman
     if [ $? -ne 0 ]; then
-        _dia_DIALOG --msgbox "Pacman preparation failed! Check $LOG for errors." 6 60
+        notify "Pacman preparation failed! Check $LOG for errors." 6 60
         return 1
     fi
 
@@ -445,7 +445,7 @@ interactive_runtime_network() {
     ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
     if [ "$ifaces" = "" ]; then
-        _dia_DIALOG --msgbox "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." 18 70
+        notify "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." 18 70
         return 1
     fi
 
@@ -455,16 +455,16 @@ interactive_runtime_network() {
         *) return 1 ;;
     esac
 
-    _dia_DIALOG --yesno "Do you want to use DHCP?" 0 0
+    ask_yesno "Do you want to use DHCP?" 0 0
     if [ $? -eq 0 ]; then
-        _dia_DIALOG --infobox "Please wait.  Polling for DHCP server on $INTERFACE..." 0 0
+        infofy "Please wait.  Polling for DHCP server on $INTERFACE..." 0 0
         dhcpcd $INTERFACE >$LOG 2>&1
         if [ $? -ne 0 ]; then
-            _dia_DIALOG --msgbox "Failed to run dhcpcd.  See $LOG for details." 0 0
+            notify "Failed to run dhcpcd.  See $LOG for details." 0 0
             return 1
         fi
         if [ ! $(ifconfig $INTERFACE | grep 'inet addr:') ]; then
-            _dia_DIALOG --msgbox "DHCP request failed." 0 0 || return 1
+            notify "DHCP request failed." 0 0 || return 1
         fi
         S_DHCP=1
     else
@@ -484,16 +484,16 @@ interactive_runtime_network() {
             PROXY_HTTP=$(cat $ANSWER)
             _dia_DIALOG --inputbox "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 16 65 "" 2>$ANSWER || return 1
             PROXY_FTP=$(cat $ANSWER)
-            _dia_DIALOG --yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP" 0 0
+            ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP" 0 0
             case $? in
                 1) ;;
                 0) NETPARAMETERS="1" ;;
             esac
         done
         echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
-        ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1 || _dia_DIALOG --msgbox "Failed to setup $INTERFACE interface." 0 0 || return 1
+        ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1 || notify "Failed to setup $INTERFACE interface." 0 0 || return 1
         if [ "$GW" != "" ]; then
-            route add default gw $GW >$LOG 2>&1 || _dia_DIALOG --msgbox "Failed to setup your gateway." 0 0 || return 1
+            route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." 0 0 || return 1
         fi
         if [ "$PROXY_HTTP" = "" ]; then
             unset http_proxy
@@ -516,7 +516,7 @@ interactive_install_grub() {
     get_grub_map
     local grubmenu="$TARGET_DIR/boot/grub/menu.lst"
     if [ ! -f $grubmenu ]; then
-        _dia_DIALOG --msgbox "Error: Couldn't find $grubmenu.  Is GRUB installed?" 0 0
+        notify "Error: Couldn't find $grubmenu.  Is GRUB installed?" 0 0
         return 1
     fi
     # try to auto-configure GRUB...
@@ -539,7 +539,7 @@ interactive_install_grub() {
             fi
             # keep the file from being completely bogus
             if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
-                _dia_DIALOG --msgbox "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly." 0 0
+                notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly." 0 0
                 grubdev="(hd0,0)"
             fi
             # remove default entries by truncating file at our little tag (#-*)
@@ -567,19 +567,19 @@ EOF
         fi
     fi
 
-    _dia_DIALOG --msgbox "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB." 0 0
+    notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB." 0 0
     [ "$EDITOR" ] || geteditor
     $EDITOR $grubmenu
 
     DEVS=$(finddisks _)
     DEVS="$DEVS $(findpartitions _)"
     if [ "$DEVS" = "" ]; then
-        _dia_DIALOG --msgbox "No hard drives were found" 0 0
+        notify "No hard drives were found" 0 0
         return 1
     fi
     _dia_DIALOG --menu "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." 14 55 7 $DEVS 2>$ANSWER || return 1
     ROOTDEV=$(cat $ANSWER)
-    _dia_DIALOG --infobox "Installing the GRUB bootloader..." 0 0
+    infofy "Installing the GRUB bootloader..." 0 0
     cp -a $TARGET_DIR/usr/lib/grub/i386-pc/* $TARGET_DIR/boot/grub/
     sync
     # freeze xfs filesystems to enable grub installation on xfs filesystems
@@ -605,11 +605,11 @@ EOF
     bootpart=$(mapdev $bootpart)
     bootdev=$(mapdev $ROOTDEV)
     if [ "$bootpart" = "" ]; then
-        _dia_DIALOG --msgbox "Error: Missing/Invalid root device: $bootpart" 0 0
+        notify "Error: Missing/Invalid root device: $bootpart" 0 0
         return 1
     fi
     if [ "$bootpart" = "DEVICE NOT FOUND" -o "$bootdev" = "DEVICE NOT FOUND" ]; then
-        _dia_DIALOG --msgbox "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader." 0 0
+        notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader." 0 0
         return 1
     fi
     $TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
@@ -625,7 +625,7 @@ EOF
     fi
 
     if grep "Error [0-9]*: " /tmp/grub.log >/dev/null; then
-        _dia_DIALOG --msgbox "Error installing GRUB. (see $LOG for output)" 0 0
+        notify "Error installing GRUB. (see $LOG for output)" 0 0
         return 1
     fi
     notify "GRUB was successfully installed."

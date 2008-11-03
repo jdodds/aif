@@ -50,6 +50,17 @@ notify ()
 }
 
 
+infofy ()
+{
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		_dia_DIALOG --infobox "$@" 20 50
+	else
+		echo -e "$@"
+	fi
+}
+
+
 # logging of stuff
 log ()
 {
@@ -173,7 +184,7 @@ _dia_ask_option ()
  
  	DIA_MENU_TITLE=$2
  	shift 2
-	_dia_DIALOG $DEFAULT --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
+	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
 }
@@ -181,6 +192,7 @@ _dia_ask_option ()
 
 _cli_ask_option ()
 {
+	#TODO: strip out color codes
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT=$1
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"

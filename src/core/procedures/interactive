@@ -75,22 +75,16 @@ mainmenu()
 	"7" "Exit Install"
 	NEXTITEM="$ANSWER_OPTION"
 	case $ANSWER_OPTION in
-        "0")
-            execute worker select_source; ret=$?
+	"0")
+		execute worker select_source; ret=$?
 		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
 			while true; do
-				_dia_DIALOG --menu "FTP Installation" 10 35 3 \
+				ask_option no "FTP Installation" \
 				"0" "Setup Network (Make sure the network is ok before continuing" \
 				"1" "Choose Mirror" \
-				"2" "Return to Main Menu" 2>$ANSWER
-				case "$(cat $ANSWER)" in
-					"0")
-						execute worker runtime_network && S_NET=1;;
-					"1")
-						execute worker select_mirror ;;
-					*)
-						break ;;
-				esac
+				"2" "Return to Main Menu"
+				[ "$ANSWER_OPTION" = 0 ] && execute worker runtime_network && S_NET=1
+				[ "$ANSWER_OPTION" = 1 ] && execute worker select_mirror ;;
 			done
 		fi
 		[ $ret -eq 0 ] && S_SRC=1 && execute worker runtime_packages ;;
@@ -105,10 +99,10 @@ mainmenu()
         "5")
             execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } ;;
         "6")
-		_dia_DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" 10 65 2 \
+		ask_option no "Which bootloader would you like to use?  Grub is the Arch default." \
 			"GRUB" "Use the GRUB bootloader (default)" \
-			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
-			execute worker install_bootloader "`cat $ANSWER`";;
+			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
+			execute worker install_bootloader "$ANSWER_OPTION";;
         "7")
             notify "If the install finished successfully, you can now type 'reboot' to restart the system."
             stop_installer ;;

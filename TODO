@@ -1,11 +1,7 @@
-* interactive procedure: cleanup bottom
-* get interactive procedure working (decoupled flow control/other stuff. not
-  yet ui vs backend), make it alpha version and post to ML
+* make interactive procedure working well.
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
-* port all flow control from /arch/setup into the interactive procedure
 * in elke phase een lege worker die te overriden valt zoda we geen phases
   moeten overriden
-* process and fix libraries
 * fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
 * instead of using the 'base' procedure and letting other procedures override,
