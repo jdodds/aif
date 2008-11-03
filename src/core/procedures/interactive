@@ -84,7 +84,7 @@ mainmenu()
 				"1" "Choose Mirror" \
 				"2" "Return to Main Menu"
 				[ "$ANSWER_OPTION" = 0 ] && execute worker runtime_network && S_NET=1
-				[ "$ANSWER_OPTION" = 1 ] && execute worker select_mirror ;;
+				[ "$ANSWER_OPTION" = 1 ] && execute worker select_mirror 
 			done
 		fi
 		[ $ret -eq 0 ] && S_SRC=1 && execute worker runtime_packages ;;
