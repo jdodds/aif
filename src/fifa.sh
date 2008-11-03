@@ -21,7 +21,7 @@ Available procedures on the filesystem:\n
 	then
 		DIALOG --msgbox "$msg" 14 65
 	else
-		echo "$msg"
+		echo -e "$msg"
 	fi
 }
 
@@ -36,7 +36,7 @@ die_error ()
 	then
 		DIALOG --msgbox "Error: $@" 0 0
 	else
-		echo "ERROR: $@"
+		echo -e "ERROR: $@"
 	fi
 	exit 2
 }
@@ -57,7 +57,7 @@ show_warning ()
 		dialog --title "$1" --exit-label "Continue" --$3box "$2" 18 70 || die_error "dialog could not show --$3box $2. often this means a file does not exist"
 	else
 		echo "WARNING: $1"
-		[ "$3" = msg ] && echo $2
+		[ "$3" = msg ] && echo -e "$2"
 		[ "$3" = text ] && cat $2 || die_error "Could not cat $2"
 	fi
 }
@@ -70,7 +70,7 @@ notify ()
 	then
 		DIALOG --msgbox "$@" 20 50
 	else
-		echo "$@"
+		echo -e "$@"
 	fi
 }
 
