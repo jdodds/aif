@@ -64,7 +64,7 @@ mainmenu()
 {
 	default=no
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
-	ask_option $default "MAIN MENU" \
+	answer=`ask_option $default "MAIN MENU" \
 	"0" "Select Source" \
 	"1" "Set Clock" \
 	"2" "Prepare Hard Drive" \
@@ -72,9 +72,9 @@ mainmenu()
 	"4" "Install Packages" \
 	"5" "Configure System" \
 	"6" "Install Bootloader" \
-	"7" "Exit Install"
-	NEXTITEM="$(cat $ANSWER)"
-	case $(cat $ANSWER) in
+	"7" "Exit Install"`
+	NEXTITEM="$answer"
+	case $answer in
         "0")
             execute worker select_source; ret=$?
 		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
