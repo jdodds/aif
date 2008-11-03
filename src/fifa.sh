@@ -30,6 +30,12 @@ notify ()
 }
 
 
+log ()
+{
+	 echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
+}
+
+
 ###### Core functions ######
 
 
@@ -37,7 +43,7 @@ notify ()
 load_module ()
 {
 	[ -z "$1" ] && die_error "load_module needs a module argument"
-	notify "Loading module $1 ..."
+	log "Loading module $1 ..."
 	path=/home/arch/fifa/user/"$1"
 	[ "$1" = core ] && path=/home/arch/fifa/core
 	
@@ -67,11 +73,11 @@ load_procedure()
 	[ -z "$2" ] && die_error "load_procedure needs a procedure as \$2"
 	if [ "$1" = 'http:' ]
 	then
-		notify "Loading procedure $2 ..."
+		log "Loading procedure $2 ..."
 		procedure=/home/arch/fifa/runtime/procedure-downloaded-`basename $2`
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
-		notify "Loading procedure $1/procedures/$2 ..."
+		log "Loading procedure $1/procedures/$2 ..."
 		procedure=/home/arch/fifa/user/"$1"/procedures/"$2"
 		[ "$1" = core ] && procedure=/home/arch/fifa/core/procedures/"$2"
 	fi
@@ -85,7 +91,7 @@ load_lib ()
 {
 	[ -z "$1" ] && die_error "load_library needs a module als \$1 and library as \$2"
 	[ -z "$2" ] && die_error "load_library needs a library as \$2"
-	notify "Loading library $1/libs/$2 ..."
+	log "Loading library $1/libs/$2 ..."
 	lib=/home/arch/fifa/user/"$1"/libs/"$2"
 	[ "$1" = core ] && lib=/home/arch/fifa/core/libs/"$2"
 	source $lib || die_error "Something went wrong while sourcing library $lib"
@@ -96,8 +102,8 @@ execute ()
 {
 	[ -z "$1" -o -z "$2" ] && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
 	[ "$1" != phase -a "$1" != worker ] && die_error "execute's first argument must be a valid type (phase/worker)"
-	[ "$1" = phase ]  && notify "******* Executing phase $2"
-	[ "$1" = worker ] && notify "*** Executing worker $2"
+	[ "$1" = phase ]  && log "******* Executing phase $2"
+	[ "$1" = worker ] && log "*** Executing worker $2"
 	if type -t $1_$2 | grep -q function
 	then
 		PWD_BACKUP=`pwd`

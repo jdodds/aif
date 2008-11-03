@@ -50,6 +50,18 @@ notify ()
 }
 
 
+# logging of stuff
+log ()
+{
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@" >$LOG
+	else
+		echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
+	fi
+}
+
+
 # ask the user a password. return is stored in $PASSWORD or $<TYPE>_PASSWORD
 # $1 type (optional.  eg 'svn', 'ssh').
 ask_password ()
