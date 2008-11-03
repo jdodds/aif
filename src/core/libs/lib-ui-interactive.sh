@@ -1,4 +1,5 @@
 #!/bin/sh
+#TODO: get backend code out of here!!
 
 interactive_partition() {
     _umountall
@@ -19,9 +20,10 @@ interactive_partition() {
         # Leave our loop if the user is done partitioning
         [ "$DISC" = "DONE" ] && break
         # Partition disc
-        DIALOG --msgbox "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.  NOTE: cfdisk may ttell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2." 18 70 
+        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.  NOTE: cfdisk may ttell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
         cfdisk $DISC
     done
+    return 0
 }
 
 
@@ -286,7 +288,8 @@ EOF
     return 0
 }
 
-mountpoints() {
+
+interactive_mountpoints() {
     while [ "$PARTFINISH" != "DONE" ]; do
         : >/tmp/.fstab
         : >/tmp/.parts
@@ -376,6 +379,7 @@ mountpoints() {
     done
 
 	notify "Partitions were successfully mounted."
+	return 0
 }
 
 # select_packages()
@@ -430,12 +434,11 @@ interactive_select_packages() {
 }
 
 
-# donetwork()
 # Hand-hold through setting up networking
 #
 # args: none
 # returns: 1 on failure
-interactive_donetwork() {
+interactive_runtime_network() {
     INTERFACE=""
     S_DHCP=""
     local ifaces
@@ -509,7 +512,7 @@ interactive_donetwork() {
 }
 
 
-interactive_dogrub() {
+interactive_install_grub() {
     get_grub_map
     local grubmenu="$TARGET_DIR/boot/grub/menu.lst"
     if [ ! -f $grubmenu ]; then
@@ -630,3 +633,66 @@ EOF
 }
 
 
+# select_source(). taken from setup.  TODO: decouple ui
+# displays installation source selection menu
+# and sets up relevant config files
+#
+# params: none
+# returns: nothing
+interactive_select_source()   
+{
+    DIALOG --menu "Please select an installation source" 10 35 3 \
+    "1" "CD-ROM or OTHER SOURCE" \
+    "2" "FTP/HTTP" 2>$ANSWER
+
+    case $(cat $ANSWER) in
+        "1")
+            var_PKG_SOURCE_TYPE="cd"
+            ;;
+        "2")  
+            var_PKG_SOURCE_TYPE="ftp"
+            ;;
+    esac
+
+    if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
+        TITLE="Arch Linux CDROM or OTHER SOURCE Installation"
+        notify "Packages included on this disk have been mounted to /src/core/pkg. If you wish to use your own packages from another source, manually mount them there."
+        if [ ! -d /src/core/pkg ]; then
+            notify "Package directory /src/core/pkg is missing!"
+            return 1
+        fi
+        echo "Using CDROM for package installation" >$LOG
+    else
+        TITLE="Arch Linux FTP/HTTP Installation"
+        notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
+   fi
+   return 0
+}
+
+
+# select_mirror(). taken from setup.
+# Prompt user for preferred mirror and set $var_SYNC_URL
+#
+# args: none
+# returns: nothing
+interactive_select_mirror() { 
+        notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
+        # FIXME: this regex doesn't honor commenting
+        MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${MIRRORLIST}" | sed 's|$| _|g')
+        _dia_DIALOG --menu "Select an FTP/HTTP mirror" 14 55 7 \
+                  $MIRRORS \
+                  "Custom" "_" 2>$ANSWER || return 1
+    local _server=$(cat $ANSWER)
+    if [ "${_server}" = "Custom" ]; then
+        _dia_DIALOG --inputbox "Enter the full URL to core repo." 8 65 \
+                "ftp://ftp.archlinux.org/core/os/i686" 2>$ANSWER || return 1
+        var_SYNC_URL=$(cat $ANSWER)
+    else
+        # Form the full URL for our mirror by grepping for the server name in
+        # our mirrorlist and pulling the full URL out. Substitute 'core' in  
+        # for the repository name, and ensure that if it was listed twice we 
+        # only return one line for the mirror.
+        var_SYNC_URL=$(egrep -o "${_server}.*" "${MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
+    fi
+    echo "Using mirror: $var_SYNC_URL" >$LOG
+}

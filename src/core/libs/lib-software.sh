@@ -21,7 +21,7 @@ run_mkinitcpio()
 # installpkg(). taken from setup. modified bigtime
 # performs package installation to the target system
 installpkg() {
-	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient." 0 0
+	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_specialfs on
 	run_background pacman-installpkg "$PACMAN_TARGET -S $PACKAGES" /tmp/pacman.log
 	follow_progress " Installing... Please Wait " /tmp/pacman.log
@@ -43,7 +43,10 @@ installpkg() {
 	target_specialfs off
 
 	sync
+
+	return 0
 }
+
 
 # auto_locale(). taken from setup
 # enable glibc locales from rc.conf and build initial locale DB

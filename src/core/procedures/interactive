@@ -1,4 +1,9 @@
 #!/bin/sh
+depend_procedure core base # esp for auto_{network,locale,fstab} workers
+
+
+# This is a port of the original /arch/setup script.  It doesn't use fifa phases but uses it's own menu-based flow (phase) control
+
 
 TARGET_DIR="/mnt"
 EDITOR=
@@ -44,6 +49,9 @@ start_process ()
 	You can view all output from commands by viewing your VC7 console (ALT-F7). \
 	ALT-F1 will bring you back here."
 
+	# menu item tracker- autoselect the next item
+	NEXTITEM=""
+	
 	while true
 	do
     		mainmenu
@@ -51,14 +59,6 @@ start_process ()
 
 }
 
-
-phase_preparation ()
-{
-	#TODO: when does grub device map happen in official installer?
-	execute worker runtime_packages
-	notify "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
-	get_grub_map
-}
 
 mainmenu()  
 {
@@ -80,19 +80,39 @@ mainmenu()
     NEXTITEM="$(cat $ANSWER)"
     case $(cat $ANSWER) in
         "0")
-            select_source ;;
+            execute worker select_source ; ret=$?
+		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
+			while true; do
+				DIALOG --menu "FTP Installation" 10 35 3 \
+				"0" "Setup Network (Make sure the network is ok before continuing" \
+				"1" "Choose Mirror" \
+				"2" "Return to Main Menu" 2>$ANSWER
+				case "$(cat $ANSWER)" in
+					"0")
+						execute worker runtime_network && S_NET=1;;
+					"1")
+						execute worker select_mirror ;;
+					*)
+						break ;;
+				esac
+			done
+		fi
+		[ $ret -eq 0 ] && S_SRC=1 && execute worker runtime_packages ;;
         "1")
-            set_clock ;;
+            execute worker set_clock && S_CLOCK=1 ;;
         "2")
-            prepare_harddrive ;;
+            execute worker prepare_disks ;; # stage set vars set in the worker
         "3")
-            select_packages ;;
+            execute worker package_list && S_SELECT=1 ;;
         "4")
-            installpkg ;;
+            execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } ;;
         "5")
-            configure_system ;;
+            execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } ;;
         "6")
-            install_bootloader ;;
+		_dia_DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" 10 65 2 \
+			"GRUB" "Use the GRUB bootloader (default)" \
+			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
+			execute worker install_bootloader "`cat $ANSWER`";;
         "7")
             echo ""
             echo "If the install finished successfully, you can now type 'reboot'"
@@ -130,11 +150,11 @@ configure_system()
 	
 	run_mkinitcpio
 	target_locale-gen
-	S_CONFIG=1
+
 }
 
 
-prepare_harddrive()
+worker_prepare_disks()
 {
     S_MKFSAUTO=0
     S_MKFS=0
@@ -182,7 +202,7 @@ prepare_harddrive()
 # params: none
 set_clock()   
 {
-	interactive_set_clock && S_CLOCK=1
+	interactive_set_clock
 }
 
 #[ $S_SELECT -eq 0 ] && install_pkg && S_INSTALL=1 # user must first select, then install
@@ -193,11 +213,23 @@ set_clock()
 #auto_network
 #auto_locale 
 
+worker_select_source ()
+{
+	#TODO: integrate setup-like source selecter here
+        var_PKG_SOURCE_TYPE=
+        var_FILE_URL="file:///src/core/pkg"
+        var_SYNC_URL=
+        var_MIRRORLIST="/etc/pacman.d/mirrorlist"
+        # if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
+	interactive_select_source && S_SRC=1 && return 0
+	return 1
+}
+
 
 
 # select_packages()
 # prompts the user to select packages to install
-select_packages() {
+worker_package_list() {
     # step dependencies
     if [ $S_SRC -eq 0 ]; then
         DIALOG --msgbox "You must select an installation source!" 0 0
@@ -210,14 +242,24 @@ select_packages() {
         DIALOG --yesno "WARNING: Running this stage again will result in the loss of previous package selections.\n\nDo you wish to continue?" 10 50 || return 1
     fi
 
-	interactive_select_packages && S_SELECT=1
+	interactive_select_packages
 }
 
 
-# donetwork()
+worker_install_packages ()
+{
+	if [ $S_SELECT -eq 0 ]; then
+		DIALOG --msgbox "You must select packages first." 0 0
+		return 1
+	fi
+	installpkg && return 0
+	return 1
+}
+
+
 # Hand-hold through setting up networking
-donetwork() {
-	interactive_donetwork && S_NET=1
+worker_runtime_network() {
+	interactive_runtime_network
 }
 
 
@@ -225,6 +267,18 @@ dogrub() {
 	interactive_dogrub && S_GRUB=1
 }
 
+
+worker_select_mirror ()
+{
+	interactive_select_mirror
+}
+
+# $1 which one
+worker_install_bootloader ()
+{
+	[ "$1" = grub ] && interactive_install_grub && S_BOOT=grub
+	[ "$1" != grub ] && S_BOOT="$1"
+}
 
 # exit if network wasn't configured in installer
 #  if [ $S_NET -eq 0 ]; then

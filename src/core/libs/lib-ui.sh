@@ -137,18 +137,6 @@ _dia_getavaildisks()
 }
 
 
-# taken from setup code. edited to echo the choice, not perform it
-# TODO: also an ugly function
-_dia_ask_bootloader()
-{
-    _dia_DIALOG --colors --menu "Which bootloader would you like to use?  Grub is the Arch default.\n\n" \
-        10 65 2 \
-        "GRUB" "Use the GRUB bootloader (default)" \
-        "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" 2>$ANSWER
-	cat $ANSWER
-}
-
-
 _dia_follow_progress ()
 {
 	title=$1
