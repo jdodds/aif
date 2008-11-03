@@ -4,7 +4,7 @@
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables?
 ANSWER="/home/arch/fifa/runtime/.dialog-answer"
-
+DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
@@ -101,7 +101,9 @@ ask_number ()
  
   
 # ask the user to choose something
-# TODO: exact implementation, which arguments etc?
+# $1 default item (set to 'no' for none)
+# $2 title
+# shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
 ask_option ()
 {
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
@@ -149,6 +151,45 @@ _dia_DIALOG()
 }
 
 
+_dia_ask_option ()
+{
+	DEFAULT=""
+	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
+	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
+	[ -z "$6" ] && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+ 
+ 	DIA_MENU_TITLE=$2
+ 	shift 2
+	_dia_DIALOG $DEFAULT --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
+	cat $ANSWER
+}
+
+
+_cli_ask_option ()
+{
+	DEFAULT=""
+	[ "$1" != 'no' ] && DEFAULT=$1
+	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
+	[ -z "$6" ] && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+
+ 	CLI_MENU_TITLE=$2
+ 	shift 2
+
+	echo "$CLI_MENU_TITLE"
+	while [ -n "$1" ]
+	do
+		echo "$1 ] $2"
+		shift 2
+	done
+	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
+	[ -z "$DEFAULT" ] && echo -n " > "
+	read answ
+	echo
+	[ -z "$answ" -a -n "$DEFAULT" ] && answ="$DEFAULT"
+	echo "$answ"
+}
+
+	
 # geteditor(). taken from original setup code. prepended dia_ because power users just export $EDITOR on the cmdline.
 # prompts the user to choose an editor
 # sets EDITOR global variable
@@ -257,12 +298,6 @@ _cli_ask_number ()
 	return 0
 }
 	
-
-_cli_ask_option ()
-{
-	die_error "_cli_ask_option Not yet implemented"
-}
-
 
 _cli_follow_progress ()
 {
