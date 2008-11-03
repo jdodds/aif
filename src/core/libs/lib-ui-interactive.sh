@@ -207,8 +207,8 @@ interactive_autoprepare()
     fi
 
     # validate DEST
-    if [ ! -d "$TARGET_DIR" ]; then
-        notify "Destination directory '$TARGET_DIR' is not valid"
+    if [ ! -d "$var_TARGET_DIR" ]; then
+        notify "Destination directory '$var_TARGET_DIR' is not valid"
         return 1
     fi
 
@@ -265,7 +265,7 @@ EOF
         mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
         fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
         if echo $mountpoint | tr -d ' ' | grep '^/$' 2>&1 > /dev/null; then
-            _mkfs yes ${DEVICE}${part} "$fstype" "$TARGET_DIR" "$mountpoint" || return 1
+            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
         fi
         part=$(($part + 1))
     done
@@ -276,7 +276,7 @@ EOF
         mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
         fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
         if [ $(echo $mountpoint | tr -d ' ' | grep '^/$' | wc -l) -eq 0 ]; then
-            _mkfs yes ${DEVICE}${part} "$fstype" "$TARGET_DIR" "$mountpoint" || return 1
+            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
         fi
         part=$(($part + 1))
     done
@@ -363,14 +363,14 @@ interactive_mountpoints() {
             else
                 infofy "Creating $FSTYPE on $PART, mounting to ${TARGET_DIR}${MP}"
             fi
-            _mkfs yes $PART $FSTYPE $TARGET_DIR $MP || return 1
+            _mkfs yes $PART $FSTYPE $var_TARGET_DIR $MP || return 1
         else
             if [ "$FSTYPE" = "swap" ]; then
                 infofy "Activating swapspace on $PART"
             else
                 infofy "Mounting $PART to ${TARGET_DIR}${MP}"
             fi
-            _mkfs no $PART $FSTYPE $TARGET_DIR $MP || return 1
+            _mkfs no $PART $FSTYPE $var_TARGET_DIR $MP || return 1
         fi
         sleep 1
     done
@@ -511,7 +511,7 @@ interactive_runtime_network() {
 
 interactive_install_grub() {
     get_grub_map
-    local grubmenu="$TARGET_DIR/boot/grub/menu.lst"
+    local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
     if [ ! -f $grubmenu ]; then
         notify "Error: Couldn't find $grubmenu.  Is GRUB installed?"
         return 1
@@ -526,7 +526,7 @@ interactive_install_grub() {
             _rootpart="/dev/disk/by-uuid/${_uuid}"
         fi
         # look for a separately-mounted /boot partition
-        bootdev=$(mount | grep $TARGET_DIR/boot | cut -d' ' -f 1)
+        bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
         if [ "$grubdev" != "" -o "$bootdev" != "" ]; then
             subdir=
             if [ "$bootdev" != "" ]; then
@@ -565,7 +565,7 @@ EOF
     fi
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
-    [ "$EDITOR" ] || geteditor
+    [ "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
 
     DEVS=$(finddisks _)
@@ -577,15 +577,15 @@ EOF
     _dia_DIALOG --menu "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." 14 55 7 $DEVS 2>$ANSWER || return 1
     ROOTDEV=$(cat $ANSWER)
     infofy "Installing the GRUB bootloader..."
-    cp -a $TARGET_DIR/usr/lib/grub/i386-pc/* $TARGET_DIR/boot/grub/
+    cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
     sync
     # freeze xfs filesystems to enable grub installation on xfs filesystems
     if [ -x /usr/sbin/xfs_freeze ]; then
-        /usr/sbin/xfs_freeze -f $TARGET_DIR/boot > /dev/null 2>&1
-        /usr/sbin/xfs_freeze -f $TARGET_DIR/ > /dev/null 2>&1
+        /usr/sbin/xfs_freeze -f $var_TARGET_DIR/boot > /dev/null 2>&1
+        /usr/sbin/xfs_freeze -f $var_TARGET_DIR/ > /dev/null 2>&1
     fi
     # look for a separately-mounted /boot partition
-    bootpart=$(mount | grep $TARGET_DIR/boot | cut -d' ' -f 1)
+    bootpart=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
     if [ "$bootpart" = "" ]; then
         if [ "$PART_ROOT" = "" ]; then
             _dia_DIALOG --inputbox "Enter the full path to your root device" 8 65 "/dev/sda3" 2>$ANSWER || return 1
@@ -609,7 +609,7 @@ EOF
         notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
         return 1
     fi
-    $TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
+    $var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
 root $bootpart
 setup $bootdev
 quit
@@ -617,8 +617,8 @@ EOF
     cat /tmp/grub.log >$LOG
     # unfreeze xfs filesystems
     if [ -x /usr/sbin/xfs_freeze ]; then
-        /usr/sbin/xfs_freeze -u $TARGET_DIR/boot > /dev/null 2>&1
-        /usr/sbin/xfs_freeze -u $TARGET_DIR/ > /dev/null 2>&1
+        /usr/sbin/xfs_freeze -u $var_TARGET_DIR/boot > /dev/null 2>&1
+        /usr/sbin/xfs_freeze -u $var_TARGET_DIR/ > /dev/null 2>&1
     fi
 
     if grep "Error [0-9]*: " /tmp/grub.log >/dev/null; then
