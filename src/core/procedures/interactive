@@ -251,9 +251,9 @@ worker_select_mirror ()
 worker_install_bootloader ()
 {
 	bl=`tr '[:upper:]' '[:lower:]' <<< "$1"`
-	log "User picked bootloader $1..."
-	[ "$1" = grub ] && interactive_install_grub && S_BOOT=grub
-	[ "$1" != grub ] && S_BOOT="$1"
+	log "User picked bootloader $bl ..."
+	[ "$bl" = grub ] && interactive_install_grub && S_BOOT=grub
+	[ "$bl" != grub ] && S_BOOT="$bl"
 }
 
 worker_auto_network ()
