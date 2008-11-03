@@ -22,7 +22,7 @@ run_mkinitcpio()
 # performs package installation to the target system
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
-	target_specialfs on
+	target_special_fs on
 	run_background pacman-installpkg "$PACMAN_TARGET -S $PACKAGES" /tmp/pacman.log
 	follow_progress " Installing... Please Wait " /tmp/pacman.log
 
@@ -40,7 +40,7 @@ installpkg() {
 
 	show_warning "$_result" "/tmp/pacman.log" text || return 1     
 
-	target_specialfs off
+	target_special_fs off
 
 	sync
 
