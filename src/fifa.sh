@@ -33,6 +33,7 @@ notify ()
 log ()
 {
 	 echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
+	 echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@" >$LOG
 }
 
 
