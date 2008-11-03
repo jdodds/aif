@@ -1,0 +1,6 @@
+This directory contains unofficial additions (modules) to/for fifa that I (Dieter)
+am writing.
+
+They are _not_ intended to be part of the "official" fifa.  it's just in the same repo for
+my own convenience.  Too install them on the installcd, run patch-install-cd
+with argument 'unofficial'

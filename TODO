@@ -1,6 +1,3 @@
-* yaourt profile. put 'unofficial' tree in git repo with modules subdir,
-  with in it dieter and yaourt. give argument to patch-install-cd to enable
-  dieters modules. put note in whatsthis.txt to clarify that
 * get interactive procedure working (decoupled flow control/other stuff. not
   yet ui vs backend), make it alpha version and post to ML
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'

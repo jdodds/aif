@@ -1,0 +1,4 @@
+I plan to someday write a module that will make yaourt available during
+installation, so you can imediately install packages from AUR on your system
+during installation.  This is something that does not belong in core, it's
+for power users only ;-)
