@@ -147,10 +147,13 @@ execute ()
 	then
 		PWD_BACKUP=`pwd`
 		$1_$2
+		ret=$?
 		cd $PWD_BACKUP
 	else
 		die_error "$1 $2 is not defined!"
 	fi
+
+	return $?
 }
 
 
