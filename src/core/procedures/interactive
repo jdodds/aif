@@ -251,6 +251,7 @@ worker_select_mirror ()
 worker_install_bootloader ()
 {
 	bl=`tr '[:upper:]' '[:lower:]' <<< "$1"`
+	log "User picked bootloader $1..."
 	[ "$1" = grub ] && interactive_install_grub && S_BOOT=grub
 	[ "$1" != grub ] && S_BOOT="$1"
 }
