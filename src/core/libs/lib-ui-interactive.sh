@@ -11,8 +11,8 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        _dia_DIALOG --menu "Select the disk you want to partition (select DONE when finished)" 14 55 7 $DISCS 2>$ANSWER || return 1
-        DISC=$(cat $ANSWER)
+        ask_option no "Select the disk you want to partition (select DONE when finished)" 14 55 7 $DISCS || return 1
+        DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
             DISC=$(cat $ANSWER)
@@ -20,7 +20,8 @@ interactive_partition() {
         # Leave our loop if the user is done partitioning
         [ "$DISC" = "DONE" ] && break
         # Partition disc
-        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.  NOTE: cfdisk may ttell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
+        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
+        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
         cfdisk $DISC
     done
     return 0
@@ -73,11 +74,11 @@ interactive_configure_system()
 interactive_set_clock()   
 {
     # utc or local?
-    _dia_DIALOG --menu "Is your hardware clock in UTC or local time?" 10 50 2 \
+	ask_option no "Is your hardware clock in UTC or local time?" \
         "UTC" " " \
         "local" " " \
-        2>$ANSWER || return 1
-    HARDWARECLOCK=$(cat $ANSWER)
+        || return 1
+    HARDWARECLOCK=$ANSWER_OPTION
 
     # timezone?
     tzselect > $ANSWER || return 1
@@ -119,8 +120,8 @@ interactive_autoprepare()
     DISCS=$(finddisks)
     if [ $(echo $DISCS | wc -w) -gt 1 ]; then
         notify "Available Disks:\n\n$(_getavaildisks)\n"
-        _dia_DIALOG --menu "Select the hard drive to use" 14 55 7 $(finddisks _) 2>$ANSWER || return 1
-        DISC=$(cat $ANSWER)
+        ask_option no "Select the hard drive to use" $(finddisks _) || return 1
+        DISC=$ANSWER_OPTION
     else
         DISC=$DISCS
     fi
@@ -704,12 +705,12 @@ interactive_select_mirror() {
 # sets EDITOR global variable
 #
 interactive_get_editor() {
-    _dia_DIALOG --menu "Select a Text Editor to Use" 10 35 3 \
-        "1" "nano (easier)" \
-        "2" "vi" 2>$ANSWER
-    case $(cat $ANSWER) in
-        "1") EDITOR="nano" ;;
-        "2") EDITOR="vi" ;;
-        *)   EDITOR="nano" ;;
-    esac
+	ask_option no "Select a Text Editor to Use" \
+	"1" "nano (easier)" \
+	"2" "vi" 
+	case $ANSWER_OPTION in
+		"1") EDITOR="nano" ;;
+		"2") EDITOR="vi" ;;
+		*)   EDITOR="nano" ;;
+	esac
 }
