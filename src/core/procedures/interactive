@@ -135,14 +135,14 @@ configure_system()
         # /etc/pacman.d/mirrorlist
         # add installer-selected mirror to the top of the mirrorlist
         if [ "$MODE" = "ftp" -a "${SYNC_URL}" != "" ]; then
-            awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${TARGET_DIR}/etc/pacman.d/mirrorlist"
+            awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/etc/pacman.d/mirrorlist"
         fi
 
         # /etc/rc.conf
         # insert timezone and utc info
         sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"$TIMEZONE\"/g" \
                -e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
-               ${TARGET_DIR}/etc/rc.conf
+               ${var_TARGET_DIR}/etc/rc.conf
     fi
 
 

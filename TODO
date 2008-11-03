@@ -1,3 +1,4 @@
+* interactive procedure: clean worker_select_source. cleanup bottom
 * get interactive procedure working (decoupled flow control/other stuff. not
   yet ui vs backend), make it alpha version and post to ML
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
