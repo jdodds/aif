@@ -116,6 +116,7 @@ ask_number ()
 # $1 default item (set to 'no' for none)
 # $2 title
 # shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
+# the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
 ask_option ()
 {
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
@@ -173,7 +174,8 @@ _dia_ask_option ()
  	DIA_MENU_TITLE=$2
  	shift 2
 	_dia_DIALOG $DEFAULT --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
-	cat $ANSWER
+	ANSWER_OPTION=`cat $ANSWER`
+	echo $ANSWER_OPTION
 }
 
 
@@ -195,10 +197,9 @@ _cli_ask_option ()
 	done
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
-	read answ
-	echo
-	[ -z "$answ" -a -n "$DEFAULT" ] && answ="$DEFAULT"
-	echo "$answ"
+	read ANSWER_OPTION
+	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
+	echo "$ANSWER_OPTION"
 }
 
 	
