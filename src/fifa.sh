@@ -139,6 +139,14 @@ start_process ()
 }
 
 
+# use this function to stop the installation procedure.
+# $1 exit code (optional)
+stop_installer ()
+{
+	log "-------------- STOPPING INSTALLATION ----------"
+	exit $1
+}
+
 
 ###### perform actual logic ######
 echo "Welcome to $TITLE"
