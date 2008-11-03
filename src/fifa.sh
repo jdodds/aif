@@ -114,7 +114,7 @@ execute ()
 		die_error "$1 $2 is not defined!"
 	fi
 
-	return $?
+	return $ret
 }
 
 
@@ -142,6 +142,7 @@ start_process ()
 
 ###### perform actual logic ######
 echo "Welcome to $TITLE"
+log "################## START OF INSTALLATION ##################"
 [ -z "$1" ] && usage && exit 1
 
 mount -o remount,rw / &>/dev/null 
