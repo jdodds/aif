@@ -15,7 +15,7 @@ run_background ()
 		touch /tmp/$1-running
 		echo "$1 progress ..." > $3; \
 		echo >> $3; \
-		eval "$1" >>$3 2>&1
+		eval "$2" >>$3 2>&1
 		echo $? > /tmp/.$1-retcode
 		echo >> $3   
 		rm -f /tmp/$1-running

@@ -2,7 +2,7 @@
 #TODO: get backend code out of here!!
 
 interactive_partition() {
-    _umountall
+    target_umountall
 
     # Select disk to partition
     DISCS=$(finddisks _)
@@ -223,7 +223,7 @@ interactive_autoprepare()
 
     rm -f /tmp/.fstab
 
-    _umountall
+    target_umountall
 
     # setup input var for sfdisk
     for fsspec in $FSSPECS; do
@@ -352,7 +352,7 @@ interactive_mountpoints() {
         ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)" 18 0 && PARTFINISH="DONE"
     done
 
-    _umountall
+    target_umountall
 
     for line in $(cat /tmp/.parts); do
         PART=$(echo $line | cut -d: -f 1)
