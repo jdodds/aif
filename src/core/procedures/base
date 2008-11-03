@@ -11,6 +11,7 @@ var_UI_TYPE="cli" # set to cli or dia for dialog
 phase_preparation ()
 {
 	execute worker select_source
+	execute worker runtime_network
 	execute worker runtime_packages
 }
 
@@ -48,8 +49,16 @@ worker_select_source ()
 {
 	var_PKG_SOURCE_TYPE='cd'
 	var_FILE_URL="file:///src/core/pkg"
+	var_SYNC_URL=
 	var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 	# if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
+}
+
+
+worker_runtime_network ()
+{
+	#network is assumed to be functional for now because we do it first with /arch/setup. once that falls away, we'll need to implement it here
+	true
 }
 
 
