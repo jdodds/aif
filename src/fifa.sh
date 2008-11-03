@@ -21,6 +21,14 @@ Available procedures on the filesystem:
 
 }
 
+##### TMP functions that we need during early bootstrap but will be overidden with decent functions by libraries ######
+
+
+notify ()
+{
+	echo -e "$@"
+}
+
 
 ###### Core functions ######
 
