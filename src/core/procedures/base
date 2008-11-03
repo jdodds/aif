@@ -142,15 +142,13 @@ worker_configure_system ()
 
 worker_mkinitcpio ()
 {
-	#TODO:check that this is the right command when projects.archlinux.org is back up
 	run_mkinitcpio
 }
 
 
 worker_locales ()
 {
-	#TODO:what to do here? didn't we already do them?
-	true
+	target_locale_gen
 }
 
 
