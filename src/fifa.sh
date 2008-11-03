@@ -1,5 +1,4 @@
 #!/bin/bash
-# TODO: we should be able to get away with not defining the "These functions would fit more in lib-ui, but we need them immediately" functions in lib-ui, but just sourcing lib-ui very early
 
 ###### Set some default variables or get them from the setup script ######
 TITLE="Flexible Installer Framework for Arch linux"
@@ -11,67 +10,15 @@ LOG="/dev/tty7"
 
 usage ()
 {
+	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
 	msg="$0 <procedurename>\n
-If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree\n
+If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
-Available procedures on the filesystem:\n
+Available procedures on the filesystem:
 `find /home/arch/fifa/core/procedures -type f`\n
 `find /home/arch/fifa/user/*/procedures -type f`" 
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		DIALOG --msgbox "$msg" 14 65
-	else
-		echo -e "$msg"
-	fi
-}
+	echo -e "$msg"
 
-
-##### "These functions would fit more in lib-ui, but we need them immediately" functions ######
-
-
-# display error message and die
-die_error ()
-{
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		DIALOG --msgbox "Error: $@" 0 0
-	else
-		echo -e "ERROR: $@"
-	fi
-	exit 2
-}
-
-
-# display warning message
-# $1 title
-# $2 item to show
-# $3 type of item.  msg or text if it's a file. (optional. defaults to msg)
-show_warning ()
-{
-	[ -z "$1" ] && die_error "show_warning needs a title"
-	[ -z "$2" ] && die_error "show_warning needs an item to show"
-	[ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
-	[ -z "$3" ] && 3=msg
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		dialog --title "$1" --exit-label "Continue" --$3box "$2" 18 70 || die_error "dialog could not show --$3box $2. often this means a file does not exist"
-	else
-		echo "WARNING: $1"
-		[ "$3" = msg ] && echo -e "$2"
-		[ "$3" = text ] && cat $2 || die_error "Could not cat $2"
-	fi
-}
-
-
-#notify user
-notify ()
-{
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		DIALOG --msgbox "$@" 20 50
-	else
-		echo -e "$@"
-	fi
 }
 
 

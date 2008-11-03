@@ -9,6 +9,46 @@ ANSWER="/home/arch/fifa/runtime/.dialog-answer"
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
+# display error message and die
+die_error ()
+{
+	notify "ERROR: $@"
+        exit 2
+}
+ 
+ 
+# display warning message
+# $1 title
+# $2 item to show
+# $3 type of item.  msg or text if it's a file. (optional. defaults to msg)
+show_warning ()
+{
+        [ -z "$1" ] && die_error "show_warning needs a title"
+        [ -z "$2" ] && die_error "show_warning needs an item to show"
+        [ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
+        [ -z "$3" ] && 3=msg
+        if [ "$var_UI_TYPE" = dia ]
+        then
+                _dia_DIALOG --title "$1" --exit-label "Continue" --$3box "$2" 18 70 || die_error "dialog could not show --$3box $2. often this means a file does not exist"
+        else
+                echo "WARNING: $1"
+                [ "$3" = msg ] && echo -e "$2"
+                [ "$3" = text ] && cat $2 || die_error "Could not cat $2"
+        fi
+}
+ 
+ 
+#notify user
+notify ()   
+{
+        if [ "$var_UI_TYPE" = dia ]
+        then
+                _dia_DIALOG --msgbox "$@" 20 50
+        else
+                echo -e "$@"
+        fi
+}
+
 
 # ask the user a password. return is stored in $PASSWORD or $<TYPE>_PASSWORD
 # $1 type (optional.  eg 'svn', 'ssh').
