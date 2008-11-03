@@ -105,14 +105,16 @@ execute ()
 	[ "$1" != phase -a "$1" != worker ] && die_error "execute's first argument must be a valid type (phase/worker)"
 	[ "$1" = phase ]  && log "******* Executing phase $2"
 	[ "$1" = worker ] && log "*** Executing worker $2"
-	if type -t $1_$2 | grep -q function
+	to_execute=$1_$2
+	shift 2
+	if type -t $to_execute | grep -q function
 	then
 		PWD_BACKUP=`pwd`
-		$1_$2
+		$to_execute "$@"
 		ret=$?
 		cd $PWD_BACKUP
 	else
-		die_error "$1 $2 is not defined!"
+		die_error "$to_execute is not defined!"
 	fi
 
 	return $ret
