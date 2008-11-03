@@ -133,11 +133,8 @@ configure_system()
     fi
 
 
-	interactive_configure_system
-	
-	run_mkinitcpio
-	target_locale-gen
-
+	interactive_configure_system &&	run_mkinitcpio && target_locale-gen && return 0
+	return 1
 }
 
 
@@ -253,6 +250,7 @@ worker_select_mirror ()
 # $1 which one
 worker_install_bootloader ()
 {
+	bl=`tr '[:upper:]' '[:lower:]' <<< "$1"`
 	[ "$1" = grub ] && interactive_install_grub && S_BOOT=grub
 	[ "$1" != grub ] && S_BOOT="$1"
 }

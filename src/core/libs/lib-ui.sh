@@ -185,8 +185,10 @@ _dia_ask_option ()
  	DIA_MENU_TITLE=$2
  	shift 2
 	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
+	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
+	return $ret
 }
 
 
@@ -215,21 +217,6 @@ _cli_ask_option ()
 }
 
 	
-# geteditor(). taken from original setup code. prepended dia_ because power users just export $EDITOR on the cmdline.
-# prompts the user to choose an editor
-# sets EDITOR global variable
-#
-# TODO: clean this up
-_dia_get_editor() {
-    _dia_DIALOG --menu "Select a Text Editor to Use" 10 35 3 \
-        "1" "nano (easier)" \
-        "2" "vi" 2>$ANSWER   
-    case $(cat $ANSWER) in   
-        "1") EDITOR="nano" ;;
-        "2") EDITOR="vi" ;;  
-        *)   EDITOR="nano" ;;
-    esac
-}
 
 # TODO: pass disks as argument to decouple backend logic
 # Get a list of available disks for use in the "Available disks" dialogs. This

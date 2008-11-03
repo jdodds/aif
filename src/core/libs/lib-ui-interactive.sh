@@ -29,41 +29,38 @@ interactive_partition() {
 
 interactive_configure_system()
 {
-    [ "$EDITOR" ] || geteditor
-    FILE=""
+	[ "$EDITOR" ] || interactive_get_editor
+	FILE=""
 
-    # main menu loop
-    while true; do
-        if [ -n "$FILE" ]; then
-            DEFAULT="--default-item $FILE"
-        else
-            DEFAULT=""
-        fi
+	# main menu loop
+	while true; do
+		DEFAULT=no
+		[ -n "$FILE" ] &&  DEFAULT="$FILE"
+		ask_option $DEFAULT "Configuration"  \
+		"/etc/rc.conf"              "System Config" \
+		"/etc/fstab"                "Filesystem Mountpoints" \
+		"/etc/mkinitcpio.conf"      "Initramfs Config" \
+		"/etc/modprobe.conf"        "Kernel Modules" \
+		"/etc/resolv.conf"          "DNS Servers" \
+		"/etc/hosts"                "Network Hosts" \
+		"/etc/hosts.deny"           "Denied Network Services" \
+		"/etc/hosts.allow"          "Allowed Network Services" \
+		"/etc/locale.gen"           "Glibc Locales" \
+		"/etc/pacman.d/mirrorlist"  "Pacman Mirror List" \
+		"Root-Password"             "Set the root password" \
+		"Return"        "Return to Main Menu" || FILE="Return"
+		FILE=$ANSWER_OPTION
 
-        _dia_DIALOG $DEFAULT --menu "Configuration" 17 70 10 \
-            "/etc/rc.conf"              "System Config" \
-            "/etc/fstab"                "Filesystem Mountpoints" \
-            "/etc/mkinitcpio.conf"      "Initramfs Config" \
-            "/etc/modprobe.conf"        "Kernel Modules" \
-            "/etc/resolv.conf"          "DNS Servers" \
-            "/etc/hosts"                "Network Hosts" \
-            "/etc/hosts.deny"           "Denied Network Services" \
-            "/etc/hosts.allow"          "Allowed Network Services" \
-            "/etc/locale.gen"           "Glibc Locales" \
-            "/etc/pacman.d/mirrorlist"  "Pacman Mirror List" \
-            "Root-Password"             "Set the root password" \
-            "Return"        "Return to Main Menu" 2>$ANSWER || FILE="Return"
-        FILE="$(cat $ANSWER)"
- if [ "$FILE" = "Return" -o -z "$FILE" ]; then       # exit
-            break
-        elif [ "$FILE" = "Root-Password" ]; then            # non-file
-            while true; do
-                chroot ${TARGET_DIR} passwd root && break
-            done
-        else                                                #regular file
-            $EDITOR ${TARGET_DIR}${FILE}
-        fi
-    done  
+		if [ "$FILE" = "Return" -o -z "$FILE" ]; then       # exit
+			break
+		elif [ "$FILE" = "Root-Password" ]; then            # non-file
+			while true; do
+				chroot ${var_TARGET_DIR} passwd root && break
+			done
+		else                                                #regular file
+			$EDITOR ${var_TARGET_DIR}/${FILE}
+		fi
+	done
 
 }
 
@@ -700,4 +697,19 @@ interactive_select_mirror() {
         var_SYNC_URL=$(egrep -o "${_server}.*" "${MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
     fi
     echo "Using mirror: $var_SYNC_URL" >$LOG
+}
+
+# geteditor(). taken from original setup code. 
+# prompts the user to choose an editor
+# sets EDITOR global variable
+#
+interactive_get_editor() {
+    _dia_DIALOG --menu "Select a Text Editor to Use" 10 35 3 \
+        "1" "nano (easier)" \
+        "2" "vi" 2>$ANSWER
+    case $(cat $ANSWER) in
+        "1") EDITOR="nano" ;;
+        "2") EDITOR="vi" ;;
+        *)   EDITOR="nano" ;;
+    esac
 }
