@@ -179,15 +179,17 @@ worker_prepare_disks()
 		if [ "$S_MKFSAUTO" = "1" ]; then
 			notify "You have already prepared your filesystems with Auto-prepare"
 		else
-			interactive_partition && S_PART=1 ;;
+			interactive_partition && S_PART=1 
 		fi
+		;;
             "3")
 		PARTFINISH=""
 		if [ "$S_MKFSAUTO" = "1" ]; then
 			notify "You have already prepared your filesystems with Auto-prepare"
 		else
-			interactive_mountpoints && S_MKFS=1 ;;
+			interactive_mountpoints && S_MKFS=1 
 		fi
+		;;
             *)
                 DONE=1 ;;
         esac
