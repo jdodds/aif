@@ -1,3 +1,4 @@
+
 * make interactive procedure working well.
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
 * in elke phase een lege worker die te overriden valt zoda we geen phases
@@ -24,3 +25,14 @@
 * make some sensible default profiles (eg desktop, server, ...)
 * make it work
 * someday.. make a script '/arch/setup' that calls '/arch/fifa.sh interactive'
+
+
+-- core/interactive --
+- bugs -
+* boot space 15 -> too large should be too small
+* swap space 0 -> invalid?
+* you always need to press ok before it does the action it just said it's
+doing (is it the same with previous installer?)
+- features -
+* more control over filesystems (lvm,dm_crypt, choose each FS and each size
+yourself)
