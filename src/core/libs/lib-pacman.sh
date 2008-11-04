@@ -76,17 +76,9 @@ do
 	#TODO: this is a VERY, VERY dirty hack.  we fall back to ftp for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
 	if [ "$repo" != core ]
 	then
-		cat << EOF >> /tmp/pacman.conf
-
-[${repo}]
-Include = /etc/pacman.d/mirrorlist
-EOF
+		target_add_pacman_repo ${repo} 'Include = /etc/pacman.d/mirrorlist'
 	else
-		cat << EOF >> /tmp/pacman.conf
-
-[${repo}]
-Server = ${serverurl}
-EOF
+		target_add_pacman_repo ${repo} "Server = ${serverurl}"
 	fi
 done
 	# Set up the necessary directories for pacman use
@@ -96,6 +88,25 @@ done
 	notify "Refreshing package database..."
 	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1
 	return 0
+}
+
+
+target_list_pacman_repos ()
+{
+	grep '\[.*\]' /tmp/pacman.conf | grep -v options | sed 's/[//' | sed 's/]//'
+}
+
+
+# $1 repo name
+# $2 string
+target_add_pacman_repo ()
+{
+	[ -z "$2" ] && die_error "target_add_repo needs \$1 repo-name and \$2 string (eg Server = ...)"
+	cat << EOF >> /tmp/pacman.conf
+
+[${1}]
+${2}
+EOF
 }
 
 
