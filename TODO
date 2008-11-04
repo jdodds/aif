@@ -14,7 +14,11 @@
   from module baz). for now let's try like this.. -> we can call explicit
   functions from libraries from modules.. so then just stick it in a lib ->
   lots of stuff can go into lib-ui, making the procedure itself just the
-  'execution plan'.. sounds good actually.
+  'execution plan'.. sounds good actually.  problem with this is functions
+  can have the same names (or you need to prepend modulename always, but
+  that's not clean + 'fallback'/overriding doesn't work well anymore. 
+  alternative -> each lib is a directory, each function in a file, make it
+  possible to source all libs, one lib, or one function from one lib
 * base procedure idea: it should just tell you what to do? -> less
   implementation work in base procedure, more in other procedures...
 * fix crossconcerns: procedures are about _how_ (autodetection, asking user,...)
