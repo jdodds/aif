@@ -23,7 +23,7 @@ run_mkinitcpio()
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_special_fs on
-	run_background pacman-installpkg "$PACMAN_TARGET -S $PACKAGES" /tmp/pacman.log
+	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" /tmp/pacman.log
 	follow_progress " Installing... Please Wait " /tmp/pacman.log
 
 	wait_for pacman-installpkg

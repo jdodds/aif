@@ -92,23 +92,19 @@ worker_prepare_disks ()
 }
 
 
-# Put the list of packages to be installed in $var_PKG_FILE
+# Put the list of packages to be installed in $TARGET_PACKAGES
 worker_package_list ()
 {
-	#TODO: sensible list of packages
+	#TODO: sensible list of packages. maybe just 'base'
 	true
 }
 
 
 worker_install_packages ()
 {
-	target_special_fs on
 	target_prepare_pacman
-	[ ! -f $var_PKG_FILE ] && die_error "No package file available!"
-	PKGLIST=`cat $var_PKG_FILE`
-	#TODO: what if $var_PKG_FILE is empty? we should die_error because that's probably not what the user wants.. or can it?  will pacman complain?
-	$PACMAN_TARGET -Sy $PKGLIST || die_error "Package installation FAILED."
-	target_special_fs off
+	[ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
+	installpkg
 }
 
 

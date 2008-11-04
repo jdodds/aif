@@ -64,6 +64,8 @@ EOF
 worker_package_list ()
 {
 	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/package-list $var_PKG_FILE || die_error "Could not export package list!"
+	TARGET_PACKAGES=`cat $var_PKG_FILE` # beware, there are newlines in it now
+	TARGET_PACKAGES=`echo $TARGET_PACKAGES` # not anymore :)
 }
 
 

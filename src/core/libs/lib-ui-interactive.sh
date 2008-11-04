@@ -393,21 +393,21 @@ interactive_select_packages() {
     # so we can get package lists
     target_prepare_pacman || ( notify "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
-    # show group listing for group selection
+    # show group listing for group selection, base is ON by default, all others are OFF
     local _catlist="base ^ ON"
     for i in $($PACMAN -Sg | sed "s/^base$/ /g"); do
         _catlist="${_catlist} ${i} - OFF"
     done
 
     _dia_DIALOG --checklist "Select Package Categories\nDO NOT deselect BASE unless you know what you're doing!" 19 55 12 $_catlist 2>$ANSWER || return 1
-    _catlist="$(cat $ANSWER)"
+    _catlist="$(cat $ANSWER)" # _catlist now contains all categories (the tags from the dialog checklist)
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
-    local _pkgtmp="$($PACMAN -Sl core | awk '{print $2}')"
+    local _pkgtmp="$($PACMAN -Sl core | awk '{print $2}')" # all packages in core repository
     local _pkglist=''
 
-    $PACMAN -Si $_pkgtmp | \
+    $PACMAN -Si $_pkgtmp | \ 
         awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }' > $ANSWER
     while read pkgname pkgcat; do
         # check if this package is in a selected group
@@ -423,7 +423,7 @@ interactive_select_packages() {
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
 
     _dia_DIALOG --checklist "Select Packages To Install." 19 60 12 $_pkglist 2>$ANSWER || return 1
-    PACKAGES="$(cat $ANSWER)"
+	TARGET_PACKAGES="$(cat $ANSWER)" # contains now all package names
     return 0
 }
 
