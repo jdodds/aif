@@ -1,5 +1,8 @@
 #!/bin/sh
 
+TMP_DEV_MAP=/home/arch/fifa/runtime/dev.map
+
+
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
 # NOTE: why were the functions in the setup called CHROOT_mount/umount? this is not chrooting ?
@@ -152,8 +155,8 @@ findpartitions() {
 
 # taken from setup
 get_grub_map() {
-	rm /tmp/dev.map
-	$var_TARGET_DIR/sbin/grub --no-floppy --device-map /tmp/dev.map >/tmp/grub.log 2>&1 <<EOF
+	rm $TMP_DEV_MAP
+	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
 }
@@ -164,7 +167,7 @@ EOF
 mapdev() {
     partition_flag=0
     device_found=0
-    devs=$( grep -v fd /tmp/dev.map | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
+    devs=$( grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
     linuxdevice=$(echo $1 | cut -b1-8)
     if [ "$(echo $1 | egrep '[0-9]$')" ]; then
         # /dev/hdXY
