@@ -76,9 +76,9 @@ do
 	#TODO: this is a VERY, VERY dirty hack.  we fall back to ftp for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
 	if [ "$repo" != core ]
 	then
-		target_add_pacman_repo ${repo} 'Include = /etc/pacman.d/mirrorlist'
+		add_pacman_repo target ${repo} 'Include = /etc/pacman.d/mirrorlist'
 	else
-		target_add_pacman_repo ${repo} "Server = ${serverurl}"
+		add_pacman_repo target ${repo} "Server = ${serverurl}"
 	fi
 done
 	# Set up the necessary directories for pacman use
@@ -91,21 +91,29 @@ done
 }
 
 
-target_list_pacman_repos ()
+# $1 target/runtime
+list_pacman_repos ()
 {
-	grep '\[.*\]' /tmp/pacman.conf | grep -v options | sed 's/[//' | sed 's/]//'
+	[ "$1" != runtime -a "$1" != target ] && die_error "list_pacman_repos needs target/runtime argument"
+	[ "$1" = target  ] && conf=/tmp/pacman.conf
+	[ "$1" = runtime ] && conf=/etc/pacman.conf
+	grep '\[.*\]' $conf | grep -v options | sed 's/[//' | sed 's/]//'
 }
 
 
-# $1 repo name
-# $2 string
-target_add_pacman_repo ()
+# $1 target/runtime
+# $2 repo name
+# $3 string
+add_pacman_repo ()
 {
-	[ -z "$2" ] && die_error "target_add_repo needs \$1 repo-name and \$2 string (eg Server = ...)"
-	cat << EOF >> /tmp/pacman.conf
+	[ "$1" != runtime -a "$1" != target ] && die_error "add_pacman_repo needs target/runtime argument"
+	[ -z "$3" ] && die_error "target_add_repo needs \$2 repo-name and \$3 string (eg Server = ...)"
+	[ "$1" = target  ] && conf=/tmp/pacman.conf
+	[ "$1" = runtime ] && conf=/etc/pacman.conf
+	cat << EOF >> $conf
 
-[${1}]
-${2}
+[${2}]
+${3}
 EOF
 }
 

@@ -4,11 +4,11 @@
 
 _runtime_yaourt ()
 {
-	if ! target_list_pacman_repos | grep -q archlinuxfr
+	if ! list_pacman_repos runtime | grep -q archlinuxfr
 	then
-		target_add_pacman_repo archlinuxfr 'Server = http://repo.archlinux.fr/i686'
+		add_pacman_repo runtime archlinuxfr 'Server = http://repo.archlinux.fr/i686'
 	fi
-	$PACMAN_TARGET -Sy yaourt || die_error "_runtime_yaourt Cannot install yaourt"
+	$PACMAN -Sy yaourt || die_error "_runtime_yaourt Cannot install yaourt"
 	YAOURT=`sed 's/pacman/yaourt/' <<< $PACMAN`
 	YAOURT_TARGET=`sed 's/pacman/yaourt/' <<< $PACMAN_TARGET`
 }
