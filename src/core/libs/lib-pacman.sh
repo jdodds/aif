@@ -56,22 +56,29 @@ target_write_pacman_conf ()
 # target_prepare_pacman() taken from setup. modified a bit
 # configures pacman and syncs for the first time on destination system
 #
-# params: none
+# $@ repositories to enable (optional. default: core)
 # returns: 1 on error
 target_prepare_pacman() {   
 	[ "$var_PKG_SOURCE_TYPE" = "cd" ] && local serverurl="${var_FILE_URL}"
 	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && local serverurl="${var_SYNC_URL}"
 
+	[ -z "$1" ] && repos=core
+	[ -n "$1" ] && repos="$@"
 	# Setup a pacman.conf in /tmp
 	cat << EOF > /tmp/pacman.conf
 [options]
 CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg
 CacheDir = /src/core/pkg
-
-[core]
-Server = ${serverurl}
 EOF
 
+for repo in $repos
+do
+	cat << EOF >> /tmp/pacman.conf
+
+[${repo}]
+Server = ${serverurl}
+EOF
+done
 	# Set up the necessary directories for pacman use
 	[ ! -d "${var_TARGET_DIR}/var/cache/pacman/pkg" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/cache/pacman/pkg"
 	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
