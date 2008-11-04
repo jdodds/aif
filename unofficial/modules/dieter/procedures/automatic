@@ -7,6 +7,30 @@ phase_preparation ()
 {
 	# All things that need to be done manually first
 	notify "A few manual things need to happen first..."
+	execute worker runtime_network
+	SVN_USERNAME=dieter
+	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
+	SVN_BASE=https://192.168.1.2/svn/repos
+	TARGET_HOST=desktop-a7n8x #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
+
+	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
+	_accept_ssl_cert
+
+	execute worker select_source
+        execute worker runtime_packages
+        #TODO: i should have extra,community,.. (actually even yaourt/aur) available
+}
+
+
+phase_finish ()
+{
+	execute worker configure_home
+}
+
+
+worker_runtime_network ()
+{
 	if ask_yesno "Do you want to (re)-configure your networking?"
 	then
 		#TODO: which function do i need here?
@@ -14,22 +38,6 @@ phase_preparation ()
 	else
 		notify "Ok. skipping network config"
 	fi
-	SVN_USERNAME=dieter
-	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
-	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
-	SVN_BASE=https://192.168.1.2/svn/repos
-	TARGET_HOST=desktop-a7n8x #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
-
-	_accept_ssl_cert
-	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
-
-        execute worker runtime_packages
-        #TODO: i should have extra,community,.. (actually even yaourt/aur) available
-}
-
-phase_finish ()
-{
-	execute worker configure_home
 }
 
 
