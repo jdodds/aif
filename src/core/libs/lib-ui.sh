@@ -317,5 +317,6 @@ _cli_follow_progress ()
 	logfile=$2
 	echo "Title: $1"
 	tail -f $2
+	#TODO: don't block anymore when it's done
 }
 
