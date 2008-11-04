@@ -73,11 +73,21 @@ EOF
 
 for repo in $repos
 do
-	cat << EOF >> /tmp/pacman.conf
+	#TODO: this is a VERY, VERY dirty hack.  we fall back to ftp for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
+	if [ "$repo" != core ]
+	then
+		cat << EOF >> /tmp/pacman.conf
+
+[${repo}]
+Include = /etc/pacman.d/mirrorlist
+EOF
+	else
+		cat << EOF >> /tmp/pacman.conf
 
 [${repo}]
 Server = ${serverurl}
 EOF
+	fi
 done
 	# Set up the necessary directories for pacman use
 	[ ! -d "${var_TARGET_DIR}/var/cache/pacman/pkg" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/cache/pacman/pkg"
