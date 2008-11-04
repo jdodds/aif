@@ -102,7 +102,7 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	target_prepare_pacman
+	target_prepare_pacman core #TODO: it would be better if this was a separate worker, i think
 	[ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
 	installpkg
 }
