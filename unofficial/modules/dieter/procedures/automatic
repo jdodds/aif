@@ -39,6 +39,9 @@ worker_prepare_disks ()
 	modprobe -q aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
 
 	# Cleanup whatever state the disk is in (that includes previous, failed runs of this script)
+	umount /dev/mapper/cryptpool-* 2>/dev/null
+	vgremove -f cryptpool 2>/dev/null
+	pvremove /dev/mapper/sda2_crypt 2>/dev/null
 	cryptsetup luksClose sda2_crypt 2>/dev/null
 	dd if=/dev/urandom of=/dev/sda bs=512 count=1
 
@@ -47,6 +50,7 @@ worker_prepare_disks ()
 ,10,L,*
 ,,L
 EOF
+	#TODO: when sfdisk is done, i still have an invalid partition table?
 	cryptsetup --batch-mode -c aes-xts-plain -y -s 512 luksFormat /dev/sda2
 	cryptsetup luksOpen /dev/sda2 sda2_crypt
 	pvcreate /dev/mapper/sda2_crypt
