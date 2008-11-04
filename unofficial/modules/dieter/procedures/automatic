@@ -1,4 +1,5 @@
 #!/bin/bash
+depend_module yaourt
 depend_procedure core base
 
 var_RUNTIME_PACKAGES="svn"
@@ -19,7 +20,7 @@ phase_preparation ()
 
 	execute worker select_source
         execute worker runtime_packages
-        #TODO: i should have extra,community,.. (actually even yaourt/aur) available
+	_yaourt_replace_pacman
 }
 
 

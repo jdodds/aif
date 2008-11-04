@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# See http://wiki.archlinux.org/index.php/Yaourt
+
+_runtime_yaourt ()
+{
+	if ! target_list_pacman_repos | grep -q archlinuxfr
+	then
+		target_add_pacman_repo archlinuxfr 'Server = http://repo.archlinux.fr/i686'
+	fi
+	PACMAN_TARGET -Sy yaourt
+	YAOURT=`sed 's/pacman/yaourt/' <<< $PACMAN`
+	YAOURT_TARGET=`sed 's/pacman/yaourt/' <<< $PACMAN_TARGET`
+}
+
+
+_yaourt_replace_pacman ()
+{
+	_runtime_yaourt
+	PACMAN=$YAOURT
+	PACMAN_TARGET=$YAOURT_TARGET
+}
+
