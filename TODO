@@ -5,6 +5,11 @@
 worker_install_packages_exit=$?.  Useful for: abstracting the phase
 regulation in procedures like core/interactive, and also for reports at the
 end of automatic installations
+* phases should be specified as vars. eg phase_preparation='worker1 worker2'
+  advantages -> even easier syntax/overriding
+                we can easily track on a higher level (execute function) whether all workers
+executed succesfully for a phase and set the exit state of that phase
+                moves all backend logic from phase to worker.
 * make interactive procedure working well.
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
 * in elke phase een lege worker die te overriden valt zoda we geen phases
