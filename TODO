@@ -1,4 +1,10 @@
-
+* go over ALL files and check all function/executable calls are to existing
+  things (eg no dirty leftovers for functions that have been renamed)
+* same for variables
+* in execute function: check exitcode of command and maintain variables like
+worker_install_packages_exit=$?.  Useful for: abstracting the phase
+regulation in procedures like core/interactive, and also for reports at the
+end of automatic installations
 * make interactive procedure working well.
 * base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
 * in elke phase een lege worker die te overriden valt zoda we geen phases
