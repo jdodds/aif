@@ -27,7 +27,7 @@ start_process ()
 	#####################
 	## begin execution ##
 
-	# install stages
+	# install stages #TODO: now that exit states of all workers are maintained by the execute function, we can probably simplify this
 	S_SRC=0         # choose install medium
 	S_NET=0         # network configuration
 	S_CLOCK=0       # clock and timezone

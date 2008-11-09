@@ -38,7 +38,7 @@ There is a very basic but powerful workflow defined by variables, phases and wor
 Depending on the procedure you choose (or write yourself), these will differ
 In the code, they are very recognizable and are named like this:
  - variable -> var_<foo>
- - phase    -> phase_<bar> (a function that calls workers and maybe does some stuff by itself.) 
+ - phase    -> phase_<bar> (an array in which each element is a worker to be executed, with optionally arguments for that worker)
                There are 4 phases: preparation, basics, system, finish. (executed in that order)
  - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic.
                eg runtime_packages, prepare_disks, package_list etc)
@@ -52,6 +52,7 @@ Notes:
    overriding only the 3 basic things and the start_process function, and only in procedures.
  - you _must_ specify a procedure, to avoid errors. take 'base' if unsure
  - don't edit the base procedure (or any other core item), rather make your own. It's easy!
+ - you're not supposed to define new phases. just override them. logic goes in workers/libariers
 
 Modules are the building blocks in fifa.  They can contain libraries (for
 user interfaces, backend logic, etc) and procedures (how an installation

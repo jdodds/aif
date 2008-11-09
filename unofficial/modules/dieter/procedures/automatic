@@ -4,29 +4,29 @@ depend_procedure core base
 
 var_RUNTIME_PACKAGES="svn"
 
-phase_preparation ()
+phase_preparation=(\
+	msg_manual \
+	runtime_network \
+	runtime_svn \
+	msg_automatic \
+	select_source \
+	runtime_packages \
+	runtime_yaourt)
+
+phase_finish=(configure_home msg_report)
+
+
+
+worker_msg_manual ()
 {
 	# All things that need to be done manually first
 	notify "A few manual things need to happen first..."
-	execute worker runtime_network
-	SVN_USERNAME=dieter
-	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
-	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
-	SVN_BASE=https://192.168.1.2/svn/repos
-	TARGET_HOST=desktop-a7n8x #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
-
-	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
-	_accept_ssl_cert
-
-	execute worker select_source
-        execute worker runtime_packages
-	_yaourt_replace_pacman
 }
 
 
-phase_finish ()
+worker_msg_automatic ()
 {
-	execute worker configure_home
+	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
 }
 
 
@@ -39,6 +39,17 @@ worker_runtime_network ()
 	else
 		notify "Ok. skipping network config"
 	fi
+}
+
+
+worker_runtime_svn ()
+{
+	SVN_USERNAME=dieter
+	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
+	SVN_BASE=https://192.168.1.2/svn/repos
+	TARGET_HOST=desktop-a7n8x #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
+	_accept_ssl_cert
 }
 
 
@@ -109,8 +120,15 @@ worker_set_clock ()
 	true
 }
 
+
 worker_install_bootloader ()
 {
 	install-grub /dev/sda
+}
+
+
+worker_runtime_yaourt ()
+{
+	_yaourt_replace_pacman
 }
 

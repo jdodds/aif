@@ -8,39 +8,28 @@ var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific procedures) ######
 
-phase_preparation ()
-{
-	execute worker select_source
-	execute worker runtime_network
-	execute worker runtime_packages
-}
+phase_preparation=(\
+	select_source \
+	runtime_network \
+	runtime_packages)
+
+phase_basics=(\
+	set_clock \
+	prepare_disks)
+
+phase_system=(\
+	package_list \
+	install_packages \
+	auto_fstab \
+	auto_network \
+	auto_locale \
+	configure_system \
+	mkinitcpio \
+	locales \
+	install_bootloader)
 
 
-phase_basics ()
-{
-	execute worker set_clock
-	execute worker prepare_disks
-}	
-
-
-phase_system ()
-{
-	execute worker package_list    
-	execute worker install_packages
-	execute worker auto_fstab   #TODO: exact names of these 3
-	execute worker auto_network
-	execute worker auto_locale
-	execute worker configure_system
-	execute worker mkinitcpio
-	execute worker locales
-	execute worker install_bootloader
-}
-
-
-phase_finish ()
-{
-	true
-}
+phase_finish=(msg_report)
 
 
 
@@ -152,4 +141,9 @@ worker_install_bootlader ()
 {
 	#TODO: ask which disk, install grub on it
 	true
+}
+
+worker_msg_report ()
+{
+	show_report
 }

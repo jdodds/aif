@@ -103,20 +103,37 @@ execute ()
 {
 	[ -z "$1" -o -z "$2" ] && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
 	[ "$1" != phase -a "$1" != worker ] && die_error "execute's first argument must be a valid type (phase/worker)"
-	[ "$1" = phase ]  && log "******* Executing phase $2"
-	[ "$1" = worker ] && log "*** Executing worker $2"
-	to_execute=$1_$2
-	shift 2
-	if type -t $to_execute | grep -q function
+	PWD_BACKUP=`pwd`
+	object=$1_$2
+
+	if [ "$1" = worker ]
 	then
-		PWD_BACKUP=`pwd`
-		$to_execute "$@"
-		ret=$?
-		cd $PWD_BACKUP
-	else
-		die_error "$to_execute is not defined!"
+		log "*** Executing worker $2"
+		if type -t $object | grep -q function
+		then
+			shift 2
+			$object "$@"
+			ret=$?
+			exit_var=exit_$object
+			read $exit_var <<< $ret # maintain exit status of each worker
+		else
+			die_error "$object is not defined!"
+		fi
+	elif [ "$1" = phase ]
+	then
+		log "******* Executing phase $2"
+		exit_var=exit_$object
+		read $exit_var <<< 0
+
+		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)  # props to jedinerd at #bash for this hack.
+		for worker_str in "${phase_array[@]}" # worker_str contains the name of the worker and optionally any arguments
+		do
+			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
+		done
+		ret={!exit_var}
 	fi
 
+	cd $PWD_BACKUP
 	return $ret
 }
 
@@ -139,6 +156,30 @@ start_process ()
 	execute phase basics
 	execute phase system
 	execute phase finish
+}
+
+
+show_report () #TODO: abstract UI method (cli/dia)
+{
+	echo "Execution Report:"
+	echo "-----------------"
+	for phase in preparation basics system finish
+	do
+		object=phase_$phase
+		exit_var=exit_$object
+		ret={!exit_var}
+		echo -n "Phase $phase: "
+		[ "$ret" = "0" ] && echo "Success" || echo "Failed"
+		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
+		for worker_str in "${phase_array[@]}"
+		do
+			worker=${worker_str%% *}
+			exit_var=exit_worker_$worker
+			ret={!exit_var}
+			echo -n " > Worker $worker: "
+			[ "$ret" = "0" ] && echo "Success" || echo "Failed"
+		done
+	done
 }
 
 
