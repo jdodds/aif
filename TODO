@@ -39,6 +39,8 @@ executed succesfully for a phase and set the exit state of that phase
 * port classic installer so it works with fifa
 * make some sensible default profiles (eg desktop, server, ...)
 * make it work
+* when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
+it can be regenerated with a command, i should look that up)
 * someday.. make a script '/arch/setup' that calls '/arch/fifa.sh interactive'
 
 
