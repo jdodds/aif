@@ -1,3 +1,4 @@
+* fix the big bug that causes no workers to be executed anymore
 * go over ALL files and check all function/executable calls are to existing
   things (eg no dirty leftovers for functions that have been renamed)
 * same for variables
