@@ -91,7 +91,7 @@ mainmenu()
         "1")
             execute worker set_clock && S_CLOCK=1 ;;
         "2")
-            execute worker prepare_disks ;; # stage set vars set in the worker
+            execute worker prepare_disks ;; # stage set vars set in the worker #TODO: when this is done, default next item is clock?
         "3")
             execute worker package_list && S_SELECT=1 ;;
         "4")

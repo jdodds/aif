@@ -130,7 +130,7 @@ execute ()
 		do
 			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
 		done
-		ret={!exit_var}
+		ret=${!exit_var}
 	fi
 
 	cd $PWD_BACKUP
@@ -167,7 +167,7 @@ show_report () #TODO: abstract UI method (cli/dia)
 	do
 		object=phase_$phase
 		exit_var=exit_$object
-		ret={!exit_var}
+		ret=${!exit_var}
 		echo -n "Phase $phase: "
 		[ "$ret" = "0" ] && echo "Success" || echo "Failed"
 		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
@@ -175,7 +175,7 @@ show_report () #TODO: abstract UI method (cli/dia)
 		do
 			worker=${worker_str%% *}
 			exit_var=exit_worker_$worker
-			ret={!exit_var}
+			ret=${!exit_var}
 			echo -n " > Worker $worker: "
 			[ "$ret" = "0" ] && echo "Success" || echo "Failed"
 		done
