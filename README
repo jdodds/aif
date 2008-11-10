@@ -109,7 +109,11 @@ choice of editors, you'll probably edit on your pc, commit, push to github
 and pull from the clone on the cd.
 If you want to do debugging, just call the debug function and export DEBUG=1
 before calling the scripts.
-
+Keep in mind there are 3 kinds of variables.  Those that affect/belong to
+the runtime (install cd live environment), target (affects/belongs to the
+target installation) and TMP (everything in between or extra). Variablenames
+should have _TARGET or _TMP suffixes or none for runtime.  (Honestly though,
+it isn't always the case like that now, I need to do more refactoring)
 
 
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
