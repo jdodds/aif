@@ -407,8 +407,7 @@ interactive_select_packages() {
     local _pkgtmp="$($PACMAN -Sl core | awk '{print $2}')" # all packages in core repository
     local _pkglist=''
 
-    $PACMAN -Si $_pkgtmp | \ 
-        awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }' > $ANSWER
+    $PACMAN -Si $_pkgtmp | awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }' > $ANSWER
     while read pkgname pkgcat; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
