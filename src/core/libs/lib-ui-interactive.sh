@@ -174,14 +174,14 @@ interactive_autoprepare()
                 if [ "$ROOT_PART_SIZE" -ge "$DISC_SIZE" ]; then
                     notify "ERROR: You have entered a too large size, please enter again."
                 else
-                    ask_yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" 0 0 && ROOT_PART_SET=1
+                    ask_yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" && ROOT_PART_SET=1
                 fi
             fi
         done
         while [ "$CHOSEN_FS" = "" ]; do
             _dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
             FSTYPE=$(cat $ANSWER)
-            ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" 0 0 && CHOSEN_FS=1
+            ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" && CHOSEN_FS=1
         done
         SET_DEFAULTFS=1
     done
@@ -307,7 +307,7 @@ interactive_mountpoints() {
         PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
         if [ "$PART" != "NONE" ]; then
             DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
             echo "$PART:swap:swap:$DOMKFS" >>/tmp/.parts
         fi
 
@@ -319,7 +319,7 @@ interactive_mountpoints() {
         _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
         FSTYPE=$(cat $ANSWER)
         DOMKFS="no"
-        ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+        ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
         echo "$PART:$FSTYPE:/:$DOMKFS" >>/tmp/.parts
 
         #
@@ -342,12 +342,12 @@ interactive_mountpoints() {
                 fi
             done
             DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" 0 0 && DOMKFS="yes"
+            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
             echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/tmp/.parts
             _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
             PART=$(cat $ANSWER)
         done
-        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)" 18 0 && PARTFINISH="DONE"
+        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
     done
 
     target_umountall
@@ -448,7 +448,7 @@ interactive_runtime_network() {
         *) return 1 ;;
     esac
 
-    ask_yesno "Do you want to use DHCP?" 0 0
+    ask_yesno "Do you want to use DHCP?"
     if [ $? -eq 0 ]; then
         infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
         killall dhcpd
@@ -480,7 +480,7 @@ interactive_runtime_network() {
             PROXY_HTTP=$(cat $ANSWER)
             _dia_DIALOG --inputbox "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 16 65 "" 2>$ANSWER || return 1
             PROXY_FTP=$(cat $ANSWER)
-            ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP" 0 0
+            ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
             case $? in
                 1) ;;
                 0) NETPARAMETERS="1" ;;

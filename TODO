@@ -3,7 +3,6 @@ See also the FIXME's and TODO's in the code.
 
 PRE-ALPHA PHASE: get the framework reasonably working + interactive procedure ftp/cdrom working.
 * core/interactive bug: configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure!
-* core/interactive bug: manual partition creation: menu returns too soon. (set mountpoints + automatic thingie work though)
 * core/interactive bug: grub menu.lst says hda instead of sda
 
 
@@ -18,6 +17,8 @@ General:
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
 * by now we should be able to shift dia/cli in all procedures and everything
 should keep working fine
+* sometimes you can't see the whole question in ask_yesno (eg after manually partitioning/setting mountpoints)
+  -> maybe just increase the panel for all dia ask_yesno's
 
 Specifically:
 * core/interactive bug: boot space 15 -> too large should be too small
