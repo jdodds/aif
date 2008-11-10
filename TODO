@@ -1,47 +1,67 @@
-* fix the big bug that causes no workers to be executed anymore
+See also the FIXME's and TODO's in the code.
+
+
+ALPHA PHASE: get it sort of reasonably working
+General:
 * go over ALL files and check all function/executable calls are to existing
   things (eg no dirty leftovers for functions that have been renamed)
 * same for variables
-* make interactive procedure working well.
-* base procedure wordt implementatie van alles wat auto gaat uit setup script, other steps warning 'not implemented'
-* in elke phase een lege worker die te overriden valt zoda we geen phases
-  moeten overriden
 * fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
-* instead of using the 'base' procedure and letting other procedures override,
-  we should have even more flexibilty to take parts from different procedures.
-  eg dieter procedure maybe wants to use something interactive. or base
-  procedure wants to do something interactive. interactive functions maybe
-  dont belong in a procedure?  -> depend_procedure good enough? or do we
-  need more fine-grained dependencies (take function foo from procedure bar
-  from module baz). for now let's try like this.. -> we can call explicit
-  functions from libraries from modules.. so then just stick it in a lib ->
-  lots of stuff can go into lib-ui, making the procedure itself just the
-  'execution plan'.. sounds good actually.  problem with this is functions
-  can have the same names (or you need to prepend modulename always, but
-  that's not clean + 'fallback'/overriding doesn't work well anymore. 
-  alternative -> each lib is a directory, each function in a file, make it
-  possible to source all libs, one lib, or one function from one lib
-* base procedure idea: it should just tell you what to do? -> less
-  implementation work in base procedure, more in other procedures...
-* fix crossconcerns: procedures are about _how_ (autodetection, asking user,...)
-  what about _what_ (desktop,server) --> 'mode'? 'profile'? procedures
-  define for themselves how much they care about the 'profile'. for some
-  it's a key thing, for others it could be just another list of defaults
-* port classic installer so it works with fifa
-* make some sensible default profiles (eg desktop, server, ...)
-* make it work
-* when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
-it can be regenerated with a command, i should look that up)
-* someday.. make a script '/arch/setup' that calls '/arch/fifa.sh interactive'
 
-
--- core/interactive --
-- bugs -
-* boot space 15 -> too large should be too small
-* swap space 0 -> invalid?
-* you always need to press ok before it does the action it just said it's
+Specifically:
+* core/interactive bug: boot space 15 -> too large should be too small
+* core/interactive bug: swap space 0 -> invalid?
+* core/interactive/lib-ui: you always need to press ok before it does the action it just said it's
 doing (is it the same with previous installer?)
-- features -
-* more control over filesystems (lvm,dm_crypt, choose each FS and each size
-yourself)
+* core/interactive: try out different installation methods
+* core/base: implement as specified in README
+* core/quickinst: figure out what needs to be done and do it.
+* dieter/automatic: wait for yaourt --config fix
+
+
+BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternative installer.
+* involve broader community
+* setup bugtracker/roadmap thingie
+* fix everything
+
+
+PRODUCTION PHASE: totally replace /arch/setup and /arch/quickinst
+* fix everything even more
+* bribe devs
+* core/interactive: more control over filesystems (lvm, dm_crypt, choose each FS and each size yourself)
+	when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
+	it can be regenerated with a command, i should look that up)
+
+
+SOMEDAY/MAYBE/RANDOM THOUGHTS:
+* the quickinst assumes the user did some stuff by himself and does some
+after-processing.  Would it be useful to have a procedure that always tells
+the user what to do (manually) ?
+* profiles like 'desktop','server' (~-> package list, configs, disk setup,..) are crossconcerns
+compared to procedures (which are about "how" the installation goes:
+prescripted, autodetection, interactive,...).
+support for profiles could be built in certain procedures), maybe by supplying extra commandline
+arguments to the procedure or asking a few questions.
+For automatic procedures, a profile could be the fundamental entitiy,
+whereas for interactive procedures it could provide some other defaults.
+
+
+WORRIES FOR MAYBE NO GOOD REASON
+* base procedure is mostly to serve other procedures.  If we need to do much
+work to implement something in the base procedure that we will probably
+never use in other procedures, we're doing something wrong.  If that ever
+happens (not likely I think), let's rethink what the base procedure should really be.
+
+* instead of every procedure using and overriding the 'base' procedure,
+we should maybe have even more flexibilty to take parts from different, specific procedures.
+eg: dieter procedure maybe wants to use something interactive. or base procedure wants to do something
+from interactive profile (Will this really happen?)
+interactive functions maybe dont belong in a procedure?
+-> depend_procedure good enough? or do we need more fine-grained dependencies (take function foo from procedure bar from module baz).
+for now let's try like this.. -> we can call explicit functions from libraries from modules.. so then just stick it in a lib ->
+  lots of stuff can go into lib-ui, making the procedure itself just the
+  'execution plan'.. sounds good actually.
+problem with this is functions can have the same names (or you need to prepend modulename always, but that's not clean + 'fallback'/overriding doesn't work well anymore. 
+alternative -> each lib is a directory, each function in a file, make it possible to source all libs, one lib, or one function from one lib
+
