@@ -37,6 +37,13 @@ log ()
 }
 
 
+debug ()
+{
+	[ "$DEBUG" = "1" ] && echo -e "[DEBUG] $@"
+	[ "$DEBUG" = "1" ] && echo -e "[DEBUG] $@" >$LOG
+}
+
+
 ###### Core functions ######
 
 
@@ -124,9 +131,13 @@ execute ()
 		log "******* Executing phase $2"
 		exit_var=exit_$object
 		read $exit_var <<< 0
+		debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_var"
+		debug "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
 
-		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)  # props to jedinerd at #bash for this hack.
-		for worker_str in "${phase_array[@]}" # worker_str contains the name of the worker and optionally any arguments
+		# props to jedinerd at #bash for this hack.
+		eval phase=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
+		# worker_str contains the name of the worker and optionally any arguments
+		for worker_str in "${phase[@]}"
 		do
 			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
 		done
