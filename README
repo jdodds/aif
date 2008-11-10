@@ -50,7 +50,7 @@ Notes:
  - The phases are started by the start_process function.  You can also override this function to take flow control in your own hands (eg iterative, menu-based installer)
  - you _can_ override _all_ variables and functions in your modules, but you should be able to achieve your goals by
    overriding only the 3 basic things and the start_process function, and only in procedures.
- - you _must_ specify a procedure, to avoid errors. take 'base' if unsure
+ - you _must_ specify a procedure, to avoid errors. take 'interactive' if unsure
  - don't edit the base procedure (or any other core item), rather make your own. It's easy!
  - you're not supposed to define new phases. just override them. logic goes in workers/libariers
 
@@ -88,6 +88,17 @@ You can specify a core procedure on the command line by specifying
 '<module_name>/<procedure_name>'
 
 
+
+
+** Procedures **
+core/base:        basic, little-interactivity installation with some common defaults.  You probably don't
+                  want to run this one, although it's useful for other procedures to inherit from.
+core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
+core/quickinst:   mostly DIY.  port of /arch/quickinst
+
+dieter/automatic: unofficial. not enabled by default
+
+
 If you want to do debugging, just call the debug function and export DEBUG=1
 before calling the scripts.
 
@@ -100,4 +111,3 @@ I couldn't find what license the code is under, but I assume this
 is okay.. if not let me know.
 The original code is at
 http://projects.archlinux.org/?p=installer.git;a=summary
-
