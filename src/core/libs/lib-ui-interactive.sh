@@ -219,7 +219,7 @@ interactive_autoprepare()
         return 1
     fi
 
-    rm -f /tmp/.fstab
+    rm -f $TMP_FSTAB
 
     target_umountall
 
@@ -289,7 +289,7 @@ EOF
 
 interactive_mountpoints() {
     while [ "$PARTFINISH" != "DONE" ]; do
-        : >/tmp/.fstab
+        : >/$TMP_FSTAB
         : >/tmp/.parts
 
         # Determine which filesystems are available

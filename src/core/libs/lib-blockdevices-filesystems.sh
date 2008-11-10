@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TMP_DEV_MAP=/home/arch/fifa/runtime/dev.map
-
+TMP_FSTAB=/home/arch/fifa/runtime/.fstab
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -259,12 +259,12 @@ _mkfs() {
     if [ -n "${_uuid}" ]; then
         _device="UUID=${_uuid}"
     fi
-    echo -n "${_device} ${_mountpoint} ${_fstype} defaults 0 " >>/tmp/.fstab
+    echo -n "${_device} ${_mountpoint} ${_fstype} defaults 0 " >>$TMP_FSTAB
 
     if [ "${_fstype}" = "swap" ]; then
-        echo "0" >>/tmp/.fstab
+        echo "0" >>$TMP_FSTAB
     else
-        echo "1" >>/tmp/.fstab
+        echo "1" >>$TMP_FSTAB
     fi
 }
 
@@ -276,11 +276,11 @@ _mkfs() {
 #
 target_configure_fstab()
 {
-	if [ -f /home/arch/fifa/runtime/.fstab ]
+	if [ -f $TMP_FSTAB ]
 	then
 		# comment out stray /dev entries
 		sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab
 		# append entries from new configuration
-		sort /home/arch/fifa/runtime/.fstab >>$var_TARGET_DIR/etc/fstab
+		sort $TMP_FSTAB >>$var_TARGET_DIR/etc/fstab
 	fi
 }
