@@ -88,7 +88,8 @@ EOF
 		mke2fs -j /dev/cryptpool/$i && mount /dev/cryptpool/$i $var_TARGET_DIR/$i || die_error "Could not format or mount $var_TARGET_DIR/$i"
 	done
 
-	#TODO fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
+	# TODO: swapon the thing and don't forget to swapoff it in the cleanup part above
+	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	
 }
 
