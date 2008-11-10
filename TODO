@@ -2,8 +2,9 @@ See also the FIXME's and TODO's in the code.
 
 
 PRE-ALPHA PHASE: get the framework reasonably working + interactive procedure ftp/cdrom working.
-* core/interactive bug: -> configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure!
-* core/interactive: manual partition creation: menu returns too soon. (set mountpoints + automatic thingie work though)
+* core/interactive bug: configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure!
+* core/interactive bug: manual partition creation: menu returns too soon. (set mountpoints + automatic thingie work though)
+* core/interactive bug: grub menu.lst says hda instead of sda
 
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
@@ -35,7 +36,7 @@ fail.  i tried killall dhcpd, killall -9 dhcpd first but that didn't help:
 it can't kill the process or something...
 
 
-PRODUCTION PHASE: totally replace /arch/setup and /arch/quickinst
+PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
 * bribe devs
 * core/interactive: more control over filesystems (lvm, dm_crypt, choose each FS and each size yourself)
