@@ -95,7 +95,7 @@ mainmenu()
         "3")
             execute worker package_list && S_SELECT=1 ;;
         "4")
-            execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } ;;
+            execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } ;; #TODO: next item is again install packages
         "5")
             execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } ;;
         "6")
@@ -104,11 +104,9 @@ mainmenu()
 			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
 			execute worker install_bootloader "$ANSWER_OPTION";;
         "7")
-            notify "If the install finished successfully, you can now type 'reboot' to restart the system."
-            stop_installer ;;
+            notify "If the install finished successfully, you can now type 'reboot' to restart the system." &&  stop_installer ;;
         *)
-            ask_yesno "Abort Installation?" && stop_installer
-            ;;
+            ask_yesno "Abort Installation?" && stop_installer ;;
     esac
 }
 

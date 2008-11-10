@@ -506,12 +506,10 @@ interactive_runtime_network() {
 
 
 interactive_install_grub() {
-    get_grub_map
-    local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
-    if [ ! -f $grubmenu ]; then
-        notify "Error: Couldn't find $grubmenu.  Is GRUB installed?"
-        return 1
-    fi
+	get_grub_map
+	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
+	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
+
     # try to auto-configure GRUB...
     if [ "$PART_ROOT" != "" -a "$S_GRUB" != "1" ]; then
         grubdev=$(mapdev $PART_ROOT)
