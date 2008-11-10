@@ -3,7 +3,10 @@ See also the FIXME's and TODO's in the code.
 
 PRE-ALPHA PHASE: get it sort of reasonably working
 * core/interactive bug: -> configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure!
-
+-> fixed i think
+* no default mirrorlist? -> fixed i think
+* can't return to main menu after mirror selection/network setup. maybe because network setup failed
+(if i say network is ok, it's ok though)
 
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs
@@ -33,7 +36,7 @@ BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternat
 * involve broader community
 * setup bugtracker/roadmap thingie
 * fix everything
-
+* if dhcpd already runs for $reason, the installer will try again @ configure network and fail
 
 PRODUCTION PHASE: totally replace /arch/setup and /arch/quickinst
 * fix everything even more

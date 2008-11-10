@@ -670,7 +670,7 @@ interactive_select_source()
 interactive_select_mirror() { 
         notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
         # FIXME: this regex doesn't honor commenting
-        MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${MIRRORLIST}" | sed 's|$| _|g')
+        MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
         _dia_DIALOG --menu "Select an FTP/HTTP mirror" 14 55 7 \
                   $MIRRORS \
                   "Custom" "_" 2>$ANSWER || return 1
@@ -684,7 +684,7 @@ interactive_select_mirror() {
         # our mirrorlist and pulling the full URL out. Substitute 'core' in  
         # for the repository name, and ensure that if it was listed twice we 
         # only return one line for the mirror.
-        var_SYNC_URL=$(egrep -o "${_server}.*" "${MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
+        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
     fi
     echo "Using mirror: $var_SYNC_URL" >$LOG
 }
