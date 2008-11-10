@@ -33,7 +33,7 @@ target_special_fs ()
 # the destination root partition last!
 target_umountall()
 {
-	notify "Disabling swapspace, unmounting already mounted disk devices..."
+	infofy "Disabling swapspace, unmounting already mounted disk devices..."
 	swapoff -a >/dev/null 2>&1
 	umount $(mount | grep -v "${var_TARGET_DIR} " | grep "${var_TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
 	umount $(mount | grep "${var_TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
