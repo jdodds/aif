@@ -102,8 +102,7 @@ findpartitions() {
 		for part in $disk*
 		do
 			# check if not already assembled to a raid device
-			if ! [ "$(cat /proc/mdstat 2>/dev/null | grep $part)" -o "$(fstype 2>/dev/null </dev/$part | grep "lvm2")" \ 
-			    -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
+			if ! [ "$(grep $part /proc/mdstat 2>/dev/null)" -o "$(fstype 2>/dev/null </dev/$part | grep lvm2)" -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
 			then
 				if [ -d $part ]
 				then  
@@ -155,7 +154,7 @@ findpartitions() {
 
 # taken from setup
 get_grub_map() {
-	rm $TMP_DEV_MAP
+	rm $TMP_DEV_MAP #TODO: this doesn't exist? is this a problem? ASKDEV
 	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
