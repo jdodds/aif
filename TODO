@@ -6,7 +6,7 @@ PRE-ALPHA PHASE: get it sort of reasonably working
 -> fixed i think
 * no default mirrorlist? -> fixed i think
 * can't return to main menu after mirror selection/network setup. maybe because network setup failed
-(if i say network is ok, it's ok though)
+(if i say network is ok, it's ok though) -> fixed i think
 
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs
@@ -37,6 +37,7 @@ BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternat
 * setup bugtracker/roadmap thingie
 * fix everything
 * if dhcpd already runs for $reason, the installer will try again @ configure network and fail
+-> fixed i think
 
 PRODUCTION PHASE: totally replace /arch/setup and /arch/quickinst
 * fix everything even more

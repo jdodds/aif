@@ -451,6 +451,9 @@ interactive_runtime_network() {
     ask_yesno "Do you want to use DHCP?" 0 0
     if [ $? -eq 0 ]; then
         infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
+        killall dhcpd
+        killall -9 dhcpd
+        sleep 1
         dhcpcd $INTERFACE >$LOG 2>&1
         if [ $? -ne 0 ]; then
             notify "Failed to run dhcpcd.  See $LOG for details."
