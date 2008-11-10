@@ -59,7 +59,7 @@ interactive_configure_system()
 				chroot ${var_TARGET_DIR} passwd root && break
 			done
 		else                                                #regular file
-			$EDITOR ${var_TARGET_DIR}/${FILE}
+			$EDITOR ${var_TARGET_DIR}${FILE}
 		fi
 	done
 
