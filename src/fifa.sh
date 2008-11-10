@@ -131,11 +131,12 @@ execute ()
 		log "******* Executing phase $2"
 		exit_var=exit_$object
 		read $exit_var <<< 0
-		debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_var"
+		debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
 		debug "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
 
 		# props to jedinerd at #bash for this hack.
 		eval phase=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
+		debug "\$phase: $phase - ${phase[@]}"
 		# worker_str contains the name of the worker and optionally any arguments
 		for worker_str in "${phase[@]}"
 		do
