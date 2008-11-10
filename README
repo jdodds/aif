@@ -88,6 +88,9 @@ You can specify a core procedure on the command line by specifying
 '<module_name>/<procedure_name>'
 
 
+If you want to do debugging, just call the debug function and export DEBUG=1
+before calling the scripts.
+
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
 scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
 to make the code more (re)useable and to separate backend code, user

@@ -131,15 +131,21 @@ execute ()
 		log "******* Executing phase $2"
 		exit_var=exit_$object
 		read $exit_var <<< 0
-		debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
-		debug "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
-
+		# TODO: for some reason the hack below does not work (tested in virtualbox), even though it really should.  Someday I must get indirect array variables working and clean this up...
+		# debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
+		# debug "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
 		# props to jedinerd at #bash for this hack.
-		eval phase=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
-		debug "\$phase: $phase - ${phase[@]}"
+		# eval phase=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
+		#debug "\$phase: $phase - ${phase[@]}"
+		unset phase
+		[ "$2" = preparation ] && phase=( "${phase_preparation[@]}" )
+		[ "$2" = basics      ] && phase=( "${phase_basics[@]}" )
+		[ "$2" = system      ] && phase=( "${phase_system[@]}" )
+		[ "$2" = finish      ] && phase=( "${phase_finish[@]}" )
 		# worker_str contains the name of the worker and optionally any arguments
 		for worker_str in "${phase[@]}"
 		do
+			debug "Loop iteration.  \$worker_str: $worker_str"
 			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
 		done
 		ret=${!exit_var}
