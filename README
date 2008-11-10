@@ -99,8 +99,18 @@ core/quickinst:   mostly DIY.  port of /arch/quickinst
 dieter/automatic: unofficial. not enabled by default
 
 
+** Contributing **
+Install a VM (I use virtualbox-ose, works fine), make a vm, boot the install
+cd (only i686 works in vbox) and just follow the HOWTO.
+It's probably easiest if you set up your own git clone that you can easily
+acces from the VM (You can open a github account and for my code).
+You can edit on the cd itself, but given the low resolution of the VM and the limited
+choice of editors, you'll probably edit on your pc, commit, push to github
+and pull from the clone on the cd.
 If you want to do debugging, just call the debug function and export DEBUG=1
 before calling the scripts.
+
+
 
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
 scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
