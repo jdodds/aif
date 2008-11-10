@@ -70,20 +70,21 @@ worker_prepare_disks ()
 ,10,L,*
 ,,L
 EOF
+	[ $? -gt 0 ] && die_error "Could not sfdisk /dev/sda.  Return code is $?"
 	#TODO: when sfdisk is done, i still have an invalid partition table?
-	cryptsetup --batch-mode -c aes-xts-plain -y -s 512 luksFormat /dev/sda2
-	cryptsetup luksOpen /dev/sda2 sda2_crypt
-	pvcreate /dev/mapper/sda2_crypt
-	vgcreate cryptpool /dev/mapper/sda2_crypt
-	lvcreate -L 2G   -n swap cryptpool
-	lvcreate -L 500M -n tmp  cryptpool
-	lvcreate -L 10G  -n home cryptpool
-	lvcreate -L 10G  -n root cryptpool
-	lvcreate -L 3G   -n var  cryptpool
+	cryptsetup --batch-mode -c aes-xts-plain -y -s 512 luksFormat /dev/sda2 || die_error "Cannot cryptsetup luksFormat /dev/sda2"
+	cryptsetup luksOpen /dev/sda2 sda2_crypt || die_error "Cannot cryptsetup luksOpen /dev/sda2"
+	pvcreate /dev/mapper/sda2_crypt || die_error "Cannot pvcreate the PV on the encrypted blockdevice"
+	vgcreate cryptpool /dev/mapper/sda2_crypt || die_error "Cannot create the VG an the PV on the encrypted blockdevice"
+	lvcreate -L 2G   -n swap cryptpool && \
+	lvcreate -L 500M -n tmp  cryptpool && \
+	lvcreate -L 10G  -n home cryptpool && \
+	lvcreate -L 10G  -n root cryptpool && \
+	lvcreate -L 3G   -n var  cryptpool || die_error "Could not create at least one of the LV's"
 	for i in home root tmp var
 	do
 		mkdir -p $var_TARGET_DIR/$i
-		mke2fs -j /dev/cryptpool/$i && mount /dev/cryptpool/$i $var_TARGET_DIR/$i
+		mke2fs -j /dev/cryptpool/$i && mount /dev/cryptpool/$i $var_TARGET_DIR/$i || die_error "Could not format or mount $var_TARGET_DIR/$i"
 	done
 
 	#TODO fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
