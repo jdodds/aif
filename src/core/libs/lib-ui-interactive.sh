@@ -11,7 +11,7 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no "Select the disk you want to partition (select DONE when finished)" 14 55 7 $DISCS || return 1
+        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1

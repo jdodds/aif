@@ -16,6 +16,8 @@ General:
 * go over all files and clean up
 * fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
+* by now we should be able to shift dia/cli in all procedures and everything
+should keep working fine
 
 Specifically:
 * core/interactive bug: boot space 15 -> too large should be too small
@@ -34,7 +36,6 @@ BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternat
 * if dhcpd already runs for $reason, the installer will try again @ configure network and
 fail.  i tried killall dhcpd, killall -9 dhcpd first but that didn't help:
 it can't kill the process or something...
-
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
