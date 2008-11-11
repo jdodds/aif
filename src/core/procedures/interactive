@@ -234,11 +234,6 @@ worker_runtime_network() {
 }
 
 
-dogrub() {
-	interactive_dogrub && S_GRUB=1
-}
-
-
 worker_select_mirror ()
 {
 	interactive_select_mirror
