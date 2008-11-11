@@ -15,7 +15,6 @@ TIMEZONE=
 
 # partitions
 PART_ROOT=
-DISK_CONFIG_TYPE= #will be set to auto or manual
 
 # default filesystem specs (the + is bootable flag)
 # <mountpoint>:<partsize>:<fstype>[:+]
@@ -140,6 +139,7 @@ worker_prepare_disks()
 	DONE=0
 	ret=1 # 1 means unsuccessful. 0 for ok
 	NEXTITEM=
+	DISK_CONFIG_TYPE=
     while [ "$DONE" = "0" ]; do
         if [ -n "$NEXTITEM" ]; then
             DEFAULT="--default-item $NEXTITEM"
