@@ -15,6 +15,7 @@ TIMEZONE=
 
 # partitions
 PART_ROOT=
+DISK_CONFIG_TYPE= #will be set to auto or manual
 
 # default filesystem specs (the + is bootable flag)
 # <mountpoint>:<partsize>:<fstype>[:+]
@@ -28,15 +29,12 @@ start_process ()
 	## begin execution ##
 
 	#TODO: implement check_depend everywhere
-	#TODO: now that exit states of all workers are maintained by the execute function, we can get rid of this special flow control
+	#TODO: now that exit states of all workers are maintained by the execute function, we are getting rid of this special flow control
 
 	# install stages
 	S_SRC=0         # choose install medium
 	S_NET=0         # network configuration
 	S_CLOCK=0       # clock and timezone
-	S_PART=0        # partitioning
-	S_MKFS=0        # formatting
-	S_MKFSAUTO=0    # auto fs part/formatting TODO: kill this
 	S_SELECT=0      # package selection
 	S_INSTALL=0     # package installation
 	S_CONFIG=0      # configuration editing
@@ -139,10 +137,9 @@ worker_configure_system()
 
 worker_prepare_disks()
 {
-    S_MKFSAUTO=0
-    S_MKFS=0
-    DONE=0
-    NEXTITEM=""
+	DONE=0
+	ret=1 # 1 means unsuccessful. 0 for ok
+	NEXTITEM=
     while [ "$DONE" = "0" ]; do
         if [ -n "$NEXTITEM" ]; then
             DEFAULT="--default-item $NEXTITEM"
@@ -150,35 +147,34 @@ worker_prepare_disks()
             DEFAULT=""
         fi
         _dia_DIALOG $DEFAULT --menu "Prepare Hard Drive" 12 60 5 \
-            "1" "Auto-Prepare (erases the ENTIRE hard drive)" \
+            "1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
             "2" "Partition Hard Drives" \
             "3" "Set Filesystem Mountpoints" \
             "4" "Return to Main Menu" 2>$ANSWER
         NEXTITEM="$(cat $ANSWER)"
         case $(cat $ANSWER) in
             "1")
-                interactive_autoprepare && S_MKFSAUTO=1 ;;
+                interactive_autoprepare && NEXTITEM=4 && ret=0 && DISK_CONFIG_TYPE=auto;;
             "2")
-		if [ "$S_MKFSAUTO" = "1" ]; then
-			notify "You have already prepared your filesystems with Auto-prepare"
+		if [ "$DISK_CONFIG_TYPE" = "auto" ]; then
+			notify "You have already prepared your filesystems with Auto-prepare" #TODO: allow user to do this anyway. he can change his mind.
 		else
-			interactive_partition && S_PART=1 
+			interactive_partition && ret=1 && NEXTITEM=3 && DISK_CONFIG_TYPE=manual
 		fi
 		;;
             "3")
 		PARTFINISH=""
-		if [ "$S_MKFSAUTO" = "1" ]; then
-			notify "You have already prepared your filesystems with Auto-prepare"
+		if "$DISK_CONFIG_TYPE" = "auto"  ]; then
+			notify "You have already prepared your filesystems with Auto-prepare" #TODO: allow user to do this anyway. he can change his mind.
 		else
-			interactive_mountpoints && S_MKFS=1 
+			interactive_mountpoints && ret=0 && NEXTITEM=4 && DISK_CONFIG_TYPE=manual
 		fi
 		;;
             *)
                 DONE=1 ;;
         esac
     done
-    [ $S_MKFSAUTO -eq 1 -o $S_MKFS -eq 1 -a $S_PART -eq 1 ] && return 0
-    return 1
+    return $ret
 }
 
 

@@ -212,11 +212,6 @@ interactive_autoprepare()
     # we assume a /dev/hdX format (or /dev/sdX)
     PART_ROOT="${DEVICE}3"
 
-    if [ "$S_MKFS" = "1" ]; then
-        notify "You have already prepared your filesystems manually"
-        return 0
-    fi
-
     # validate DEVICE
     if [ ! -b "$DEVICE" ]; then
       notify "Device '$DEVICE' is not valid"
