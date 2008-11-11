@@ -155,6 +155,7 @@ findpartitions() {
 # taken from setup
 get_grub_map() {
 	rm $TMP_DEV_MAP #TODO: this doesn't exist? is this a problem? ASKDEV
+	#TODO: what's the use of this? does it generate the menu.lst? man grub says it will put it in /boot/grub/menu.lst, I think our 'boot' is mounted on /mnt/boot ?  check that out. is it grub who sets up the marker?
 	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
