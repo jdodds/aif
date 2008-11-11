@@ -11,6 +11,7 @@ check_depend ()
 
 	object=$1_$2
 	exit_var=exit_$object
+	debug "Depending on exit state of $objecct.. looking up -> ${!exit_var}"
 	[ "${!exit_var}" = '0' ] && return 0
 	show_warning "Cannot Continue.  Going back to $2" "You must do $2 first before going here!." && return 1
 }

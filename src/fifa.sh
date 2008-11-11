@@ -151,6 +151,7 @@ execute ()
 		ret=${!exit_var}
 	fi
 
+	debug "$1 $2 exit state was $ret"
 	cd $PWD_BACKUP
 	return $ret
 }
