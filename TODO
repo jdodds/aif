@@ -18,8 +18,7 @@ General:
 * by now we should be able to shift dia/cli in all procedures and everything
 should keep working fine
 * sometimes you can't see the whole question in ask_yesno (eg after manually partitioning/setting mountpoints)
-  -> maybe just increase the panel for all dia ask_yesno's -> fixed now i
-  think with automatic height calculation
+  -> maybe just increase the panel for all dia ask_yesno's -> fixed now i think with automatic height calculation
 
 Specifically:
 * core/interactive bug: boot space 15 -> too large should be too small
