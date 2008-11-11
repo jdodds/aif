@@ -96,7 +96,7 @@ mainmenu()
         "3")
             check_depend worker prepare_disks && execute worker package_list && S_SELECT=1 && NEXTITEM=4 ;;
         "4")
-            check_depend worker package_list && execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } && NEXITITEM=5 ;; 
+            check_depend worker package_list && execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } && NEXTITEM=5 ;;
         "5")
             check_depend worker install_packages && execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } && NEXTITEM=6 ;;
         "6")
@@ -140,12 +140,13 @@ worker_prepare_disks()
 	ret=1 # 1 means unsuccessful. 0 for ok
 	NEXTITEM=
 	DISK_CONFIG_TYPE=
-    while [ "$DONE" = "0" ]; do
-        if [ -n "$NEXTITEM" ]; then
-            DEFAULT="--default-item $NEXTITEM"
-        else
-            DEFAULT=""
-        fi
+
+	while [ "$DONE" = "0" ]
+	do
+		DEFAULT=""
+		[ -n "$NEXTITEM" ] && DEFAULT="--default-item $NEXTITEM"
+
+
         _dia_DIALOG $DEFAULT --menu "Prepare Hard Drive" 12 60 5 \
             "1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
             "2" "Partition Hard Drives" \
@@ -154,7 +155,7 @@ worker_prepare_disks()
         NEXTITEM="$(cat $ANSWER)"
         case $(cat $ANSWER) in
             "1")
-                interactive_autoprepare && NEXTITEM=4 && ret=0 && DISK_CONFIG_TYPE=auto;;
+                interactive_autoprepare && NEXTITEM=4 && ret=0 && DISK_CONFIG_TYPE=auto;; #TODO: for some reason. if this completes $?=0, next item will be 1 :/
             "2")
 		if [ "$DISK_CONFIG_TYPE" = "auto" ]; then
 			notify "You have already prepared your filesystems with Auto-prepare" #TODO: allow user to do this anyway. he can change his mind.

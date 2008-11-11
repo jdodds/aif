@@ -46,6 +46,7 @@ PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/qui
 * core/interactive: more control over filesystems (lvm, dm_crypt, choose each FS and each size yourself)
 	when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
 	it can be regenerated with a command, i should look that up)
+* core/interactive: when auto-setting up hard disk. show with a bit more detail what is happening (not 'partitioning <disk>' but partitioning, and each FS)
 * core/interactive: do pacman -Sy in the background during early phases, to
   lessen the wait period before selecting packages
 * write bash completion thing for fifa modules/procedures
