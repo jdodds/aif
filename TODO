@@ -2,7 +2,7 @@ See also the FIXME's and TODO's in the code.
 
 
 PRE-ALPHA PHASE: get the framework reasonably working + interactive procedure ftp/cdrom working.
-* core/interactive bug: configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure!
+* core/interactive bug: configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure! -> fixed i think
 * core/interactive bug: grub menu.lst says hda instead of sda
 
 

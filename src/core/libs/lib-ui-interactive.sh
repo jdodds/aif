@@ -1,6 +1,21 @@
 #!/bin/sh
 #TODO: get backend code out of here!!
 
+
+# check if a worker has completed successfully. if not -> tell user he must do it + return 1
+# if ok -> don't warn anything and return 0
+check_depend ()
+{
+	[ -z "$1" -o -z "$2" ] && die_error "Use the check_depend function like this: check_depend <type> <name> with type=phase/worker"
+	[ "$1" != phase -a "$1" != worker ] && die_error "check_depend's first argument must be a valid type (phase/worker)"
+
+	object=$1_$2
+	exit_var=exit_$object
+	[ "${!exit_var}" = '0' ] && return 0
+	show_warning "Cannot Continue.  Going back to $2" "You must do $2 first before going here!." && return 1
+}
+
+
 interactive_partition() {
     target_umountall
 
@@ -289,7 +304,7 @@ EOF
 
 interactive_mountpoints() {
     while [ "$PARTFINISH" != "DONE" ]; do
-        : >/$TMP_FSTAB
+        : >$TMP_FSTAB
         : >/tmp/.parts
 
         # Determine which filesystems are available

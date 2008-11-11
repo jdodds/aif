@@ -99,9 +99,7 @@ worker_install_packages ()
 
 worker_auto_fstab ()
 {
-	if [ "$S_MKFS" = "1" -o "$S_MKFSAUTO" = "1" ]; then
-		target_configure_fstab
-	fi
+	target_configure_fstab
 }
 
 
