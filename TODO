@@ -18,13 +18,16 @@ General:
 * by now we should be able to shift dia/cli in all procedures and everything
 should keep working fine
 * sometimes you can't see the whole question in ask_yesno (eg after manually partitioning/setting mountpoints)
-  -> maybe just increase the panel for all dia ask_yesno's
+  -> maybe just increase the panel for all dia ask_yesno's -> fixed now i
+  think with automatic height calculation
 
 Specifically:
 * core/interactive bug: boot space 15 -> too large should be too small
 * core/interactive bug: swap space 0 -> invalid?
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
 * core/interactive: try out different installation methods
+* core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are
+not mounted under /mnt
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
 * dieter/automatic: wait for yaourt --config fix
@@ -44,6 +47,9 @@ PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/qui
 * core/interactive: more control over filesystems (lvm, dm_crypt, choose each FS and each size yourself)
 	when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
 	it can be regenerated with a command, i should look that up)
+* core/interactive: do pacman -Sy in the background during early phases, to
+  lessen the wait period before selecting packages
+* write bash completion thing for fifa modules/procedures
 
 
 SOMEDAY/MAYBE/RANDOM THOUGHTS:

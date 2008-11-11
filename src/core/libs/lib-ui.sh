@@ -190,6 +190,7 @@ _dia_ask_option ()
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
+	debug "User choose $ANSWER_OPTION"
 	return $ret
 }
 
@@ -215,6 +216,7 @@ _cli_ask_option ()
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
+	debug "User choose $ANSWER_OPTION"
 	echo "$ANSWER_OPTION"
 }
 
@@ -242,7 +244,12 @@ _dia_follow_progress ()
 
 _dia_ask_yesno ()
 {
-	dialog --yesno "$1" 10 55 # returns 0 for yes, 1 for no
+	height=$((`echo -e "$1" | wc -l` +7))
+	dialog --yesno "$1" $height 55 # returns 0 for yes, 1 for no
+	ret=$?
+	[ $ret -eq 0 ] && debug "User picked YES"
+	[ $ret -gt 0 ] && debug "User picked NO"
+	return $ret
 }
 
 
@@ -272,8 +279,10 @@ _cli_ask_yesno ()
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
 	if [ "$answer" = y -o "$answer" = yes ]
 	then
+		debug "User picked YES"
 		return 0
 	else
+		debug "User picked NO"
 		return 1
 	fi
 }
@@ -284,6 +293,7 @@ _cli_ask_string ()
 	echo -n "$@: "
 	read answ
 	echo "$answ"
+	debug "User entered: $answ"
 	[ -z "$answ" ] && return 1
 	return 0
 }
@@ -308,6 +318,7 @@ _cli_ask_number ()
 		fi
 	done
 	echo "$answ"
+	debug "user entered: $answ"
 	[ -z "$answ" ] && return 1
 	return 0
 }

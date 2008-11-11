@@ -38,7 +38,7 @@ start_process ()
 	S_INSTALL=0     # package installation
 	S_CONFIG=0      # configuration editing
 	S_GRUB=0        # TODO: kill this - if using grub
-	S_BOOT=""       # bootloader installed (set to loader name instead of 1)
+	S_BOOT=""       # bootloader installed
 
 	var_UI_TYPE=dia
 
@@ -73,7 +73,7 @@ mainmenu()
 	"5" "Configure System" \
 	"6" "Install Bootloader" \
 	"7" "Exit Install"
-	NEXTITEM="$ANSWER_OPTION"
+	NEXTITEM="$ANSWER_OPTION" #TODO: set next item always current+1 after succesfull finish of each phase/worker, if relevant
 	case $ANSWER_OPTION in
 	"0")
 		execute worker select_source; ret=$?
@@ -100,10 +100,7 @@ mainmenu()
         "5")
             execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } ;;
         "6")
-		ask_option no "Which bootloader would you like to use?  Grub is the Arch default." \
-			"GRUB" "Use the GRUB bootloader (default)" \
-			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
-			execute worker install_bootloader "$ANSWER_OPTION";;
+		 execute worker install_bootloader && S_BOOT=1 ;;
         "7")
             notify "If the install finished successfully, you can now type 'reboot' to restart the system." &&  stop_installer ;;
         *)
@@ -246,14 +243,18 @@ worker_select_mirror ()
 	interactive_select_mirror
 }
 
-# $1 which one
+
 worker_install_bootloader ()
 {
-	bl=`tr '[:upper:]' '[:lower:]' <<< "$1"`
-	log "User picked bootloader $bl ..."
-	[ "$bl" = grub ] && interactive_install_grub && S_BOOT=grub
-	[ "$bl" != grub ] && S_BOOT="$bl"
+	ask_option Grub "Which bootloader would you like to use?  Grub is the Arch default." \
+			"Grub" "Use the GRUB bootloader (default)" \
+			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
+
+	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
+	[ "$bl" != grub ] && return 0
+	interactive_install_grub
 }
+
 
 worker_auto_network ()
 {
