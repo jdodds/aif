@@ -2,8 +2,7 @@ See also the FIXME's and TODO's in the code.
 
 
 PRE-ALPHA PHASE: get the framework reasonably working + interactive procedure ftp/cdrom working.
-* core/interactive bug: configure system -> fstab (/mnt/etc/fstab) does only contain pts,shm and floppy/dvd/cdrom. not hd's?  ->this breaks the boot procedure! -> fixed i think
-* core/interactive bug: grub menu.lst says hda instead of sda
+* core/interactive bug: grub menu.lst says hda instead of sda + too many entries again (1) /dev/hda, 2)windows, 0 1 again but with uuid's (fallback and normal)
 
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
@@ -31,6 +30,7 @@ not mounted under /mnt
 * core/quickinst: figure out what needs to be done and do it.
 * dieter/automatic: wait for yaourt --config fix
 * dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
+* on boot after fresh install sometimes filesystem creation date is newer then current date -> fsck. sometimes even forced reboot. (i've had this witch /arch/setup too)
 
 
 BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternative installer.

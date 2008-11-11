@@ -98,7 +98,7 @@ mainmenu()
         "4")
             check_depend worker package_list && execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } && NEXTITEM=5 ;;
         "5")
-            check_depend worker install_packages && execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } && NEXTITEM=6 ;;
+            check_depend worker install_packages && execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } && NEXTITEM=6 ;; #TODO: why is next item 5 if $?=0?
         "6")
 		 execute worker install_bootloader && S_BOOT=1 && NEXTITEM=7 ;;
         "7")
