@@ -200,7 +200,7 @@ worker_select_source ()
 # prompts the user to select packages to install
 worker_package_list() {
 	# if selection has been done before, warn about loss of input and let the user exit gracefully
-	ended_ok worker package_list && _dia_DIALOG --yesno "WARNING: Running this stage again will result in the loss of previous package selections.\n\nDo you wish to continue?" 10 50 || return 0
+	ended_ok worker package_list && ! _dia_DIALOG --yesno "WARNING: Running this stage again will result in the loss of previous package selections.\n\nDo you wish to continue?" 10 50 && return 0
 
 	interactive_select_packages
 }
