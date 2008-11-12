@@ -1,11 +1,6 @@
 See also the FIXME's and TODO's in the code.
 
 
-PRE-ALPHA PHASE: get the framework reasonably working + interactive procedure ftp/cdrom working.
-* core/interactive bug: grub menu.lst bad entries not cleaned ( after '#-*' tag). check if get_grub_map is the key..
--> fixed i think
-
-
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
