@@ -9,11 +9,11 @@ check_depend ()
 	[ -z "$1" -o -z "$2" ] && die_error "Use the check_depend function like this: check_depend <type> <name> with type=phase/worker"
 	[ "$1" != phase -a "$1" != worker ] && die_error "check_depend's first argument must be a valid type (phase/worker)"
 
-	object=$1_$2
-	exit_var=exit_$object
-	debug "Depending on exit state of $objecct.. looking up -> ${!exit_var}"
-	[ "${!exit_var}" = '0' ] && return 0
-	show_warning "Cannot Continue.  Going back to $2" "You must do $2 first before going here!." && return 1
+	ended_ok $1 $2 && return 0
+	subject="$1 $2"
+	title=worker_$1_$2_title
+	[ -n "${!title}" ] && subject="'${!title}'"
+	show_warning "Cannot Continue.  Going back to $2" "You must do $subject first before going here!." && return 1
 }
 
 
@@ -525,7 +525,8 @@ interactive_install_grub() {
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
     # try to auto-configure GRUB...
-    if [ "$PART_ROOT" != "" -a "$S_GRUB" != "1" ]; then
+    if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
+    GRUB_OK=0
         grubdev=$(mapdev $PART_ROOT)
         local _rootpart="${PART_ROOT}"
         local _uuid="$(getuuid ${PART_ROOT})"
@@ -634,6 +635,7 @@ EOF
         return 1
     fi
     notify "GRUB was successfully installed."
+    GRUB_OK=1
 	return 0
 }
 
