@@ -83,24 +83,24 @@ mainmenu()
 				[ "$ANSWER_OPTION" = 2 ] && break
 			done
 		fi
-		                                                                                         [ $ret -eq 0 ] && execute worker runtime_packages && NEXTITEM=1 ;;
+		                                                                                                [ $ret -eq 0 ] && execute worker runtime_packages && NEXTITEM=1 ;;
 
         "1")
-		                                        execute worker set_clock                                                                           && NEXTITEM=2 ;;
+		                                        execute worker set_clock                                                                                  && NEXTITEM=2 ;;
         "2")
-		                                        execute worker prepare_disks                                                                       && NEXTITEM=3 ;;
+		                                        execute worker prepare_disks                                                                              && NEXTITEM=3 ;;
         "3")
-		check_depend worker prepare_disks    && execute worker package_list                                                                        && NEXTITEM=4 ;;
+		check_depend worker prepare_disks    && execute worker package_list                                                                               && NEXTITEM=4 ;;
         "4")
 		check_depend worker package_list && \
-		check_depend select_source           && execute worker install_packages   && {                             execute worker auto_fstab   ; \
-		                                                                               ended_ok runtime_network && execute worker auto_network ; \
-		                                                                                                           execute worker auto_locale  ; } && NEXTITEM=5 ;;
+		check_depend select_source           && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
+		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
+		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=5 ;;
         "5")
-		check_depend worker install_packages && execute worker configure_system   && {                             execute worker mkinitcpio   ; \
-		                                                                                                           execute worker locales      ; } && NEXTITEM=6 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
+		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
+		                                                                                                                  execute worker locales      ; } && NEXTITEM=6 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
         "6")
-		check_depend worker configure_system && execute worker install_bootloader                                                                  && NEXTITEM=7 ;;
+		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=7 ;;
         "7")
 		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
         *)
