@@ -93,7 +93,7 @@ mainmenu()
 		check_depend worker prepare_disks    && execute worker package_list                                                                               && NEXTITEM=4 ;;
         "4")
 		check_depend worker package_list && \
-		check_depend select_source           && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
+		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
 		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
 		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=5 ;;
         "5")
