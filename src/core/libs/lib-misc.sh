@@ -32,7 +32,7 @@ wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
 
-	while [ -f /tmp/$1-running ]
+	while [ -f /home/arch/fifa/runtime/$1-running ]
 	do
 		#TODO: follow_progress dialog mode = nonblocking (so check and sleep is good), cli mode (tail -f )= blocking? (so check is probably not needed as it will be done)
 		sleep 1
