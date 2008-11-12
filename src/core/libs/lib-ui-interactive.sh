@@ -211,7 +211,6 @@ interactive_autoprepare()
     DEVICE=$DISC
     # TODO: why do we define a $DEFAULTFS variable someplace else if we hardcode it's attributes here to be able to replace them with custom values?  Can't we just construct the custom thing?
     FSSPECS=$(echo $DEFAULTFS | sed -e "s|/:7500:ext3|/:$ROOT_PART_SIZE:$FSTYPE|g" -e "s|/home:\*:ext3|/home:\*:$FSTYPE|g" -e "s|swap:256|swap:$SWAP_PART_SIZE|g" -e "s|/boot:32|/boot:$BOOT_PART_SIZE|g")
-    sfdisk_input=""
 
     # we assume a /dev/hdX format (or /dev/sdX)
     PART_ROOT="${DEVICE}3"
@@ -224,7 +223,7 @@ interactive_autoprepare()
 interactive_mountpoints() {
     while [ "$PARTFINISH" != "DONE" ]; do
         : >$TMP_FSTAB
-        : >/tmp/.parts
+        : >/home/arch/fifa/runtime/.parts #TODO: use a variable instead of a file, we don't need to use a file for this
 
         # Determine which filesystems are available
         FSOPTS="ext2 ext2 ext3 ext3"
@@ -242,7 +241,7 @@ interactive_mountpoints() {
         if [ "$PART" != "NONE" ]; then
             DOMKFS="no"
             ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:swap:swap:$DOMKFS" >>/tmp/.parts
+            echo "$PART:swap:swap:$DOMKFS" >>/home/arch/fifa/runtime/.parts
         fi
 
         _dia_DIALOG --menu "Select the partition to mount as /" 21 50 13 $PARTS 2>$ANSWER || return 1
@@ -254,7 +253,7 @@ interactive_mountpoints() {
         FSTYPE=$(cat $ANSWER)
         DOMKFS="no"
         ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-        echo "$PART:$FSTYPE:/:$DOMKFS" >>/tmp/.parts
+        echo "$PART:$FSTYPE:/:$DOMKFS" >>/home/arch/fifa/runtime/.parts
 
         #
         # Additional partitions
@@ -270,48 +269,26 @@ interactive_mountpoints() {
             while [ "${MP}" = "" ]; do
                 _dia_DIALOG --inputbox "Enter the mountpoint for $PART" 8 65 "/boot" 2>$ANSWER || return 1
                 MP=$(cat $ANSWER)
-                if grep ":$MP:" /tmp/.parts; then
+                if grep ":$MP:" /home/arch/fifa/runtime/.parts; then
                     notify "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint."
                     MP=""
                 fi
             done
             DOMKFS="no"
             ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/tmp/.parts
+            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/home/arch/fifa/runtime/.parts
             _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
             PART=$(cat $ANSWER)
         done
-        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /tmp/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
+        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/fifa/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
     done
 
     target_umountall
 
-    for line in $(cat /tmp/.parts); do
-        PART=$(echo $line | cut -d: -f 1)
-        FSTYPE=$(echo $line | cut -d: -f 2)
-        MP=$(echo $line | cut -d: -f 3)
-        DOMKFS=$(echo $line | cut -d: -f 4)
-        umount ${TARGET_DIR}${MP}
-        if [ "$DOMKFS" = "yes" ]; then
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Creating and activating swapspace on $PART"
-            else
-                infofy "Creating $FSTYPE on $PART, mounting to ${TARGET_DIR}${MP}"
-            fi
-            _mkfs yes $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        else
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Activating swapspace on $PART"
-            else
-                infofy "Mounting $PART to ${TARGET_DIR}${MP}"
-            fi
-            _mkfs no $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        fi
-        sleep 1
-    done
+	fix_filesystems /home/arch/fifa/runtime/.parts && notify "Partitions were successfully mounted." && return 0
 
-	notify "Partitions were successfully mounted."
-	return 0
+	show_warning "Failure while doing filesystems" "Something went wrong.  Check your logs"
+	return 1
 }
 
 # select_packages()

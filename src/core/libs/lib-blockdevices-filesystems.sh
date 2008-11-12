@@ -382,3 +382,36 @@ EOF
     return 0
 }
 
+
+# makes and mounts filesystems#TODO: don't use files but pass variables, integrate this with other functions
+# $1 file with setup
+fix_filesystems ()
+{
+	[ -z "$1" -o ! -f "$1" ] && die_error "Fix_filesystems needs a file with the setup structure in it"
+
+    for line in $(cat $1); do
+        PART=$(echo $line | cut -d: -f 1)
+        FSTYPE=$(echo $line | cut -d: -f 2)
+        MP=$(echo $line | cut -d: -f 3)
+        DOMKFS=$(echo $line | cut -d: -f 4)
+        umount ${var_TARGET_DIR}${MP}
+        if [ "$DOMKFS" = "yes" ]; then
+            if [ "$FSTYPE" = "swap" ]; then
+                infofy "Creating and activating swapspace on $PART"
+            else
+                infofy "Creating $FSTYPE on $PART, mounting to ${var_TARGET_DIR}${MP}"
+            fi
+            _mkfs yes $PART $FSTYPE $var_TARGET_DIR $MP || return 1
+        else
+            if [ "$FSTYPE" = "swap" ]; then
+                infofy "Activating swapspace on $PART"
+            else
+                infofy "Mounting $PART to ${var_TARGET_DIR}${MP}"
+            fi
+            _mkfs no $PART $FSTYPE $var_TARGET_DIR $MP || return 1
+        fi
+        sleep 1
+    done
+
+	return 0
+}
