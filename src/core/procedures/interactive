@@ -72,7 +72,6 @@ mainmenu()
 	case $ANSWER_OPTION in
 	"0")
 		                                        execute worker select_source; ret=$?
-		                                                                                         [ $ret -eq 0 ] && execute worker runtime_packages && NEXTITEM=1 ;;
 		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
 			while true; do
 				ask_option no "FTP Installation" \
@@ -84,6 +83,8 @@ mainmenu()
 				[ "$ANSWER_OPTION" = 2 ] && break
 			done
 		fi
+		                                                                                         [ $ret -eq 0 ] && execute worker runtime_packages && NEXTITEM=1 ;;
+
         "1")
 		                                        execute worker set_clock                                                                           && NEXTITEM=2 ;;
         "2")
