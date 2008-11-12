@@ -14,7 +14,8 @@ run_mkinitcpio()
 	target_special_fs off
 
 	# alert the user to fatal errors
-	[ $(cat /tmp/.mkinitcpio-retcode) -ne 0 ] && show_warning "MKINITCPIO FAILED - SYSTEM MAY NOT BOOT" "/tmp/mkinitcpio.log" text
+	[ $mkinitcpio_exitcode -ne 0 ] && show_warning "MKINITCPIO FAILED - SYSTEM MAY NOT BOOT" "/tmp/mkinitcpio.log" text
+	return $mkinitcpio_exitcode
 }
 
 
@@ -28,23 +29,22 @@ installpkg() {
 
 	wait_for pacman-installpkg
         
+
 	local _result=''
-	if [ $(cat /tmp/.pacman-retcode) -ne 0 ]; then
+	if [ ${pacman-installpkg_exitcode} -ne 0 ]; then
 		_result="Installation Failed (see errors below)"
 		echo -e "\nPackage Installation FAILED." >>/tmp/pacman.log
 	else
 		_result="Installation Complete"
 		echo -e "\nPackage Installation Complete." >>/tmp/pacman.log
 	fi
-	rm /tmp/.pacman-retcode
 
 	show_warning "$_result" "/tmp/pacman.log" text || return 1     
 
 	target_special_fs off
-
 	sync
 
-	return 0
+	return ${pacman-installpkg_exitcode}
 }
 
 

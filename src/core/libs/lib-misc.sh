@@ -2,7 +2,7 @@
 
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile
-# You are supposed to clean up the retcode yourself!
+# returncode is stored in $<identifier>_exitcode
 # $1 identifier
 # $2 command (will be eval'ed)
 # $3 logfile
@@ -13,13 +13,13 @@ run_background ()
 	[ -z "$3" ] && die_error "run_background needs a logfile to redirect output to!"
 
 	( \
-		touch /tmp/$1-running
+		touch /home/arch/fifa/runtime/$1-running
 		echo "$1 progress ..." > $3; \
 		echo >> $3; \
 		eval "$2" >>$3 2>&1
-		echo $? > /tmp/.$1-retcode
+		read $1_exitcode <<< $?
 		echo >> $3   
-		rm -f /tmp/$1-running
+		rm -f /home/arch/fifa/runtime/$1-running
 	) &
 
 	sleep 2
