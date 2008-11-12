@@ -548,7 +548,7 @@ interactive_install_grub() {
                 grubdev="(hd0,0)"
             fi
             # remove default entries by truncating file at our little tag (#-*)
-            sed -i -e '/#-\*/q'
+            sed -i -e '/#-\*/q' $grubmenu
             cat >>$grubmenu <<EOF
 
 # (0) Arch Linux
