@@ -389,7 +389,7 @@ fix_filesystems ()
 {
 	[ -z "$1" -o ! -f "$1" ] && die_error "Fix_filesystems needs a file with the setup structure in it"
 
-    for line in $(cat $1); do
+    for line in $(tac $1); do #TODO: we should probably do / as last because we can't umount it if other filesystems are mounted in it. for now we can be sure we do swap last and before that /.
         PART=$(echo $line | cut -d: -f 1)
         FSTYPE=$(echo $line | cut -d: -f 2)
         MP=$(echo $line | cut -d: -f 3)
