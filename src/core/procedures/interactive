@@ -20,25 +20,20 @@ PART_ROOT=
 # <mountpoint>:<partsize>:<fstype>[:+]
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 
-
+worker_select_source_title='Select Source'
+worker_runtime_network_title='Setup Network (Make sure the network is ok before continuing'
+worker_select_mirror_title='Choose Mirror'
+worker_set_clock_title='Set clock'
+worker_prepare_disks_title='Prepare Hard Drive(s)'
+worker_package_list_title='Select Packages'
+worker_install_packages_title='Install Packages'
+worker_configure_system_title='Configure System'
+worker_install_bootloader_title='Install Bootloader'
 
 start_process ()
 {
 	#####################
 	## begin execution ##
-
-	#TODO: implement check_depend everywhere
-	#TODO: now that exit states of all workers are maintained by the execute function, we are getting rid of this special flow control
-
-	# install stages
-	S_SRC=0         # choose install medium
-	S_NET=0         # network configuration
-	S_CLOCK=0       # clock and timezone
-	S_SELECT=0      # package selection
-	S_INSTALL=0     # package installation
-	S_CONFIG=0      # configuration editing
-	S_GRUB=0        # TODO: kill this - if using grub
-	S_BOOT=""       # bootloader installed
 
 	var_UI_TYPE=dia
 
@@ -65,46 +60,50 @@ mainmenu()
 	default=no
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 	ask_option $default "MAIN MENU" \
-	"0" "Select Source" \
-	"1" "Set Clock" \
-	"2" "Prepare Hard Drive" \
-	"3" "Select Packages" \
-	"4" "Install Packages" \
-	"5" "Configure System" \
-	"6" "Install Bootloader" \
+	"0" "$worker_select_source_title" \
+	"1" "$worker_set_clock_title" \
+	"2" "$worker_prepare_disks_title" \
+	"3" "$worker_package_list_title" \
+	"4" "$worker_install_packages_title" \
+	"5" "$worker_configure_system_title" \
+	"6" "$worker_install_bootloader_title" \
 	"7" "Exit Install"
 	NEXTITEM="$ANSWER_OPTION" #TODO: set next item always current+1 after succesfull finish of each phase/worker, if relevant
 	case $ANSWER_OPTION in
 	"0")
-		execute worker select_source; ret=$?
+		                                        execute worker select_source; ret=$?
+		                                                                                         [ $ret -eq 0 ] && execute worker runtime_packages && NEXTITEM=1 ;;
 		if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
 			while true; do
 				ask_option no "FTP Installation" \
-				"0" "Setup Network (Make sure the network is ok before continuing" \
-				"1" "Choose Mirror" \
+				"0" "$worker_runtime_network_title" \
+				"1" "$worker_select_mirror_title" \
 				"2" "Return to Main Menu"
-				[ "$ANSWER_OPTION" = 0 ] && execute worker runtime_network && S_NET=1
+				[ "$ANSWER_OPTION" = 0 ] && execute worker runtime_network
 				[ "$ANSWER_OPTION" = 1 ] && execute worker select_mirror
 				[ "$ANSWER_OPTION" = 2 ] && break
 			done
 		fi
-		[ $ret -eq 0 ] && S_SRC=1 && execute worker runtime_packages ;;
         "1")
-            execute worker set_clock && S_CLOCK=1 && NEXTITEM=2;;
+		                                        execute worker set_clock                                                                           && NEXTITEM=2 ;;
         "2")
-            execute worker prepare_disks && NEXTITEM=3;; # stage set vars set in the worker
+		                                        execute worker prepare_disks                                                                       && NEXTITEM=3 ;;
         "3")
-            check_depend worker prepare_disks && execute worker package_list && S_SELECT=1 && NEXTITEM=4 ;;
+		check_depend worker prepare_disks    && execute worker package_list                                                                        && NEXTITEM=4 ;;
         "4")
-            check_depend worker package_list && execute worker install_packages && S_INSTALL=1 && { execute worker auto_fstab; execute worker auto_network; execute worker auto_locale; } && NEXTITEM=5 ;;
+		check_depend worker package_list && \
+		check_depend select_source           && execute worker install_packages   && {                             execute worker auto_fstab   ; \
+		                                                                               ended_ok runtime_network && execute worker auto_network ; \
+		                                                                                                           execute worker auto_locale  ; } && NEXTITEM=5 ;;
         "5")
-            check_depend worker install_packages && execute worker configure_system && S_CONFIG=1 && { execute worker mkinitcpio; execute worker locales; } && NEXTITEM=6 ;; #TODO: why is next item 5 if $?=0?
+		check_depend worker install_packages && execute worker configure_system   && {                             execute worker mkinitcpio   ; \
+		                                                                                                           execute worker locales      ; } && NEXTITEM=6 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
         "6")
-		 execute worker install_bootloader && S_BOOT=1 && NEXTITEM=7 ;;
+		check_depend worker configure_system && execute worker install_bootloader                                                                  && NEXTITEM=7 ;;
         "7")
-            notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
+		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
         *)
-            ask_yesno "Abort Installation?" && stop_installer ;;
+		ask_yesno "Abort Installation?" && stop_installer ;;
     esac
 }
 
@@ -112,21 +111,19 @@ mainmenu()
 worker_configure_system()
 {
     ## PREPROCESSING ##
-    # only done on first invocation of configure_system
-    if [ $S_CONFIG -eq 0 ]; then
 
+	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already, yet worker did not exit 0
         # /etc/pacman.d/mirrorlist
         # add installer-selected mirror to the top of the mirrorlist
-        if [ "$MODE" = "ftp" -a "${SYNC_URL}" != "" ]; then
+        if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${SYNC_URL}" != "" ]; then
             awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/etc/pacman.d/mirrorlist"
         fi
 
         # /etc/rc.conf
-        # insert timezone and utc info
+        # Make sure timezone and utc info are what we want
         sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"$TIMEZONE\"/g" \
                -e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
                ${var_TARGET_DIR}/etc/rc.conf
-    fi
 
 
 	interactive_configure_system &&	return 0
@@ -201,17 +198,8 @@ worker_select_source ()
 # select_packages()
 # prompts the user to select packages to install
 worker_package_list() {
-    # step dependencies
-    if [ $S_SRC -eq 0 ]; then
-        _dia_DIALOG --msgbox "You must select an installation source!" 0 0
-        return 1
-    fi
-
-    # if selection has been done before, warn about loss of input
-    # and let the user exit gracefully
-    if [ $S_SELECT -ne 0 ]; then
-        _dia_DIALOG --yesno "WARNING: Running this stage again will result in the loss of previous package selections.\n\nDo you wish to continue?" 10 50 || return 1
-    fi
+	# if selection has been done before, warn about loss of input and let the user exit gracefully
+	ended_ok worker package_list && _dia_DIALOG --yesno "WARNING: Running this stage again will result in the loss of previous package selections.\n\nDo you wish to continue?" 10 50 || return 0
 
 	interactive_select_packages
 }
@@ -219,10 +207,6 @@ worker_package_list() {
 
 worker_install_packages ()
 {
-	if [ $S_SELECT -eq 0 ]; then
-		notify "You must select packages first."
-		return 1
-	fi
 	installpkg && return 0
 	return 1
 }
@@ -254,8 +238,6 @@ worker_install_bootloader ()
 
 worker_auto_network ()
 {
-	[ $S_NET -eq 0 ] && return 1
-
 	ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 1
 
         [ "$S_DHCP" = 1 ] && target_configure_network dhcp "$PROXY_HTTP" "$PROXY_FTP"
