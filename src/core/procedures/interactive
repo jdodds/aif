@@ -5,7 +5,7 @@ depend_procedure core base # esp for auto_{network,locale,fstab} workers
 # This is a port of the original /arch/setup script.  It doesn't use fifa phases but uses it's own menu-based flow (phase) control
 
 
-TARGET_DIR="/mnt"
+var_TARGET_DIR="/mnt"
 EDITOR=
 
 
