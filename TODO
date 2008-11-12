@@ -30,6 +30,7 @@ not mounted under /mnt
 * dieter/automatic: wait for yaourt --config fix
 * dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
 * on boot after fresh install sometimes filesystem creation date is newer then current date -> fsck. sometimes even forced reboot. (i've had this witch /arch/setup too)
+* it looks like automatic installer 'forgets' about /home: it asks you about it but doesn't make,format or fstab it
 
 
 BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternative installer.
