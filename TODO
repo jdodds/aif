@@ -22,6 +22,7 @@ Specifically:
 * core/interactive: try out different installation methods
 * core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are
 not mounted under /mnt
+* core/interactive or lib-ui: don't echo the name/id of selection options in dia mode
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
 * dieter/automatic: wait for yaourt --config fix
