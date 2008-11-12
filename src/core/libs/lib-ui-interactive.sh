@@ -215,7 +215,7 @@ interactive_autoprepare()
     # we assume a /dev/hdX format (or /dev/sdX)
     PART_ROOT="${DEVICE}3"
 
-	partition "$FSSPECS" &&  notify "Auto-prepare was successful" && return 0
+	partition $DEVICE "$FSSPECS" &&  notify "Auto-prepare was successful" && return 0
 	return 1
 }
 
