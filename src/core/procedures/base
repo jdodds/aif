@@ -131,7 +131,7 @@ worker_mkinitcpio ()
 
 worker_locales ()
 {
-	target_locale_gen
+	target_locale-gen
 }
 
 
