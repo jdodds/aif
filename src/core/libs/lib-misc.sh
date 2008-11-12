@@ -26,7 +26,7 @@ run_background ()
 }
 
 
-# wait untill a process is done
+# wait until a process is done
 # $1 identifier
 wait_for ()
 {
