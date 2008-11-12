@@ -2,6 +2,7 @@
 
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile
+# You are supposed to clean up the retcode yourself!
 # $1 identifier
 # $2 command (will be eval'ed)
 # $3 logfile
