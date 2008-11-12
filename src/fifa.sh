@@ -106,6 +106,9 @@ load_lib ()
 }
 
 
+# $1 phase/worker
+# $2 phase/worker name
+# $3... extra args for phase/worker (optional)
 execute ()
 {
 	[ -z "$1" -o -z "$2" ] && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
@@ -154,6 +157,23 @@ execute ()
 	debug "$1 $2 exit state was $ret"
 	cd $PWD_BACKUP
 	return $ret
+}
+
+
+# check if a phase/worker executed sucessfully
+# returns 0 if ok, the phase/workers' exit state otherwise (and returns 1 if not executed yet)
+# $1 phase/worker
+# $2 phase/worker name
+ended_ok ()
+{
+	[ -z "$1" -o -z "$2" ] && die_error "Use the ended_ok function like this: ended_ok <type> <name> with type=phase/worker"
+	[ "$1" != phase -a "$1" != worker ] && die_error "ended_ok's first argument must be a valid type (phase/worker)"
+	object=$1_$2
+	exit_var=exit_$object
+	debug "Exit state of $objecct was: ${!exit_var} (if empty. it's not executed yet)"
+	[ "${!exit_var}" = '0' ] && return 0
+	[ "${!exit_var}" = '' ] && return 1
+	return ${!exit_var}
 }
 
 
