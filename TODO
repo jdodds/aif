@@ -14,6 +14,8 @@ General:
 should keep working fine
 * sometimes you can't see the whole question in ask_yesno (eg after manually partitioning/setting mountpoints)
   -> maybe just increase the panel for all dia ask_yesno's -> fixed now i think with automatic height calculation
+* find a way to not have to preload libs and stuff, only load them when
+needed. -> faster start of install program
 
 Specifically:
 * core/interactive bug: boot space 15 -> too large should be too small
