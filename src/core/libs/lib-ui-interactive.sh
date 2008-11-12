@@ -97,8 +97,8 @@ interactive_set_clock()
     HARDWARECLOCK=$ANSWER_OPTION
 
     # timezone?
-    tzselect > $ANSWER || return 1
-    TIMEZONE=$(cat $ANSWER)
+    TIMEZONE=`tzselect` || return 1
+
 
     # set system clock from hwclock - stolen from rc.sysinit
     local HWCLOCK_PARAMS=""
@@ -159,8 +159,11 @@ interactive_autoprepare()
             if [ "$BOOT_PART_SIZE" = "" ]; then
                 notify "ERROR: You have entered an invalid size, please enter again."
             else
-                if [ "$BOOT_PART_SIZE" -ge "$DISC_SIZE" -o "$BOOT_PART_SIZE" -lt "16" -o "$SBOOT_PART_SIZE" = "$DISC_SIZE" ]; then
+                if [ "$BOOT_PART_SIZE" -ge "$DISC_SIZE" -o "$SBOOT_PART_SIZE" = "$DISC_SIZE" ]; then
                     notify "ERROR: You have entered a too large size, please enter again."
+                   elif [ "$BOOT_PART_SIZE" -lt "16" ];
+                   then
+                   	notify "ERROR: You have entered a too small size, please enter again."
                 else
                     BOOT_PART_SET=1
                 fi

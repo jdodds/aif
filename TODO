@@ -18,7 +18,6 @@ should keep working fine
 needed. -> faster start of install program
 
 Specifically:
-* core/interactive bug: boot space 15 -> too large should be too small
 * core/interactive bug: swap space 0 -> invalid?
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
 * core/interactive: try out different installation methods
@@ -42,6 +41,8 @@ it can't kill the process or something...
 * core/interactive should mount all target fs's into /mnt (eg /mnt/home is
 not mounted).  Maybe not needed, but can be useful for other people who want
 to inject some stuff into the installer
+* core/interactive: do not check hard for the dependencies. a user could really know what he's doing or need to reboot after partitioning a disk and
+skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
