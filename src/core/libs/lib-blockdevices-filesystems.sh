@@ -285,3 +285,100 @@ target_configure_fstab()
 		sort $TMP_FSTAB >>$var_TARGET_DIR/etc/fstab
 	fi
 }
+
+
+# partitions a disk , creates filesystems and mounts them
+# $1 device to partition
+# $2 a string of the form: <mountpoint>:<partsize>:<fstype>[:+] (the + is bootable flag)
+partition ()
+{
+	debug "Partition called like: partition '$1' '$2'"
+	[ -z "$1" ] && die_error "partition() requires a device file and a partition string"
+	[ -z "$2" ] && die_error "partition() requires a partition string"
+
+	DEVICE=$1
+	STRING=$2
+
+    # validate DEVICE
+    if [ ! -b "$DEVICE" ]; then
+      notify "Device '$DEVICE' is not valid"
+      return 1
+    fi
+
+    # validate DEST
+    if [ ! -d "$var_TARGET_DIR" ]; then
+        notify "Destination directory '$var_TARGET_DIR' is not valid"
+        return 1
+    fi
+
+    # / required
+    if [ $(grep -c '/:' <<< $STRING) -ne 1 ]; then
+        notify "Need exactly one root partition"
+        return 1
+    fi
+
+    rm -f $TMP_FSTAB
+
+    target_umountall
+ # setup input var for sfdisk
+    for fsspec in $STRING; do
+        fssize=$(echo $fsspec | tr -d ' ' | cut -f2 -d:)
+        if [ "$fssize" = "*" ]; then
+                fssize_spec=';'
+        else
+                fssize_spec=",$fssize"
+        fi
+        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
+        if [ "$fstype" = "swap" ]; then
+                fstype_spec=",S"
+        else
+                fstype_spec=","
+        fi
+        bootflag=$(echo $fsspec | tr -d ' ' | cut -f4 -d:)
+        if [ "$bootflag" = "+" ]; then
+            bootflag_spec=",*"
+        else
+            bootflag_spec=""
+        fi
+        sfdisk_input="${sfdisk_input}${fssize_spec}${fstype_spec}${bootflag_spec}\n"
+    done
+    sfdisk_input=$(printf "$sfdisk_input")
+
+    # invoke sfdisk
+    printk off
+    infofy "Partitioning $DEVICE"
+    sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
+$sfdisk_input
+EOF
+    if [ $? -gt 0 ]; then
+        notify "Error partitioning $DEVICE (see $LOG for details)"
+        printk on
+        return 1
+    fi
+    printk on
+
+    # need to mount root first, then do it again for the others
+    part=1
+    for fsspec in $STRING; do
+        mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
+        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
+        if echo $mountpoint | tr -d ' ' | grep '^/$' 2>&1 > /dev/null; then
+            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
+        fi
+        part=$(($part + 1))
+    done
+
+    # make other filesystems
+    part=1
+    for fsspec in $STRING; do
+        mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
+        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
+        if [ $(echo $mountpoint | tr -d ' ' | grep '^/$' | wc -l) -eq 0 ]; then
+            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
+        fi
+        part=$(($part + 1))
+    done
+
+    return 0
+}
+
