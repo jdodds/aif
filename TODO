@@ -36,6 +36,9 @@ BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternat
 * if dhcpd already runs for $reason, the installer will try again @ configure network and
 fail.  i tried killall dhcpd, killall -9 dhcpd first but that didn't help:
 it can't kill the process or something...
+* core/interactive should mount all target fs's into /mnt (eg /mnt/home is
+not mounted).  Maybe not needed, but can be useful for other people who want
+to inject some stuff into the installer
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
