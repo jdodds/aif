@@ -222,9 +222,9 @@ _mkfs() {
     if [ "${_fstype}" = "swap" ]; then
         swapoff ${_device} >/dev/null 2>&1
         if [ "${_domk}" = "yes" ]; then
-            mkswap ${_device} >$LOG 2>&1 || show_warning "Error creating swap: mkswap ${_device}" && return 1
+            mkswap ${_device} >$LOG 2>&1 || ( show_warning "Error creating swap: mkswap ${_device}" ; return 1 )
         fi
-        swapon ${_device} >$LOG 2>&1 || show_warning "Error activating swap: swapon ${_device}"  &&  return 1
+        swapon ${_device} >$LOG 2>&1 || ( show_warning "Error activating swap: swapon ${_device}"  ;  return 1 )
     else
         # make sure the fstype is one we can handle
         local knownfs=0
@@ -232,7 +232,7 @@ _mkfs() {
             [ "${_fstype}" = "${fs}" ] && knownfs=1 && break
         done
         
-        [ $knownfs -eq 0 ] && show_warning "unknown fstype ${_fstype} for ${_device}"  && return 1
+        [ $knownfs -eq 0 ] && ( show_warning "unknown fstype ${_fstype} for ${_device}" ; return 1 )
         # if we were tasked to create the filesystem, do so
         if [ "${_domk}" = "yes" ]; then
             local ret
@@ -245,14 +245,14 @@ _mkfs() {
                 vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
                 # don't handle anything else here, we will error later
             esac
-            [ $ret != 0 ] && show_warning "Error creating filesystem ${_fstype} on ${_device}" && return 1
+            [ $ret != 0 ] && ( show_warning "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
             sleep 2
         fi
         # create our mount directory
         mkdir -p ${_dest}${_mountpoint}
         # mount the bad boy
         mount -t ${_fstype} ${_device} ${_dest}${_mountpoint} >$LOG 2>&1
-	[ $? != 0 ] && show_warning "Error mounting ${_dest}${_mountpoint}" && return 1
+	[ $? != 0 ] && ( show_warning "Error mounting ${_dest}${_mountpoint}" ; return 1 )
     fi
 
     # add to temp fstab
