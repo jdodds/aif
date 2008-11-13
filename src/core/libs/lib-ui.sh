@@ -29,6 +29,7 @@ show_warning ()
         [ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
         type=msg
         [ -n "$3" ] && type=$3
+        debug "show_warning '$1': $2 ($type)"
         if [ "$var_UI_TYPE" = dia ]
         then
                 _dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
@@ -43,6 +44,7 @@ show_warning ()
 #notify user
 notify ()   
 {
+	debug "notify: $@"
         if [ "$var_UI_TYPE" = dia ]
         then
                 _dia_DIALOG --msgbox "$@" 20 50
@@ -55,6 +57,7 @@ notify ()
 # like notify, but user does not need to confirm explicitly when in dia mode
 infofy ()
 {
+	debug "infofy: $@"
 	if [ "$var_UI_TYPE" = dia ]
 	then
 		_dia_DIALOG --infobox "$@" 20 50
@@ -67,12 +70,15 @@ infofy ()
 # logging of stuff
 log ()
 {
+	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@" >$LOG
+		echo -e "$str" >$LOG
 	else
-		echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
+		echo -e "$str"
 	fi
+
+	echo -e "$str" >> $LOGFILE
 }
 
 
@@ -191,7 +197,7 @@ _dia_ask_option ()
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
-	debug "User choose $ANSWER_OPTION"
+	debug "dia_ask_option: User choose $ANSWER_OPTION"
 	return $ret
 }
 
@@ -217,7 +223,7 @@ _cli_ask_option ()
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug "User choose $ANSWER_OPTION"
+	debug "cli_ask_option: User choose $ANSWER_OPTION"
 	echo "$ANSWER_OPTION"
 }
 
@@ -248,8 +254,8 @@ _dia_ask_yesno ()
 	height=$((`echo -e "$1" | wc -l` +7))
 	dialog --yesno "$1" $height 55 # returns 0 for yes, 1 for no
 	ret=$?
-	[ $ret -eq 0 ] && debug "User picked YES"
-	[ $ret -gt 0 ] && debug "User picked NO"
+	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
+	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
 	return $ret
 }
 
@@ -280,10 +286,10 @@ _cli_ask_yesno ()
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
 	if [ "$answer" = y -o "$answer" = yes ]
 	then
-		debug "User picked YES"
+		debug "cli_ask_yesno: User picked YES"
 		return 0
 	else
-		debug "User picked NO"
+		debug "cli_ask_yesno: User picked NO"
 		return 1
 	fi
 }
@@ -294,7 +300,7 @@ _cli_ask_string ()
 	echo -n "$@: "
 	read answ
 	echo "$answ"
-	debug "User entered: $answ"
+	debug "cli_ask_string: User entered: $answ"
 	[ -z "$answ" ] && return 1
 	return 0
 }
@@ -319,7 +325,7 @@ _cli_ask_number ()
 		fi
 	done
 	echo "$answ"
-	debug "user entered: $answ"
+	debug "cli_ask_number: user entered: $answ"
 	[ -z "$answ" ] && return 1
 	return 0
 }
