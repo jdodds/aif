@@ -1,5 +1,7 @@
 #!/bin/sh
 
+TMP_MKINITCPIO_LOG=/home/arch/fifa/runtime/mkinitcpio.log
+TMP_PACMAN_LOG=/home/arch/fifa/runtime/pacman.log
 
 # run_mkinitcpio() taken from setup. adapted a lot
 # runs mkinitcpio on the target system, displays output
@@ -7,14 +9,14 @@ run_mkinitcpio()
 {
 	target_special_fs on
 
-	run_background mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" /tmp/mkinitcpio.log
-	follow_progress "Rebuilding initcpio images ..." /tmp/mkinitcpio.log
+	run_background mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" $TMP_MKINITCPIO_LOG
+	follow_progress "Rebuilding initcpio images ..." $TMP_MKINITCPIO_LOG
 	wait_for mkinitcpio
 
 	target_special_fs off
 
 	# alert the user to fatal errors
-	[ $mkinitcpio_exitcode -ne 0 ] && show_warning "MKINITCPIO FAILED - SYSTEM MAY NOT BOOT" "/tmp/mkinitcpio.log" text
+	[ $mkinitcpio_exitcode -ne 0 ] && show_warning "MKINITCPIO FAILED - SYSTEM MAY NOT BOOT" "$TMP_MKINITCPIO_LOG" text
 	return $mkinitcpio_exitcode
 }
 
@@ -24,8 +26,8 @@ run_mkinitcpio()
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_special_fs on
-	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" /home/arch/fifa/runtime/pacman.log
-	follow_progress " Installing... Please Wait " /home/arch/fifa/runtime/pacman.log
+	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" $TMP_PACMAN_LOG
+	follow_progress " Installing... Please Wait " $TMP_PACMAN_LOG
 
 	wait_for pacman-installpkg
         
@@ -33,13 +35,13 @@ installpkg() {
 	local _result=''
 	if [ ${pacman-installpkg_exitcode} -ne 0 ]; then
 		_result="Installation Failed (see errors below)"
-		echo -e "\nPackage Installation FAILED." >>/home/arch/fifa/runtime/pacman.log
+		echo -e "\nPackage Installation FAILED." >>$TMP_PACMAN_LOG
 	else
 		_result="Installation Complete"
-		echo -e "\nPackage Installation Complete." >>/home/arch/fifa/runtime/pacman.log
+		echo -e "\nPackage Installation Complete." >>$TMP_PACMAN_LOG
 	fi
 
-	show_warning "$_result" "/home/arch/fifa/runtime/pacman.log" text || return 1
+	show_warning "$_result" "$TMP_PACMAN_LOG" text || return 1
 
 	target_special_fs off
 	sync
