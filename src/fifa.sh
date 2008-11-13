@@ -177,7 +177,7 @@ ended_ok ()
 	[ "$1" != phase -a "$1" != worker ] && die_error "ended_ok's first argument must be a valid type (phase/worker)"
 	object=$1_$2
 	exit_var=exit_$object
-	debug "Exit state of $object was: ${!exit_var} (if empty. it's not executed yet)"
+	debug "Ended_ok? -> Exit state of $object was: ${!exit_var} (if empty. it's not executed yet)"
 	[ "${!exit_var}" = '0' ] && return 0
 	[ "${!exit_var}" = '' ] && return 1
 	return ${!exit_var}
