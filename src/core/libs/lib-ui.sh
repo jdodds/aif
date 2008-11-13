@@ -38,6 +38,8 @@ show_warning ()
                 [ "${type}" = msg  ] && echo -e "$2"
                 [ "${type}" = text ] && cat $2 || die_error "Could not cat $2"
         fi
+
+        return 0
 }
  
  
