@@ -12,12 +12,16 @@ run_background ()
 	[ -z "$2" ] && die_error "run_background needs a command to execute!"
 	[ -z "$3" ] && die_error "run_background needs a logfile to redirect output to!"
 
+	debug "run_background called. identifier: $1, command: $2, logfile: $3"
 	( \
 		touch /home/arch/fifa/runtime/$1-running
+		debug "run_background starting $1: $2 >>$3 2>&1"
 		echo "$1 progress ..." > $3; \
 		echo >> $3; \
 		eval "$2" >>$3 2>&1
-		read $1_exitcode <<< $?
+		var_exit=${1}_exitcode
+		read $var_exit <<< $?
+		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3"
 		echo >> $3   
 		rm -f /home/arch/fifa/runtime/$1-running
 	) &

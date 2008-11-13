@@ -24,8 +24,8 @@ run_mkinitcpio()
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_special_fs on
-	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" /tmp/pacman.log
-	follow_progress " Installing... Please Wait " /tmp/pacman.log
+	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" /home/arch/fifa/runtime/pacman.log
+	follow_progress " Installing... Please Wait " /home/arch/fifa/runtime/pacman.log
 
 	wait_for pacman-installpkg
         
@@ -33,13 +33,13 @@ installpkg() {
 	local _result=''
 	if [ ${pacman-installpkg_exitcode} -ne 0 ]; then
 		_result="Installation Failed (see errors below)"
-		echo -e "\nPackage Installation FAILED." >>/tmp/pacman.log
+		echo -e "\nPackage Installation FAILED." >>/home/arch/fifa/runtime/pacman.log
 	else
 		_result="Installation Complete"
-		echo -e "\nPackage Installation Complete." >>/tmp/pacman.log
+		echo -e "\nPackage Installation Complete." >>/home/arch/fifa/runtime/pacman.log
 	fi
 
-	show_warning "$_result" "/tmp/pacman.log" text || return 1     
+	show_warning "$_result" "/home/arch/fifa/runtime/pacman.log" text || return 1
 
 	target_special_fs off
 	sync
