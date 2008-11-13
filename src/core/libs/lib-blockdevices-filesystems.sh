@@ -218,6 +218,7 @@ _mkfs() {
     local _dest=$4
     local _mountpoint=$5
 
+	debug "_mkfs: domk: $1, _device: $2, fstype: $3, dest: $4, mountpoint: $5"
     # we have two main cases: "swap" and everything else.
     if [ "${_fstype}" = "swap" ]; then
         swapoff ${_device} >/dev/null 2>&1
@@ -345,6 +346,7 @@ partition ()
     sfdisk_input=$(printf "$sfdisk_input")
 
     # invoke sfdisk
+    debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
     printk off
     infofy "Partitioning $DEVICE"
     sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
@@ -373,7 +375,7 @@ EOF
     for fsspec in $STRING; do
         mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
         fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
-        if [ $(echo $mountpoint | tr -d ' ' | grep '^/$' | wc -l) -eq 0 ]; then
+        if [ $(echo $mountpoint | tr -d ' ' | grep -c '^/$') -eq 0 ]; then
             _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
         fi
         part=$(($part + 1))
