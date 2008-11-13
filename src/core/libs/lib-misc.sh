@@ -17,12 +17,11 @@ run_background ()
 		touch /home/arch/fifa/runtime/$1-running
 		debug "run_background starting $1: $2 >>$3 2>&1"
 		[ -f $3 ] && echo -e "\n\n\n" >>$3
-		echo "STARTING $1 . Executing $2 >>$3 2>&1" >> $3; \
-		echo >> $3; \
-		eval "$2" >>$3 2>&1
+		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
 		var_exit=${1}_exitcode
-		read $var_exit <<< $? #TODO: bash complains about 'invalid key' or something iirc
-		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3" #TODO ${!var_exit} doesn't show anything
+		eval "$2" >>$3 2>&1
+		read $var_exit <<< $? #TODO: bash complains about 'not a valid identifier' or something iirc -> maybe fixed now..
+		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3" #TODO ${!var_exit} doesn't show anything --> maybe fixed now
 		echo >> $3   
 		rm -f /home/arch/fifa/runtime/$1-running
 	) &
