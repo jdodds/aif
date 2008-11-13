@@ -161,7 +161,7 @@ execute ()
 		ret=${!exit_var}
 	fi
 
-	debug "$1 $2 exit state was $ret" #TODO: why are $1 and $2 empty here? Something to do with the recursion maybe?  Also, exit codes for phases are not shown :/
+	debug "Execute(): $object exit state was $ret"
 	cd $PWD_BACKUP
 	return $ret
 }
