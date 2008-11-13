@@ -16,7 +16,8 @@ run_background ()
 	( \
 		touch /home/arch/fifa/runtime/$1-running
 		debug "run_background starting $1: $2 >>$3 2>&1"
-		echo "$1 progress ..." > $3; \
+		[ -f $3 ] && echo -e "\n\n\n" >>$3
+		echo "STARTING $1 . Executing $2 >>$3 2>&1" >> $3; \
 		echo >> $3; \
 		eval "$2" >>$3 2>&1
 		var_exit=${1}_exitcode
