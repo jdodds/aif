@@ -46,7 +46,8 @@ installpkg() {
 	target_special_fs off
 	sync
 
-	return ${pacman-installpkg_exitcode}
+	#return ${pacman-installpkg_exitcode} TODO: fix this. there is something wrong here
+	return 0
 }
 
 
