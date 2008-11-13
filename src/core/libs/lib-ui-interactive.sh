@@ -210,7 +210,10 @@ interactive_autoprepare()
 
     DEVICE=$DISC
     # TODO: why do we define a $DEFAULTFS variable someplace else if we hardcode it's attributes here to be able to replace them with custom values?  Can't we just construct the custom thing?
-    FSSPECS=$(echo $DEFAULTFS | sed -e "s|/:7500:ext3|/:$ROOT_PART_SIZE:$FSTYPE|g" -e "s|/home:\*:ext3|/home:\*:$FSTYPE|g" -e "s|swap:256|swap:$SWAP_PART_SIZE|g" -e "s|/boot:32|/boot:$BOOT_PART_SIZE|g")
+    # For some reason the thing belows replaces everything well, but 'looses' the /home part, I don't know why, cannot reproduce it, but it happens in vbox
+    # FSSPECS=$(echo $DEFAULTFS | sed -e "s|/:7500:ext3|/:$ROOT_PART_SIZE:$FSTYPE|g" -e "s|/home:\*:ext3|/home:\*:$FSTYPE|g" -e "s|swap:256|swap:$SWAP_PART_SIZE|g" -e "s|/boot:32|/boot:$BOOT_PART_SIZE|g")
+
+	FSSPECS="/boot:$BOOT_PART_SIZE:ext2:+ swap:$SWAP_PART_SIZE:swap /:$ROOT_PART_SIZE:$FSTYPE /home:*:$FSTYPE"
 	debug "\$DEFAULTFS: $DEFAULTFS"
 	debug "\$FSSPECS  : $FSSPECS"
     # we assume a /dev/hdX format (or /dev/sdX)
