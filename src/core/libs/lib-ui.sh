@@ -12,6 +12,7 @@ DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch 
 # display error message and die
 die_error ()
 {
+	[ -n "$LOGFILE" ] && debug "die_error: ERROR: $@" > $LOGFILE
 	notify "ERROR: $@"
         exit 2
 }

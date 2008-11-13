@@ -20,8 +20,8 @@ run_background ()
 		echo >> $3; \
 		eval "$2" >>$3 2>&1
 		var_exit=${1}_exitcode
-		read $var_exit <<< $?
-		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3"
+		read $var_exit <<< $? #TODO: bash complains about 'invalid key' or something iirc
+		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3" #TODO ${!var_exit} doesn't show anything
 		echo >> $3   
 		rm -f /home/arch/fifa/runtime/$1-running
 	) &
