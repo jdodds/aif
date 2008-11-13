@@ -3,7 +3,7 @@
 ###### Set some default variables or get them from the setup script ######
 TITLE="Flexible Installer Framework for Arch linux"
 LOG="/dev/tty7"
-
+LOGFILE=/home/arch/fifa/runtime/fifa.log #TODO: maybe we could use a flag to en/disable logging to a file.
 
 
 ###### Miscalleaneous functions ######
@@ -32,15 +32,22 @@ notify ()
 
 log ()
 {
-	 echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
-	 echo -e "[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@" >$LOG
+	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
+	echo -e "$str"
+	echo -e "$str" > $LOG
+	echo -e "$str" > $LOGFILE
 }
 
 
 debug ()
 {
-	[ "$DEBUG" = "1" ] && echo -e "[DEBUG] $@"
-	[ "$DEBUG" = "1" ] && echo -e "[DEBUG] $@" >$LOG
+	str="[DEBUG] $@"
+	if [ "$DEBUG" = "1" ]
+	then
+		echo -e "$str"
+		echo -e "$str" > $LOG
+		echo -e "$str" > $LOGFILE
+	fi
 }
 
 
