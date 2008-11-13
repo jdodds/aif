@@ -11,7 +11,7 @@ check_depend ()
 
 	ended_ok $1 $2 && return 0
 	subject="$1 $2"
-	title=worker_$1_$2_title
+	title=$1_$2_title
 	[ -n "${!title}" ] && subject="'${!title}'"
 	show_warning "Cannot Continue.  Going back to $2" "You must do $subject first before going here!." && return 1
 }
