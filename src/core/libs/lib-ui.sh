@@ -82,6 +82,22 @@ log ()
 }
 
 
+debug ()
+{
+        str="[DEBUG] $@"
+        if [ "$DEBUG" = "1" ]
+        then
+		if [ "$var_UI_TYPE" = dia ]
+		then
+			echo -e "$str" > $LOG
+		else
+			echo -e "$str"
+		fi
+		echo -e "$str" >> $LOGFILE
+	fi
+}
+
+
 # ask the user a password. return is stored in $PASSWORD or $<TYPE>_PASSWORD
 # $1 type (optional.  eg 'svn', 'ssh').
 ask_password ()
