@@ -321,7 +321,7 @@ partition ()
     rm -f $TMP_FSTAB
 
     target_umountall
- # setup input var for sfdisk
+ # setup input var for sfdisk #TODO: even though $STRING Contains a '/home' part it doesn't go through in the loops.. is this only in vbox?
     for fsspec in $STRING; do
         fssize=$(echo $fsspec | tr -d ' ' | cut -f2 -d:)
         if [ "$fssize" = "*" ]; then
