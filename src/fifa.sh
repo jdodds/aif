@@ -35,7 +35,7 @@ log ()
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
 	echo -e "$str"
 	echo -e "$str" > $LOG
-	echo -e "$str" > $LOGFILE
+	echo -e "$str" >> $LOGFILE
 }
 
 
@@ -46,7 +46,7 @@ debug ()
 	then
 		echo -e "$str"
 		echo -e "$str" > $LOG
-		echo -e "$str" > $LOGFILE
+		echo -e "$str" >> $LOGFILE
 	fi
 }
 
