@@ -1,5 +1,8 @@
 See also the FIXME's and TODO's in the code.
 
+rename all refs to fifa into aif.
+HOWTO: there are 2 methods now. stable packages and from git, check if
+livecd has makepkg, then we can probably deprecate patch-install-cd.sh
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
