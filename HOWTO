@@ -1,12 +1,44 @@
-### for unmodified install cd: (TODO: someday, have an iso that has the scripts already) ###
+### This howto explains how to install aif on an installcd that does not have the aif package installed yet ###
+### You can also use this if you want to use another version than what's available on the installcd) ###
+### TODO: someday, have an iso that comes with aif by default) ###
 
-You can copy-paste the code below when logged in to the install cd
 
+1) Boot from the installcd
 
+2) Open 2 shells, one as user root, one as regular user (arch)
+
+3) Decide on a version.  See http://aur.archlinux.org/packages.php?K=aif for available packages
+- aif: recommended: latest 'stable' package
+- aif-git: latest from git: very bleeding edge.  Might not work as expected!
+I assume you'll pick aif.
+
+4) Copy paste the code below.
+
+# root shell:
 /arch/setup. # fake ftp install so it lets you run the network configure script
 # when network works, quit installer
-pacman -Sy git # You need about 192MB ram for this! 128MB is not enough.
-git clone git://github.com/Dieterbe/fifa.git /home/arch/tmp
-/home/arch/tmp/src/patch-install-cd.sh            # for an 'official' fifa installation
-/home/arch/tmp/src/patch-install-cd.sh unoffocial # for a fifa installation including Dieter's custom, unofficial modules
-/arch/fifa.sh <procedurename> #you can skip networking.  See readme on howto specify procedures
+pacman -Sy git fakeroot # You need about 192MB ram for this! 128MB is not enough.
+
+# arch shell
+wget http://aur.archlinux.org/packages/aif/aif.tar.gz
+tar -xzf
+cd aif
+makepkg
+
+# root shell:
+pacman -U /home/arch/aif/aif*.pkg.tar.gz
+
+
+4) Fire it up! (as root)
+
+/arch/aif <procedurename> #you can skip networking.  See readme on howto specify procedures
+
+
+
+
+
+
+
+
+
+

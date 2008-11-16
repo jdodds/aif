@@ -1,7 +1,7 @@
 #!/bin/sh
 
-TMP_MKINITCPIO_LOG=/home/arch/fifa/runtime/mkinitcpio.log
-TMP_PACMAN_LOG=/home/arch/fifa/runtime/pacman.log
+TMP_MKINITCPIO_LOG=/home/arch/aif/runtime/mkinitcpio.log
+TMP_PACMAN_LOG=/home/arch/aif/runtime/pacman.log
 
 # run_mkinitcpio() taken from setup. adapted a lot
 # runs mkinitcpio on the target system, displays output

@@ -3,7 +3,7 @@
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_PACKAGES=
-var_PKG_FILE=/home/arch/fifa/runtime/package-list
+var_PKG_FILE=/home/arch/aif/runtime/package-list
 var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific procedures) ######

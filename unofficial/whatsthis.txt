@@ -1,6 +1,5 @@
-This directory contains unofficial additions (modules) to/for fifa that I (Dieter)
+This directory contains unofficial additions (modules) to/for AIF that I (Dieter)
 am writing.
 
-They are _not_ intended to be part of the "official" fifa.  it's just in the same repo for
-my own convenience.  Too install them on the installcd, run patch-install-cd
-with argument 'unofficial'
+They are _not_ intended to be part of the "official" aif.  it's just in the same repo for
+my own convenience.  TODO: new way to easily install them?

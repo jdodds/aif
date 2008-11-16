@@ -1,11 +1,11 @@
-FIFA is a Flexible Installer Framework for Arch linux.
+AIF is the Arch Linux Installation Framework..
 
 ---  Alpha software.  Use at own risk!! ---
 
 
 Licensce:     GPL3. See COPYING.
 Author:       Dieter Plaetinck
-Homepage:     http://github.com/Dieterbe/fifa
+Homepage:     http://github.com/Dieterbe/aif
 
 
 ** Goals **
@@ -23,13 +23,13 @@ together to come up with the procedure of your liking.
 
 
 ** File locations (on the install CD): **
-Basically fifa.sh is put in /arch (together with the default installer scripts), while all other fifa-related files belong in /home/arch/fifa
+Basically aif.sh is put in /arch (together with the default installer scripts), while all other aif-related files belong in /home/arch/aif
 
-* fifa.sh       -> /arch/fifa.sh
-* docs          -> /home/arch/fifa/docs/
-* core module   -> /home/arch/fifa/core
-* user modules  -> /home/arch/fifa/user/<module name> (put your own modules here)
-* runtime files -> /home/arch/fifa/runtime (package list etc go here)
+* aif.sh        -> /arch/aif
+* docs          -> /home/arch/aif/docs/
+* core module   -> /home/arch/aif/core
+* user modules  -> /home/arch/aif/user/<module name> (put your own modules here)
+* runtime files -> /home/arch/aif/runtime (package list etc go here)
 
 A module can have 2 directories: libs, and procedures.
 
@@ -54,7 +54,7 @@ Notes:
  - don't edit the base procedure (or any other core item), rather make your own. It's easy!
  - you're not supposed to define new phases. just override them. logic goes in workers/libariers
 
-Modules are the building blocks in fifa.  They can contain libraries (for
+Modules are the building blocks in aif.  They can contain libraries (for
 user interfaces, backend logic, etc) and procedures (how an installation
 process should go).
 The core module comes by default and contains everything 99% of the users
@@ -65,7 +65,7 @@ their names in line with what core has (lib-ui.sh, lib-network.sh etc).
 Do not put stuff in the core module yourself!  If it's good stuff, it might
 be merged into core someday...  Also, don't name your custom module 'core' (it will be
 ignored anyway).  Don't call it http either, because you can specify
-'http://some/path/to/a/procedure', fifa will download that procedure and
+'http://some/path/to/a/procedure', aif will download that procedure and
 execute it (and the module will be 'http')
 
 Note that if you load a module and a library has the same function names as

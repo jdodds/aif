@@ -1,9 +1,5 @@
 See also the FIXME's and TODO's in the code.
 
-rename all refs to fifa into aif.
-HOWTO: there are 2 methods now. stable packages and from git, check if
-livecd has makepkg, then we can probably deprecate patch-install-cd.sh
-
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
@@ -36,7 +32,7 @@ not mounted under /mnt
 * on boot after fresh install sometimes filesystem creation date is newer then current date -> fsck. sometimes even forced reboot. (i've had this witch /arch/setup too)
 * /home doesn't get made separately in automatic installer. it's not formatted in sfdisk or _mkfs'd.  is this only in virtualbox or elsewhere too?
 
-BETA PHASE: try to get fifa on the (beta) installcd as an experimental, alternative installer.
+BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * involve broader community
 * fix everything
 * if dhcpd already runs for $reason, the installer will try again @ configure network and
@@ -54,7 +50,7 @@ PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/qui
 * core/interactive: when auto-setting up hard disk. show with a bit more detail what is happening (not 'partitioning <disk>' but partitioning, and each FS)
 * core/interactive: do pacman -Sy in the background during early phases, to
   lessen the wait period before selecting packages
-* write bash completion thing for fifa modules/procedures
+* write bash completion thing for aif modules/procedures
 
 
 SOMEDAY/MAYBE/RANDOM THOUGHTS:

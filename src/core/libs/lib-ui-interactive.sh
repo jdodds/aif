@@ -227,7 +227,7 @@ interactive_autoprepare()
 interactive_mountpoints() {
     while [ "$PARTFINISH" != "DONE" ]; do
         : >$TMP_FSTAB
-        : >/home/arch/fifa/runtime/.parts #TODO: use a variable instead of a file, we don't need to use a file for this
+        : >/home/arch/aif/runtime/.parts #TODO: use a variable instead of a file, we don't need to use a file for this
 
         # Determine which filesystems are available
         FSOPTS="ext2 ext2 ext3 ext3"
@@ -245,7 +245,7 @@ interactive_mountpoints() {
         if [ "$PART" != "NONE" ]; then
             DOMKFS="no"
             ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:swap:swap:$DOMKFS" >>/home/arch/fifa/runtime/.parts
+            echo "$PART:swap:swap:$DOMKFS" >>/home/arch/aif/runtime/.parts
         fi
 
         _dia_DIALOG --menu "Select the partition to mount as /" 21 50 13 $PARTS 2>$ANSWER || return 1
@@ -257,7 +257,7 @@ interactive_mountpoints() {
         FSTYPE=$(cat $ANSWER)
         DOMKFS="no"
         ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-        echo "$PART:$FSTYPE:/:$DOMKFS" >>/home/arch/fifa/runtime/.parts
+        echo "$PART:$FSTYPE:/:$DOMKFS" >>/home/arch/aif/runtime/.parts
 
         #
         # Additional partitions
@@ -273,23 +273,23 @@ interactive_mountpoints() {
             while [ "${MP}" = "" ]; do
                 _dia_DIALOG --inputbox "Enter the mountpoint for $PART" 8 65 "/boot" 2>$ANSWER || return 1
                 MP=$(cat $ANSWER)
-                if grep ":$MP:" /home/arch/fifa/runtime/.parts; then
+                if grep ":$MP:" /home/arch/aif/runtime/.parts; then
                     notify "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint."
                     MP=""
                 fi
             done
             DOMKFS="no"
             ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/home/arch/fifa/runtime/.parts
+            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/home/arch/aif/runtime/.parts
             _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
             PART=$(cat $ANSWER)
         done
-        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/fifa/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
+        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/aif/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
     done
 
     target_umountall
 
-	fix_filesystems /home/arch/fifa/runtime/.parts && notify "Partitions were successfully mounted." && return 0
+	fix_filesystems /home/arch/aif/runtime/.parts && notify "Partitions were successfully mounted." && return 0
 
 	show_warning "Failure while doing filesystems" "Something went wrong.  Check your logs"
 	return 1

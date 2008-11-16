@@ -3,7 +3,7 @@
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables?
-ANSWER="/home/arch/fifa/runtime/.dialog-answer"
+ANSWER="/home/arch/aif/runtime/.dialog-answer"
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 
 

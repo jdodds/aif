@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ###### Set some default variables or get them from the setup script ######
-TITLE="Flexible Installer Framework for Arch linux"
+TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
-LOGFILE=/home/arch/fifa/runtime/fifa.log #TODO: maybe we could use a flag to en/disable logging to a file.
+LOGFILE=/home/arch/aif/runtime/aif.log #TODO: maybe we could use a flag to en/disable logging to a file.
 
 
 ###### Miscalleaneous functions ######
@@ -15,8 +15,8 @@ usage ()
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
 Available procedures on the filesystem:
-`find /home/arch/fifa/core/procedures -type f`\n
-`find /home/arch/fifa/user/*/procedures -type f 2>/dev/null`" 
+`find /home/arch/aif/core/procedures -type f`\n
+`find /home/arch/aif/user/*/procedures -type f 2>/dev/null`" 
 	echo -e "$msg"
 
 }
@@ -59,8 +59,8 @@ load_module ()
 {
 	[ -z "$1" ] && die_error "load_module needs a module argument"
 	log "Loading module $1 ..."
-	path=/home/arch/fifa/user/"$1"
-	[ "$1" = core ] && path=/home/arch/fifa/core
+	path=/home/arch/aif/user/"$1"
+	[ "$1" = core ] && path=/home/arch/aif/core
 	
 	for submodule in lib #procedure don't load procedures automatically!
 	do	
@@ -89,12 +89,12 @@ load_procedure()
 	if [ "$1" = 'http:' ]
 	then
 		log "Loading procedure $2 ..."
-		procedure=/home/arch/fifa/runtime/procedure-downloaded-`basename $2`
+		procedure=/home/arch/aif/runtime/procedure-downloaded-`basename $2`
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
 		log "Loading procedure $1/procedures/$2 ..."
-		procedure=/home/arch/fifa/user/"$1"/procedures/"$2"
-		[ "$1" = core ] && procedure=/home/arch/fifa/core/procedures/"$2"
+		procedure=/home/arch/aif/user/"$1"/procedures/"$2"
+		[ "$1" = core ] && procedure=/home/arch/aif/core/procedures/"$2"
 	fi
 	[ -f "$procedure" ] && source "$procedure" || die_error "Something went wrong while sourcing procedure $procedure"
 }
@@ -107,8 +107,8 @@ load_lib ()
 	[ -z "$1" ] && die_error "load_library needs a module als \$1 and library as \$2"
 	[ -z "$2" ] && die_error "load_library needs a library as \$2"
 	log "Loading library $1/libs/$2 ..."
-	lib=/home/arch/fifa/user/"$1"/libs/"$2"
-	[ "$1" = core ] && lib=/home/arch/fifa/core/libs/"$2"
+	lib=/home/arch/aif/user/"$1"/libs/"$2"
+	[ "$1" = core ] && lib=/home/arch/aif/core/libs/"$2"
 	source $lib || die_error "Something went wrong while sourcing library $lib"
 }
 

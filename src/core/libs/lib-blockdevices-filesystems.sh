@@ -1,7 +1,7 @@
 #!/bin/sh
 
-TMP_DEV_MAP=/home/arch/fifa/runtime/dev.map
-TMP_FSTAB=/home/arch/fifa/runtime/.fstab
+TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
+TMP_FSTAB=/home/arch/aif/runtime/.fstab
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
