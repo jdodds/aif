@@ -45,7 +45,7 @@ start_process ()
 	ALT-F1 will bring you back here."
 
 	# menu item tracker- autoselect the next item
-	NEXTITEM=""
+	NEXTITEM="1"
 	
 	while true
 	do
@@ -59,37 +59,36 @@ mainmenu()
 	default=no
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 	ask_option $default "MAIN MENU" \
-	"0" "$worker_select_source_title" \
-	"1" "$worker_set_clock_title" \
-	"2" "$worker_prepare_disks_title" \
-	"3" "$worker_package_list_title" \
-	"4" "$worker_install_packages_title" \
-	"5" "$worker_configure_system_title" \
-	"6" "$worker_install_bootloader_title" \
-	"7" "Exit Install"
-	NEXTITEM="$ANSWER_OPTION" #TODO: set next item always current+1 after succesfull finish of each phase/worker, if relevant
+	"1" "$worker_select_source_title" \
+	"2" "$worker_set_clock_title" \
+	"3" "$worker_prepare_disks_title" \
+	"4" "$worker_package_list_title" \
+	"5" "$worker_install_packages_title" \
+	"6" "$worker_configure_system_title" \
+	"7" "$worker_install_bootloader_title" \
+	"8" "Exit Install"
 	case $ANSWER_OPTION in
-	"0")
+	"1")
 		                                        execute worker select_source; ret=$?; [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = ftp ] && select_source_extras_menu
-		                                                                              [ $ret -eq 0 ] && execute worker runtime_packages                   && NEXTITEM=1 ;;
+		                                                                              [ $ret -eq 0 ] && execute worker runtime_packages                   && NEXTITEM=2 ;;
 
-        "1")
-		                                        execute worker set_clock                                                                                  && NEXTITEM=2 ;;
         "2")
-		                                        execute worker prepare_disks                                                                              && NEXTITEM=3 ;;
+		                                        execute worker set_clock                                                                                  && NEXTITEM=3 ;;
         "3")
-		check_depend worker prepare_disks    && execute worker package_list                                                                               && NEXTITEM=4 ;;
+		                                        execute worker prepare_disks                                                                              && NEXTITEM=4 ;;
         "4")
+		check_depend worker prepare_disks    && execute worker package_list                                                                               && NEXTITEM=5 ;;
+        "5")
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
 		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
-		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=5 ;;
-        "5")
-		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
-		                                                                                                                  execute worker locales      ; } && NEXTITEM=6 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
+		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=6 ;;
         "6")
-		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=7 ;;
+		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
+		                                                                                                                  execute worker locales      ; } && NEXTITEM=7 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
         "7")
+		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=8 ;;
+        "8")
 		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
         *)
 		ask_yesno "Abort Installation?" && stop_installer ;;
@@ -101,12 +100,12 @@ select_source_extras_menu ()
 {
 	while true; do
 		ask_option no "FTP Installation" \
-		"0" "$worker_runtime_network_title" \
-		"1" "$worker_select_mirror_title" \
-		"2" "Return to Main Menu"
-		[ "$ANSWER_OPTION" = 0 ] && execute worker runtime_network
-		[ "$ANSWER_OPTION" = 1 ] && execute worker select_mirror
-		[ "$ANSWER_OPTION" = 2 ] && break
+		"1" "$worker_runtime_network_title" \
+		"2" "$worker_select_mirror_title" \
+		"3" "Return to Main Menu"
+		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network
+		[ "$ANSWER_OPTION" = 2 ] && execute worker select_mirror
+		[ "$ANSWER_OPTION" = 3 ] && break
 	done
 }
 
