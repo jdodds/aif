@@ -3,35 +3,21 @@ See also the FIXME's and TODO's in the code.
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
-* go over ALL files and check all function/executable calls are to existing
-  things (eg no dirty leftovers for functions that have been renamed)
-* same for variables
-* go over all files and clean up
-* fix to use $var_UI_TYPE where needed
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
-* by now we should be able to shift dia/cli in all procedures and everything
-should keep working fine
-* sometimes you can't see the whole question in ask_yesno (eg after manually partitioning/setting mountpoints)
-  -> maybe just increase the panel for all dia ask_yesno's -> fixed now i think with automatic height calculation
-* find a way to not have to preload libs and stuff, only load them when
-needed. -> faster start of install program
+* find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 
 Specifically:
-* core/interactive gui transparancy: interactive autoprepare, package selection
+* core/interactive: gui transparancy: interactive autoprepare, package selection
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive bug: swap space 0 -> invalid?
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
-* core/interactive: try out different installation methods
-* core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are
-not mounted under /mnt
+* core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are not mounted under /mnt
 * core/interactive or lib-ui: don't echo the name/id of selection options in dia mode
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
-* dieter/automatic: wait for yaourt --config fix
-* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
-* on boot after fresh install sometimes filesystem creation date is newer then current date -> fsck. sometimes even forced reboot. (i've had this witch /arch/setup too)
--> ASKDEV
+* time totally incorrect during install -> filesystem creation date is newer then current date -> on reboot in new system fsck. sometimes even forced reboot. (i've had this witch /arch/setup too). a tool to configure the date? run ntp? (not always network available!) -> ASKDEV
 * /home doesn't get made separately in automatic installer. it's not formatted in sfdisk or _mkfs'd.  is this only in virtualbox or elsewhere too?
+
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * involve broader community

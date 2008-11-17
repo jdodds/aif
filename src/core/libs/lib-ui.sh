@@ -1,5 +1,5 @@
 #!/bin/sh
-# TODO: lot's of implementation work still open in this library. especially the dialog stuff
+# TODO: lot's of implementation work still open in this library. especially the dialog & $var_UI_TYPE stuff
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV

@@ -3,7 +3,9 @@
 ###### Set some default variables or get them from the setup script ######
 TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
-LOGFILE=/home/arch/aif/runtime/aif.log #TODO: maybe we could use a flag to en/disable logging to a file.
+LOGFILE=/home/arch/aif/runtime/aif.log
+
+#TODO: maybe we could use optional flags to en/disable logging to a file, override UI_TYPE etc.
 
 
 ###### Miscalleaneous functions ######

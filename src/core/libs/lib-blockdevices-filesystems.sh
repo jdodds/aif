@@ -5,7 +5,7 @@ TMP_FSTAB=/home/arch/aif/runtime/.fstab
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
-# NOTE: why were the functions in the setup called CHROOT_mount/umount? this is not chrooting ?
+# NOTE: why were the functions in the setup called CHROOT_mount/umount? this is not chrooting ? ASKDEV
 target_special_fs ()
 {
 	[ "$1" = on -o "$1" = off ] || die_error "special_fs needs on/off argument"
@@ -13,12 +13,12 @@ target_special_fs ()
 	then
 		# mount proc/sysfs first, so mkinitrd can use auto-detection if it wants
 		! [ -d $var_TARGET_DIR/proc ] && mkdir $var_TARGET_DIR/proc
-		! [ -d $var_TARGET_DIR/sys ] && mkdir $var_TARGET_DIR/sys
-		! [ -d $var_TARGET_DIR/dev ] && mkdir $var_TARGET_DIR/dev
+		! [ -d $var_TARGET_DIR/sys  ] && mkdir $var_TARGET_DIR/sys
+		! [ -d $var_TARGET_DIR/dev  ] && mkdir $var_TARGET_DIR/dev
 		#mount, if not mounted yet
-		mount | grep -q "$var_TARGET_DIR/proc" || mount -t proc none $var_TARGET_DIR/proc || die_error "Could not mount $var_TARGET_DIR/proc" #NOTE:  setup script uses mount -t proc proc ? what's best?
-		mount | grep -q "$var_TARGET_DIR/sys"  || mount -t sysfs none $var_TARGET_DIR/sys || die_error "Could not mount $var_TARGET_DIR/sys" # NOTE: setup script uses mount -t sysfs sysfs ? what's best?
-		mount | grep -q "$var_TARGET_DIR/dev"  || mount -o bind /dev $var_TARGET_DIR/dev  || die_error "Could not mount $var_TARGET_DIR/dev"
+		mount | grep -q "$var_TARGET_DIR/proc" || mount -t proc  none $var_TARGET_DIR/proc || die_error "Could not mount $var_TARGET_DIR/proc" # NOTE: setup script uses mount -t proc proc   ? what's best? ASKDEV
+		mount | grep -q "$var_TARGET_DIR/sys"  || mount -t sysfs none $var_TARGET_DIR/sys  || die_error "Could not mount $var_TARGET_DIR/sys"  # NOTE: setup script uses mount -t sysfs sysfs ? what's best? ASKDEV
+		mount | grep -q "$var_TARGET_DIR/dev"  || mount -o bind  /dev $var_TARGET_DIR/dev  || die_error "Could not mount $var_TARGET_DIR/dev"
 	elif [ "$1" = off ]
 	then
 		umount $var_TARGET_DIR/proc || die_error "Could not umount $var_TARGET_DIR/proc"
@@ -36,7 +36,7 @@ target_umountall()
 	infofy "Disabling swapspace, unmounting already mounted disk devices..."
 	swapoff -a >/dev/null 2>&1
 	umount $(mount | grep -v "${var_TARGET_DIR} " | grep "${var_TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
-	umount $(mount | grep "${var_TARGET_DIR} " | sed 's|\ .*||g') >/dev/null 2>&1
+	umount $(mount | grep    "${var_TARGET_DIR} "                            | sed 's|\ .*||g') >/dev/null 2>&1
 }
 
 
@@ -92,7 +92,8 @@ getuuid()
 	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s UUID -o value ${1})"  
 }
 
-# taken from setup. slightly optimized. TODO: fix identation + can be improved more
+
+# taken from setup. slightly optimized.
 findpartitions() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
@@ -101,7 +102,7 @@ findpartitions() {
 		cd /sys/block/$disk   
 		for part in $disk*
 		do
-			# check if not already assembled to a raid device
+			# check if not already assembled to a raid device.  TODO: what is the significance of the 5? ASKDEV
 			if ! [ "$(grep $part /proc/mdstat 2>/dev/null)" -o "$(fstype 2>/dev/null </dev/$part | grep lvm2)" -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
 			then
 				if [ -d $part ]
@@ -147,7 +148,7 @@ findpartitions() {
 			[ "$1" ] && echo $1
 		done
 	fi
-	
+
 	cd "$workdir"
 }
 
@@ -162,7 +163,7 @@ EOF
 }
 
 
-# TODO: $1 is what??
+# TODO: $1 is what?? ASKDEV
 # taken from setup. slightly edited.
 mapdev() {
     partition_flag=0
@@ -197,8 +198,10 @@ mapdev() {
         fi
     else
         echo "DEVICE NOT FOUND" >&2
+        return 2
     fi
 }
+
 
 # _mkfs() taken from setup code and slightly improved.
 # Create and mount filesystems in our destination system directory.
@@ -385,7 +388,7 @@ EOF
 }
 
 
-# makes and mounts filesystems#TODO: don't use files but pass variables, integrate this with other functions
+# makes and mounts filesystems #TODO: don't use files but pass variables, integrate this with other functions
 # $1 file with setup
 fix_filesystems ()
 {
