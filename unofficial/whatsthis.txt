@@ -2,4 +2,4 @@ This directory contains unofficial additions (modules) to/for AIF that I (Dieter
 am writing.
 
 They are _not_ intended to be part of the "official" aif.  it's just in the same repo for
-my own convenience.  TODO: new way to easily install them?
+my own convenience.

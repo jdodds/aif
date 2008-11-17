@@ -1,0 +1,9 @@
+# to install these unofficial modules onto the arch install cd:
+
+
+
+# install aif from package
+
+git clone git://github.com/Dieterbe/aif.git /home/arch/tmp
+
+cp -ax /home/arch/tmp/unofficial/modules/* /home/arch/aif/user/
