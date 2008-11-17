@@ -118,7 +118,7 @@ EOF
 }
 
 
-# taken from quickinst. TODO: figure this one out
+# taken from quickinst. TODO: figure this one out ASKDEV
 pacman_what_is_this_for ()
 {
 	PKGLIST=

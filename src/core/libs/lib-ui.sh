@@ -2,7 +2,7 @@
 # TODO: lot's of implementation work still open in this library. especially the dialog stuff
 
 
-# Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables?
+# Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
 ANSWER="/home/arch/aif/runtime/.dialog-answer"
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 

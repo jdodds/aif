@@ -53,7 +53,7 @@ finddisks() {
     done  
     #scsi/sata devices
     for dev in $(ls | egrep '^sd'); do
-        # TODO: what is the significance of 5?
+        # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
             echo "/dev/$dev"
             [ "$1" ] && echo $1
