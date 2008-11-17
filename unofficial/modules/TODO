@@ -1,0 +1,3 @@
+See also the FIXME's and TODO's in the code.
+* dieter/automatic: wait for yaourt --config fix ( http://forums.archlinux.fr/post23171.html#23171 )
+* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.

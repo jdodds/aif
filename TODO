@@ -30,6 +30,7 @@ not mounted under /mnt
 * dieter/automatic: wait for yaourt --config fix
 * dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
 * on boot after fresh install sometimes filesystem creation date is newer then current date -> fsck. sometimes even forced reboot. (i've had this witch /arch/setup too)
+-> ASKDEV
 * /home doesn't get made separately in automatic installer. it's not formatted in sfdisk or _mkfs'd.  is this only in virtualbox or elsewhere too?
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
@@ -56,7 +57,7 @@ PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/qui
 SOMEDAY/MAYBE/RANDOM THOUGHTS:
 * the quickinst assumes the user did some stuff by himself and does some
 after-processing.  Would it be useful to have a procedure that always tells
-the user what to do (manually) ?
+the user what to do (manually) ? -> ASKDEV
 * profiles like 'desktop','server' (~-> package list, configs, disk setup,..) are crossconcerns
 compared to procedures (which are about "how" the installation goes:
 prescripted, autodetection, interactive,...).
@@ -68,7 +69,7 @@ whereas for interactive procedures it could provide some other defaults.
 * we run mkinitcpio twice: one while installing kernel packages, once after
 configuring the system (mkinitcpio.conf). can we optimize this?
 * core/interactive -> install packages -> dependency cycles with glibc.  not
-a problem?
+a problem? -> ASKDEV
 
 
 WORRIES FOR MAYBE NO GOOD REASON
