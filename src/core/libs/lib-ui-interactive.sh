@@ -178,8 +178,7 @@ interactive_autoprepare()
         SET_DEFAULTFS=1
     done
 
-    _dia_DIALOG --defaultno --yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" 0 0 \
-    || return 1
+    _dia_DIALOG --defaultno --yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" 0 0 || return 1
 
 
 	# we assume a /dev/hdX format (or /dev/sdX)
@@ -220,28 +219,44 @@ interactive_partition() {
         [ "$DISC" = "DONE" ] && break
         # Partition disc
         notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
-        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
+        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to the mountpoints selection step."
         cfdisk $DISC
     done
     return 0
 }
 
 
-interactive_mountpoints() {
-    while [ "$PARTFINISH" != "DONE" ]; do
-        : >$TMP_FSTAB
-        : >/home/arch/aif/runtime/.parts #TODO: use a variable instead of a file, we don't need to use a file for this
+interactive_filesystems() {
 
-        # Determine which filesystems are available
-        FSOPTS="ext2 ext2 ext3 ext3"
-        [ "$(which mkreiserfs 2>/dev/null)" ] && FSOPTS="$FSOPTS reiserfs Reiser3"
-        [ "$(which mkfs.xfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS xfs XFS"
-        [ "$(which mkfs.jfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS jfs JFS"
-        [ "$(which mkfs.vfat 2>/dev/null)" ]  && FSOPTS="$FSOPTS vfat VFAT"
+	# Determine which filesystems are available
+	FSOPTS="ext2 ext2 ext3 ext3"
+	which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
+	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
+	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
 
-        # Select mountpoints
-        notify "Available Disks:\n\n$(_getavaildisks)\n"
-        PARTS=$(findpartitions _)
+	notify "Available Disks:\n\n$(_getavaildisks)\n"
+
+	# Let the user make filesystems and mountpoints
+	USERHAPPY=0
+	while [ "$USERHAPPY" = 0 ]
+	do
+		PARTS=$(findpartitions _)
+		ask_option no "Add/edit partitions" $PARTS $UPCOMINGPARTS
+		ANSWER_OPTION
+
+		#TODO: let user choose FS, mountpoint etc, and even create lvm pv's, dm_crypt stuff etc, create $UPCOMINGPARTS as needed
+		# also show the disks along with the fs, mountpoint that has been choosen (maybe) already
+	done
+
+	# If the user has forgotten one or more fundamental ones, ask him now
+	ALLOK=true
+	# TODO: check all conditions that would make ALLOK untrue again
+	while [ "$ALLOK" != "true" ]; do
+
         _dia_DIALOG --menu "Select the partition to use as swap" 21 50 13 NONE - $PARTS 2>$ANSWER || return 1
         PART=$(cat $ANSWER)
         PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
@@ -283,7 +298,7 @@ interactive_mountpoints() {
             done
             DOMKFS="no"
             ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/home/arch/aif/runtime/.parts
+            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>file
             _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
             PART=$(cat $ANSWER)
         done
@@ -292,7 +307,7 @@ interactive_mountpoints() {
 
     target_umountall
 
-	fix_filesystems /home/arch/aif/runtime/.parts && notify "Partitions were successfully mounted." && return 0
+	fix_filesystems && notify "Partitions were successfully mounted." && return 0
 
 	show_warning "Failure while doing filesystems" "Something went wrong.  Check your logs"
 	return 1

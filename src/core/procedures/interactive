@@ -165,7 +165,7 @@ worker_prepare_disks()
 		if [ "$DISK_CONFIG_TYPE" = "auto"  ]; then
 			notify "You have already prepared your filesystems with Auto-prepare" #TODO: allow user to do this anyway. he can change his mind.
 		else
-			interactive_mountpoints && ret=0 && NEXTITEM=4 && DISK_CONFIG_TYPE=manual
+			interactive_filesystems && ret=0 && NEXTITEM=4 && DISK_CONFIG_TYPE=manual
 		fi
 		;;
             *)

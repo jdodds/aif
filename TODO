@@ -1,5 +1,9 @@
 See also the FIXME's and TODO's in the code.
 
+* finish interactive_filesystems port to refactored code
+* do the remaining bits in lib-blockdevices-filesystems
+* test
+
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
