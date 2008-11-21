@@ -17,33 +17,6 @@ check_depend ()
 }
 
 
-interactive_partition() {
-    target_umountall
-
-    # Select disk to partition
-    DISCS=$(finddisks _)
-    DISCS="$DISCS OTHER - DONE +"
-    notify "Available Disks:\n\n$(_getavaildisks)\n"
-    DISC=""
-    while true; do
-        # Prompt the user with a list of known disks
-        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
-        DISC=$ANSWER_OPTION
-        if [ "$DISC" = "OTHER" ]; then
-            _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
-            DISC=$(cat $ANSWER)
-        fi
-        # Leave our loop if the user is done partitioning
-        [ "$DISC" = "DONE" ] && break
-        # Partition disc
-        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
-        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
-        cfdisk $DISC
-    done
-    return 0
-}
-
-
 interactive_configure_system()
 {
 	[ "$EDITOR" ] || interactive_get_editor
@@ -224,6 +197,33 @@ interactive_autoprepare()
 	notify "Auto-prepare was successful"
 	return 0
 
+}
+
+
+interactive_partition() {
+    target_umountall
+
+    # Select disk to partition
+    DISCS=$(finddisks _)
+    DISCS="$DISCS OTHER - DONE +"
+    notify "Available Disks:\n\n$(_getavaildisks)\n"
+    DISC=""
+    while true; do
+        # Prompt the user with a list of known disks
+        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
+        DISC=$ANSWER_OPTION
+        if [ "$DISC" = "OTHER" ]; then
+            _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
+            DISC=$(cat $ANSWER)
+        fi
+        # Leave our loop if the user is done partitioning
+        [ "$DISC" = "DONE" ] && break
+        # Partition disc
+        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
+        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
+        cfdisk $DISC
+    done
+    return 0
 }
 
 
