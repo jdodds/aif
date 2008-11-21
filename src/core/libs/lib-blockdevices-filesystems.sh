@@ -215,34 +215,42 @@ mapdev() {
 # Create and mount filesystems in our destination system directory.
 #
 # args:
-#  $2 device: target block device
-#  $3 fstype: type of filesystem located at the device (or what to create)
-#  $3 opts:   extra opts for the mkfs program (optional)
+#  $1 device: target block device
+#  $2 fstype: type of filesystem located at the device (or what to create)
+#  $3 label:  label/name for the FS (you can pass an empty string) (optional)
+#  $4 opts:   extra opts for the mkfs program (optional)
 
 
 # returns: 1 on failure
 _mkfs() {
-	local _device=$2
-	local _fstype=$3
-	local _opts=$3
+	local _device=$1
+	local _fstype=$2
+	local _label=$3
+	local opts=$4
 
-	debug "_mkfs: _device: $1, fstype: $2, opts: $3"
+	debug "_mkfs: _device: $1, fstype: $2, label: $3, opts: $4"
 	# make sure the fstype is one we can handle
 	local knownfs=0
-	for fs in xfs jfs reiserfs ext2 ext3 vfat swap; do
+	for fs in xfs jfs reiserfs ext2 ext3 vfat swap dm_crypt lvm-pv lvm-vg lvm-lv; do
 		[ "${_fstype}" = "${fs}" ] && knownfs=1 && break
 	done
 
+	[ -z "$_label" ] && _label=default #TODO. when creating more then 1 VG we will get errors that it exists already. we should (per type) add incrementing numbers or something
 	[ $knownfs -eq 0 ] && ( show_warning 'mkfs' "unknown fstype ${_fstype} for ${_device}" ; return 1 )
 	local ret
 	case ${_fstype} in
-		xfs)      mkfs.xfs -f ${_device} >$LOG 2>&1; ret=$? ;;
-		jfs)      yes | mkfs.jfs ${_device} >$LOG 2>&1; ret=$? ;;
-		reiserfs) yes | mkreiserfs ${_device} >$LOG 2>&1; ret=$? ;;
-		ext2)     mke2fs "${_device}" >$LOG 2>&1; ret=$? ;;
-		ext3)     mke2fs -j ${_device} >$LOG 2>&1; ret=$? ;;
-		vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
-		swap)     mkswap ${_device} >$LOG 2>&1; ret=$? ;;
+		xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
+		jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
+		reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
+		ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
+		ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+		vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+		swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
+		dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
+		          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
+		lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
+		lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
+		lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
 		# don't handle anything else here, we will error later
 	esac
 	[ "$ret" != 0 ] && ( show_warning mkfs "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
@@ -419,8 +427,9 @@ process_partitions ()
 # go over each filesystem in $TMP_FILESYSTEMS, reorder them so that each entry has it's correspondent block device available (eg if you need /dev/mapper/foo which only becomes available after some other entry is processed) and process them
 process_filesystems ()
 {
-	#TODO: reorder file by strlen of mountpoint, so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good
-	#TODO: 'deconstruct' the mounted filesystems in the right order before doing this (opposite order of construct) (and swapoff)
+	#TODO: reorder file by strlen of mountpoint (or alphabetically), so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good -> sort -t \  -k 2
+	#TODO: we must make sure we have created all PV's, then reate a vg and the lv's.
+	#TODO: 'deconstruct' the mounted filesystems, pv's, lv's,vg's,dm_crypt's.. in the right order before doing this (opposite order of construct) and swapoff.
 	debug "process_filesystems Called.  checking all entries in $TMP_FILESYSTEMS"
 	devs_avail=1
 	while [ $devs_avail = 1 ]
@@ -468,15 +477,19 @@ process_filesystem ()
 
 	if [ "$DOMNT" = runtime -o "$DOMNT" = target ]
 	then
-		if [ "$FSTYPE" != swap ]
+		if [ "$FSTYPE" = swap ]
 		then
+			debug "swaponning $BLOCK"
+			swapon $BLOCK >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $BLOCK"  ;  return 1 )
+		elif [ "$FSTYPE" = dm_crypt ]
+		then
+			debug "cryptsetup luksOpen $BLOCK $dst"
+			cryptsetup luksOpen $BLOCK $dst >$LOG 2>&1 || ( show_warning 'cryptsetup' "Error luksOpening $BLOCK on $dst"  ;  return 1 )
+		else
 			[ "$DOMNT" = runtime ] && dst=$MP
 			[ "$DOMNT" = target  ] && dst=$var_TARGET_DIR$MP
 			debug "mounting $BLOCK on $dst"
 			mount -t $FSTYPE $BLOCK $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $BLOCK on $dst"  ;  return 1 )
-		else
-			debug "swaponning $BLOCK"
-			swapon $BLOCK >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $BLOCK"  ;  return 1 )
 		fi
 	fi
 
