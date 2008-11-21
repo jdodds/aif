@@ -1,5 +1,11 @@
 #!/bin/sh
 
+#TODO: this should be fixed on the installcd.
+modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
+modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
+
+
+
 TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
 TMP_FSTAB=/home/arch/aif/runtime/.fstab
 TMP_PARTITIONS=/home/arch/aif/runtime/.partitions
@@ -205,74 +211,42 @@ mapdev() {
 }
 
 
-# _mkfs() taken from setup code and slightly improved.
+# _mkfs() taken from setup code and altered.
 # Create and mount filesystems in our destination system directory.
 #
 # args:
-#  $1 domk: Whether to make the filesystem or use what is already there  (yes/no)
-#  $2 device: Device filesystem is on
+#  $2 device: target block device
 #  $3 fstype: type of filesystem located at the device (or what to create)
-#  $4 dest: Mounting location for the destination system
-#  $5 mountpoint: Mount point inside the destination system, e.g. '/boot'
+#  $3 opts:   extra opts for the mkfs program (optional)
+
 
 # returns: 1 on failure
 _mkfs() {
-    local _domk=$1
-    local _device=$2
-    local _fstype=$3
-    local _dest=$4
-    local _mountpoint=$5
+	local _device=$2
+	local _fstype=$3
+	local _opts=$3
 
-	debug "_mkfs: domk: $1, _device: $2, fstype: $3, dest: $4, mountpoint: $5"
-    # we have two main cases: "swap" and everything else.
-    if [ "${_fstype}" = "swap" ]; then
-        swapoff ${_device} >/dev/null 2>&1
-        if [ "${_domk}" = "yes" ]; then
-            mkswap ${_device} >$LOG 2>&1 || ( show_warning "Error creating swap: mkswap ${_device}" ; return 1 )
-        fi
-        swapon ${_device} >$LOG 2>&1 || ( show_warning "Error activating swap: swapon ${_device}"  ;  return 1 )
-    else
-        # make sure the fstype is one we can handle
-        local knownfs=0
-        for fs in xfs jfs reiserfs ext2 ext3 vfat; do
-            [ "${_fstype}" = "${fs}" ] && knownfs=1 && break
-        done
-        
-        [ $knownfs -eq 0 ] && ( show_warning "unknown fstype ${_fstype} for ${_device}" ; return 1 )
-        # if we were tasked to create the filesystem, do so
-        if [ "${_domk}" = "yes" ]; then
-            local ret
-            case ${_fstype} in
-                xfs)      mkfs.xfs -f ${_device} >$LOG 2>&1; ret=$? ;;
-                jfs)      yes | mkfs.jfs ${_device} >$LOG 2>&1; ret=$? ;;
-                reiserfs) yes | mkreiserfs ${_device} >$LOG 2>&1; ret=$? ;;
-                ext2)     mke2fs "${_device}" >$LOG 2>&1; ret=$? ;;
-                ext3)     mke2fs -j ${_device} >$LOG 2>&1; ret=$? ;;
-                vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
-                # don't handle anything else here, we will error later
-            esac
-            [ $ret != 0 ] && ( show_warning "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
-            sleep 2
-        fi
-        # create our mount directory
-        mkdir -p ${_dest}${_mountpoint}
-        # mount the bad boy
-        mount -t ${_fstype} ${_device} ${_dest}${_mountpoint} >$LOG 2>&1
-	[ $? != 0 ] && ( show_warning "Error mounting ${_dest}${_mountpoint}" ; return 1 )
-    fi
+	debug "_mkfs: _device: $1, fstype: $2, opts: $3"
+	# make sure the fstype is one we can handle
+	local knownfs=0
+	for fs in xfs jfs reiserfs ext2 ext3 vfat swap; do
+		[ "${_fstype}" = "${fs}" ] && knownfs=1 && break
+	done
 
-    # add to temp fstab
-    local _uuid="$(getuuid ${_device})"
-    if [ -n "${_uuid}" ]; then
-        _device="UUID=${_uuid}"
-    fi
-    echo -n "${_device} ${_mountpoint} ${_fstype} defaults 0 " >>$TMP_FSTAB
-
-    if [ "${_fstype}" = "swap" ]; then
-        echo "0" >>$TMP_FSTAB
-    else
-        echo "1" >>$TMP_FSTAB
-    fi
+	[ $knownfs -eq 0 ] && ( show_warning 'mkfs' "unknown fstype ${_fstype} for ${_device}" ; return 1 )
+	local ret
+	case ${_fstype} in
+		xfs)      mkfs.xfs -f ${_device} >$LOG 2>&1; ret=$? ;;
+		jfs)      yes | mkfs.jfs ${_device} >$LOG 2>&1; ret=$? ;;
+		reiserfs) yes | mkreiserfs ${_device} >$LOG 2>&1; ret=$? ;;
+		ext2)     mke2fs "${_device}" >$LOG 2>&1; ret=$? ;;
+		ext3)     mke2fs -j ${_device} >$LOG 2>&1; ret=$? ;;
+		vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
+		swap)     mkswap ${_device} >$LOG 2>&1; ret=$? ;;
+		# don't handle anything else here, we will error later
+	esac
+	[ "$ret" != 0 ] && ( show_warning mkfs "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
+	sleep 2
 }
 
 
@@ -431,12 +405,9 @@ fix_filesystems_deprecated ()
 
 
 # file layout:
-TMP_PARTITIONS
+#TMP_PARTITIONS
 # disk something-sfdisk-compliant
 
-
-TMP_FILESYSTEMS
-#blockdevice:filesystem:mountpoint(can be null for lvm/dm_crypt stuff):recreate FS? (yes/no)[:extra options for specific filesystem]
 
 
 # go over each disk in $TMP_PARTITIONS and partition it
@@ -448,6 +419,8 @@ process_partitions ()
 # go over each filesystem in $TMP_FILESYSTEMS, reorder them so that each entry has it's correspondent block device available (eg if you need /dev/mapper/foo which only becomes available after some other entry is processed) and process them
 process_filesystems ()
 {
+	#TODO: reorder file by strlen of mountpoint, so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good
+	#TODO: 'deconstruct' the mounted filesystems in the right order before doing this (opposite order of construct) (and swapoff)
 	debug "process_filesystems Called.  checking all entries in $TMP_FILESYSTEMS"
 	devs_avail=1
 	while [ $devs_avail = 1 ]
@@ -472,7 +445,55 @@ process_filesystems ()
 }
 
 
+#TMP_FILESYSTEMS beware, the 'mount?' for now just matters for the location (if 'target', the target path gets prepended)
+#blockdevice:filesystem:mountpoint:recreate FS?(yes/no):mount?(target,runtime,no)[:extra options for specific filesystem]
+
+# make a filesystem on a blockdevice and mount if requested.
 process_filesystem ()
 {
+	[ -z "$1" ] && die_error "process_filesystem needs a FS entry"
 	debug "process_filesystem $1"
+	line=$1
+        BLOCK=$( echo $line | cut -d: -f 1)
+        FSTYPE=$(echo $line | cut -d: -f 2)
+        MP=$(    echo $line | cut -d: -f 3) # can be null for lvm/dm_crypt stuff
+        DOMKFS=$(echo $line | cut -d: -f 4)
+        DOMNT=$( echo $line | cut -d: -f 5)
+        OPTS=$(  echo $line | cut -d: -f 6)
+
+	if [ "$DOMKFS" = yes ]
+	then
+		 _mkfs $BLOCK $FSTYPE $OPTS || return 1
+	fi
+
+	if [ "$DOMNT" = runtime -o "$DOMNT" = target ]
+	then
+		if [ "$FSTYPE" != swap ]
+		then
+			[ "$DOMNT" = runtime ] && dst=$MP
+			[ "$DOMNT" = target  ] && dst=$var_TARGET_DIR$MP
+			debug "mounting $BLOCK on $dst"
+			mount -t $FSTYPE $BLOCK $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $BLOCK on $dst"  ;  return 1 )
+		else
+			debug "swaponning $BLOCK"
+			swapon $BLOCK >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $BLOCK"  ;  return 1 )
+		fi
+	fi
+
+	# add to temp fstab
+	if [ $MP != null -a $DOMNT = target ]
+	then
+		local _uuid="$(getuuid $BLOCK)"
+		if [ -n "${_uuid}" ]; then
+			_device="UUID=${_uuid}"
+		fi
+		echo -n "$BLOCK ${_mountpoint} $FSTYPE defaults 0 " >>$TMP_FSTAB
+		if [ "$FSTYPE" = "swap" ]; then
+			echo "0" >>$TMP_FSTAB
+		else
+			echo "1" >>$TMP_FSTAB
+		fi
+	fi
+
+	return 0
 }
