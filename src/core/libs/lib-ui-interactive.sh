@@ -208,19 +208,22 @@ interactive_autoprepare()
     _dia_DIALOG --defaultno --yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" 0 0 \
     || return 1
 
-    DEVICE=$DISC
-    # TODO: why do we define a $DEFAULTFS variable someplace else if we hardcode it's attributes here to be able to replace them with custom values?  Can't we just construct the custom thing?
-    # For some reason the thing belows replaces everything well, but 'looses' the /home part, I don't know why, cannot reproduce it, but it happens in vbox
-    # FSSPECS=$(echo $DEFAULTFS | sed -e "s|/:7500:ext3|/:$ROOT_PART_SIZE:$FSTYPE|g" -e "s|/home:\*:ext3|/home:\*:$FSTYPE|g" -e "s|swap:256|swap:$SWAP_PART_SIZE|g" -e "s|/boot:32|/boot:$BOOT_PART_SIZE|g")
 
-	FSSPECS="/boot:$BOOT_PART_SIZE:ext2:+ swap:$SWAP_PART_SIZE:swap /:$ROOT_PART_SIZE:$FSTYPE /home:*:$FSTYPE"
-	debug "\$DEFAULTFS: $DEFAULTFS"
-	debug "\$FSSPECS  : $FSSPECS"
-    # we assume a /dev/hdX format (or /dev/sdX)
-    PART_ROOT="${DEVICE}3"
+	# we assume a /dev/hdX format (or /dev/sdX)
+	PART_ROOT="${DISC}3"
 
-	partition $DEVICE "$FSSPECS" &&  notify "Auto-prepare was successful" && return 0
-	return 1
+	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
+	echo "${DISC}1:ext2:/boot:yes:target"     >$TMP_FILESYSTEMS
+	echo "${DISC}2:swap:null:yes:target"      >$TMP_FILESYSTEMS
+	echo "${DISC}3:$FSTYPE:/:yes:target"      >$TMP_FILESYSTEMS
+	echo "${DISC}4:$FSTYPE:/home:yes:target"  >$TMP_FILESYSTEMS
+
+
+	process_disks       || die_error "Something went wrong while partitioning"
+	process_filesystems || die_error "Something went wrong while processing the filesystems"
+	notify "Auto-prepare was successful"
+	return 0
+
 }
 
 
