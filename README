@@ -96,8 +96,6 @@ core/base:        basic, little-interactivity installation with some common defa
 core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
 core/quickinst:   mostly DIY.  port of /arch/quickinst
 
-dieter/automatic: unofficial. not enabled by default
-
 
 ** Contributing **
 Install a VM (I use virtualbox-ose, works fine), make a vm, boot the install

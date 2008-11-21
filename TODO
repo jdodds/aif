@@ -9,13 +9,12 @@ General:
 Specifically:
 * core/interactive: gui transparancy: interactive autoprepare, package selection
 * core/interactive: fix workaround needed for installpkg exitcode
-* core/interactive bug: swap space 0 -> invalid?
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
 * core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are not mounted under /mnt
 * core/interactive or lib-ui: don't echo the name/id of selection options in dia mode
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
-* time totally incorrect during install -> filesystem creation date is newer then current date -> on reboot in new system fsck. sometimes even forced reboot. (i've had this witch /arch/setup too). a tool to configure the date? run ntp? (not always network available!) -> ASKDEV
+* time totally incorrect during install -> filesystem creation date is newer then current date -> on reboot in new system fsck. sometimes even forced reboot. (i've had this with /arch/setup too). a tool to configure the date? run ntp? (not always network available!) -> ASKDEV
 * /home doesn't get made separately in automatic installer. it's not formatted in sfdisk or _mkfs'd.  is this only in virtualbox or elsewhere too?
 
 
