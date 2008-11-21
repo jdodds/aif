@@ -2,6 +2,8 @@
 
 TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
 TMP_FSTAB=/home/arch/aif/runtime/.fstab
+TMP_PARTITIONS=/home/arch/aif/runtime/.partitions
+TMP_FILESYSTEMS=/home/arch/aif/runtime/.filesystems
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -294,7 +296,7 @@ target_configure_fstab()
 # partitions a disk , creates filesystems and mounts them
 # $1 device to partition
 # $2 a string of the form: <mountpoint>:<partsize>:<fstype>[:+] (the + is bootable flag)
-partition ()
+partition_deprecated ()
 {
 	debug "Partition called like: partition '$1' '$2'"
 	[ -z "$1" ] && die_error "partition() requires a device file and a partition string"
@@ -390,7 +392,7 @@ EOF
 
 # makes and mounts filesystems #TODO: don't use files but pass variables, integrate this with other functions
 # $1 file with setup
-fix_filesystems ()
+fix_filesystems_deprecated ()
 {
 	[ -z "$1" -o ! -f "$1" ] && die_error "Fix_filesystems needs a file with the setup structure in it"
 
@@ -425,4 +427,52 @@ fix_filesystems ()
     done
 
 	return 0
+}
+
+
+# file layout:
+TMP_PARTITIONS
+# disk something-sfdisk-compliant
+
+
+TMP_FILESYSTEMS
+#blockdevice:filesystem:mountpoint(can be null for lvm/dm_crypt stuff):recreate FS? (yes/no)[:extra options for specific filesystem]
+
+
+# go over each disk in $TMP_PARTITIONS and partition it
+process_partitions ()
+{
+}
+
+
+# go over each filesystem in $TMP_FILESYSTEMS, reorder them so that each entry has it's correspondent block device available (eg if you need /dev/mapper/foo which only becomes available after some other entry is processed) and process them
+process_filesystems ()
+{
+	debug "process_filesystems Called.  checking all entries in $TMP_FILESYSTEMS"
+	devs_avail=1
+	while [ $devs_avail = 1 ]
+	do
+		devs_avail=0
+		for part in `findpartitions`
+		do
+			if entry=`grep ^$part $TMP_FILESYSTEMS`
+			then
+				process_filesystem "$entry" && sed -i "/^$part/d" $TMP_FILESYSTEMS && debug "$part processed and removed from $TMP_FILESYSTEMS"
+				devs_avail=1
+			fi
+		done
+	done
+	entries=`wc -l $TMP_FILESYSTEMS`
+	if [ $entries -gt 0 ]
+	then
+		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $TMP_FILESYSTEMS`"
+	else
+		debug "All entries processed..."
+	fi
+}
+
+
+process_filesystem ()
+{
+	debug "process_filesystem $1"
 }
