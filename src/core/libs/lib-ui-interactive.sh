@@ -228,31 +228,67 @@ interactive_partition() {
 
 interactive_filesystems() {
 
-	# Determine which filesystems are available
+	# Determine which filesystems/blockdevices are available
 	FSOPTS="ext2 ext2 ext3 ext3"
 	which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
 	which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
-	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
-	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+	                                                                            # source?    mountpoint?    label?    exposes new, dummy blockdevice?      extra opts?        remarks
+	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume" # part       no             no        no: pv is specified as $part         optional           TODO: on 1 part you can make PV (or a totally different fs) but also VG if there is a PV already !
+	which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"     # dummy part no             yes       /dev/mapper/$label                   PV's to use        TODO: on 1 vg you must be able to create multiple LV's
+	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"  # dummy part no             yes       /dev/mapper/$vg-$label               VG and LV size
+	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"   # dummy part no             yes       /dev/mapper/$label                   optional
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
 	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
-	findpartitions 0 'no filesystem, no mountpoint' > $TMP_MENU
+	findpartitions 0 'no_filesystem;no_mountpoint;no_opts;no_label' > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
-		ask_option no "Add/edit partitions" `cat $TMP_MENU`
+		ask_option no "Add/edit partitions. Note that you don't *need* to specify opts or labels if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
+		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
+
 		part=$ANSWER_OPTION
-		--default-item
-_dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-            FSTYPE=$(cat $ANSWER)
-		#TODO: let user choose FS, mountpoint etc, and even create lvm pv's, dm_crypt stuff etc, update entries in $TMP_MENU and add 'fake' ones as needed
-		# also show the disks along with the fs, mountpoint that has been choosen (maybe) already
+		fs=`   awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1`
+		mount=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2`
+		opts=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3`
+		label=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4`
+
+		# ask FS
+		default=
+		[ "$fs" != no_filesystem ] && default="--default-item $fs"
+		_dia_DIALOG --menu "Select a filesystem for $part:" $FSOPTS 2>$ANSWER || return 1 #TODO on PV part you can only make PV/vg, on vg you can only make lv etc
+		fs=$(cat $ANSWER)
+
+		# ask mountpoint, if relevant
+		if [[ $fs != lvm-* && "$fs" != dm_crypt ]]
+		then
+			default=
+			[ "$mount" != no_mountpoint ] && default="$mount"
+			_dia_DIALOG --inputbox "Enter the mountpoint for $part" 8 65 "$default" 2>$ANSWER || return 1
+			fs=$(cat $ANSWER)
+		fi
+
+		# ask label, if relevant
+		if [ "$fs" = lvm-vg -o "$fs" = lvm-lv -o "$fs" = dm_crypt ]
+		then
+			default=
+			[ "$label" != no_label ] && default="$label"
+			_dia_DIALOG --inputbox "Enter the label/name for $part" 8 65 "$default" 2>$ANSWER || return 1
+			label=$(cat $ANSWER)
+		fi
+
+		# ask opts
+
+		# update the menu
+		sed -i "s/^$part/$part $fs;$mount;$opts;$label/" $TMP_MENU
+		# if we have at least 1 lvm PV, create a dummy lvm VG if not done yet
+
+		# TODO:create dummy 'results' of dm_crypt and lvm pv's, also remove them if we just changed from vg->ext3, dm_crypt -> fat, etc.
+		# TODO: find a way to make it possible to create n lv's on 1 pv
 	done
 
 	# If the user has forgotten one or more fundamental ones, ask him now
