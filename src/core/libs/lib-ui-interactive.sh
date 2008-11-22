@@ -228,36 +228,61 @@ interactive_partition() {
 
 interactive_filesystems() {
 
-	# Determine which filesystems/blockdevices are available
-	FSOPTS="ext2 ext2 ext3 ext3"
-	which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-	which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-	which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-	which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	                                                                            # source?    mountpoint?    label?    exposes new, dummy blockdevice?      special params?    remarks
-	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume" # part       no             no        no: pv is specified as $part         no                 TODO: on 1 part you can make PV (or a totally different fs) but also VG if there is a PV already !
-	which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"     # dummy part no             yes       /dev/mapper/$label                   PV's to use        TODO: on 1 vg you must be able to create multiple LV's
-	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"  # dummy part no             yes       /dev/mapper/$vg-$label               LV size
-	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"   # dummy part no             yes       /dev/mapper/$label                   no
-
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
-	TMP_MENU=/home/arch/aif/runtime/.tmpmenu #contains each block device along with all it's settings.  note that each line must have 2 fields only, separated by 1 space!
-	findpartitions 0 'no_filesystem;no_mountpoint;no_opts;no_label;no_params' > $TMP_MENU
+	TMP_MENU=/home/arch/aif/runtime/.tmpmenu 
+
+	# $TMP_MENU entry:
+	# <blockdevice>(type[,label]) empty/<FS-string> # note that each line must have 2 fields only, separated by 1 space!
+	# FS-string:
+	# type;mountpoint;opts;label;params[|FS-string|...]
+
+	findpartitions 0 'empty' '(raw') > $TMP_MENU #TODO: add label of partition too
 	while [ "$USERHAPPY" = 0 ]
 	do
-		ask_option no "Add/edit partitions. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
+		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
-		part=$ANSWER_OPTION
-		fs=`    awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1`
-		mount=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2`
-		opts=`  awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3`
-		label=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4`
-		params=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 5`
+		part=`sed 's/(.*)$//' <<< $ANSWER_OPTION`
+		part_type=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION`
+		part_label=`
+		fs=`    awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1` ; old_fs=$fs
+		mount=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2` ; old_mount=$mount
+		opts=`  awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3` ; old_opts=$opts
+		label=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4` ; old_label=$label
+		params=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 5` ; old_params=$params
 
+		# Possible filesystems/software layers on partitions/block devices
+
+		# name        on top of             mountpoint?    label?        DM device?                     theoretical device?   opts?   special params?    remarks
+
+		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                    no         no
+		# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+		# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+		# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+		# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+		# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+		# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                    optional   no
+		# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               yes. $part(lvm-pv)    optional   no
+		# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device            optional   PV's to use    TODO: on 1 vg you must be able to create multiple LV's
+		# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device            optional   LV size
+		# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device            optional   no
+
+
+		# Determine which filesystems/blockdevices are available
+		FSOPTS="ext2 ext2 ext3 ext3"
+		which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+		which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+		which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+		which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+		which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
+		which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
+		which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
+		which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+# TODO: implement 0..n FS's logic.  default fs: no_filesystem;no_mountpoint;no_opts;no_label;no_params
+		#TODO: for each $part_type, select only relevant/possible FSOPTS
 		# ask FS
 		default=
 		[ "$fs" != no_filesystem ] && default="--default-item $fs"
@@ -301,7 +326,6 @@ interactive_filesystems() {
 			params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
 			[ -z "$params" ] && params=no_params
 		fi
-
 		if [ "$fs" = lvm-lv ]
 		then
 			[ "$params"  = no_params ] && default='5G'
@@ -319,12 +343,33 @@ interactive_filesystems() {
 		[ -z "$opts" ] && opts=no_opts
 
 
-
 		# update the menu
-		sed -i "s/^$part/$part $fs;$mount;$opts;$label/" $TMP_MENU
-		# if we have at least 1 lvm PV, create a dummy lvm VG if not done yet
+		sed -i "s/^$part($part_type).*/$part($part_type) $fs;$mount;$opts;$label;$params/" $TMP_MENU
 
-		# TODO:create dummy 'results' of dm_crypt and lvm pv's, also remove them if we just changed from vg->ext3, dm_crypt -> fat, etc.
+		# add new dummy blockdevice, if relevant
+		if [ "$fs" = lvm-vg ]
+		then
+			echo "/dev/mapper/$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
+		elif [ "$fs" = lvm-pv ]
+		then
+			echo "$part($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
+		elif [ "$fs" = lvm-lv ]
+		then
+			#TODO: $vg is not set yet
+			echo "/dev/mapper/$vg-$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
+		elif  [ "$fs" = dm_crypt ]
+		then
+			echo "/dev/mapper/$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
+		fi
+
+		# cascading remove (dummy) blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, etc)
+		if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs != lvm-* && "$fs" != dm_crypt ]]
+		then
+			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
+			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
+			sed -i "#$target#d" $TMP_MENU #TODO: check affected items, delete those, etc etc.
+		fi
+
 		# TODO: find a way to make it possible to create n lv's on 1 pv
 	done
 
@@ -381,11 +426,11 @@ interactive_filesystems() {
         ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/aif/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
     done
 
-    target_umountall
+# TODO: should not need this anymore    target_umountall
+    # TODO: prepend $var_TARGET_DIR before handing over
 
-	fix_filesystems && notify "Partitions were successfully mounted." && return 0
-
-	show_warning "Failure while doing filesystems" "Something went wrong.  Check your logs"
+	process_filesystems && notify "Partitions were successfully created." && return 0
+	show_warning "Something went wrong while processing the filesystems"
 	return 1
 }
 
