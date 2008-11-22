@@ -234,34 +234,36 @@ interactive_filesystems() {
 	which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	                                                                            # source?    mountpoint?    label?    exposes new, dummy blockdevice?      extra opts?        remarks
-	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume" # part       no             no        no: pv is specified as $part         optional           TODO: on 1 part you can make PV (or a totally different fs) but also VG if there is a PV already !
+	                                                                            # source?    mountpoint?    label?    exposes new, dummy blockdevice?      special params?    remarks
+	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume" # part       no             no        no: pv is specified as $part         no                 TODO: on 1 part you can make PV (or a totally different fs) but also VG if there is a PV already !
 	which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"     # dummy part no             yes       /dev/mapper/$label                   PV's to use        TODO: on 1 vg you must be able to create multiple LV's
 	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"  # dummy part no             yes       /dev/mapper/$vg-$label               VG and LV size
-	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"   # dummy part no             yes       /dev/mapper/$label                   optional
+	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"   # dummy part no             yes       /dev/mapper/$label                   no
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
-	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
-	findpartitions 0 'no_filesystem;no_mountpoint;no_opts;no_label' > $TMP_MENU
+	TMP_MENU=/home/arch/aif/runtime/.tmpmenu #contains each block device along with all it's settings.  note that each line must have 2 fields only, separated by 1 space!
+	findpartitions 0 'no_filesystem;no_mountpoint;no_opts;no_label;no_params' > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
-		ask_option no "Add/edit partitions. Note that you don't *need* to specify opts or labels if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
+		ask_option no "Add/edit partitions. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
-		fs=`   awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1`
-		mount=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2`
-		opts=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3`
-		label=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4`
+		fs=`    awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1`
+		mount=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2`
+		opts=`  awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3`
+		label=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4`
+		params=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 5`
 
 		# ask FS
 		default=
 		[ "$fs" != no_filesystem ] && default="--default-item $fs"
 		_dia_DIALOG --menu "Select a filesystem for $part:" $FSOPTS 2>$ANSWER || return 1 #TODO on PV part you can only make PV/vg, on vg you can only make lv etc
 		fs=$(cat $ANSWER)
+		[ -z "$fs" ] && fs=no_filesystem
 
 		# ask mountpoint, if relevant
 		if [[ $fs != lvm-* && "$fs" != dm_crypt ]]
@@ -270,6 +272,7 @@ interactive_filesystems() {
 			[ "$mount" != no_mountpoint ] && default="$mount"
 			_dia_DIALOG --inputbox "Enter the mountpoint for $part" 8 65 "$default" 2>$ANSWER || return 1
 			fs=$(cat $ANSWER)
+			[ -z "$mount" ] && mount=no_mountpoint
 		fi
 
 		# ask label, if relevant
@@ -279,9 +282,39 @@ interactive_filesystems() {
 			[ "$label" != no_label ] && default="$label"
 			_dia_DIALOG --inputbox "Enter the label/name for $part" 8 65 "$default" 2>$ANSWER || return 1
 			label=$(cat $ANSWER)
+			[ -z "$label" ] && label=no_label
+		fi
+
+		# ask special params, if relevant
+		if [ "$fs" = lvm-vg ]
+		then
+			[ "$params" = no_params ] && params=
+			for pv in `sed 's/:/ /' <<< $params`
+			do
+				list="$list $pv ^ ON"
+			done
+			for pv in `grep ' lvm-pv' $TMP_MENU | awk '{print $1}'`
+			do
+				! grep -q "$pv ^ ON" && list="$list $pv - OFF"
+			done
+			_dia_DIALOG --checklist "Which lvm PV's must this volume group span?" 19 55 12 $list 2>$ANSWER || return 1
+			params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
+			[ -z "$params" ] && params=no_params
+		fi
+
+		if [ "$fs" = lvm-lv ]
+		then
+			#TODO: implement this
 		fi
 
 		# ask opts
+		default=
+		[ "$opts" != no_opts ] && default="$opts"
+		_dia_DIALOG --inputbox "Enter any additional opts for the program that will make $fs on $part" 8 65 "$default" 2>$ANSWER || return 1
+		opts=$(cat $ANSWER)
+		[ -z "$opts" ] && opts=no_opts
+
+
 
 		# update the menu
 		sed -i "s/^$part/$part $fs;$mount;$opts;$label/" $TMP_MENU
