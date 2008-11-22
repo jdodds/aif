@@ -109,7 +109,7 @@ interactive_autoprepare()
     DISCS=$(finddisks)
     if [ $(echo $DISCS | wc -w) -gt 1 ]; then
         notify "Available Disks:\n\n$(_getavaildisks)\n"
-        ask_option no "Select the hard drive to use" $(finddisks _) || return 1
+        ask_option no "Select the hard drive to use" $(finddisks 1 _) || return 1
         DISC=$ANSWER_OPTION
     else
         DISC=$DISCS
@@ -203,7 +203,7 @@ interactive_partition() {
     target_umountall
 
     # Select disk to partition
-    DISCS=$(finddisks _)
+    DISCS=$(finddisks 1 _)
     DISCS="$DISCS OTHER - DONE +"
     notify "Available Disks:\n\n$(_getavaildisks)\n"
     DISC=""
@@ -242,13 +242,16 @@ interactive_filesystems() {
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
+	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
+	findpartitions 0 'no filesystem, no mountpoint' > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
-		PARTS=$(findpartitions _)
-		ask_option no "Add/edit partitions" $PARTS $UPCOMINGPARTS
-		ANSWER_OPTION
-
-		#TODO: let user choose FS, mountpoint etc, and even create lvm pv's, dm_crypt stuff etc, create $UPCOMINGPARTS as needed
+		ask_option no "Add/edit partitions" `cat $TMP_MENU`
+		part=$ANSWER_OPTION
+		--default-item
+_dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
+            FSTYPE=$(cat $ANSWER)
+		#TODO: let user choose FS, mountpoint etc, and even create lvm pv's, dm_crypt stuff etc, update entries in $TMP_MENU and add 'fake' ones as needed
 		# also show the disks along with the fs, mountpoint that has been choosen (maybe) already
 	done
 
@@ -499,8 +502,8 @@ EOF
     [ "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
 
-    DEVS=$(finddisks _)
-    DEVS="$DEVS $(findpartitions _)"
+    DEVS=$(finddisks 1 _)
+    DEVS="$DEVS $(findpartitions 1 _)"
     if [ "$DEVS" = "" ]; then
         notify "No hard drives were found"
         return 1

@@ -48,39 +48,45 @@ target_umountall()
 }
 
 
-# literally taken from setup script
+# taken from setup script, modified for separator control
+# $1 set to 1 to echo a newline after device instead of a space (optional)
+# $2 extra things to echo for each device (optional)
 finddisks() {
     workdir="$PWD"
     cd /sys/block 
     # ide devices 
     for dev in $(ls | egrep '^hd'); do
         if [ "$(cat $dev/device/media)" = "disk" ]; then
-            echo "/dev/$dev"
-            [ "$1" ] && echo $1
+            echo -n "/dev/$dev"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         fi
     done  
     #scsi/sata devices
     for dev in $(ls | egrep '^sd'); do
         # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
-            echo "/dev/$dev"
-            [ "$1" ] && echo $1
+            echo -n "/dev/$dev"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         fi
     done  
     # cciss controllers
     if [ -d /dev/cciss ] ; then
         cd /dev/cciss
         for dev in $(ls | egrep -v 'p'); do
-            echo "/dev/cciss/$dev"
-            [ "$1" ] && echo $1   
+            echo -n "/dev/cciss/$dev"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         done
     fi
     # Smart 2 controllers
     if [ -d /dev/ida ] ; then
         cd /dev/ida
         for dev in $(ls | egrep -v 'p'); do
-            echo "/dev/ida/$dev"
-            [ "$1" ] && echo $1 
+            echo -n"/dev/ida/$dev"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         done
     fi
     cd "$workdir"
@@ -101,7 +107,9 @@ getuuid()
 }
 
 
-# taken from setup. slightly optimized.
+# taken from setup script, slightly optimized and modified for separator control
+# $1 set to 1 to echo a newline after device instead of a space (optional)
+# $2 extra things to echo for each device (optional)
 findpartitions() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
@@ -115,8 +123,9 @@ findpartitions() {
 			then
 				if [ -d $part ]
 				then  
-					echo "/dev/$part"  
-					[ "$1" ] && echo $1
+					echo -n "/dev/$part"
+					[ "$1" = 1 ] && echo || echo -n ' '
+					[ "$2" ] && echo $2
 				fi
 			fi
 		done
@@ -124,16 +133,18 @@ findpartitions() {
 	# include any mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
-		echo "/dev/mapper/$devpath"
-		[ "$1" ] && echo $1
+		echo -n "/dev/mapper/$devpath"
+		[ "$1" = 1 ] && echo || echo -n ' '
+		[ "$2" ] && echo $2
 	done
 	# include any raid md devices
 	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
 		then
-			echo "$devpath"
-			[ "$1" ] && echo $1
+			echo -n "$devpath"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		fi
 	done
 	# inlcude cciss controllers
@@ -142,8 +153,9 @@ findpartitions() {
 		cd /dev/cciss
 		for dev in $(ls | egrep 'p')
 		do
-			echo "/dev/cciss/$dev"
-			[ "$1" ] && echo $1
+			echo -n "/dev/cciss/$dev"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		done
 	fi
 	# inlcude Smart 2 controllers
@@ -152,8 +164,9 @@ findpartitions() {
 		cd /dev/ida
 		for dev in $(ls | egrep 'p')
 		do
-			echo "/dev/ida/$dev"
-			[ "$1" ] && echo $1
+			echo -n "/dev/ida/$dev"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		done
 	fi
 
@@ -375,8 +388,6 @@ fix_filesystems_deprecated ()
 # file layout:
 #TMP_PARTITIONS
 # disk partition-scheme
-
-
 
 # go over each disk in $TMP_PARTITIONS and partition it
 process_disks ()
