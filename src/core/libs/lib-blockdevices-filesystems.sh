@@ -51,13 +51,14 @@ target_umountall()
 # taken from setup script, modified for separator control
 # $1 set to 1 to echo a newline after device instead of a space (optional)
 # $2 extra things to echo for each device (optional)
+# $3 something to append directly after the device (optional)
 finddisks() {
     workdir="$PWD"
     cd /sys/block 
     # ide devices 
     for dev in $(ls | egrep '^hd'); do
         if [ "$(cat $dev/device/media)" = "disk" ]; then
-            echo -n "/dev/$dev"
+            echo -n "/dev/$dev$3"
             [ "$1" = 1 ] && echo || echo -n ' '
             [ "$2" ] && echo $2
         fi
@@ -66,7 +67,7 @@ finddisks() {
     for dev in $(ls | egrep '^sd'); do
         # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
-            echo -n "/dev/$dev"
+            echo -n "/dev/$dev$3"
             [ "$1" = 1 ] && echo || echo -n ' '
             [ "$2" ] && echo $2
         fi
@@ -75,7 +76,7 @@ finddisks() {
     if [ -d /dev/cciss ] ; then
         cd /dev/cciss
         for dev in $(ls | egrep -v 'p'); do
-            echo -n "/dev/cciss/$dev"
+            echo -n "/dev/cciss/$dev$3"
             [ "$1" = 1 ] && echo || echo -n ' '
             [ "$2" ] && echo $2
         done
@@ -84,7 +85,7 @@ finddisks() {
     if [ -d /dev/ida ] ; then
         cd /dev/ida
         for dev in $(ls | egrep -v 'p'); do
-            echo -n"/dev/ida/$dev"
+            echo -n"/dev/ida/$dev$3"
             [ "$1" = 1 ] && echo || echo -n ' '
             [ "$2" ] && echo $2
         done
@@ -108,8 +109,9 @@ getuuid()
 
 
 # taken from setup script, slightly optimized and modified for separator control
-# $1 set to 1 to echo a newline after device instead of a space (optional)
-# $2 extra things to echo for each device (optional)
+# $1 set to 1 to echo a newline after partition instead of a space (optional)
+# $2 extra things to echo for each partition (optional)
+# $3 something to append directly after the partition (optional)
 findpartitions() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
@@ -123,7 +125,7 @@ findpartitions() {
 			then
 				if [ -d $part ]
 				then  
-					echo -n "/dev/$part"
+					echo -n "/dev/$part$3"
 					[ "$1" = 1 ] && echo || echo -n ' '
 					[ "$2" ] && echo $2
 				fi
@@ -133,7 +135,7 @@ findpartitions() {
 	# include any mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
-		echo -n "/dev/mapper/$devpath"
+		echo -n "/dev/mapper/$devpath$3"
 		[ "$1" = 1 ] && echo || echo -n ' '
 		[ "$2" ] && echo $2
 	done
@@ -142,7 +144,7 @@ findpartitions() {
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
 		then
-			echo -n "$devpath"
+			echo -n "$devpath$3"
 			[ "$1" = 1 ] && echo || echo -n ' '
 			[ "$2" ] && echo $2
 		fi
@@ -153,7 +155,7 @@ findpartitions() {
 		cd /dev/cciss
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/cciss/$dev"
+			echo -n "/dev/cciss/$dev$3"
 			[ "$1" = 1 ] && echo || echo -n ' '
 			[ "$2" ] && echo $2
 		done
@@ -164,7 +166,7 @@ findpartitions() {
 		cd /dev/ida
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/ida/$dev"
+			echo -n "/dev/ida/$dev$3"
 			[ "$1" = 1 ] && echo || echo -n ' '
 			[ "$2" ] && echo $2
 		done
