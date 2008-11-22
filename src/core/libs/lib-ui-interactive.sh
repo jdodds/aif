@@ -237,7 +237,7 @@ interactive_filesystems() {
 	                                                                            # source?    mountpoint?    label?    exposes new, dummy blockdevice?      special params?    remarks
 	which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume" # part       no             no        no: pv is specified as $part         no                 TODO: on 1 part you can make PV (or a totally different fs) but also VG if there is a PV already !
 	which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"     # dummy part no             yes       /dev/mapper/$label                   PV's to use        TODO: on 1 vg you must be able to create multiple LV's
-	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"  # dummy part no             yes       /dev/mapper/$vg-$label               VG and LV size
+	which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"  # dummy part no             yes       /dev/mapper/$vg-$label               LV size
 	which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"   # dummy part no             yes       /dev/mapper/$label                   no
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
@@ -304,7 +304,11 @@ interactive_filesystems() {
 
 		if [ "$fs" = lvm-lv ]
 		then
-			#TODO: implement this
+			[ "$params"  = no_params ] && default='5G'
+			[ "$params" != no_params ] && default="$params"
+			_dia_DIALOG --inputbox "Enter the size for this $fs on $part (suffix K,M,G,T,P,E. default is M)" 8 65 "$default" 2>$ANSWER || return 1
+			params=$(cat $ANSWER)
+			[ -z "$params" ] && params=no_params
 		fi
 
 		# ask opts
