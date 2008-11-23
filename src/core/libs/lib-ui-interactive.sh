@@ -235,19 +235,19 @@ interactive_filesystems() {
 	TMP_MENU=/home/arch/aif/runtime/.tmpmenu 
 
 	# $TMP_MENU entry:
-	# <blockdevice>(type[,label]) empty/<FS-string> # note that each line must have 2 fields only, separated by 1 space!
+	# <blockdevice>(type,[label]) empty/<FS-string> # note that each line must have 2 fields only, separated by 1 space!
 	# FS-string:
 	# type;mountpoint;opts;label;params[|FS-string|...]
 
-	findpartitions 0 'empty' '(raw') > $TMP_MENU #TODO: add label of partition too
+	findpartitions 0 'empty' '(raw,)') > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=`sed 's/(.*)$//' <<< $ANSWER_OPTION`
-		part_type=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION`
-		part_label=`
+		part_type=` sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 1`
+		part_label=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 2`
 		fs=`    awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1` ; old_fs=$fs
 		mount=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2` ; old_mount=$mount
 		opts=`  awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3` ; old_opts=$opts
@@ -281,6 +281,8 @@ interactive_filesystems() {
 		which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
 		which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
 		which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+
+		#TODO: make separate function interactive_filesystem
 # TODO: implement 0..n FS's logic.  default fs: no_filesystem;no_mountpoint;no_opts;no_label;no_params
 		#TODO: for each $part_type, select only relevant/possible FSOPTS
 		# ask FS
