@@ -354,6 +354,29 @@ interactive_filesystem ()
 		[ -z "$fs_label"  ] && fs_label=no_label
 		[ -z "$fs_params" ] && fs_params=no_params
 		NEW_FILESYSTEM="$fs_type;$fs_mount;$fs_opts;$fs_label;$fs_params"
+
+		# add new theoretical blockdevice, if relevant
+		if [ "$fs_type" = lvm-vg ]
+		then
+			echo "/dev/mapper/$fs_label($fs_type) empty" >> $TMP_MENU
+		elif [ "$fs_type" = lvm-pv ]
+		then
+			echo "$part($fs_type) empty" >> $TMP_MENU
+		elif [ "$fs_type" = lvm-lv ]
+		then
+			echo "/dev/mapper/$part_label-$fs_label($fs_type) empty" >> $TMP_MENU
+		elif  [ "$fs_type" = dm_crypt ]
+		then
+			echo "/dev/mapper/$fs_label($fs_type) empty" >> $TMP_MENU
+		fi
+
+		# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
+		if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs != lvm-* && "$fs" != dm_crypt ]]
+		then
+			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
+			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
+			sed -i "#$target#d" $TMP_MENU #TODO: check affected items, delete those, etc etc.
+		fi
 }
 
 interactive_filesystems() {
@@ -379,45 +402,30 @@ interactive_filesystems() {
 		part_type=` sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 1`
 		part_label=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 2`
 		fs=`awk "/^$part/ {print \$2} $TMP_MENU"`
-		if [ $part_type = lvm-vg ]
+
+		if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 		then
-			#TODO: menu here where you can add/edit 0..n lv's
+			list=
+			if [ $fs != empty ]
+			then
+				for lv in `sed '/|/ /' <<< $fs`
+				do
+					list="$list $lv"
+				done
+			fi
+			list="$list empty NEW"
+			ask_option empty "Edit/create new LV's on this VG:" $list
+			interactive_filesystem $ANSWER_OPTION
+			#TODO: for now we just append, that's obviously wrong
+			fs="$fs|$NEW_FILESYSTEM"
 		else
 			interactive_filesystem $part $part_type $part_label $fs
+			fs=$NEW_FILESYSTEM
 		fi
-
-
-	# TODO: handle $NEW_FILESYSTEM
-
 
 		# update the menu
-		sed -i "s/^$part($part_type).*/$part($part_type) $fs;$mount;$opts;$label;$params/" $TMP_MENU
+		sed -i "s/^$part($part_type,$part_label).*/$part($part_type,$part_label) $fs/" $TMP_MENU
 
-		# add new dummy blockdevice, if relevant
-		if [ "$fs" = lvm-vg ]
-		then
-			echo "/dev/mapper/$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
-		elif [ "$fs" = lvm-pv ]
-		then
-			echo "$part($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
-		elif [ "$fs" = lvm-lv ]
-		then
-			#TODO: $vg is not set yet
-			echo "/dev/mapper/$vg-$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
-		elif  [ "$fs" = dm_crypt ]
-		then
-			echo "/dev/mapper/$label($fs) no_filesystem;no_mountpoint;no_opts;no_label;no_params" >> $TMP_MENU
-		fi
-
-		# cascading remove (dummy) blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, etc)
-		if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs != lvm-* && "$fs" != dm_crypt ]]
-		then
-			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
-			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
-			sed -i "#$target#d" $TMP_MENU #TODO: check affected items, delete those, etc etc.
-		fi
-
-		# TODO: find a way to make it possible to create n lv's on 1 pv
 	done
 
 	# If the user has forgotten one or more fundamental ones, ask him now
@@ -473,8 +481,9 @@ interactive_filesystems() {
         ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/aif/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
     done
 
-# TODO: should not need this anymore    target_umountall
-    # TODO: prepend $var_TARGET_DIR before handing over
+	# TODO: should not need this anymore    target_umountall
+	# TODO: prepend $var_TARGET_DIR before handing over
+	# TODO: convert our format to what process_filesystems will understand
 
 	process_filesystems && notify "Partitions were successfully created." && return 0
 	show_warning "Something went wrong while processing the filesystems"
