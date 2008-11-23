@@ -226,13 +226,143 @@ interactive_partition() {
 }
 
 
+# create new, delete, or edit a filesystem
+interactive_filesystem ()
+{
+	part=$1
+	part_type=$2
+	part_label=$3
+	fs=$4
+	NEW_FILESYSTEM=
+	if [ $fs = empty ]
+	then
+		fs_type=
+		fs_mount=
+		fs_opts=
+		fs_label=
+		fs_params=
+	else
+		ask_option edit "What do you want to do on $part ($part_type,$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		if [ "$ANSWER_OPTION" = delete ]
+		then
+			NEW_FILESYSTEM=empty
+			return 0
+		else
+			fs_type=`  cut -d ';' -f 1 <<< $fs`
+			fs_mount=` cut -d ';' -f 2 <<< $fs`
+			fs_opts=`  cut -d ';' -f 3 <<< $fs`
+			fs_label=` cut -d ';' -f 4 <<< $fs`
+			fs_params=`cut -d ';' -f 5 <<< $fs`
+			[ "$fs_type"   = no_type   ] && fs_type=
+			[ "$fs_mount"  = no_mount  ] && fs_mount=
+			[ "$fs_opts"   = no_opts   ] && fs_opts=
+			[ "$fs_label"  = no_label  ] && fs_label=
+			[ "$fs_params" = no_params ] && fs_params=
+			old_fs_type=$fs_type
+			old_fs_mount=$fs_mount
+			old_fs_opts=$fs_opts
+			old_fs_label=$fs_label
+			old_fs_params=$fs_params
+		fi
+	fi
+
+	# Possible filesystems/software layers on partitions/block devices
+
+	# name        on top of             mountpoint?    label?        DM device?                     theoretical device?   opts?   special params?
+
+	# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                    no         no
+	# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+	# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+	# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+	# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+	# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
+	# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                    optional   no
+	# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               yes. $part(lvm-pv)    optional   no
+	# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device            optional   PV's to use
+	# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device            optional   LV size
+	# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device            optional   no
+
+
+	# Determine which filesystems/blockdevices are available
+	FSOPTS=
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  2>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  2>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
+	[ $part_type = lvm-pv                                              ] && which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
+	[ $part_type = lvm-vg                                              ] && which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
+	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+
+		# ask FS
+		default=
+		[ -n "$fs_type" ] && default="--default-item $fs_type"
+		_dia_DIALOG --menu "Select a filesystem for $part:" $FSOPTS 2>$ANSWER || return 1
+		fs_type=$(cat $ANSWER)
+
+		# ask mountpoint, if relevant
+		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt ]]
+		then
+			default=
+			[ -n "$fs_mount" ] && default="$fs_mount"
+			_dia_DIALOG --inputbox "Enter the mountpoint for $part" 8 65 "$default" 2>$ANSWER || return 1
+			fs_mount=$(cat $ANSWER)
+		fi
+
+		# ask label, if relevant
+		if [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
+		then
+			default=
+			[ -n "$fs_label" ] && default="$fs_label"
+			_dia_DIALOG --inputbox "Enter the label/name for $part" 8 65 "$default" 2>$ANSWER || return 1
+			fs_label=$(cat $ANSWER)
+		fi
+
+		# ask special params, if relevant
+		if [ "$fs_type" = lvm-vg ]
+		then
+			for pv in `sed 's/:/ /' <<< $fs_params`
+			do
+				list="$list $pv ^ ON"
+			done
+			for pv in `grep ' lvm-pv' $TMP_MENU | awk '{print $1}'`
+			do
+				! grep -q "$pv ^ ON" && list="$list $pv - OFF"
+			done
+			_dia_DIALOG --checklist "Which lvm PV's must this volume group span?" 19 55 12 $list 2>$ANSWER || return 1
+			fs_params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
+		fi
+		if [ "$fs_type" = lvm-lv ]
+		then
+			[ -z "$fs_params" ] && default='5G'
+			[ -n "$fs_params" ] && default="$fs_params"
+			_dia_DIALOG --inputbox "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" 8 65 "$default" 2>$ANSWER || return 1
+			fs_params=$(cat $ANSWER)
+		fi
+
+		# ask opts
+		default=
+		[ -n "$fs_opts" ] && default="$fs_opts"
+		_dia_DIALOG --inputbox "Enter any additional opts for the program that will make $fs_type on $part" 8 65 "$default" 2>$ANSWER || return 1
+		fs_opts=$(cat $ANSWER)
+
+		[ -z "$fs_type"   ] && fs_type=no_type
+		[ -z "$fs_mount"  ] && fs_mount=no_mount
+		[ -z "$fs_opts"   ] && fs_opts=no_opts
+		[ -z "$fs_label"  ] && fs_label=no_label
+		[ -z "$fs_params" ] && fs_params=no_params
+		NEW_FILESYSTEM="$fs_type;$fs_mount;$fs_opts;$fs_label;$fs_params"
+}
+
 interactive_filesystems() {
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
-	TMP_MENU=/home/arch/aif/runtime/.tmpmenu 
+	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
 
 	# $TMP_MENU entry:
 	# <blockdevice>(type,[label]) empty/<FS-string> # note that each line must have 2 fields only, separated by 1 space!
@@ -248,101 +378,16 @@ interactive_filesystems() {
 		part=`sed 's/(.*)$//' <<< $ANSWER_OPTION`
 		part_type=` sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 1`
 		part_label=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 2`
-		fs=`    awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 1` ; old_fs=$fs
-		mount=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 2` ; old_mount=$mount
-		opts=`  awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 3` ; old_opts=$opts
-		label=` awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 4` ; old_label=$label
-		params=`awk "/^$part/ {print \$2} $TMP_MENU" | cut -d ';' -f 5` ; old_params=$params
-
-		# Possible filesystems/software layers on partitions/block devices
-
-		# name        on top of             mountpoint?    label?        DM device?                     theoretical device?   opts?   special params?    remarks
-
-		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                    no         no
-		# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-		# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-		# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-		# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-		# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-		# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                    optional   no
-		# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               yes. $part(lvm-pv)    optional   no
-		# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device            optional   PV's to use    TODO: on 1 vg you must be able to create multiple LV's
-		# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device            optional   LV size
-		# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device            optional   no
-
-
-		# Determine which filesystems/blockdevices are available
-		FSOPTS="ext2 ext2 ext3 ext3"
-		which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-		which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-		which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-		which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-		which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
-		which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
-		which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
-		which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
-
-		#TODO: make separate function interactive_filesystem
-# TODO: implement 0..n FS's logic.  default fs: no_filesystem;no_mountpoint;no_opts;no_label;no_params
-		#TODO: for each $part_type, select only relevant/possible FSOPTS
-		# ask FS
-		default=
-		[ "$fs" != no_filesystem ] && default="--default-item $fs"
-		_dia_DIALOG --menu "Select a filesystem for $part:" $FSOPTS 2>$ANSWER || return 1 #TODO on PV part you can only make PV/vg, on vg you can only make lv etc
-		fs=$(cat $ANSWER)
-		[ -z "$fs" ] && fs=no_filesystem
-
-		# ask mountpoint, if relevant
-		if [[ $fs != lvm-* && "$fs" != dm_crypt ]]
+		fs=`awk "/^$part/ {print \$2} $TMP_MENU"`
+		if [ $part_type = lvm-vg ]
 		then
-			default=
-			[ "$mount" != no_mountpoint ] && default="$mount"
-			_dia_DIALOG --inputbox "Enter the mountpoint for $part" 8 65 "$default" 2>$ANSWER || return 1
-			fs=$(cat $ANSWER)
-			[ -z "$mount" ] && mount=no_mountpoint
+			#TODO: menu here where you can add/edit 0..n lv's
+		else
+			interactive_filesystem $part $part_type $part_label $fs
 		fi
 
-		# ask label, if relevant
-		if [ "$fs" = lvm-vg -o "$fs" = lvm-lv -o "$fs" = dm_crypt ]
-		then
-			default=
-			[ "$label" != no_label ] && default="$label"
-			_dia_DIALOG --inputbox "Enter the label/name for $part" 8 65 "$default" 2>$ANSWER || return 1
-			label=$(cat $ANSWER)
-			[ -z "$label" ] && label=no_label
-		fi
 
-		# ask special params, if relevant
-		if [ "$fs" = lvm-vg ]
-		then
-			[ "$params" = no_params ] && params=
-			for pv in `sed 's/:/ /' <<< $params`
-			do
-				list="$list $pv ^ ON"
-			done
-			for pv in `grep ' lvm-pv' $TMP_MENU | awk '{print $1}'`
-			do
-				! grep -q "$pv ^ ON" && list="$list $pv - OFF"
-			done
-			_dia_DIALOG --checklist "Which lvm PV's must this volume group span?" 19 55 12 $list 2>$ANSWER || return 1
-			params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
-			[ -z "$params" ] && params=no_params
-		fi
-		if [ "$fs" = lvm-lv ]
-		then
-			[ "$params"  = no_params ] && default='5G'
-			[ "$params" != no_params ] && default="$params"
-			_dia_DIALOG --inputbox "Enter the size for this $fs on $part (suffix K,M,G,T,P,E. default is M)" 8 65 "$default" 2>$ANSWER || return 1
-			params=$(cat $ANSWER)
-			[ -z "$params" ] && params=no_params
-		fi
-
-		# ask opts
-		default=
-		[ "$opts" != no_opts ] && default="$opts"
-		_dia_DIALOG --inputbox "Enter any additional opts for the program that will make $fs on $part" 8 65 "$default" 2>$ANSWER || return 1
-		opts=$(cat $ANSWER)
-		[ -z "$opts" ] && opts=no_opts
+	# TODO: handle $NEW_FILESYSTEM
 
 
 		# update the menu
