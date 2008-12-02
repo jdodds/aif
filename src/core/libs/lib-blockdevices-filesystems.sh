@@ -111,7 +111,7 @@ getuuid()
 # taken from setup script, slightly optimized and modified for separator control
 # $1 set to 1 to echo a newline after partition instead of a space (optional)
 # $2 extra things to echo for each partition (optional)
-# $3 something to append directly after the partition (optional)
+# $3 something to append directly after the partition (optional) TODO: refactor code so there's a space in between, merge $2 and $3. use echo -e to print whatever user wants
 findpartitions() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
