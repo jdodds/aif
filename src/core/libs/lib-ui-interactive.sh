@@ -388,20 +388,29 @@ interactive_filesystems() {
 	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
 
 	# $TMP_MENU entry:
-	# <blockdevice>(type,[label]) empty/<FS-string> # note that each line must have 2 fields only, separated by 1 space!
+	# old -> <blockdevice>(type,[label]) empty/<FS-string> # TODO / WIP !!!!: separate menu formatting from datafile syntax -> allow spaces here
+	# new -> <blockdevice> type label/no_label <FS-string>/no_fs
 	# FS-string:
 	# type;mountpoint;opts;label;params[|FS-string|...]
 
-	findpartitions 0 'empty' '(raw,)' > $TMP_MENU
+	findpartitions 0 'no_fs' ' raw no_label' > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
-		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
+		menu_list=
+		while read $part $type $label $fs
+		do
+			menu_list="$menu_list $part"
+		done < $TMP_MENU
+
+		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
-		part=`sed 's/(.*)$//' <<< $ANSWER_OPTION`
-		part_type=` sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 1`
-		part_label=`sed 's/.*(\(.*\))$/\1/' <<< $ANSWER_OPTION | cut -d ',' -f 2`
-		fs=`awk "/^$part/ {print \$2} $TMP_MENU"`
+		part=$ANSWER_OPTION
+		part_type=` awk "/^$part/ {print \$2}" $TMP_MENU`
+		part_label=`awk "/^$part/ {print \$3}" $TMP_MENU`
+		fs=`        awk "/^$part/ {print \$4}" $TMP_MENU`
+		[ "$part_label" == no_label ] && part_label=
+		[ "$fs"         == no_fs    ] && fs=
 
 		if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 		then
