@@ -242,7 +242,7 @@ interactive_filesystem ()
 		fs_label=
 		fs_params=
 	else
-		ask_option edit "What do you want to do on $part ($part_type,$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		ask_option edit "What do you want to do on $part (type:$part_type,label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
 		if [ "$ANSWER_OPTION" = delete ]
 		then
 			NEW_FILESYSTEM=empty
@@ -327,7 +327,7 @@ interactive_filesystem ()
 			do
 				list="$list $pv ^ ON"
 			done
-			for pv in `grep ' lvm-pv' $TMP_MENU | awk '{print $1}'`
+			for pv in `grep ' lvm-pv' $BLOCK_DATA | awk '{print $1}'`
 			do
 				! grep -q "$pv ^ ON" && list="$list $pv - OFF"
 			done
@@ -358,16 +358,16 @@ interactive_filesystem ()
 		# add new theoretical blockdevice, if relevant
 		if [ "$fs_type" = lvm-vg ]
 		then
-			echo "/dev/mapper/$fs_label($fs_type) empty" >> $TMP_MENU
+			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $BLOCK_DATA
 		elif [ "$fs_type" = lvm-pv ]
 		then
-			echo "$part($fs_type) empty" >> $TMP_MENU
+			echo "$part $fs_type no_label no_fs" >> $BLOCK_DATA
 		elif [ "$fs_type" = lvm-lv ]
 		then
-			echo "/dev/mapper/$part_label-$fs_label($fs_type) empty" >> $TMP_MENU
+			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
 		elif  [ "$fs_type" = dm_crypt ]
 		then
-			echo "/dev/mapper/$fs_label($fs_type) empty" >> $TMP_MENU
+			echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
 		fi
 
 		# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
@@ -375,7 +375,7 @@ interactive_filesystem ()
 		then
 			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
 			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
-			sed -i "#$target#d" $TMP_MENU #TODO: check affected items, delete those, etc etc.
+			sed -i "#$target#d" $BLOCK_DATA #TODO: check affected items, delete those, etc etc.
 		fi
 }
 
@@ -385,30 +385,30 @@ interactive_filesystems() {
 
 	# Let the user make filesystems and mountpoints
 	USERHAPPY=0
-	TMP_MENU=/home/arch/aif/runtime/.tmpmenu
+	BLOCK_DATA=/home/arch/aif/runtime/.blockdata
 
-	# $TMP_MENU entry:
-	# old -> <blockdevice>(type,[label]) empty/<FS-string> # TODO / WIP !!!!: separate menu formatting from datafile syntax -> allow spaces here
-	# new -> <blockdevice> type label/no_label <FS-string>/no_fs
+	# $BLOCK_DATA entry. easily parsable.:
+	# <blockdevice> type label/no_label <FS-string>/no_fs
 	# FS-string:
 	# type;mountpoint;opts;label;params[|FS-string|...]
 
-	findpartitions 0 'no_fs' ' raw no_label' > $TMP_MENU
+	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
 	while [ "$USERHAPPY" = 0 ]
 	do
+		# generate a menu based on the information in the datafile
 		menu_list=
 		while read $part $type $label $fs
 		do
-			menu_list="$menu_list $part"
-		done < $TMP_MENU
+			menu_list="$menu_list $part (type:$type,label:$label,fs:$fs)" #don't add extra spaces, dialog doesn't like that.
+		done < $BLOCK_DATA
 
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
-		part_type=` awk "/^$part/ {print \$2}" $TMP_MENU`
-		part_label=`awk "/^$part/ {print \$3}" $TMP_MENU`
-		fs=`        awk "/^$part/ {print \$4}" $TMP_MENU`
+		part_type=` awk "/^$part/ {print \$2}" $BLOCK_DATA`
+		part_label=`awk "/^$part/ {print \$3}" $BLOCK_DATA`
+		fs=`        awk "/^$part/ {print \$4}" $BLOCK_DATA`
 		[ "$part_label" == no_label ] && part_label=
 		[ "$fs"         == no_fs    ] && fs=
 
@@ -433,7 +433,7 @@ interactive_filesystems() {
 		fi
 
 		# update the menu
-		sed -i "s/^$part($part_type,$part_label).*/$part($part_type,$part_label) $fs/" $TMP_MENU
+		sed -i "s/^$part $part_type $part_label.*/$part $part_type $part_label $fs/" $BLOCK_DATA
 
 	done
 
