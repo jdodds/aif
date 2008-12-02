@@ -392,7 +392,7 @@ interactive_filesystems() {
 	# FS-string:
 	# type;mountpoint;opts;label;params[|FS-string|...]
 
-	findpartitions 0 'empty' '(raw,)') > $TMP_MENU
+	findpartitions 0 'empty' '(raw,)' > $TMP_MENU
 	while [ "$USERHAPPY" = 0 ]
 	do
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." `cat $TMP_MENU` DONE _
