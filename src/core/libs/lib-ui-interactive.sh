@@ -408,6 +408,7 @@ interactive_filesystems() {
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
+		# TODO: Something goes wrong here.. all these 3 become the complete line
 		part_type=` awk "/^${part//\//\\\/}/ {print \$2}" $BLOCK_DATA` # the bash substition replaces all /'s with \/'s otherwise awk complains
 		part_label=`awk "/^${part//\//\\\/}/ {print \$3}" $BLOCK_DATA`
 		fs=`        awk "/^${part//\//\\\/}/ {print \$4}" $BLOCK_DATA`
