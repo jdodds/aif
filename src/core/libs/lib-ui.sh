@@ -155,6 +155,7 @@ ask_number ()
 # $2 title
 # shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
 # the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
+# $? if user cancelled. 0 otherwise
 ask_option ()
 {
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
@@ -237,12 +238,15 @@ _cli_ask_option ()
 		echo "$1 ] $2"
 		shift 2
 	done
+	echo "CANCEL ] CANCEL"
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
 	debug "cli_ask_option: User choose $ANSWER_OPTION"
 	echo "$ANSWER_OPTION"
+	[ "$ANSWER_OPTION" = CANCEL ] && return 1
+	return 0
 }
 
 	
