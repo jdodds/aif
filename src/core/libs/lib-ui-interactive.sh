@@ -242,7 +242,8 @@ interactive_filesystem ()
 		fs_label=
 		fs_params=
 	else
-		ask_option edit "What do you want to do on $part (type:$part_type,label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		ask_option edit "Alter $part (type:$part_type,label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs && return 0
 		if [ "$ANSWER_OPTION" = delete ]
 		then
 			NEW_FILESYSTEM=empty
@@ -403,6 +404,7 @@ interactive_filesystems() {
 		done < $BLOCK_DATA
 
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+		[ $? -gt 0                 ] && USERHAPPY=1 && break
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
@@ -415,11 +417,11 @@ interactive_filesystems() {
 		if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 		then
 			list=
-			if [ $fs != empty ]
+			if [ $fs != no_fs ]
 			then
 				for lv in `sed '/|/ /' <<< $fs`
 				do
-					list="$list $lv"
+					list="$list $lv" #TODO: this is probably incorrect
 				done
 			fi
 			list="$list empty NEW"
