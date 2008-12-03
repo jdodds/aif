@@ -147,7 +147,7 @@ worker_prepare_disks()
 		ask_option $default "Prepare Hard Drive" \
 		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
 		"2" "Partition Hard Drives" \
-		"3" "Set Filesystem Mountpoints" \
+		"3" "Configure block devices, filesystems and mountpoints" \
 		"4" "Return to Main Menu"
 
         case $ANSWER_OPTION in
