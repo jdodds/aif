@@ -224,6 +224,7 @@ _dia_ask_option ()
 _cli_ask_option ()
 {
 	#TODO: strip out color codes
+	#TODO: if user entered incorrect choice, ask him again
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT=$1
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"

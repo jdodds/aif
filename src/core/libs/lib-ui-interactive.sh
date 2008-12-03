@@ -398,7 +398,7 @@ interactive_filesystems() {
 	do
 		# generate a menu based on the information in the datafile
 		menu_list=
-		while read $part $type $label $fs
+		while read part type label fs
 		do
 			menu_list="$menu_list $part (type:$type,label:$label,fs:$fs)" #don't add extra spaces, dialog doesn't like that.
 		done < $BLOCK_DATA
@@ -408,9 +408,9 @@ interactive_filesystems() {
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
-		part_type=` awk "/^$part/ {print \$2}" $BLOCK_DATA`
-		part_label=`awk "/^$part/ {print \$3}" $BLOCK_DATA`
-		fs=`        awk "/^$part/ {print \$4}" $BLOCK_DATA`
+		part_type=` awk "/^${part//\//\\\/}/ {print \$2}" $BLOCK_DATA` # the bash substition replaces all /'s with \/'s otherwise awk complains
+		part_label=`awk "/^${part//\//\\\/}/ {print \$3}" $BLOCK_DATA`
+		fs=`        awk "/^${part//\//\\\/}/ {print \$4}" $BLOCK_DATA`
 		[ "$part_label" == no_label ] && part_label=
 		[ "$fs"         == no_fs    ] && fs=
 
