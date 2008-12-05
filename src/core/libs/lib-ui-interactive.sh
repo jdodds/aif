@@ -325,7 +325,7 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label/name for $part" "$default" 0 || return 1
+			ask_string "Enter the label/name for $part" "$default" 0
 			fs_label=$ANSWER_STRING
 		fi
 
@@ -359,7 +359,7 @@ interactive_filesystem ()
 		default=
 		[ -n "$fs_opts" ] && default="$fs_opts"
 		program=`get_filesystem_program $fs_type`
-		ask_string "Enter any additional opts for $program" "$default" 0 || return 1
+		ask_string "Enter any additional opts for $program" "$default" 0
 		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
