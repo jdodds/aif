@@ -298,11 +298,18 @@ interactive_filesystem ()
 	[ $part_type = lvm-vg                                              ] && which lvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
 	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
-		# ask FS
-		default=
-		[ -n "$fs_type" ] && default="--default-item $fs_type"
-		ask_option no "Select a filesystem for $part:" $FSOPTS || return 1
-		fs_type=$ANSWER_OPTION
+		# determine FS
+		fsopts=($FSOPTS);
+		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
+		then
+			infofy "Automatically picked ${fsopts[1]}.  It's the only option for $part_type blockdevices"
+			fs_type=${fsopts[0]}
+		else
+			default=
+			[ -n "$fs_type" ] && default="--default-item $fs_type"
+			ask_option no "Select a filesystem for $part:" $FSOPTS || return 1
+			fs_type=$ANSWER_OPTION
+		fi
 
 		# ask mountpoint, if relevant
 		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt ]]
