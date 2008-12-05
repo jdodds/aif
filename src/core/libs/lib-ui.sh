@@ -9,6 +9,7 @@ DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch 
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
+
 # display error message and die
 die_error ()
 {
@@ -100,44 +101,35 @@ debug ()
 }
 
 
-# ask the user a password. return is stored in $PASSWORD or $<TYPE>_PASSWORD
-# $1 type (optional.  eg 'svn', 'ssh').
-ask_password ()
+# taken from setup
+printk()
 {
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_password "$@" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_password "$@" ; return $? ; }
+    case $1 in
+        "on")  echo 4 >/proc/sys/kernel/printk ;;
+        "off") echo 0 >/proc/sys/kernel/printk ;;
+    esac
 }
 
 
-# ask a yes/no question. 
-# $1 question
-# returns 0 if response is yes/y (case insensitive).  1 otherwise
-# TODO: support for default answer 
-ask_yesno ()
+# TODO: pass disks as argument to decouple backend logic
+# Get a list of available disks for use in the "Available disks" dialogs. This
+# will print the disks as follows, getting size info from hdparm:
+#   /dev/sda: 640133 MBytes (640 GB)
+#   /dev/sdb: 640135 MBytes (640 GB)
+_getavaildisks()
 {
-	[ -z "$1" ] && die_error "ask_yesno needs a question!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_yesno "$@" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_yesno "$@" ; return $? ; }
+    # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
+    for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
 }
 
 
-# ask for a string.
-# $1 question
-# echo's the string the user gave.
-# returns 1 if the user cancelled, 0 otherwise
-ask_string ()
-{
-	[ -z "$1" ] && die_error "ask_string needs a question!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$@" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$@" ; return $? ; }
-}
 
-
-# TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?
+# TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?, maybe a wrapper that wraps all functions
 # ask for a number.
 # $1 question
 # $2 lower limit (optional)
 # $3 upper limit (optional)
+# TODO: implement a default number
 # echo's the number the user said
 # returns 1 if the user cancelled or did not enter a numeric, 0 otherwise 
 ask_number ()
@@ -148,7 +140,7 @@ ask_number ()
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" "$2" "$3" ; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" "$2" "$3" ; return $? ; }
 }
- 
+
   
 # ask the user to choose something
 # $1 default item (set to 'no' for none)
@@ -163,6 +155,43 @@ ask_option ()
 }  
 
 
+# ask the user a password. return is stored in $PASSWORD or $<TYPE>_PASSWORD
+# $1 type (optional.  eg 'svn', 'ssh').
+ask_password ()
+{
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_password "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_password "$@" ; return $? ; }
+}
+
+
+# ask for a string.
+# $1 question
+# $2 default (optional)
+# echo's the string the user gave.
+# returns 1 if the user cancelled, 0 otherwise
+ask_string ()
+{
+	[ -z "$1" ] && die_error "ask_string needs a question!"
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$1" "$2" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$1" "$2" ; return $? ; }
+}
+
+
+# ask a yes/no question.
+# $1 question
+# returns 0 if response is yes/y (case insensitive).  1 otherwise
+# TODO: support for default answer
+ask_yesno ()
+{
+	[ -z "$1" ] && die_error "ask_yesno needs a question!"
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_yesno "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_yesno "$@" ; return $? ; }
+}
+
+
+
+
+
 # follow the progress of something by showing it's log, updating real-time
 # $1 title
 # $2 logfile
@@ -174,15 +203,6 @@ follow_progress ()
 	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$1" "$2" ; return $? ; }
 }
 
-
-# taken from setup
-printk()
-{
-    case $1 in
-        "on")  echo 4 >/proc/sys/kernel/printk ;;
-        "off") echo 0 >/proc/sys/kernel/printk ;;
-    esac
-}
 
 
 
@@ -203,6 +223,31 @@ _dia_DIALOG()
 }
 
 
+_dia_ask_number ()
+{
+	#TODO: i'm not entirely sure this works perfectly. what if user doesnt give anything or wants to abort?
+	while true
+	do
+		str="$1"
+		[ -n "$2" ] && str2="min $2"
+		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n "$str2" ] && str="$str ( $str2 )"
+		_dia_DIALOG --inputbox "$str" 8 65 "$4" 2>$ANSWER
+		ret=$?
+		ANSWER_NUMBER=`cat $ANSWER`
+		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
+		then
+			show_warning "$ANSWER_NUMBER is not a number! try again."
+		else
+			break
+		fi
+	done
+	echo "$ANSWER_NUMBER"
+	debug "_dia_ask_number: user entered: $ANSWER_NUMBER"
+	[ -z "$ANSWER_NUMBER" ] && return 1
+	return $?
+}
+
 _dia_ask_option ()
 {
 	DEFAULT=""
@@ -218,6 +263,84 @@ _dia_ask_option ()
 	echo $ANSWER_OPTION
 	debug "dia_ask_option: User choose $ANSWER_OPTION"
 	return $ret
+}
+
+
+_dia_ask_password ()
+{
+	if [ -n "$1" ]
+	then
+		type_l=`tr '[:upper:]' '[:lower:]' <<< $1`
+		type_u=`tr '[:lower:]' '[:upper:]' <<< $1`
+	else
+		type_l=
+		type_u=
+	fi
+
+	_dia_DIALOG --passwordbox  "Enter your $type_l password" 8 65 "$2" 2>$ANSWER
+	ret=$?
+	[ -n "$type_u" ] && read ${type_u}_PASSWORD < $ANSWER
+	[ -z "$type_u" ] && read           PASSWORD < $ANSWER
+	cat $ANSWER
+	debug "_dia_ask_password: user entered <<hidden>>"
+	return $ret
+}
+
+
+_dia_ask_string ()
+{
+	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
+	ret=$?
+	ANSWER_STRING=`cat $ANSWER`
+	echo $ANSWER_STRING
+	debug "_dia_ask_string: user entered $ANSWER_STRING"
+	return $ret
+}
+
+
+_dia_ask_yesno ()
+{
+	height=$((`echo -e "$1" | wc -l` +7))
+	dialog --yesno "$1" $height 55 # returns 0 for yes, 1 for no
+	ret=$?
+	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
+	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
+	return $ret
+}
+
+
+_dia_follow_progress ()
+{
+	title=$1
+	logfile=$2
+	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 18 70 2>$ANSWER
+}
+
+
+
+
+_cli_ask_number ()
+{
+	#TODO: i'm not entirely sure this works perfectly. what if user doesnt give anything or wants to abort?
+	while true
+	do
+		str="$1"
+		[ -n "$2" ] && str2="min $2"
+		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n "$str2" ] && str="$str ( $str2 )"
+		echo "$str"
+		read ANSWER_NUMBER
+		if [[ $ANSWER_NUMBER = *[^0-9]* ]]
+		then
+			show_warning "$ANSWER_NUMBER is not a number! try again."
+		else
+			break
+		fi
+	done
+	echo "$ANSWER_NUMBER"
+	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
+	[ -z "$ANSWER_NUMBER" ] && return 1
+	return 0
 }
 
 
@@ -250,57 +373,22 @@ _cli_ask_option ()
 	return 0
 }
 
-	
-
-# TODO: pass disks as argument to decouple backend logic
-# Get a list of available disks for use in the "Available disks" dialogs. This
-# will print the disks as follows, getting size info from hdparm:
-#   /dev/sda: 640133 MBytes (640 GB)
-#   /dev/sdb: 640135 MBytes (640 GB)
-_getavaildisks()
-{
-    # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
-    for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
-}
-
-
-_dia_follow_progress ()
-{
-	title=$1
-	logfile=$2
-	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 18 70 2>$ANSWER
-}
-
-
-_dia_ask_yesno ()
-{
-	height=$((`echo -e "$1" | wc -l` +7))
-	dialog --yesno "$1" $height 55 # returns 0 for yes, 1 for no
-	ret=$?
-	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
-	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
-	return $ret
-}
-
 
 _cli_ask_password ()
 {
-	if [ -n "$1" ]
-	then
-		type_l=`tr '[:upper:]' '[:lower:]' <<< $1`
-		type_u=`tr '[:lower:]' '[:upper:]' <<< $1`
-	else
-		type_l=
-		type_u=
-	fi
-
-	echo -n "Enter your $type_l password: "
-	stty -echo
-	[ -n "$type_u" ] && read ${type_u}_PASSWORD
-	[ -z "$type_u" ] && read PASSWORD
-	stty echo
-	echo
 }
+
+
+_cli_ask_string ()   #TODO: implement default answer
+{
+	echo -n "$@: "
+	read ANSWER_STRING
+	echo "$ANSWER_STRING"
+	debug "cli_ask_string: User entered: $ANSWER_STRING"
+	[ -z "$ANSWER_STRING" ] && return 1
+	return 0
+}
+
 
 _cli_ask_yesno ()
 {
@@ -318,42 +406,6 @@ _cli_ask_yesno ()
 }
 
 
-_cli_ask_string ()   
-{
-	echo -n "$@: "
-	read answ
-	echo "$answ"
-	debug "cli_ask_string: User entered: $answ"
-	[ -z "$answ" ] && return 1
-	return 0
-}
-
-
-_cli_ask_number ()
-{
-	#TODO: i'm not entirely sure this works perfectly. what if user doesnt give anything or wants to abort?
-	while true
-	do
-		str="$1"
-		[ -n "$2" ] && str2="min $2"
-		[ -n "$3" ] && str2="$str2 max $3"
-		[ -n "$str2" ] && str="$str ( $str2 )"
-		echo "$str"
-		read answ
-		if [[ $answ = *[^0-9]* ]]
-		then
-			show_warning "$answ is not a number! try again."
-		else
-			break
-		fi
-	done
-	echo "$answ"
-	debug "cli_ask_number: user entered: $answ"
-	[ -z "$answ" ] && return 1
-	return 0
-}
-	
-
 _cli_follow_progress ()
 {
 	title=$1
@@ -362,4 +414,3 @@ _cli_follow_progress ()
 	tail -f $2
 	#TODO: don't block anymore when it's done
 }
-
