@@ -229,11 +229,10 @@ interactive_partition() {
 # create new, delete, or edit a filesystem
 interactive_filesystem ()
 {
-	# these variables can be empty strings!
-	part=$1
-	part_type=$2
-	part_label=$3
-	fs=$4
+	part=$1 # must be given and a valid device TODO: check it
+	part_type=$2 # a part should always have a type
+	part_label=$3 # can be empty
+	fs=$4 # can be empty
 	NEW_FILESYSTEM=
 	if [ -z "$fs" ]
 	then
@@ -325,7 +324,7 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label/name for $part" "$default" 0
+			ask_string "Enter the label/name for $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
 			fs_label=$ANSWER_STRING
 		fi
 
@@ -446,10 +445,32 @@ interactive_filesystems() {
 			fi
 			list="$list empty NEW"
 			ask_option empty "Edit/create new LV's on this VG:" $list
-			[ "$ANSWER_OPTION" = XXX ] && ANSWER_OPTION=empty
-			interactive_filesystem $ANSWER_OPTION
-			#TODO: for now we just append, that's obviously wrong
-			[ $? -eq 0 ] && fs="$fs|$NEW_FILESYSTEM"
+			if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
+			then
+				# a new LV must be created on this VG
+				if interactive_filesystem $part $part_type $part_label '' 
+				then
+					[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+					[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+				fi
+			else
+				# an existing LV will be edited and it's settings updated
+				for lv in `sed '/|/ /' <<< $fs`
+				do
+					label=$(cut -d ';' -f 4 <<< $lv)
+					[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
+				done
+				interactive_filesystem $part $part_type $part_label "$found_lv"
+				fs=
+				for lv in `sed '/|/ /' <<< $fs`
+				do
+					label=$(cut -d ';' -f 4 <<< $lv)
+					add=$lv
+					[ "$label" = "$ANSWER_OPTION" ] && add=$NEW_FILESYSTEM
+					[ -z "$fs" ] && fs=$add
+					[ -n "$fs" ] && fs="$fs|$add"
+				done
+			fi
 		else
 			interactive_filesystem $part $part_type $part_label $fs
 			[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
