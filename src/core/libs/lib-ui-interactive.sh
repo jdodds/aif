@@ -411,7 +411,8 @@ interactive_filesystems() {
 
 		part=$ANSWER_OPTION
 
-		declare part_escaped=${part//\//\\/} # the bash substition replaces all /'s with \/'s otherwise awk complains
+		declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
+		declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
 		part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
 		part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
 		fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
