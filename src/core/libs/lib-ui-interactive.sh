@@ -421,7 +421,7 @@ interactive_filesystems() {
 		if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 		then
 			list=
-			if [ $fs != no_fs ]
+			if [ -n "$fs" ]
 			then
 				for lv in `sed '/|/ /' <<< $fs`
 				do
@@ -439,6 +439,8 @@ interactive_filesystems() {
 		fi
 
 		# update the menu
+		[ -z "$part_label" ] && part_label=no_label
+		[ -z "$fs"         ] && fs=no_fs
 		sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
 
 	done
