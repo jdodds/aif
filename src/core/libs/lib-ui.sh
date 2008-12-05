@@ -173,6 +173,7 @@ ask_password ()
 # ask for a string.
 # $1 question
 # $2 default (optional)
+# $3 exitcode to use when string is empty and there was no default, or default was ignored (1 default)
 # echo's the string the user gave.
 # returns 1 if the user cancelled, 0 otherwise
 ask_string ()
@@ -302,11 +303,13 @@ _dia_ask_password ()
 
 _dia_ask_string ()
 {
+	exitcode=${3:-1}
 	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
 	ret=$?
 	ANSWER_STRING=`cat $ANSWER`
 	echo $ANSWER_STRING
 	debug "_dia_ask_string: user entered $ANSWER_STRING"
+	[ -z "$ANSWER_STRING" ] && return $exitcode
 	return $ret
 }
 
@@ -407,8 +410,10 @@ _cli_ask_password ()
 }
 
 
+# $3 -z string behavior: always take default if applicable, but if no default then $3 is the returncode (1 is default)
 _cli_ask_string ()
 {
+	exitcode=${3:-1}
 	echo "$1: "
 	[ -n "$2" ] && echo "(Press enter for default.  Default: $2)"
 	echo -n ">"
@@ -421,7 +426,7 @@ _cli_ask_string ()
 		then
 			ANSWER_STRING=$2
 		else
-			return 1
+			return $exitcode
 		fi
 	fi
 	return 0
