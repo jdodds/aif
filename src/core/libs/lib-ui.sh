@@ -179,8 +179,8 @@ ask_password ()
 ask_string ()
 {
 	[ -z "$1" ] && die_error "ask_string needs a question!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$1" "$2" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$1" "$2" ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$1" "$2" "$3"; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$1" "$2" "$3"; return $? ; }
 }
 
 
