@@ -333,15 +333,16 @@ interactive_filesystem ()
 		if [ "$fs_type" = lvm-vg ]
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default
-			grep -q ":$part:" <<< $fs_params || grep -q ":$part\$" <<< $fs_params || fs_params="$fs_params:$part"
+			pv=${part/+/}
+			grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
 
 			for pv in `sed 's/:/ /' <<< $fs_params`
 			do
 				list="$list $pv ^ ON"
 			done
-			for pv in `grep ' lvm-pv' $BLOCK_DATA | awk '{print $1}'`
+			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type
 			do
-				! grep -q "$pv ^ ON" $BLOCK_DATA && list="$list $pv - OFF"
+				grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
 			done
 			_dia_DIALOG --checklist "Which lvm PV's must this volume group span?" 19 55 12 $list 2>$ANSWER || return 1
 			fs_params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
