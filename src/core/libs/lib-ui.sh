@@ -260,6 +260,7 @@ _dia_ask_number ()
 	return $?
 }
 
+
 _dia_ask_option ()
 {
 	DEFAULT=""
@@ -388,16 +389,41 @@ _cli_ask_option ()
 
 _cli_ask_password ()
 {
+	if [ -n "$1" ]
+	then
+		type_l=`tr '[:upper:]' '[:lower:]' <<< $1`
+		type_u=`tr '[:lower:]' '[:upper:]' <<< $1`
+	else
+		type_l=
+		type_u=
+	fi
+
+	echo -n "Enter your $type_l password: "
+	stty -echo
+	[ -n "$type_u" ] && read ${type_u}_PASSWORD
+	[ -z "$type_u" ] && read PASSWORD
+	stty echo
+	echo
 }
 
 
-_cli_ask_string ()   #TODO: implement default answer
+_cli_ask_string ()
 {
-	echo -n "$@: "
+	echo "$1: "
+	[ -n "$2" ] && echo "(Press enter for default.  Default: $2)"
+	echo -n ">"
 	read ANSWER_STRING
 	echo "$ANSWER_STRING"
 	debug "cli_ask_string: User entered: $ANSWER_STRING"
-	[ -z "$ANSWER_STRING" ] && return 1
+	if [ -z "$ANSWER_STRING" ]
+	then
+		if [ -n "$2" ]
+		then
+			ANSWER_STRING=$2
+		else
+			return 1
+		fi
+	fi
 	return 0
 }
 
