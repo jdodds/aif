@@ -123,6 +123,12 @@ _getavaildisks()
 }
 
 
+ask_checklist () #TODO
+{
+	true
+}
+
+
 
 # TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?, maybe a wrapper that wraps all functions
 # ask for a number.
@@ -220,6 +226,12 @@ _dia_DIALOG()
 {
 	dialog --backtitle "$TITLE" --aspect 15 "$@"
 	return $?
+}
+
+
+_dia_ask_checklist () #TODO: implement this
+{
+	_dia_DIALOG --checklist "$1" $list
 }
 
 
