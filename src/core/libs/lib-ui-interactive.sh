@@ -270,19 +270,19 @@ interactive_filesystem ()
 
 	# Possible filesystems/software layers on partitions/block devices
 
-	# name        on top of             mountpoint?    label?        DM device?                     theoretical device?   opts?   special params?
+	# name        on top of             mountpoint?    label?        DM device?                     theoretical device?                        opts?      special params?
 
-	# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                    no         no
-	# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-	# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-	# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-	# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-	# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                    optional   no
-	# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                    optional   no
-	# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               yes. $part(lvm-pv)    optional   no
-	# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device            optional   PV's to use
-	# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device            optional   LV size
-	# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device            optional   no
+	# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
+	# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                                         optional   no
+	# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               $part+ (+ is to differentiate from $part)  optional   no
+	# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device                                 optional   PV's to use
+	# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device                                 optional   LV size
+	# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device                                 optional   no
 
 
 	# Determine which filesystems/blockdevices are possible for this blockdevice
@@ -349,7 +349,7 @@ interactive_filesystem ()
 		[ -n "$fs_opts" ] && default="$fs_opts"
 		program=`get_filesystem_program $fs_type`
 		_dia_DIALOG --inputbox "Enter any additional opts for $program" 8 65 "$default" 2>$ANSWER || return 1
-		fs_opts=$(cat $ANSWER)
+		fs_opts=$(cat $ANSWER | sed 's/ /_/g') #TODO: clean up all whitespace (tabs and shit)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
 		[ -z "$fs_mount"  ] && fs_mount=no_mount
@@ -364,7 +364,7 @@ interactive_filesystem ()
 			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $BLOCK_DATA
 		elif [ "$fs_type" = lvm-pv ]
 		then
-			echo "$part $fs_type no_label no_fs" >> $BLOCK_DATA
+			echo "$part+ $fs_type no_label no_fs" >> $BLOCK_DATA
 		elif [ "$fs_type" = lvm-lv ]
 		then
 			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
@@ -393,7 +393,7 @@ interactive_filesystems() {
 	# $BLOCK_DATA entry. easily parsable.:
 	# <blockdevice> type label/no_label <FS-string>/no_fs
 	# FS-string:
-	# type;mountpoint;opts;label;params[|FS-string|...]
+	# type;mountpoint;opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
 
 	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
 	while [ "$USERHAPPY" = 0 ]
@@ -438,7 +438,7 @@ interactive_filesystems() {
 			[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
 		fi
 
-		# update the menu
+		# update the menu # NOTE that part_type remains raw for basic filesystems!
 		[ -z "$part_label" ] && part_label=no_label
 		[ -z "$fs"         ] && fs=no_fs
 		sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
