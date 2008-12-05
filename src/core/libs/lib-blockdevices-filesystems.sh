@@ -494,3 +494,20 @@ process_filesystem ()
 
 	return 0
 }
+
+
+# $1 filesystem type
+get_filesystem_program ()
+{
+	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
+	[ $1 = ext2     ] && echo mkfs.ext2
+	[ $1 = ext3     ] && echo mkfs.ext3
+	[ $1 = reiserfs ] && echo mkreiserfs
+	[ $1 = xfs      ] && echo mkfs.xfs
+	[ $1 = jfs      ] && echo mkfs.jfs
+	[ $1 = vfat     ] && echo mkfs.vfat
+	[ $1 = lvm-pv   ] && echo pvcreate
+	[ $1 = lvm-vg   ] && echo vgcreate
+	[ $1 = lvg-lv   ] && echo lvcreate
+	[ $1 = dm_crypt ] && echo cryptsetup
+}

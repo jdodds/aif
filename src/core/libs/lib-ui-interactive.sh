@@ -288,7 +288,7 @@ interactive_filesystem ()
 	# Determine which filesystems/blockdevices are possible for this blockdevice
 	FSOPTS=
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext3  &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkreiserfs &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
@@ -347,7 +347,8 @@ interactive_filesystem ()
 		# ask opts
 		default=
 		[ -n "$fs_opts" ] && default="$fs_opts"
-		_dia_DIALOG --inputbox "Enter any additional opts for the program that will make $fs_type on $part" 8 65 "$default" 2>$ANSWER || return 1
+		program=`get_filesystem_program $fs_type`
+		_dia_DIALOG --inputbox "Enter any additional opts for $program" 8 65 "$default" 2>$ANSWER || return 1
 		fs_opts=$(cat $ANSWER)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
@@ -438,7 +439,7 @@ interactive_filesystems() {
 		fi
 
 		# update the menu
-		sed -i "s/^$part $part_type $part_label.*/$part $part_type $part_label $fs/" $BLOCK_DATA
+		sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
 
 	done
 
