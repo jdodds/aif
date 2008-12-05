@@ -316,8 +316,8 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_mount" ] && default="$fs_mount"
-			_dia_DIALOG --inputbox "Enter the mountpoint for $part" 8 65 "$default" 2>$ANSWER || return 1
-			fs_mount=$(cat $ANSWER)
+			ask_string "Enter the mountpoint for $part" "$default" || return 1
+			fs_mount=$ANSWER_STRING
 		fi
 
 		# ask label, if relevant
@@ -325,8 +325,8 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			_dia_DIALOG --inputbox "Enter the label/name for $part" 8 65 "$default" 2>$ANSWER || return 1
-			fs_label=$(cat $ANSWER)
+			ask_string "Enter the label/name for $part" "$default" || return 1
+			fs_label=$ANSWER_STRING
 		fi
 
 		# ask special params, if relevant
@@ -351,16 +351,16 @@ interactive_filesystem ()
 		then
 			[ -z "$fs_params" ] && default='5G'
 			[ -n "$fs_params" ] && default="$fs_params"
-			_dia_DIALOG --inputbox "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" 8 65 "$default" 2>$ANSWER || return 1
-			fs_params=$(cat $ANSWER)
+			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
+			fs_params=$ANSWER_STRING
 		fi
 
 		# ask opts
 		default=
 		[ -n "$fs_opts" ] && default="$fs_opts"
 		program=`get_filesystem_program $fs_type`
-		_dia_DIALOG --inputbox "Enter any additional opts for $program" 8 65 "$default" 2>$ANSWER || return 1
-		fs_opts=$(cat $ANSWER | sed 's/ /_/g') #TODO: clean up all whitespace (tabs and shit)
+		ask_string "Enter any additional opts for $program" "$default" || return 1
+		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
 		[ -z "$fs_mount"  ] && fs_mount=no_mount
