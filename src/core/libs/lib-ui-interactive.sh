@@ -286,22 +286,22 @@ interactive_filesystem ()
 
 	# Determine which filesystems/blockdevices are available
 	FSOPTS=
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  2>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  2>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkreiserfs 2>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   2>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   2>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.vfat  2>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
-	[ $part_type = lvm-pv                                              ] && which vgcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
-	[ $part_type = lvm-vg                                              ] && which lvcreate   2>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
-	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup 2>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkreiserfs &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.vfat  &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
+	[ $part_type = lvm-pv                                              ] && which vgcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
+	[ $part_type = lvm-vg                                              ] && which lvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
+	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
 
 		# ask FS
 		default=
 		[ -n "$fs_type" ] && default="--default-item $fs_type"
-		_dia_DIALOG --menu "Select a filesystem for $part:" $FSOPTS 2>$ANSWER || return 1
-		fs_type=$(cat $ANSWER)
+		ask_option no "Select a filesystem for $part:" $FSOPTS || return 1
+		fs_type=$ANSWER_OPTION
 
 		# ask mountpoint, if relevant
 		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt ]]
@@ -430,10 +430,10 @@ interactive_filesystems() {
 			ask_option empty "Edit/create new LV's on this VG:" $list
 			interactive_filesystem $ANSWER_OPTION
 			#TODO: for now we just append, that's obviously wrong
-			fs="$fs|$NEW_FILESYSTEM"
+			[ $? -eq 0 ] && fs="$fs|$NEW_FILESYSTEM"
 		else
 			interactive_filesystem $part $part_type $part_label $fs
-			fs=$NEW_FILESYSTEM
+			[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
 		fi
 
 		# update the menu
