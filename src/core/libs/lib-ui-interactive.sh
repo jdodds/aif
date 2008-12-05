@@ -408,11 +408,11 @@ interactive_filesystems() {
 		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 		part=$ANSWER_OPTION
-		# TODO: Something goes wrong here.. all these 3 become the complete line
+
 		declare part_escaped=${part//\//\\/} # the bash substition replaces all /'s with \/'s otherwise awk complains
-		part_type=` awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA`
-		part_label=`awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA`
-		fs=`        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA`
+		part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
+		part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
+		fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
 		[ "$part_label" == no_label ] && part_label=
 		[ "$fs"         == no_fs    ] && fs=
 
