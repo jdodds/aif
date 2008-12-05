@@ -208,7 +208,7 @@ _dia_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	[ -z "$6" ] && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+	[ -z "$6" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
  
  	DIA_MENU_TITLE=$2
  	shift 2
@@ -228,7 +228,7 @@ _cli_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT=$1
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	[ -z "$6" ] && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+	[ -z "$6" ] && debug "_cli_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
 
  	CLI_MENU_TITLE=$2
  	shift 2
