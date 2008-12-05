@@ -437,11 +437,16 @@ interactive_filesystems() {
 			then
 				for lv in `sed '/|/ /' <<< $fs`
 				do
-					list="$list $lv" #TODO: this is probably incorrect
+					label=$(cut -d ';' -f 4 <<< $lv)
+					mountpoint=$(cut -d ';' -f 2 <<< $lv)
+					list="$list $label $mountpoint"
 				done
+			else
+				list="XXX no-LV's-defined-yet-make-a-new-one"
 			fi
 			list="$list empty NEW"
 			ask_option empty "Edit/create new LV's on this VG:" $list
+			[ "$ANSWER_OPTION" = XXX ] && ANSWER_OPTION=empty
 			interactive_filesystem $ANSWER_OPTION
 			#TODO: for now we just append, that's obviously wrong
 			[ $? -eq 0 ] && fs="$fs|$NEW_FILESYSTEM"
