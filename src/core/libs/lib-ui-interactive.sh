@@ -229,12 +229,13 @@ interactive_partition() {
 # create new, delete, or edit a filesystem
 interactive_filesystem ()
 {
+	# these variables can be empty strings!
 	part=$1
 	part_type=$2
 	part_label=$3
 	fs=$4
 	NEW_FILESYSTEM=
-	if [ $fs = empty ]
+	if [ -z "$fs" ]
 	then
 		fs_type=
 		fs_mount=
@@ -284,7 +285,7 @@ interactive_filesystem ()
 	# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device            optional   no
 
 
-	# Determine which filesystems/blockdevices are available
+	# Determine which filesystems/blockdevices are possible for this blockdevice
 	FSOPTS=
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
@@ -292,10 +293,10 @@ interactive_filesystem ()
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.vfat  &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM Physical Volume"
-	[ $part_type = lvm-pv                                              ] && which vgcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM Volumegroup"
-	[ $part_type = lvm-vg                                              ] && which lvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM Logical Volume"
-	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt Volume"
+	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM_Physical_Volume"
+	[ $part_type = lvm-pv                                              ] && which vgcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM_Volumegroup"
+	[ $part_type = lvm-vg                                              ] && which lvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
+	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
 		# ask FS
 		default=
