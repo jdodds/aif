@@ -1,5 +1,6 @@
 #!/bin/sh
 # TODO: lot's of implementation work still open in this library. especially the dialog & $var_UI_TYPE stuff
+# TODO: get rid of the echoing of the variables at the end.  passing output as $ANSWER_<foo> is more useful
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
@@ -123,9 +124,15 @@ _getavaildisks()
 }
 
 
-ask_checklist () #TODO
+# ask the user to make a selection from a certain group of things
+# $1 question
+# shift;shift; $@ list of options. first tag. then ON/OFF
+ask_checklist ()
 {
-	true
+	[ -z "$1" ] && die_error "ask_checklist needs a question!"
+	[ -z "$3" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (incl ON/OFF switch)"
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_option "$@" ; return $? ; }
 }
 
 
@@ -186,8 +193,8 @@ ask_string ()
 
 # ask a yes/no question.
 # $1 question
+# $2 default answer yes/no (optional)
 # returns 0 if response is yes/y (case insensitive).  1 otherwise
-# TODO: support for default answer
 ask_yesno ()
 {
 	[ -z "$1" ] && die_error "ask_yesno needs a question!"
@@ -230,9 +237,23 @@ _dia_DIALOG()
 }
 
 
-_dia_ask_checklist () #TODO: implement this
+_dia_ask_checklist ()
 {
-	_dia_DIALOG --checklist "$1" $list
+	str=$1
+	shift
+	list=
+	while [ -n "$1" ]
+	do
+		[ -z "$2" ] && die_error "no ON/OFF switch given for element $1"
+		[ "$2" = ON  ] && newlist="$1 ^ ON"
+		[ "$2" = OFF ] && newlist="$1 - OFF"
+		shift 2
+	done
+	_dia_DIALOG --checklist "$str" $list 2>$ANSWER
+	ret=$?
+	ANSWER_CHECKLIST=`cat $ANSWER`
+	debug "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
+	return $ret
 }
 
 
@@ -317,7 +338,10 @@ _dia_ask_string ()
 _dia_ask_yesno ()
 {
 	height=$((`echo -e "$1" | wc -l` +7))
-	dialog --yesno "$1" $height 55 # returns 0 for yes, 1 for no
+	str=$1
+	#TODO: i think dialog doesnt support a default value for yes/no, so we need this workaround:
+	[ -n "$2" ] && str="$str (default: $2)"
+	dialog --yesno "$str" $height 55 # returns 0 for yes, 1 for no
 	ret=$?
 	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
 	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
@@ -333,6 +357,22 @@ _dia_follow_progress ()
 }
 
 
+
+
+_cli_ask_checklist ()
+{
+	str=$1
+	shift
+	output=
+	while [ -n "$1" ]
+	do
+		[ -z "$2" ] && die_error "no ON/OFF switch given for element $1"
+		[ "$2" = ON  ] && ask_yesno "Enable $1 ?" yes && output="$output $1"
+		[ "$2" = OFF ] && ask_yesno "Enable $1 ?" no  && output="$output $1"
+	done
+	ANSWER_CHECKLIST=$output
+	return 0
+}
 
 
 _cli_ask_number ()
@@ -435,10 +475,13 @@ _cli_ask_string ()
 
 _cli_ask_yesno ()
 {
-	echo -n "$1 (y/n): "
+	[ -z "$2"    ] && echo -n "$1 (y/n): "
+	[ "$2" = yes ] && echo -n "$1 (Y/n): "
+	[ "$2" = no  ] && echo -n "$1 (y/N): "
+
 	read answer
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
-	if [ "$answer" = y -o "$answer" = yes ]
+	if [ "$answer" = y -o "$answer" = yes ] || [ -z "$answer" -a "$2" = yes ]
 	then
 		debug "cli_ask_yesno: User picked YES"
 		return 0
