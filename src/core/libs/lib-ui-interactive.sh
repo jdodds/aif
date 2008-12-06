@@ -127,8 +127,8 @@ interactive_autoprepare()
         [ "$(which mkfs.xfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS xfs XFS"
         [ "$(which mkfs.jfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS jfs JFS"
         while [ "$BOOT_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your /boot partition.  Minimum value is 16.\n\nDisk space left: $DISC_SIZE MB" 8 65 "32" 2>$ANSWER || return 1
-            BOOT_PART_SIZE="$(cat $ANSWER)"
+            ask_string "Enter the size (MB) of your /boot partition.  Minimum value is 16.\n\nDisk space left: $DISC_SIZE MB" "32" || return 1
+            BOOT_PART_SIZE=$ANSWER_STRING
             if [ "$BOOT_PART_SIZE" = "" ]; then
                 notify "ERROR: You have entered an invalid size, please enter again."
             else
@@ -144,8 +144,8 @@ interactive_autoprepare()
         done
         DISC_SIZE=$(($DISC_SIZE-$BOOT_PART_SIZE))
         while [ "$SWAP_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your swap partition.  Minimum value is > 0.\n\nDisk space left: $DISC_SIZE MB" 8 65 "256" 2>$ANSWER || return 1
-            SWAP_PART_SIZE=$(cat $ANSWER)
+            ask_string "Enter the size (MB) of your swap partition.  Minimum value is > 0.\n\nDisk space left: $DISC_SIZE MB" "256" || return 1
+            SWAP_PART_SIZE=$ANSWER_STRING
             if [ "$SWAP_PART_SIZE" = "" -o  "$SWAP_PART_SIZE" -le "0" ]; then
                 notify "ERROR: You have entered an invalid size, please enter again."
             else
@@ -158,8 +158,8 @@ interactive_autoprepare()
         done
         DISC_SIZE=$(($DISC_SIZE-$SWAP_PART_SIZE))
         while [ "$ROOT_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your / partition.  The /home partition will use the remaining space.\n\nDisk space left:  $DISC_SIZE MB" 8 65 "7500" 2>$ANSWER || return 1
-            ROOT_PART_SIZE=$(cat $ANSWER)
+            ask_string "Enter the size (MB) of your / partition.  The /home partition will use the remaining space.\n\nDisk space left:  $DISC_SIZE MB" "7500" || return 1
+            ROOT_PART_SIZE=$ANSWER_STRING
             if [ "$ROOT_PART_SIZE" = "" -o "$ROOT_PART_SIZE" -le "0" ]; then
                 notify "ERROR: You have entered an invalid size, please enter again."
             else
@@ -171,14 +171,14 @@ interactive_autoprepare()
             fi
         done
         while [ "$CHOSEN_FS" = "" ]; do
-            _dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-            FSTYPE=$(cat $ANSWER)
+            ask_option "Select a filesystem for / and /home:" $FSOPTS || return 1
+            FSTYPE=$ANSWER_OPTION
             ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" && CHOSEN_FS=1
         done
         SET_DEFAULTFS=1
     done
 
-    _dia_DIALOG --defaultno --yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" 0 0 || return 1
+    ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
 
 	# we assume a /dev/hdX format (or /dev/sdX)
@@ -212,8 +212,8 @@ interactive_partition() {
         ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
-            _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
-            DISC=$(cat $ANSWER)
+            ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
+            DISC=$ANSWER_STRING
         fi
         # Leave our loop if the user is done partitioning
         [ "$DISC" = "DONE" ] && break
@@ -229,11 +229,12 @@ interactive_partition() {
 # create new, delete, or edit a filesystem
 interactive_filesystem ()
 {
-	part=$1 # must be given and a valid device TODO: check it
+	part=$1 # must be given and a valid device
 	part_type=$2 # a part should always have a type
 	part_label=$3 # can be empty
 	fs=$4 # can be empty
 	NEW_FILESYSTEM=
+	[ -b $part ] || die_error "interactive_filesystem \$1 must be a blockdevice! ($part given)"
 	if [ -z "$fs" ]
 	then
 		fs_type=
@@ -337,14 +338,14 @@ interactive_filesystem ()
 
 			for pv in `sed 's/:/ /' <<< $fs_params`
 			do
-				list="$list $pv ^ ON"
+				list="$list $pv ON"
 			done
 			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type
 			do
-				grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
+				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
 			done
-			_dia_DIALOG --checklist "Which lvm PV's must this volume group span?" 19 55 12 $list 2>$ANSWER || return 1
-			fs_params="$(sed 's/ /:/' $ANSWER)" #replace spaces by colon's, we cannot have spaces anywhere in any string
+			ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
+			fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
 		fi
 		if [ "$fs_type" = lvm-lv ]
 		then
