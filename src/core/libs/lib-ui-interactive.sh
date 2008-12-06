@@ -229,13 +229,11 @@ interactive_partition() {
 # create new, delete, or edit a filesystem
 interactive_filesystem ()
 {
-	part=$1 # must be given and a valid device
+	part=$1 # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
 	part_type=$2 # a part should always have a type
 	part_label=$3 # can be empty
 	fs=$4 # can be empty
 	NEW_FILESYSTEM=
-	real_part=${part/+/} # strip away an extra '+' which is used for lvm pv's
-	[ -b $real_part ] || die_error "interactive_filesystem \$1 must be a blockdevice! ($part given)"
 	if [ -z "$fs" ]
 	then
 		fs_type=
