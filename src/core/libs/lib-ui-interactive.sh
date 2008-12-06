@@ -345,8 +345,15 @@ interactive_filesystem ()
 			do
 				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
 			done
-			ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
-			fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
+			list2=($list)
+			if [ ${#list2[*]} -lt 4 ] # less then 4 words in the list. eg only one option
+			then
+				notify "Automatically picked PV ${list2[0]}.  It's the only available lvm PV"
+				fs_params=${list2[0]}
+			else
+				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
+				fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
+			fi
 		fi
 		if [ "$fs_type" = lvm-lv ]
 		then
