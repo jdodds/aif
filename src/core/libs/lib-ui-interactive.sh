@@ -302,7 +302,7 @@ interactive_filesystem ()
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
 		then
-			infofy "Automatically picked ${fsopts[1]}.  It's the only option for $part_type blockdevices"
+			notify "Automatically picked ${fsopts[1]}.  It's the only option for $part_type blockdevices"
 			fs_type=${fsopts[0]}
 		else
 			default=
