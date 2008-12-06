@@ -324,7 +324,7 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label/name for $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
+			ask_string "Enter the label/name for this $fs_type on $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
 			fs_label=$ANSWER_STRING
 		fi
 
