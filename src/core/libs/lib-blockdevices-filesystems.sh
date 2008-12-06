@@ -511,3 +511,14 @@ get_filesystem_program ()
 	[ $1 = lvg-lv   ] && echo lvcreate
 	[ $1 = dm_crypt ] && echo cryptsetup
 }
+
+
+# $1 blockdevice
+# output will be in $BLOCKDEVICE_SIZE in MB
+get_blockdevice_size ()
+{
+	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
+	blocks=`fdisk -s $1`
+	#NOTE: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
+	BLOCKDEVICE_SIZE=$(($blocks/1024))
+}

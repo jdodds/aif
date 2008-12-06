@@ -234,7 +234,8 @@ interactive_filesystem ()
 	part_label=$3 # can be empty
 	fs=$4 # can be empty
 	NEW_FILESYSTEM=
-	[ -b $part ] || die_error "interactive_filesystem \$1 must be a blockdevice! ($part given)"
+	real_part=${part/+/} # strip away an extra '+' which is used for lvm pv's
+	[ -b $real_part ] || die_error "interactive_filesystem \$1 must be a blockdevice! ($part given)"
 	if [ -z "$fs" ]
 	then
 		fs_type=
@@ -413,7 +414,8 @@ interactive_filesystems() {
 		menu_list=
 		while read part type label fs
 		do
-			menu_list="$menu_list $part (type:$type,label:$label,fs:$fs)" #don't add extra spaces, dialog doesn't like that.
+			get_blockdevice_size ${part/+/}
+			menu_list="$menu_list $part size:${BLOCKDEVICE_SIZE}MB,type:$type,label:$label,fs:$fs" #don't add extra spaces, dialog doesn't like that.
 		done < $BLOCK_DATA
 
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
