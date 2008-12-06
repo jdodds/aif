@@ -303,7 +303,7 @@ interactive_filesystem ()
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
 		then
-			notify "Automatically picked ${fsopts[1]}.  It's the only option for $part_type blockdevices"
+			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
 			fs_type=${fsopts[0]}
 		else
 			default=
@@ -341,14 +341,14 @@ interactive_filesystem ()
 			do
 				list="$list $pv ON"
 			done
-			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type
+			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
 			do
 				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
 			done
 			list2=($list)
 			if [ ${#list2[*]} -lt 4 ] # less then 4 words in the list. eg only one option
 			then
-				notify "Automatically picked PV ${list2[0]}.  It's the only available lvm PV"
+				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
 				fs_params=${list2[0]}
 			else
 				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
@@ -421,8 +421,9 @@ interactive_filesystems() {
 		menu_list=
 		while read part type label fs
 		do
-			get_blockdevice_size ${part/+/}
-			menu_list="$menu_list $part size:${BLOCKDEVICE_SIZE}MB,type:$type,label:$label,fs:$fs" #don't add extra spaces, dialog doesn't like that.
+			infostring="type:$type,label:$label,fs:$fs"
+			[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
+			menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 		done < $BLOCK_DATA
 
 		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
