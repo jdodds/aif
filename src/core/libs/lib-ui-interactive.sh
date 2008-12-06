@@ -104,7 +104,7 @@ interactive_set_clock()
 }
 
 
-interactive_autoprepare()
+interactive_autoprepare() #TODO: port this to use the $BLOCK_DATA format
 {
     DISCS=$(finddisks)
     if [ $(echo $DISCS | wc -w) -gt 1 ]; then
@@ -227,7 +227,7 @@ interactive_partition() {
 
 
 # create new, delete, or edit a filesystem
-interactive_filesystem ()
+interactive_filesystem () #TODO: make it possible to edit 1 specific aspect of a FS (eg mountpoint, type etc)
 {
 	part=$1 # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
 	part_type=$2 # a part should always have a type
@@ -237,7 +237,7 @@ interactive_filesystem ()
 	if [ -z "$fs" ]
 	then
 		fs_type=
-		fs_mount=
+		fs_mountpoint=
 		fs_opts=
 		fs_label=
 		fs_params=
@@ -249,18 +249,20 @@ interactive_filesystem ()
 			NEW_FILESYSTEM=empty
 			return 0
 		else
-			fs_type=`  cut -d ';' -f 1 <<< $fs`
-			fs_mount=` cut -d ';' -f 2 <<< $fs`
-			fs_opts=`  cut -d ';' -f 3 <<< $fs`
-			fs_label=` cut -d ';' -f 4 <<< $fs`
-			fs_params=`cut -d ';' -f 5 <<< $fs`
+			fs_type=`       cut -d ';' -f 1 <<< $fs`
+			fs_create=`     cut -d ';' -f 2 <<< $fs` #not asked for to the user. this is always 'yes' for now
+			fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+			fs_mount=`      cut -d ';' -f 4 <<< $fs` #we dont need to ask this to the user. this is always 'target' for 99.99% of the users
+			fs_opts=`       cut -d ';' -f 5 <<< $fs`
+			fs_label=`      cut -d ';' -f 6 <<< $fs`
+			fs_params=`     cut -d ';' -f 7 <<< $fs`
 			[ "$fs_type"   = no_type   ] && fs_type=
-			[ "$fs_mount"  = no_mount  ] && fs_mount=
+			[ "$fs_mountpoint"  = no_mount  ] && fs_mountpoint=
 			[ "$fs_opts"   = no_opts   ] && fs_opts=
 			[ "$fs_label"  = no_label  ] && fs_label=
 			[ "$fs_params" = no_params ] && fs_params=
 			old_fs_type=$fs_type
-			old_fs_mount=$fs_mount
+			old_fs_mountpoint=$fs_mountpoint
 			old_fs_opts=$fs_opts
 			old_fs_label=$fs_label
 			old_fs_params=$fs_params
@@ -314,9 +316,9 @@ interactive_filesystem ()
 		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt ]]
 		then
 			default=
-			[ -n "$fs_mount" ] && default="$fs_mount"
+			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
 			ask_string "Enter the mountpoint for $part" "$default" || return 1
-			fs_mount=$ANSWER_STRING
+			fs_mountpoint=$ANSWER_STRING
 		fi
 
 		# ask label, if relevant
@@ -369,11 +371,11 @@ interactive_filesystem ()
 		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
-		[ -z "$fs_mount"  ] && fs_mount=no_mount
+		[ -z "$fs_mountpoint"  ] && fs_mountpoint=no_mount
 		[ -z "$fs_opts"   ] && fs_opts=no_opts
 		[ -z "$fs_label"  ] && fs_label=no_label
 		[ -z "$fs_params" ] && fs_params=no_params
-		NEW_FILESYSTEM="$fs_type;$fs_mount;$fs_opts;$fs_label;$fs_params"
+		NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
 
 		# add new theoretical blockdevice, if relevant
 		if [ "$fs_type" = lvm-vg ]
@@ -410,7 +412,7 @@ interactive_filesystems() {
 	# $BLOCK_DATA entry. easily parsable.:
 	# <blockdevice> type label/no_label <FS-string>/no_fs
 	# FS-string:
-	# type;mountpoint;opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
 
 	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
 	while [ "$USERHAPPY" = 0 ]
@@ -443,7 +445,7 @@ interactive_filesystems() {
 			list=
 			if [ -n "$fs" ]
 			then
-				for lv in `sed '/|/ /' <<< $fs`
+				for lv in `sed 's/|/ /g' <<< $fs`
 				do
 					label=$(cut -d ';' -f 4 <<< $lv)
 					mountpoint=$(cut -d ';' -f 2 <<< $lv)
@@ -492,7 +494,7 @@ interactive_filesystems() {
 
 	done
 
-	# If the user has forgotten one or more fundamental ones, ask him now
+	#TODO: If the user has forgotten one or more fundamental ones, send him back to the main editor
 	ALLOK=true
 	# TODO: check all conditions that would make ALLOK untrue again
 	while [ "$ALLOK" != "true" ]; do
@@ -548,6 +550,7 @@ interactive_filesystems() {
 	# TODO: should not need this anymore    target_umountall
 	# TODO: prepend $var_TARGET_DIR before handing over
 	# TODO: convert our format to what process_filesystems will understand
+
 
 	process_filesystems && notify "Partitions were successfully created." && return 0
 	show_warning "Something went wrong while processing the filesystems"

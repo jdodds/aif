@@ -9,7 +9,7 @@ modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no supp
 TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
 TMP_FSTAB=/home/arch/aif/runtime/.fstab
 TMP_PARTITIONS=/home/arch/aif/runtime/.partitions
-TMP_FILESYSTEMS=/home/arch/aif/runtime/.filesystems
+TMP_FILESYSTEMS=/home/arch/aif/runtime/.filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -38,7 +38,7 @@ target_special_fs ()
 
 # taken from setup
 # Disable swap and all mounted partitions for the destination system. Unmount
-# the destination root partition last!
+# the destination root partition last! TODO: only taking care of / is not enough, we can have the same problem on another level (eg /a/b/c and /a/b)
 target_umountall()
 {
 	infofy "Disabling swapspace, unmounting already mounted disk devices..."
@@ -407,13 +407,81 @@ process_disk ()
 }
 
 
-# go over each filesystem in $TMP_FILESYSTEMS, reorder them so that each entry has it's correspondent block device available (eg if you need /dev/mapper/foo which only becomes available after some other entry is processed) and process them
+generate_filesystem_list ()
+{
+	echo -n > $TMP_FILESYSTEMS
+	while read part type label fs_string
+	do
+		if [ "$fs_string" != no_fs ]
+		then
+			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
+			do
+				fs_type=`       cut -d ';' -f 1 <<< $fs`
+				fs_create=`     cut -d ';' -f 2 <<< $fs`
+				fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+				fs_mount=`      cut -d ';' -f 4 <<< $fs`
+				fs_opts=`       cut -d ';' -f 5 <<< $fs`
+				fs_label=`      cut -d ';' -f 6 <<< $fs`
+				fs_params=`     cut -d ';' -f 7 <<< $fs`
+				echo "$part $part_type $part_label $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params" >> $TMP_FILESYSTEMS
+			done
+		fi
+	done < $BLOCK_DATA
+
+}
+
+
+# process all entries in $BLOCK_DATA, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
 process_filesystems ()
 {
-	#TODO: reorder file by strlen of mountpoint (or alphabetically), so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good -> sort -t \  -k 2
-	#TODO: we must make sure we have created all PV's, then reate a vg and the lv's.
-	#TODO: 'deconstruct' the mounted filesystems, pv's, lv's,vg's,dm_crypt's.. in the right order before doing this (opposite order of construct) and swapoff.
-	debug "process_filesystems Called.  checking all entries in $TMP_FILESYSTEMS"
+	generate_filesystem_list
+
+	# phase 1: deconstruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
+	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
+
+	sort -t \  -k 2 test $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		if [ "$fs_type" = swap ]
+		then
+			swapoff $part
+		elif [ "$fs_mountpoint" != no_mount ]
+		then
+			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
+			umount $fs_mountpoint
+		fi
+	done
+
+	# TODO: phase 2: deconstruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
+	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should deconstruct things we need and who are in /etc/mtab or something.
+	# targets for deconstruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
+	# after deconstructing. the parent must be updated to reflect the vanished child.
+
+# TODO: as long as devices in this list remains and exist physically
+# TODO: abort when there still are physical devices listed, but we tried to deconstruct them already, give error
+
+	egrep '\+|mapper' $BLOCK_DATA | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
+	do
+		real_part=${part/+/}
+		if [ -b "$real_part" ]
+		then
+			debug "Attempting deconstruction of device $part (type $part_type)"
+			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice deconstruction" "Could not pvremove $part") 
+			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice deconstruction" "Could not vgremove -f $part")
+			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice deconstruction" "Could not lvremove -f $part")
+			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice deconstruction" "Could not cryptsetup luksClose $part")
+		else
+			debug "Skipping deconstruction of device $part (type $part_type) because it doesn't exist"
+		fi
+	done
+
+	# TODO: phase 3: create all blockdevices in the correct order (for each fs, the underlying block device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc, but all device mapper devices need attention)
+
+	# TODO: phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+	# reorder file by strlen of mountpoint (or alphabetically), so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good -> sort -t \  -k 2
+	 sort -t \  -k 2 test
+
+
+	debug "process_filesystems Called.  checking all entries in $BLOCK_DATA"
 	rm -f $TMP_FSTAB
 	devs_avail=1
 	while [ $devs_avail = 1 ]
@@ -421,25 +489,36 @@ process_filesystems ()
 		devs_avail=0
 		for part in `findpartitions`
 		do
-			if entry=`grep ^$part $TMP_FILESYSTEMS`
+			if entry=`grep ^$part $BLOCK_DATA`
 			then
-				process_filesystem "$entry" && sed -i "/^$part/d" $TMP_FILESYSTEMS && debug "$part processed and removed from $TMP_FILESYSTEMS"
+				process_filesystem "$entry" && sed -i "/^$part/d" $BLOCK_DATA && debug "$part processed and removed from $BLOCK_DATA"
 				devs_avail=1
 			fi
 		done
 	done
-	entries=`wc -l $TMP_FILESYSTEMS`
+	entries=`wc -l $BLOCK_DATA`
 	if [ $entries -gt 0 ]
 	then
-		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $TMP_FILESYSTEMS`"
+		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $BLOCK_DATA`"
 	else
 		debug "All entries processed..."
 	fi
 }
 
+# NOTE:  beware, the 'mount?' for now just matters for the location (if 'target', the target path gets prepended)
 
-#TMP_FILESYSTEMS beware, the 'mount?' for now just matters for the location (if 'target', the target path gets prepended)
-#blockdevice:filesystem:mountpoint:recreate FS?(yes/no):mount?(target,runtime,no)[:extra options for specific filesystem]
+# FORMAT DEFINITION:
+
+# MAIN FORMAT FOR $BLOCK_DATA (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
+# $BLOCK_DATA entry.
+# <blockdevice> type label/no_label <FS-string>/no_fs
+# FS-string:
+# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+
+
+# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can be on multiple lines
+# part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+
 
 # make a filesystem on a blockdevice and mount if requested.
 process_filesystem ()
