@@ -1,5 +1,7 @@
 See also the FIXME's and TODO's in the code.
 
+* test refactored disk code
+
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie

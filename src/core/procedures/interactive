@@ -1,5 +1,5 @@
 #!/bin/sh
-depend_procedure core base # esp for auto_{network,locale,fstab} and intro workers
+depend_procedure core base # esp for auto_{network,locale,fstab}, intro and set_clock workers
 
 
 # This is a port of the original /arch/setup script.  It doesn't use aif phases but uses it's own menu-based flow (phase) control
@@ -142,7 +142,7 @@ worker_prepare_disks()
 		ask_option $default "Prepare Hard Drive" \
 		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
 		"2" "Partition Hard Drives" \
-		"3" "Set Filesystem Mountpoints" \
+		"3" "Configure block devices, filesystems and mountpoints" \
 		"4" "Return to Main Menu"
 
         case $ANSWER_OPTION in
@@ -160,7 +160,7 @@ worker_prepare_disks()
 		if [ "$DISK_CONFIG_TYPE" = "auto"  ]; then
 			notify "You have already prepared your filesystems with Auto-prepare" #TODO: allow user to do this anyway. he can change his mind.
 		else
-			interactive_mountpoints && ret=0 && NEXTITEM=4 && DISK_CONFIG_TYPE=manual
+			interactive_filesystems && ret=0 && NEXTITEM=4 && DISK_CONFIG_TYPE=manual
 		fi
 		;;
             *)
@@ -168,16 +168,6 @@ worker_prepare_disks()
         esac
     done
     return $ret
-}
-
-
-# set_clock()
-# prompts user to set hardware clock and timezone
-#
-# params: none
-worker_set_clock()
-{
-	interactive_set_clock
 }
 
 

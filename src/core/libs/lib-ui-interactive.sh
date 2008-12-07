@@ -17,33 +17,6 @@ check_depend ()
 }
 
 
-interactive_partition() {
-    target_umountall
-
-    # Select disk to partition
-    DISCS=$(finddisks _)
-    DISCS="$DISCS OTHER - DONE +"
-    notify "Available Disks:\n\n$(_getavaildisks)\n"
-    DISC=""
-    while true; do
-        # Prompt the user with a list of known disks
-        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
-        DISC=$ANSWER_OPTION
-        if [ "$DISC" = "OTHER" ]; then
-            _dia_DIALOG --inputbox "Enter the full path to the device you wish to partition" 8 65 "/dev/sda" 2>$ANSWER || return 1
-            DISC=$(cat $ANSWER)
-        fi
-        # Leave our loop if the user is done partitioning
-        [ "$DISC" = "DONE" ] && break
-        # Partition disc
-        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
-        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to step 2."
-        cfdisk $DISC
-    done
-    return 0
-}
-
-
 interactive_configure_system()
 {
 	[ "$EDITOR" ] || interactive_get_editor
@@ -89,211 +62,444 @@ interactive_configure_system()
 # returns: 1 on failure
 interactive_set_clock()   
 {
-    # utc or local?
-	ask_option no "Is your hardware clock in UTC or local time?" \
-        "UTC" " " \
-        "local" " " \
-        || return 1
-    HARDWARECLOCK=$ANSWER_OPTION
+	# utc or local?
+	ask_option no "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
+	HARDWARECLOCK=$ANSWER_OPTION
 
-    # timezone?
-    TIMEZONE=`tzselect` || return 1
+	# timezone?
+	ask_timezone || return 1
+	TIMEZONE=$ANSWER_TIMEZONE
 
+	# set system clock from hwclock - stolen from rc.sysinit
+	local HWCLOCK_PARAMS=""
+	if [ "$HARDWARECLOCK" = "UTC" ]
+	then
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
+	else
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
+	fi
 
-    # set system clock from hwclock - stolen from rc.sysinit
-    local HWCLOCK_PARAMS=""
-    if [ "$HARDWARECLOCK" = "UTC" ]; then
-        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
-    else
-        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
-    fi  
-    if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]; then
-        /bin/rm -f /etc/localtime
-        /bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-    fi
-    /sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
+	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+	then
+		/bin/rm -f /etc/localtime
+		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+	fi
+	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
 
-    # display and ask to set date/time
-    dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
-    local _date="$(cat $ANSWER)"
-    dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
-    local _time="$(cat $ANSWER)"
-    echo "date: $_date time: $_time" >$LOG
+	# display and ask to set date/time
+	ask_datetime
 
-    # save the time
-    # DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss
-    local _datetime="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
-    echo "setting date to: $_datetime" >$LOG
-    date -s "$_datetime" 2>&1 >$LOG
-    /sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
+	# save the time
+	date -s "$ANSWER_DATETIME" || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
+	/sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
 
-    return 0
+	return 0
 }
 
 
 interactive_autoprepare()
 {
-    DISCS=$(finddisks)
-    if [ $(echo $DISCS | wc -w) -gt 1 ]; then
-        notify "Available Disks:\n\n$(_getavaildisks)\n"
-        ask_option no "Select the hard drive to use" $(finddisks _) || return 1
-        DISC=$ANSWER_OPTION
-    else
-        DISC=$DISCS
-    fi
-    SET_DEFAULTFS=""
-    BOOT_PART_SET=""
-    SWAP_PART_SET=""
-    ROOT_PART_SET=""
-    CHOSEN_FS=""
-    # get just the disk size in 1000*1000 MB
-    DISC_SIZE=$(hdparm -I /dev/sda | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
-    while [ "$SET_DEFAULTFS" = "" ]; do
-        FSOPTS="ext2 ext2 ext3 ext3"
-        [ "$(which mkreiserfs 2>/dev/null)" ] && FSOPTS="$FSOPTS reiserfs Reiser3"
-        [ "$(which mkfs.xfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS xfs XFS"
-        [ "$(which mkfs.jfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS jfs JFS"
-        while [ "$BOOT_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your /boot partition.  Minimum value is 16.\n\nDisk space left: $DISC_SIZE MB" 8 65 "32" 2>$ANSWER || return 1
-            BOOT_PART_SIZE="$(cat $ANSWER)"
-            if [ "$BOOT_PART_SIZE" = "" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$BOOT_PART_SIZE" -ge "$DISC_SIZE" -o "$SBOOT_PART_SIZE" = "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                   elif [ "$BOOT_PART_SIZE" -lt "16" ];
-                   then
-                   	notify "ERROR: You have entered a too small size, please enter again."
-                else
-                    BOOT_PART_SET=1
-                fi
-            fi
-        done
-        DISC_SIZE=$(($DISC_SIZE-$BOOT_PART_SIZE))
-        while [ "$SWAP_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your swap partition.  Minimum value is > 0.\n\nDisk space left: $DISC_SIZE MB" 8 65 "256" 2>$ANSWER || return 1
-            SWAP_PART_SIZE=$(cat $ANSWER)
-            if [ "$SWAP_PART_SIZE" = "" -o  "$SWAP_PART_SIZE" -le "0" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$SWAP_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                else
-                    SWAP_PART_SET=1
-                fi
-            fi
-        done
-        DISC_SIZE=$(($DISC_SIZE-$SWAP_PART_SIZE))
-        while [ "$ROOT_PART_SET" = "" ]; do
-            _dia_DIALOG --inputbox "Enter the size (MB) of your / partition.  The /home partition will use the remaining space.\n\nDisk space left:  $DISC_SIZE MB" 8 65 "7500" 2>$ANSWER || return 1
-            ROOT_PART_SIZE=$(cat $ANSWER)
-            if [ "$ROOT_PART_SIZE" = "" -o "$ROOT_PART_SIZE" -le "0" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$ROOT_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                else
-                    ask_yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" && ROOT_PART_SET=1
-                fi
-            fi
-        done
-        while [ "$CHOSEN_FS" = "" ]; do
-            _dia_DIALOG --menu "Select a filesystem for / and /home:" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-            FSTYPE=$(cat $ANSWER)
-            ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" && CHOSEN_FS=1
-        done
-        SET_DEFAULTFS=1
-    done
+	DISCS=$(finddisks)
+	if [ $(echo $DISCS | wc -w) -gt 1 ]
+	then
+		notify "Available Disks:\n\n$(_getavaildisks)\n"
+		ask_option no "Select the hard drive to use" $(finddisks 1 _) || return 1
+		DISC=$ANSWER_OPTION
+	else
+		DISC=$DISCS
+	fi
 
-    _dia_DIALOG --defaultno --yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" 0 0 \
-    || return 1
+	get_blockdevice_size $DISC SI
+	FSOPTS=
+	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
 
-    DEVICE=$DISC
-    # TODO: why do we define a $DEFAULTFS variable someplace else if we hardcode it's attributes here to be able to replace them with custom values?  Can't we just construct the custom thing?
-    # For some reason the thing belows replaces everything well, but 'looses' the /home part, I don't know why, cannot reproduce it, but it happens in vbox
-    # FSSPECS=$(echo $DEFAULTFS | sed -e "s|/:7500:ext3|/:$ROOT_PART_SIZE:$FSTYPE|g" -e "s|/home:\*:ext3|/home:\*:$FSTYPE|g" -e "s|swap:256|swap:$SWAP_PART_SIZE|g" -e "s|/boot:32|/boot:$BOOT_PART_SIZE|g")
+	ask_number "Enter the size (MB) of your /boot partition.  Recommended size: 100MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 16 $BLOCKDEVICE_SIZE || return 1
+	BOOT_PART_SIZE=$ANSWER_NUMBER
 
-	FSSPECS="/boot:$BOOT_PART_SIZE:ext2:+ swap:$SWAP_PART_SIZE:swap /:$ROOT_PART_SIZE:$FSTYPE /home:*:$FSTYPE"
-	debug "\$DEFAULTFS: $DEFAULTFS"
-	debug "\$FSSPECS  : $FSSPECS"
-    # we assume a /dev/hdX format (or /dev/sdX)
-    PART_ROOT="${DEVICE}3"
+	BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$BOOT_PART_SIZE))
 
-	partition $DEVICE "$FSSPECS" &&  notify "Auto-prepare was successful" && return 0
-	return 1
+	ask_number "Enter the size (MB) of your swap partition.  Recommended size: 256MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+	SWAP_PART_SIZE=$ANSWER_NUMBER
+
+        BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$SWAP_PART_SIZE))
+
+	ROOT_PART_SET=""
+	while [ "$ROOT_PART_SET" = "" ]
+	do
+		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+		ROOT_PART_SIZE=$ANSWER_NUMBER
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
+        done
+
+	CHOSEN_FS=""
+	while [ "$CHOSEN_FS" = "" ]
+	do
+		ask_option "Select a filesystem for / and /home:" $FSOPTS || return 1
+		FSTYPE=$ANSWER_OPTION
+		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
+        done
+
+	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
+
+
+	# we assume a /dev/hdX format (or /dev/sdX)
+	PART_ROOT="${DISC}3"
+
+	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
+
+	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >$BLOCK_DATA
+	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >$BLOCK_DATA
+	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >$BLOCK_DATA
+	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >$BLOCK_DATA
+
+
+	process_disks       || die_error "Something went wrong while partitioning"
+	process_filesystems || die_error "Something went wrong while processing the filesystems"
+	notify "Auto-prepare was successful"
+	return 0
+
 }
 
 
-interactive_mountpoints() {
-    while [ "$PARTFINISH" != "DONE" ]; do
-        : >$TMP_FSTAB
-        : >/home/arch/aif/runtime/.parts #TODO: use a variable instead of a file, we don't need to use a file for this
-
-        # Determine which filesystems are available
-        FSOPTS="ext2 ext2 ext3 ext3"
-        [ "$(which mkreiserfs 2>/dev/null)" ] && FSOPTS="$FSOPTS reiserfs Reiser3"
-        [ "$(which mkfs.xfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS xfs XFS"
-        [ "$(which mkfs.jfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS jfs JFS"
-        [ "$(which mkfs.vfat 2>/dev/null)" ]  && FSOPTS="$FSOPTS vfat VFAT"
-
-        # Select mountpoints
-        notify "Available Disks:\n\n$(_getavaildisks)\n"
-        PARTS=$(findpartitions _)
-        _dia_DIALOG --menu "Select the partition to use as swap" 21 50 13 NONE - $PARTS 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-        if [ "$PART" != "NONE" ]; then
-            DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:swap:swap:$DOMKFS" >>/home/arch/aif/runtime/.parts
-        fi
-
-        _dia_DIALOG --menu "Select the partition to mount as /" 21 50 13 $PARTS 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-        PART_ROOT=$PART
-        # Select root filesystem type
-        _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-        FSTYPE=$(cat $ANSWER)
-        DOMKFS="no"
-        ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-        echo "$PART:$FSTYPE:/:$DOMKFS" >>/home/arch/aif/runtime/.parts
-
-        #
-        # Additional partitions
-        #
-        _dia_DIALOG --menu "Select any additional partitions to mount under your new root (select DONE when finished)" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        while [ "$PART" != "DONE" ]; do
-            PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-            # Select a filesystem type
-            _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-            FSTYPE=$(cat $ANSWER)
-            MP=""
-            while [ "${MP}" = "" ]; do
-                _dia_DIALOG --inputbox "Enter the mountpoint for $PART" 8 65 "/boot" 2>$ANSWER || return 1
-                MP=$(cat $ANSWER)
-                if grep ":$MP:" /home/arch/aif/runtime/.parts; then
-                    notify "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint."
-                    MP=""
-                fi
-            done
-            DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>/home/arch/aif/runtime/.parts
-            _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
-            PART=$(cat $ANSWER)
-        done
-        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/aif/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
-    done
-
+interactive_partition() {
     target_umountall
 
-	fix_filesystems /home/arch/aif/runtime/.parts && notify "Partitions were successfully mounted." && return 0
+    # Select disk to partition
+    DISCS=$(finddisks 1 _)
+    DISCS="$DISCS OTHER - DONE +"
+    notify "Available Disks:\n\n$(_getavaildisks)\n"
+    DISC=""
+    while true; do
+        # Prompt the user with a list of known disks
+        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
+        DISC=$ANSWER_OPTION
+        if [ "$DISC" = "OTHER" ]; then
+            ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
+            DISC=$ANSWER_STRING
+        fi
+        # Leave our loop if the user is done partitioning
+        [ "$DISC" = "DONE" ] && break
+        # Partition disc
+        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
+        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to the mountpoints selection step."
+        cfdisk $DISC
+    done
+    return 0
+}
 
-	show_warning "Failure while doing filesystems" "Something went wrong.  Check your logs"
+
+# create new, delete, or edit a filesystem
+# At first I had the idea of a menu where all properties of a filesystem and you could pick one to update only that one (eg mountpoint, type etc)\
+# but I think it's better to go through them all and by default always show the previous choice.
+interactive_filesystem ()
+{
+	part=$1 # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
+	part_type=$2 # a part should always have a type
+	part_label=$3 # can be empty
+	fs=$4 # can be empty
+	NEW_FILESYSTEM=
+	if [ -z "$fs" ]
+	then
+		fs_type=
+		fs_mountpoint=
+		fs_opts=
+		fs_label=
+		fs_params=
+	else
+		ask_option edit "Alter $part (type:$part_type,label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs && return 0
+		if [ "$ANSWER_OPTION" = delete ]
+		then
+			NEW_FILESYSTEM=empty
+			return 0
+		else
+			fs_type=`       cut -d ';' -f 1 <<< $fs`
+			fs_create=`     cut -d ';' -f 2 <<< $fs` #not asked for to the user. this is always 'yes' for now
+			fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+			fs_mount=`      cut -d ';' -f 4 <<< $fs` #we dont need to ask this to the user. this is always 'target' for 99.99% of the users
+			fs_opts=`       cut -d ';' -f 5 <<< $fs`
+			fs_label=`      cut -d ';' -f 6 <<< $fs`
+			fs_params=`     cut -d ';' -f 7 <<< $fs`
+			[ "$fs_type"   = no_type   ] && fs_type=
+			[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
+			[ "$fs_opts"   = no_opts   ] && fs_opts=
+			[ "$fs_label"  = no_label  ] && fs_label=
+			[ "$fs_params" = no_params ] && fs_params=
+			old_fs_type=$fs_type
+			old_fs_mountpoint=$fs_mountpoint
+			old_fs_opts=$fs_opts
+			old_fs_label=$fs_label
+			old_fs_params=$fs_params
+		fi
+	fi
+
+	# Possible filesystems/software layers on partitions/block devices
+
+	# name        on top of             mountpoint?    label?        DM device?                     theoretical device?                        opts?      special params?
+
+	# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
+	# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+	# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                                         optional   no
+	# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               $part+ (+ is to differentiate from $part)  optional   no
+	# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device                                 optional   PV's to use
+	# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device                                 optional   LV size
+	# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device                                 optional   no
+
+
+	# Determine which filesystems/blockdevices are possible for this blockdevice
+	FSOPTS=
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program swap`     &>/dev/null && FSOPTS="$FSOPTS swap Swap"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	[ $part_type = raw                        -o $part_type = dm_crypt ] && which `get_filesystem_program lvm-pv`   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM_Physical_Volume"
+	[ $part_type = lvm-pv                                              ] && which `get_filesystem_program lvm-vg`   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM_Volumegroup"
+	[ $part_type = lvm-vg                                              ] && which `get_filesystem_program lvm-lv`   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
+	[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
+
+		# determine FS
+		fsopts=($FSOPTS);
+		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
+		then
+			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices" #TODO:  ${fsopts[1]} is empty when making an LV on a VG
+			fs_type=${fsopts[0]}
+		else
+			default=
+			[ -n "$fs_type" ] && default="--default-item $fs_type"
+			ask_option no "Select a filesystem for $part:" $FSOPTS || return 1
+			fs_type=$ANSWER_OPTION
+		fi
+
+		# ask mountpoint, if relevant
+		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
+		then
+			default=
+			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
+			ask_string "Enter the mountpoint for $part" "$default" || return 1
+			fs_mountpoint=$ANSWER_STRING
+		fi
+
+		# ask label, if relevant
+		if [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
+		then
+			default=
+			[ -n "$fs_label" ] && default="$fs_label"
+			ask_string "Enter the label/name for this $fs_type on $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
+			fs_label=$ANSWER_STRING
+		fi
+
+		# ask special params, if relevant
+		if [ "$fs_type" = lvm-vg ]
+		then
+			# add $part to $fs_params if it's not in there because the user wants this enabled by default
+			pv=${part/+/}
+			grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
+
+			for pv in `sed 's/:/ /' <<< $fs_params`
+			do
+				list="$list $pv ON"
+			done
+			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
+			do
+				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
+			done
+			list2=($list)
+			if [ ${#list2[*]} -lt 4 ] # less then 4 words in the list. eg only one option
+			then
+				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
+				fs_params=${list2[0]}
+			else
+				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
+				fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
+			fi
+		fi
+		if [ "$fs_type" = lvm-lv ]
+		then
+			[ -z "$fs_params" ] && default='5G'
+			[ -n "$fs_params" ] && default="$fs_params"
+			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
+			fs_params=$ANSWER_STRING
+		fi
+		if [ "$fs_type" = dm_crypt ]
+		then
+			[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
+			[ -n "$fs_params" ] && default="${fs_params//_/ }"
+			ask_string "Enter the options for this $fs_type on $part" "$default" || return 1
+			fs_params="${ANSWER_STRING// /_}"
+		fi
+
+		# ask opts
+		default=
+		[ -n "$fs_opts" ] && default="$fs_opts"
+		program=`get_filesystem_program $fs_type`
+		ask_string "Enter any additional opts for $program" "$default" 0
+		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+
+		[ -z "$fs_type"   ] && fs_type=no_type
+		[ -z "$fs_mountpoint"  ] && fs_mountpoint=no_mountpoint
+		[ -z "$fs_opts"   ] && fs_opts=no_opts
+		[ -z "$fs_label"  ] && fs_label=no_label
+		[ -z "$fs_params" ] && fs_params=no_params
+		NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
+
+		# add new theoretical blockdevice, if relevant
+		if [ "$fs_type" = lvm-vg ]
+		then
+			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $BLOCK_DATA
+		elif [ "$fs_type" = lvm-pv ]
+		then
+			echo "$part+ $fs_type no_label no_fs" >> $BLOCK_DATA
+		elif [ "$fs_type" = lvm-lv ]
+		then
+			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
+		elif  [ "$fs_type" = dm_crypt ]
+		then
+			echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
+		fi
+
+		# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
+		if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs != lvm-* && "$fs" != dm_crypt ]]
+		then
+			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
+			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
+			sed -i "#$target#d" $BLOCK_DATA #TODO: check affected items, delete those, etc etc.
+		fi
+}
+
+interactive_filesystems() {
+
+	notify "Available Disks:\n\n$(_getavaildisks)\n"
+
+	BLOCK_DATA=/home/arch/aif/runtime/.blockdata
+
+	# $BLOCK_DATA entry. easily parsable.:
+	# <blockdevice> type label/no_label <FS-string>/no_fs
+	# FS-string:
+	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
+
+	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
+
+	ALLOK=0
+	while [ "$ALLOK" = 0 ]
+	do
+		# Let the user make filesystems and mountpoints
+		USERHAPPY=0
+
+		while [ "$USERHAPPY" = 0 ]
+		do
+			# generate a menu based on the information in the datafile
+			menu_list=
+			while read part type label fs
+			do
+				infostring="type:$type,label:$label,fs:$fs"
+				[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
+				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
+			done < $BLOCK_DATA
+
+			ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+			[ $? -gt 0                 ] && USERHAPPY=1 && break
+			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
+
+			part=$ANSWER_OPTION
+
+			declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
+			declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
+			part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
+			part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
+			fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
+			[ "$part_label" == no_label ] && part_label=
+			[ "$fs"         == no_fs    ] && fs=
+
+			if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
+			then
+				list=
+				if [ -n "$fs" ]
+				then
+					for lv in `sed 's/|/ /g' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						mountpoint=$(cut -d ';' -f 2 <<< $lv)
+						list="$list $label $mountpoint"
+					done
+				else
+					list="XXX no-LV's-defined-yet-make-a-new-one"
+				fi
+				list="$list empty NEW"
+				ask_option empty "Edit/create new LV's on this VG:" $list
+				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
+				then
+					# a new LV must be created on this VG
+					if interactive_filesystem $part $part_type $part_label '' 
+					then
+						[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+						[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+					fi
+				else
+					# an existing LV will be edited and it's settings updated
+					for lv in `sed '/|/ /' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
+					done
+					interactive_filesystem $part $part_type $part_label "$found_lv"
+					fs=
+					for lv in `sed '/|/ /' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						add=$lv
+						[ "$label" = "$ANSWER_OPTION" ] && add=$NEW_FILESYSTEM
+						[ -z "$fs" ] && fs=$add
+						[ -n "$fs" ] && fs="$fs|$add"
+					done
+				fi
+			else
+				interactive_filesystem $part $part_type $part_label $fs
+				[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
+			fi
+
+			# update the menu # NOTE that part_type remains raw for basic filesystems!
+			[ -z "$part_label" ] && part_label=no_label
+			[ -z "$fs"         ] && fs=no_fs
+			sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
+
+		done
+
+		# Check all conditions that need to be fixed and ask the user if he wants to go back and correct them
+		errors=
+		warnings=
+
+		grep -q ';/boot;' || warnings="$warnings\n-No separate /boot filesystem"
+		grep -q ';/;'     || errors="$errors\n-No filesystem with mountpoint /"
+		grep -q ' swap;' || grep -q '|swap;' || warnings="$warnings\n-No swap partition defined"
+
+		if [ -n "$errors$warnings" ]
+		then
+			str="The following issues have been detected:\n"
+			[ -n "$errors" ] && str="$str\n - Errors: $errors"
+			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
+			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1
+		fi
+
+	done
+
+
+	process_filesystems && notify "Partitions were successfully created." && return 0
+	show_warning "Filesystem processing" "Something went wrong while processing the filesystems"
 	return 1
 }
+
 
 # select_packages()
 # prompts the user to select packages to install
@@ -481,8 +687,8 @@ EOF
     [ "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
 
-    DEVS=$(finddisks _)
-    DEVS="$DEVS $(findpartitions _)"
+    DEVS=$(finddisks 1 _)
+    DEVS="$DEVS $(findpartitions 1 _)"
     if [ "$DEVS" = "" ]; then
         notify "No hard drives were found"
         return 1

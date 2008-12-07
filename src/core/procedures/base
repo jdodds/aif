@@ -72,18 +72,7 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
-	HARDWARECLOCK=utc
-	TIMEZONE=`tzselect`
-	HWCLOCK_PARAMS=" --utc"
-	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
-	then
-		cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-	fi
-
-	ask_string "Enter date [MMDDhhmmYYYY.ss]" # Thanks Ryan Sims for this one
-	date $answ || show_warning "Date/time setting failed" "Something went wrong when doing date $answ"
-
-	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
+	interactive_set_clock
 }
 
 

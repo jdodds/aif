@@ -1,7 +1,31 @@
 #!/bin/sh
 
+
+# FORMAT DEFINITIONS:
+
+# MAIN FORMAT FOR $BLOCK_DATA (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
+# $BLOCK_DATA entry.
+# <blockdevice> type label/no_label <FS-string>/no_fs
+# FS-string:
+# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+# NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
+
+
+# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
+# part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+
+
+
+#TODO: this should be fixed on the installcd.
+modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
+modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
+
+
+
 TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
 TMP_FSTAB=/home/arch/aif/runtime/.fstab
+TMP_PARTITIONS=/home/arch/aif/runtime/.partitions
+TMP_FILESYSTEMS=/home/arch/aif/runtime/.filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -30,7 +54,7 @@ target_special_fs ()
 
 # taken from setup
 # Disable swap and all mounted partitions for the destination system. Unmount
-# the destination root partition last!
+# the destination root partition last! TODO: only taking care of / is not enough, we can have the same problem on another level (eg /a/b/c and /a/b)
 target_umountall()
 {
 	infofy "Disabling swapspace, unmounting already mounted disk devices..."
@@ -40,39 +64,46 @@ target_umountall()
 }
 
 
-# literally taken from setup script
+# taken from setup script, modified for separator control
+# $1 set to 1 to echo a newline after device instead of a space (optional)
+# $2 extra things to echo for each device (optional)
+# $3 something to append directly after the device (optional)
 finddisks() {
     workdir="$PWD"
     cd /sys/block 
     # ide devices 
     for dev in $(ls | egrep '^hd'); do
         if [ "$(cat $dev/device/media)" = "disk" ]; then
-            echo "/dev/$dev"
-            [ "$1" ] && echo $1
+            echo -n "/dev/$dev$3"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         fi
     done  
     #scsi/sata devices
     for dev in $(ls | egrep '^sd'); do
         # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
-            echo "/dev/$dev"
-            [ "$1" ] && echo $1
+            echo -n "/dev/$dev$3"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         fi
     done  
     # cciss controllers
     if [ -d /dev/cciss ] ; then
         cd /dev/cciss
         for dev in $(ls | egrep -v 'p'); do
-            echo "/dev/cciss/$dev"
-            [ "$1" ] && echo $1   
+            echo -n "/dev/cciss/$dev$3"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         done
     fi
     # Smart 2 controllers
     if [ -d /dev/ida ] ; then
         cd /dev/ida
         for dev in $(ls | egrep -v 'p'); do
-            echo "/dev/ida/$dev"
-            [ "$1" ] && echo $1 
+            echo -n"/dev/ida/$dev$3"
+            [ "$1" = 1 ] && echo || echo -n ' '
+            [ "$2" ] && echo $2
         done
     fi
     cd "$workdir"
@@ -93,7 +124,10 @@ getuuid()
 }
 
 
-# taken from setup. slightly optimized.
+# taken from setup script, slightly optimized and modified for separator control
+# $1 set to 1 to echo a newline after partition instead of a space (optional)
+# $2 extra things to echo for each partition (optional)
+# $3 something to append directly after the partition (optional) TODO: refactor code so there's a space in between, merge $2 and $3. use echo -e to print whatever user wants
 findpartitions() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
@@ -107,8 +141,9 @@ findpartitions() {
 			then
 				if [ -d $part ]
 				then  
-					echo "/dev/$part"  
-					[ "$1" ] && echo $1
+					echo -n "/dev/$part$3"
+					[ "$1" = 1 ] && echo || echo -n ' '
+					[ "$2" ] && echo $2
 				fi
 			fi
 		done
@@ -116,16 +151,18 @@ findpartitions() {
 	# include any mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
-		echo "/dev/mapper/$devpath"
-		[ "$1" ] && echo $1
+		echo -n "/dev/mapper/$devpath$3"
+		[ "$1" = 1 ] && echo || echo -n ' '
+		[ "$2" ] && echo $2
 	done
 	# include any raid md devices
 	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
 		then
-			echo "$devpath"
-			[ "$1" ] && echo $1
+			echo -n "$devpath$3"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		fi
 	done
 	# inlcude cciss controllers
@@ -134,8 +171,9 @@ findpartitions() {
 		cd /dev/cciss
 		for dev in $(ls | egrep 'p')
 		do
-			echo "/dev/cciss/$dev"
-			[ "$1" ] && echo $1
+			echo -n "/dev/cciss/$dev$3"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		done
 	fi
 	# inlcude Smart 2 controllers
@@ -144,8 +182,9 @@ findpartitions() {
 		cd /dev/ida
 		for dev in $(ls | egrep 'p')
 		do
-			echo "/dev/ida/$dev"
-			[ "$1" ] && echo $1
+			echo -n "/dev/ida/$dev$3"
+			[ "$1" = 1 ] && echo || echo -n ' '
+			[ "$2" ] && echo $2
 		done
 	fi
 
@@ -203,76 +242,6 @@ mapdev() {
 }
 
 
-# _mkfs() taken from setup code and slightly improved.
-# Create and mount filesystems in our destination system directory.
-#
-# args:
-#  $1 domk: Whether to make the filesystem or use what is already there  (yes/no)
-#  $2 device: Device filesystem is on
-#  $3 fstype: type of filesystem located at the device (or what to create)
-#  $4 dest: Mounting location for the destination system
-#  $5 mountpoint: Mount point inside the destination system, e.g. '/boot'
-
-# returns: 1 on failure
-_mkfs() {
-    local _domk=$1
-    local _device=$2
-    local _fstype=$3
-    local _dest=$4
-    local _mountpoint=$5
-
-	debug "_mkfs: domk: $1, _device: $2, fstype: $3, dest: $4, mountpoint: $5"
-    # we have two main cases: "swap" and everything else.
-    if [ "${_fstype}" = "swap" ]; then
-        swapoff ${_device} >/dev/null 2>&1
-        if [ "${_domk}" = "yes" ]; then
-            mkswap ${_device} >$LOG 2>&1 || ( show_warning "Error creating swap: mkswap ${_device}" ; return 1 )
-        fi
-        swapon ${_device} >$LOG 2>&1 || ( show_warning "Error activating swap: swapon ${_device}"  ;  return 1 )
-    else
-        # make sure the fstype is one we can handle
-        local knownfs=0
-        for fs in xfs jfs reiserfs ext2 ext3 vfat; do
-            [ "${_fstype}" = "${fs}" ] && knownfs=1 && break
-        done
-        
-        [ $knownfs -eq 0 ] && ( show_warning "unknown fstype ${_fstype} for ${_device}" ; return 1 )
-        # if we were tasked to create the filesystem, do so
-        if [ "${_domk}" = "yes" ]; then
-            local ret
-            case ${_fstype} in
-                xfs)      mkfs.xfs -f ${_device} >$LOG 2>&1; ret=$? ;;
-                jfs)      yes | mkfs.jfs ${_device} >$LOG 2>&1; ret=$? ;;
-                reiserfs) yes | mkreiserfs ${_device} >$LOG 2>&1; ret=$? ;;
-                ext2)     mke2fs "${_device}" >$LOG 2>&1; ret=$? ;;
-                ext3)     mke2fs -j ${_device} >$LOG 2>&1; ret=$? ;;
-                vfat)     mkfs.vfat ${_device} >$LOG 2>&1; ret=$? ;;
-                # don't handle anything else here, we will error later
-            esac
-            [ $ret != 0 ] && ( show_warning "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
-            sleep 2
-        fi
-        # create our mount directory
-        mkdir -p ${_dest}${_mountpoint}
-        # mount the bad boy
-        mount -t ${_fstype} ${_device} ${_dest}${_mountpoint} >$LOG 2>&1
-	[ $? != 0 ] && ( show_warning "Error mounting ${_dest}${_mountpoint}" ; return 1 )
-    fi
-
-    # add to temp fstab
-    local _uuid="$(getuuid ${_device})"
-    if [ -n "${_uuid}" ]; then
-        _device="UUID=${_uuid}"
-    fi
-    echo -n "${_device} ${_mountpoint} ${_fstype} defaults 0 " >>$TMP_FSTAB
-
-    if [ "${_fstype}" = "swap" ]; then
-        echo "0" >>$TMP_FSTAB
-    else
-        echo "1" >>$TMP_FSTAB
-    fi
-}
-
 
 # auto_fstab(). taken from setup
 # preprocess fstab file
@@ -291,10 +260,10 @@ target_configure_fstab()
 }
 
 
-# partitions a disk , creates filesystems and mounts them
+# partitions a disk. heavily altered
 # $1 device to partition
-# $2 a string of the form: <mountpoint>:<partsize>:<fstype>[:+] (the + is bootable flag)
-partition ()
+# $2 a string of the form: <partsize>:<fstype>[:+] (the + is bootable flag)
+partition()
 {
 	debug "Partition called like: partition '$1' '$2'"
 	[ -z "$1" ] && die_error "partition() requires a device file and a partition string"
@@ -303,56 +272,38 @@ partition ()
 	DEVICE=$1
 	STRING=$2
 
-    # validate DEVICE
-    if [ ! -b "$DEVICE" ]; then
-      notify "Device '$DEVICE' is not valid"
-      return 1
-    fi
+	# validate DEVICE
+	if [ ! -b "$DEVICE" ]; then
+		notify "Device '$DEVICE' is not valid"
+		return 1
+	fi
 
-    # validate DEST
-    if [ ! -d "$var_TARGET_DIR" ]; then
-        notify "Destination directory '$var_TARGET_DIR' is not valid"
-        return 1
-    fi
+	target_umountall
 
-    # / required
-    if [ $(grep -c '/:' <<< $STRING) -ne 1 ]; then
-        notify "Need exactly one root partition"
-        return 1
-    fi
+	# setup input var for sfdisk
+	for fsspec in $STRING; do
+		fssize=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
+		fssize_spec=",$fssize"
+		[ "$fssize" = "*" ] && fssize_spec=';'
 
-    rm -f $TMP_FSTAB
+		fstype=$(echo $fsspec | tr -d ' ' | cut -f2 -d:)
+		fstype_spec=","
+		[ "$fstype" = "swap" ] && fstype_spec=",S"
 
-    target_umountall
- # setup input var for sfdisk #TODO: even though $STRING Contains a '/home' part it doesn't go through in the loops.. is this only in vbox?
-    for fsspec in $STRING; do
-        fssize=$(echo $fsspec | tr -d ' ' | cut -f2 -d:)
-        if [ "$fssize" = "*" ]; then
-                fssize_spec=';'
-        else
-                fssize_spec=",$fssize"
-        fi
-        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
-        if [ "$fstype" = "swap" ]; then
-                fstype_spec=",S"
-        else
-                fstype_spec=","
-        fi
-        bootflag=$(echo $fsspec | tr -d ' ' | cut -f4 -d:)
-        if [ "$bootflag" = "+" ]; then
-            bootflag_spec=",*"
-        else
-            bootflag_spec=""
-        fi
-        sfdisk_input="${sfdisk_input}${fssize_spec}${fstype_spec}${bootflag_spec}\n"
-    done
-    sfdisk_input=$(printf "$sfdisk_input")
+		bootflag=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
+		bootflag_spec=""
+		[ "$bootflag" = "+" ] && bootflag_spec=",*"
 
-    # invoke sfdisk
-    debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
-    printk off
-    infofy "Partitioning $DEVICE"
-    sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
+		sfdisk_input="${sfdisk_input}${fssize_spec}${fstype_spec}${bootflag_spec}\n"
+	done
+
+	sfdisk_input=$(printf "$sfdisk_input")
+
+	# invoke sfdisk
+	debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
+	printk off
+	infofy "Partitioning $DEVICE"
+	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
     if [ $? -gt 0 ]; then
@@ -362,67 +313,284 @@ EOF
     fi
     printk on
 
-    # need to mount root first, then do it again for the others
-    part=1
-    for fsspec in $STRING; do
-        mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
-        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
-        if echo $mountpoint | tr -d ' ' | grep '^/$' 2>&1 > /dev/null; then
-            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
-        fi
-        part=$(($part + 1))
-    done
-
-    # make other filesystems
-    part=1
-    for fsspec in $STRING; do
-        mountpoint=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
-        fstype=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
-        if [ $(echo $mountpoint | tr -d ' ' | grep -c '^/$') -eq 0 ]; then
-            _mkfs yes ${DEVICE}${part} "$fstype" "$var_TARGET_DIR" "$mountpoint" || return 1
-        fi
-        part=$(($part + 1))
-    done
-
     return 0
 }
 
 
-# makes and mounts filesystems #TODO: don't use files but pass variables, integrate this with other functions
-# $1 file with setup
-fix_filesystems ()
+# file layout:
+#TMP_PARTITIONS
+# disk partition-scheme
+
+# go over each disk in $TMP_PARTITIONS and partition it
+process_disks ()
 {
-	[ -z "$1" -o ! -f "$1" ] && die_error "Fix_filesystems needs a file with the setup structure in it"
+	while read disk scheme
+	do
+		process_disk $disk "$scheme"
+	done < $TMP_PARTITIONS
+}
 
-	# Umount all things first, umount / last.  After that create/mount stuff again, with / first
-	# TODO: we now rely on the fact that the manual mountpoint selecter uses this order 'swap,/, /<*>'.  It works for now but it's not the most solid
 
-    for line in $(tac $1); do
-        MP=$(echo $line | cut -d: -f 3)
-        umount ${var_TARGET_DIR}${MP}
-    done
-    for line in $(cat $1); do
-        PART=$(echo $line | cut -d: -f 1)
-        FSTYPE=$(echo $line | cut -d: -f 2)
-        MP=$(echo $line | cut -d: -f 3)
-        DOMKFS=$(echo $line | cut -d: -f 4)
-        if [ "$DOMKFS" = "yes" ]; then
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Creating and activating swapspace on $PART"
-            else
-                infofy "Creating $FSTYPE on $PART, mounting to ${var_TARGET_DIR}${MP}"
-            fi
-            _mkfs yes $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        else
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Activating swapspace on $PART"
-            else
-                infofy "Mounting $PART to ${var_TARGET_DIR}${MP}"
-            fi
-            _mkfs no $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        fi
-        sleep 1
-    done
+process_disk ()
+{
+	partition $1 $2
+}
+
+
+generate_filesystem_list ()
+{
+	echo -n > $TMP_FILESYSTEMS
+	while read part type label fs_string
+	do
+		if [ "$fs_string" != no_fs ]
+		then
+			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
+			do
+				fs_type=`       cut -d ';' -f 1 <<< $fs`
+				fs_create=`     cut -d ';' -f 2 <<< $fs`
+				fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+				fs_mount=`      cut -d ';' -f 4 <<< $fs`
+				fs_opts=`       cut -d ';' -f 5 <<< $fs`
+				fs_label=`      cut -d ';' -f 6 <<< $fs`
+				fs_params=`     cut -d ';' -f 7 <<< $fs`
+				echo "$part $part_type $part_label $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params" >> $TMP_FILESYSTEMS
+			done
+		fi
+	done < $BLOCK_DATA
+
+}
+
+
+# process all entries in $BLOCK_DATA, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
+process_filesystems ()
+{
+	debug "process_filesystems Called.  checking all entries in $BLOCK_DATA"
+	rm -f $TMP_FSTAB
+	generate_filesystem_list
+
+	# phase 1: destruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
+	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
+	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $BLOCK_DATA ? that needs to be cleaned up too.
+
+	sort -t \  -k 2 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		debug "umounting/swapoffing $part"
+		if [ "$fs_type" = swap ]
+		then
+			swapoff $part # could be that it was not swappedon yet.  that's not a problem at all.
+		elif [ "$fs_mountpoint" != no_mount ]
+		then
+			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
+			umount $fs_mountpoint # could be that this was not mounted yet. no problem.
+		fi
+	done
+
+#	devs_avail=1
+#	while [ $devs_avail = 1 ]
+#	do
+#		devs_avail=0
+#		for part in `findpartitions`
+#		do
+#			if entry=`grep ^$part $BLOCK_DATA`
+#			then
+#				process_filesystem "$entry" && sed -i "/^$part/d" $BLOCK_DATA && debug "$part processed and removed from $BLOCK_DATA"
+#				devs_avail=1
+#			fi
+#		done
+#	done
+#	entries=`wc -l $BLOCK_DATA`
+#	if [ $entries -gt 0 ]
+#	then
+#		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $BLOCK_DATA`"
+#	else
+#		debug "All entries processed..."
+#	fi
+
+
+	# phase 2: destruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
+	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should destruct things we need and who are in /etc/mtab or something.
+	# targets for destruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
+	# after destructing. the parent must be updated to reflect the vanished child.
+
+	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $BLOCK_DATA, or even better by using finddisks and only doing it if they are in $BLOCK_DATA  ) and attempt to destruct.
+	#  do that a few times and the ones that blocked because something else on it will probable have become freed and possible to destruct
+
+	# TODO: do this as long as devices in this list remains and exist physically
+	# TODO: abort when there still are physical devices listed, but we tried to destruct them already, give error
+
+	egrep '\+|mapper' $BLOCK_DATA | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
+	do
+		real_part=${part/+/}
+		if [ -b "$real_part" ]
+		then
+			debug "Attempting destruction of device $part (type $part_type)"
+			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part")
+			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
+			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
+			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $part")
+		else
+			debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+		fi
+	done
+
+
+	# TODO: phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
+
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		if [ -b "$part" -a "$fs_create" = yes ]
+		then
+			# don't ask to mount. we take care of all that ourselves in the next phase
+			process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params
+		fi
+	done < $TMP_FILESYSTEMS
+
+
+	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+	sort -t \  -k 2 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		if [ "$part_type" = raw ]
+		then
+			debug "mounting/swaponning $part"
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+		fi
+	done
+
+
+}
+
+
+# make a filesystem on a blockdevice and mount if needed.
+# $1 partition
+# $2 fs_type
+# $3 fs_create     (optional. defaults to yes)
+# $4 fs_mountpoint (optional. defaults to no_mountpoint)
+# $5 fs_mount      (optional. defaults to no_mount)
+# $6 fs_opts       (optional. defaults to no_opts)
+# $7 fs_label      (optional. defaults to no_label or for lvm volumes who need a label (VG's and LV's) vg1,vg2,lv1 etc).  Note that if there's no label for a VG you probably did something wrong, because you probably want LV's on it so you need a label for the VG.
+# $8 fs_params     (optional. defaults to no_params)
+
+process_filesystem ()
+{
+	[ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1"
+	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
+	debug "process_filesystem $@"
+        part=$1
+        fs_type=$2
+	fs_create=${3:-yes}
+	fs_mountpoint=${4:-no_mountpoint}
+	fs_mount=${5:-no_mount}
+	fs_opts=${6:-no_opts}
+	fs_label=${7:-no_label}
+	fs_params=${8:-no_params}
+
+	# Create the FS
+	if [ "$fs_create" = yes ]
+	then
+		if ! program=`get_filesystem_program $fs_type`
+		then
+			show_warning "process_filesystem error" "Cannot determine filesystem program for $fs_type on $part.  Not creating this FS"
+			return 1
+		fi
+		[ "$fs_label" = no_label ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
+
+		ret=0
+		#TODO: health checks on $fs_params etc
+		case ${_fstype} in #TODO: implement label, opts etc decently
+			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
+			jfs)      yes | mkfs.jfs $part        $opts >$LOG 2>&1; ret=$? ;;
+			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
+			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
+			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
+			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
+			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
+			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
+			          fs_params=${fs_params//_/ }
+			          cryptsetup $fs_params $opts luksFormat $part >$LOG 2>&1; ret=$?
+			          cryptsetup       luksOpen $part /dev/mapper/$fs_label >$LOG 2>&1; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
+			lvm-pv)   pvcreate $opts $part              >$LOG 2>&1; ret=$? ;;
+			lvm-vg)   # $fs_params: ':'-separated list of PV's
+			          vgcreate $opts $_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
+			lvm-lv)   # $fs_params = size string (eg '5G')
+			          lvcreate -L $fs_params $fs_opts -n $_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+			# don't handle anything else here, we will error later
+		esac
+		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
+		sleep 2
+	fi
+
+	# Mount it, if requested.  Note that it's your responsability to figure out if you want this or not before calling me.  This will only work for 'raw' filesystems (ext,reiser,xfs, swap etc. not lvm stuff,dm_crypt etc)
+	if [ "$fs_mount" = runtime -o "$fs_mount" = target ]
+	then
+		if [ "$fs_type" = swap ]
+		then
+			debug "swaponning $part"
+			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
+		else
+			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
+			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
+			debug "mounting $part on $dst"
+			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
+		fi
+	fi
+
+
+	# Add to temp fstab, if not already there.
+	if [ $fs_mountpoint != no_mountpoint -a $fs_mount = target ]
+	then
+		local _uuid="$(getuuid $part)"
+		if [ -n "${_uuid}" ]; then
+			_device="UUID=${_uuid}"
+		fi
+		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB
+		then
+			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
+			if [ "$FSTYPE" = "swap" ]; then
+				echo "0" >>$TMP_FSTAB
+			else
+				echo "1" >>$TMP_FSTAB
+			fi
+		fi
+	fi
 
 	return 0
+}
+
+
+# $1 filesystem type
+get_filesystem_program ()
+{
+	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
+	[ $1 = swap     ] && echo mkswap     && return 0
+	[ $1 = ext2     ] && echo mkfs.ext2  && return 0
+	[ $1 = ext3     ] && echo mkfs.ext3  && return 0
+	[ $1 = reiserfs ] && echo mkreiserfs && return 0
+	[ $1 = xfs      ] && echo mkfs.xfs   && return 0
+	[ $1 = jfs      ] && echo mkfs.jfs   && return 0
+	[ $1 = vfat     ] && echo mkfs.vfat  && return 0
+	[ $1 = lvm-pv   ] && echo pvcreate   && return 0
+	[ $1 = lvm-vg   ] && echo vgcreate   && return 0
+	[ $1 = lvg-lv   ] && echo lvcreate   && return 0
+	[ $1 = dm_crypt ] && echo cryptsetup && return 0
+	return 1
+}
+
+
+# $1 blockdevice
+# $2 standard SI for 1000*n, IEC for 1024*n (optional. defaults to SI)
+# output will be in $BLOCKDEVICE_SIZE in MB/MiB
+get_blockdevice_size ()
+{
+	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
+	standard=${2:-SI}
+
+	if [ "$2" = SI ]
+	then
+		BLOCKDEVICE_SIZE=$(hdparm -I $1 | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
+	elif [ "$2" = IEC ]
+	then
+		blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
+		#NOTE: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
+		BLOCKDEVICE_SIZE=$(($blocks/1024))
+	fi
 }
