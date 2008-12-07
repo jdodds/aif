@@ -368,11 +368,13 @@ process_filesystems ()
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
 
-	# phase 1: deconstruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
+	# phase 1: destruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
 	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $BLOCK_DATA ? that needs to be cleaned up too.
-	sort -t \  -k 2 test $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+
+	sort -t \  -k 2 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
+		debug "umounting/swapoffing $part"
 		if [ "$fs_type" = swap ]
 		then
 			swapoff $part # could be that it was not swappedon yet.  that's not a problem at all.
@@ -404,55 +406,114 @@ process_filesystems ()
 #		debug "All entries processed..."
 #	fi
 
-	# phase 2: deconstruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
-	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should deconstruct things we need and who are in /etc/mtab or something.
-	# targets for deconstruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
-	# after deconstructing. the parent must be updated to reflect the vanished child.
+
+	# phase 2: destruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
+	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should destruct things we need and who are in /etc/mtab or something.
+	# targets for destruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
+	# after destructing. the parent must be updated to reflect the vanished child.
+
+	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $BLOCK_DATA, or even better by using finddisks and only doing it if they are in $BLOCK_DATA  ) and attempt to destruct.
+	#  do that a few times and the ones that blocked because something else on it will probable have become freed and possible to destruct
 
 	# TODO: do this as long as devices in this list remains and exist physically
-	# TODO: abort when there still are physical devices listed, but we tried to deconstruct them already, give error
+	# TODO: abort when there still are physical devices listed, but we tried to destruct them already, give error
 
 	egrep '\+|mapper' $BLOCK_DATA | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
 	do
 		real_part=${part/+/}
 		if [ -b "$real_part" ]
 		then
-			debug "Attempting deconstruction of device $part (type $part_type)"
-			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice deconstruction" "Could not pvremove $part") 
-			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice deconstruction" "Could not vgremove -f $part")
-			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice deconstruction" "Could not lvremove -f $part")
-			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice deconstruction" "Could not cryptsetup luksClose $part")
+			debug "Attempting destruction of device $part (type $part_type)"
+			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part")
+			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
+			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
+			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $part")
 		else
-			debug "Skipping deconstruction of device $part (type $part_type) because it doesn't exist"
+			debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 		fi
 	done
 
+
 	# TODO: phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 
-	# TODO: phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		if [ -b "$part" -a "$fs_create" = yes ]
+		then
+			# don't ask to mount. we take care of all that ourselves in the next phase
+			process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params
+		fi
+	done < $TMP_FILESYSTEMS
+
+
+	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+	sort -t \  -k 2 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		debug "mounting/swaponning $part"
+		process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+	done
 
 
 }
 
-# make a filesystem on a blockdevice and mount if requested.
+
+# make a filesystem on a blockdevice and mount if needed.
+# $1 partition
+# $2 fs_type
+# $3 fs_create     (optional. defaults to yes)
+# $4 fs_mountpoint (optional. defaults to no_mountpoint)
+# $5 fs_mount      (optional. defaults to no_mount)
+# $6 fs_opts       (optional. defaults to no_opts)
+# $7 fs_label      (optional. defaults to no_label or for lvm volumes who need a label (VG's and LV's) vg1,vg2,lv1 etc).  Note that if there's no label for a VG you probably did something wrong, because you probably want LV's on it so you need a label for the VG.
+# $8 fs_params     (optional. defaults to no_params)
+
 process_filesystem ()
 {
-	[ -z "$1" ] && die_error "process_filesystem needs a FS entry"
-	debug "process_filesystem $1"
-	line=$1
-        BLOCK=$( echo $line | cut -d: -f 1)
-        FSTYPE=$(echo $line | cut -d: -f 2)
-        MP=$(    echo $line | cut -d: -f 3) # can be null for lvm/dm_crypt stuff
-        DOMKFS=$(echo $line | cut -d: -f 4)
-        DOMNT=$( echo $line | cut -d: -f 5)
-        OPTS=$(  echo $line | cut -d: -f 6)
+	[ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1"
+	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
+	debug "process_filesystem $@"
+        part=$1
+        fs_type=$2
+	fs_create=${3:-yes}
+	fs_mountpoint=${4:-no_mountpoint}
+	fs_mount=${5:-no_mount}
+	fs_opts=${6:-no_opts}
+	fs_label=${7:-no_label}
+	fs_params=${8:-no_params}
 
-	if [ "$DOMKFS" = yes ]
+	# Create the FS
+	if [ "$fs_create" = yes ]
 	then
-		 _mkfs $BLOCK $FSTYPE $OPTS || return 1
+		if ! program=`get_filesystem_program $fs_type`
+		then
+			show_warning "process_filesystem error" "Cannot determine filesystem program for $fs_type on $part.  Not creating this FS"
+			return 1
+		fi
+		[ "$fs_label" = no_label ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
+
+		ret=0
+		case ${_fstype} in
+			xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
+			jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
+			reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
+			ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
+			ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+			vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+			swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
+			dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
+			          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
+			          cryptsetup       luksOpen $BLOCK $dst >$LOG 2>&1; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $BLOCK on $dst" )
+			lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
+			lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
+			lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+			# don't handle anything else here, we will error later
+		esac
+		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
+		sleep 2
 	fi
 
-	if [ "$DOMNT" = runtime -o "$DOMNT" = target ]
+	# Mount it, if requested
+	if [ "$DOMNT" = runtime -o "$DOMNT" = target ] #TODO: ONLY RAW TYPE I THINK
 	then
 		if [ "$FSTYPE" = swap ]
 		then
@@ -461,7 +522,6 @@ process_filesystem ()
 		elif [ "$FSTYPE" = dm_crypt ]
 		then
 			debug "cryptsetup luksOpen $BLOCK $dst"
-			cryptsetup luksOpen $BLOCK $dst >$LOG 2>&1 || ( show_warning 'cryptsetup' "Error luksOpening $BLOCK on $dst"  ;  return 1 )
 		else
 			[ "$DOMNT" = runtime ] && dst=$MP
 			[ "$DOMNT" = target  ] && dst=$var_TARGET_DIR$MP
@@ -470,7 +530,17 @@ process_filesystem ()
 		fi
 	fi
 
-	# add to temp fstab
+			if [ "$fs_type" = swap ]
+		then
+			swapon $part
+		elif [ "$fs_mountpoint" != no_mount ]
+		then
+			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
+			mount $part $fs_mountpoint
+		fi
+
+
+	# Add to temp fstab, if not already there: TODO: check if it's already there
 	if [ $MP != null -a $DOMNT = target ]
 	then
 		local _uuid="$(getuuid $BLOCK)"
@@ -486,39 +556,6 @@ process_filesystem ()
 	fi
 
 	return 0
-
-	local _device=$1
-	local _fstype=$2
-	local _label=$3
-	local opts=$4
-
-	debug "_mkfs: _device: $1, fstype: $2, label: $3, opts: $4"
-	# make sure the fstype is one we can handle TODO: we can use get_filesystem_program for that
-	local knownfs=0
-	for fs in xfs jfs reiserfs ext2 ext3 vfat swap dm_crypt lvm-pv lvm-vg lvm-lv; do
-		[ "${_fstype}" = "${fs}" ] && knownfs=1 && break
-	done
-
-	[ -z "$_label" ] && _label=default #TODO. when creating more then 1 VG we will get errors that it exists already. we should (per type) add incrementing numbers or something
-	[ $knownfs -eq 0 ] && ( show_warning 'mkfs' "unknown fstype ${_fstype} for ${_device}" ; return 1 )
-	local ret
-	case ${_fstype} in
-		xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
-		jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
-		reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
-		ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
-		ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-		vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-		swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
-		dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
-		          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
-		lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
-		lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
-		lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
-		# don't handle anything else here, we will error later
-	esac
-	[ "$ret" != 0 ] && ( show_warning mkfs "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
-	sleep 2
 }
 
 
@@ -529,15 +566,15 @@ process_filesystem ()
 get_filesystem_program ()
 {
 	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
-	[ $1 = ext2     ] && echo mkfs.ext2 && return 0
-	[ $1 = ext3     ] && echo mkfs.ext3 && return 0
+	[ $1 = ext2     ] && echo mkfs.ext2  && return 0
+	[ $1 = ext3     ] && echo mkfs.ext3  && return 0
 	[ $1 = reiserfs ] && echo mkreiserfs && return 0
-	[ $1 = xfs      ] && echo mkfs.xfs && return 0
-	[ $1 = jfs      ] && echo mkfs.jfs && return 0
-	[ $1 = vfat     ] && echo mkfs.vfat && return 0
-	[ $1 = lvm-pv   ] && echo pvcreate && return 0
-	[ $1 = lvm-vg   ] && echo vgcreate && return 0
-	[ $1 = lvg-lv   ] && echo lvcreate && return 0
+	[ $1 = xfs      ] && echo mkfs.xfs   && return 0
+	[ $1 = jfs      ] && echo mkfs.jfs   && return 0
+	[ $1 = vfat     ] && echo mkfs.vfat  && return 0
+	[ $1 = lvm-pv   ] && echo pvcreate   && return 0
+	[ $1 = lvm-vg   ] && echo vgcreate   && return 0
+	[ $1 = lvg-lv   ] && echo lvcreate   && return 0
 	[ $1 = dm_crypt ] && echo cryptsetup && return 0
 	return 1
 }
