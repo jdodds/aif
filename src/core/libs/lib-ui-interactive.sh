@@ -90,7 +90,7 @@ interactive_set_clock()
 	ask_datetime
 
 	# save the time
-	date -s $ANSWER_DATETIME || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
+	date -s "$ANSWER_DATETIME" || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
 	/sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
 
 	return 0
