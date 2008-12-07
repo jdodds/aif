@@ -1,5 +1,5 @@
 #!/bin/sh
-depend_procedure core base # esp for auto_{network,locale,fstab} workers
+depend_procedure core base # esp for auto_{network,locale,fstab} and intro workers
 
 
 # This is a port of the original /arch/setup script.  It doesn't use aif phases but uses it's own menu-based flow (phase) control
@@ -37,12 +37,7 @@ start_process ()
 
 	var_UI_TYPE=dia
 
-	notify "Welcome to the Arch Linux Installation program. The install \
-	process is fairly straightforward, and you should run through the options in \
-	the order they are presented. If you are unfamiliar with partitioning/making \
-	filesystems, you may want to consult some documentation before continuing. \
-	You can view all output from commands by viewing your VC7 console (ALT-F7). \
-	ALT-F1 will bring you back here."
+	execute worker intro
 
 	# menu item tracker- autoselect the next item
 	NEXTITEM="1"
@@ -191,6 +186,17 @@ worker_select_source ()
 	#TODO: how to handle user going here again? discard previous settings, warn him that he already done it?
 	interactive_select_source && return 0
 	return 1
+}
+
+
+worker_intro ()
+{
+	notify "Welcome to the Arch Linux Installation program. The install \
+	process is fairly straightforward, and you should run through the options in \
+	the order they are presented. If you are unfamiliar with partitioning/making \
+	filesystems, you may want to consult some documentation before continuing. \
+	You can view all output from commands by viewing your VC7 console (ALT-F7). \
+	ALT-F1 will bring you back here."
 }
 
 

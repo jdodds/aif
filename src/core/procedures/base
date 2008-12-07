@@ -7,8 +7,8 @@ var_PKG_FILE=/home/arch/aif/runtime/package-list
 var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific procedures) ######
-#TODO: warn user that this is a low-interactivity 'common-defaults' installation. ask the user if he really, really wants this, we will probably override his data
 phase_preparation=(\
+	intro \
 	select_source \
 	runtime_network \
 	runtime_packages)
@@ -34,6 +34,16 @@ phase_finish=(msg_report)
 
 
 ###### Workers ( can be overridden by more specific procedures) ######
+worker_intro ()
+{
+	ask_yesno "This is a low-interactivity 'common defaults' installation.  Do you really want to do this?  We may overwrite your data."
+	if [ $? -gt 0 ]
+	then
+		die_error "User aborted base profile execution"
+	fi
+}
+
+
 worker_select_source ()
 {
 	var_PKG_SOURCE_TYPE='cd'
