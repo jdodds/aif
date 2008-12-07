@@ -302,7 +302,15 @@ _dia_ask_number ()
 		then
 			show_warning "$ANSWER_NUMBER is not a number! try again."
 		else
-			break
+			if [ -n "$3" -a $ANSWER_NUMBER -gt $3 ]
+			then
+				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
+			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
+			then
+				show_warning "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
+			else
+				break
+			fi
 		fi
 	done
 	echo "$ANSWER_NUMBER"

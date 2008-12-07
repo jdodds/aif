@@ -99,79 +99,52 @@ interactive_set_clock()
 
 interactive_autoprepare()
 {
-    DISCS=$(finddisks)
-    if [ $(echo $DISCS | wc -w) -gt 1 ]; then
-        notify "Available Disks:\n\n$(_getavaildisks)\n"
-        ask_option no "Select the hard drive to use" $(finddisks 1 _) || return 1
-        DISC=$ANSWER_OPTION
-    else
-        DISC=$DISCS
-    fi
-    SET_DEFAULTFS=""
-    BOOT_PART_SET=""
-    SWAP_PART_SET=""
-    ROOT_PART_SET=""
-    CHOSEN_FS=""
-    # get just the disk size in 1000*1000 MB
-    DISC_SIZE=$(hdparm -I /dev/sda | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
-    while [ "$SET_DEFAULTFS" = "" ]; do
-        FSOPTS="ext2 ext2 ext3 ext3"
-        [ "$(which mkreiserfs 2>/dev/null)" ] && FSOPTS="$FSOPTS reiserfs Reiser3"
-        [ "$(which mkfs.xfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS xfs XFS"
-        [ "$(which mkfs.jfs 2>/dev/null)" ]   && FSOPTS="$FSOPTS jfs JFS"
-        while [ "$BOOT_PART_SET" = "" ]; do
-            ask_string "Enter the size (MB) of your /boot partition.  Minimum value is 16.\n\nDisk space left: $DISC_SIZE MB" "32" || return 1
-            BOOT_PART_SIZE=$ANSWER_STRING
-            if [ "$BOOT_PART_SIZE" = "" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$BOOT_PART_SIZE" -ge "$DISC_SIZE" -o "$SBOOT_PART_SIZE" = "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                   elif [ "$BOOT_PART_SIZE" -lt "16" ];
-                   then
-                   	notify "ERROR: You have entered a too small size, please enter again."
-                else
-                    BOOT_PART_SET=1
-                fi
-            fi
-        done
-        DISC_SIZE=$(($DISC_SIZE-$BOOT_PART_SIZE))
-        while [ "$SWAP_PART_SET" = "" ]; do
-            ask_string "Enter the size (MB) of your swap partition.  Minimum value is > 0.\n\nDisk space left: $DISC_SIZE MB" "256" || return 1
-            SWAP_PART_SIZE=$ANSWER_STRING
-            if [ "$SWAP_PART_SIZE" = "" -o  "$SWAP_PART_SIZE" -le "0" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$SWAP_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                else
-                    SWAP_PART_SET=1
-                fi
-            fi
-        done
-        DISC_SIZE=$(($DISC_SIZE-$SWAP_PART_SIZE))
-        while [ "$ROOT_PART_SET" = "" ]; do
-            ask_string "Enter the size (MB) of your / partition.  The /home partition will use the remaining space.\n\nDisk space left:  $DISC_SIZE MB" "7500" || return 1
-            ROOT_PART_SIZE=$ANSWER_STRING
-            if [ "$ROOT_PART_SIZE" = "" -o "$ROOT_PART_SIZE" -le "0" ]; then
-                notify "ERROR: You have entered an invalid size, please enter again."
-            else
-                if [ "$ROOT_PART_SIZE" -ge "$DISC_SIZE" ]; then
-                    notify "ERROR: You have entered a too large size, please enter again."
-                else
-                    ask_yesno "$(($DISC_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" && ROOT_PART_SET=1
-                fi
-            fi
-        done
-        while [ "$CHOSEN_FS" = "" ]; do
-            ask_option "Select a filesystem for / and /home:" $FSOPTS || return 1
-            FSTYPE=$ANSWER_OPTION
-            ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" && CHOSEN_FS=1
-        done
-        SET_DEFAULTFS=1
-    done
+	DISCS=$(finddisks)
+	if [ $(echo $DISCS | wc -w) -gt 1 ]
+	then
+		notify "Available Disks:\n\n$(_getavaildisks)\n"
+		ask_option no "Select the hard drive to use" $(finddisks 1 _) || return 1
+		DISC=$ANSWER_OPTION
+	else
+		DISC=$DISCS
+	fi
 
-    ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
+	get_blockdevice_size $DISC SI
+	FSOPTS=
+	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+
+	ask_number "Enter the size (MB) of your /boot partition.  Recommended size: 100MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 16 $BLOCKDEVICE_SIZE || return 1
+	BOOT_PART_SIZE=$ANSWER_NUMBER
+
+	BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$BOOT_PART_SIZE))
+
+	ask_number "Enter the size (MB) of your swap partition.  Recommended size: 256MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+	SWAP_PART_SIZE=$ANSWER_NUMBER
+
+        BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$SWAP_PART_SIZE))
+
+	ROOT_PART_SET=""
+	while [ "$ROOT_PART_SET" = "" ]
+	do
+		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+		ROOT_PART_SIZE=$ANSWER_NUMBER
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" && ROOT_PART_SET=1
+        done
+
+	CHOSEN_FS=""
+	while [ "$CHOSEN_FS" = "" ]
+	do
+		ask_option "Select a filesystem for / and /home:" $FSOPTS || return 1
+		FSTYPE=$ANSWER_OPTION
+		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
+        done
+
+	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
 
 	# we assume a /dev/hdX format (or /dev/sdX)

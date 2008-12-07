@@ -576,11 +576,20 @@ get_filesystem_program ()
 
 
 # $1 blockdevice
-# output will be in $BLOCKDEVICE_SIZE in MB
+# $2 standard SI for 1000*n, IEC for 1024*n (optional. defaults to SI)
+# output will be in $BLOCKDEVICE_SIZE in MB/MiB
 get_blockdevice_size ()
 {
 	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
-	blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
-	#NOTE: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
-	BLOCKDEVICE_SIZE=$(($blocks/1024))
+	standard=${2:-SI}
+
+	if [ "$2" = SI ]
+	then
+		BLOCKDEVICE_SIZE=$(hdparm -I $1 | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
+	elif [ "$2" = IEC ]
+	then
+		blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
+		#NOTE: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
+		BLOCKDEVICE_SIZE=$(($blocks/1024))
+	fi
 }
