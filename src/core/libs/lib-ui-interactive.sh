@@ -227,7 +227,9 @@ interactive_partition() {
 
 
 # create new, delete, or edit a filesystem
-interactive_filesystem () #TODO: make it possible to edit 1 specific aspect of a FS (eg mountpoint, type etc)
+# At first I had the idea of a menu where all properties of a filesystem and you could pick one to update only that one (eg mountpoint, type etc)\
+# but I think it's better to go through them all and by default always show the previous choice.
+interactive_filesystem ()
 {
 	part=$1 # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
 	part_type=$2 # a part should always have a type
