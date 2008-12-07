@@ -175,7 +175,7 @@ worker_prepare_disks()
 # prompts user to set hardware clock and timezone
 #
 # params: none
-set_clock()   
+worker_set_clock()
 {
 	interactive_set_clock
 }
