@@ -405,8 +405,6 @@ interactive_filesystems() {
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
-	# Let the user make filesystems and mountpoints
-	USERHAPPY=0
 	BLOCK_DATA=/home/arch/aif/runtime/.blockdata
 
 	# $BLOCK_DATA entry. easily parsable.:
@@ -415,147 +413,116 @@ interactive_filesystems() {
 	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
 
 	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
-	while [ "$USERHAPPY" = 0 ]
+
+	ALLOK=0
+	while [ "$ALLOK" = 0 ]
 	do
-		# generate a menu based on the information in the datafile
-		menu_list=
-		while read part type label fs
+		# Let the user make filesystems and mountpoints
+		USERHAPPY=0
+
+		while [ "$USERHAPPY" = 0 ]
 		do
-			infostring="type:$type,label:$label,fs:$fs"
-			[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
-			menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
-		done < $BLOCK_DATA
+			# generate a menu based on the information in the datafile
+			menu_list=
+			while read part type label fs
+			do
+				infostring="type:$type,label:$label,fs:$fs"
+				[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
+				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
+			done < $BLOCK_DATA
 
-		ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
-		[ $? -gt 0                 ] && USERHAPPY=1 && break
-		[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
+			ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+			[ $? -gt 0                 ] && USERHAPPY=1 && break
+			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
-		part=$ANSWER_OPTION
+			part=$ANSWER_OPTION
 
-		declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
-		declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
-		part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
-		part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
-		fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
-		[ "$part_label" == no_label ] && part_label=
-		[ "$fs"         == no_fs    ] && fs=
+			declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
+			declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
+			part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
+			part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
+			fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
+			[ "$part_label" == no_label ] && part_label=
+			[ "$fs"         == no_fs    ] && fs=
 
-		if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
-		then
-			list=
-			if [ -n "$fs" ]
+			if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 			then
-				for lv in `sed 's/|/ /g' <<< $fs`
-				do
-					label=$(cut -d ';' -f 4 <<< $lv)
-					mountpoint=$(cut -d ';' -f 2 <<< $lv)
-					list="$list $label $mountpoint"
-				done
-			else
-				list="XXX no-LV's-defined-yet-make-a-new-one"
-			fi
-			list="$list empty NEW"
-			ask_option empty "Edit/create new LV's on this VG:" $list
-			if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
-			then
-				# a new LV must be created on this VG
-				if interactive_filesystem $part $part_type $part_label '' 
+				list=
+				if [ -n "$fs" ]
 				then
-					[ -z "$fs" ] && fs=$NEW_FILESYSTEM
-					[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+					for lv in `sed 's/|/ /g' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						mountpoint=$(cut -d ';' -f 2 <<< $lv)
+						list="$list $label $mountpoint"
+					done
+				else
+					list="XXX no-LV's-defined-yet-make-a-new-one"
+				fi
+				list="$list empty NEW"
+				ask_option empty "Edit/create new LV's on this VG:" $list
+				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
+				then
+					# a new LV must be created on this VG
+					if interactive_filesystem $part $part_type $part_label '' 
+					then
+						[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+						[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+					fi
+				else
+					# an existing LV will be edited and it's settings updated
+					for lv in `sed '/|/ /' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
+					done
+					interactive_filesystem $part $part_type $part_label "$found_lv"
+					fs=
+					for lv in `sed '/|/ /' <<< $fs`
+					do
+						label=$(cut -d ';' -f 4 <<< $lv)
+						add=$lv
+						[ "$label" = "$ANSWER_OPTION" ] && add=$NEW_FILESYSTEM
+						[ -z "$fs" ] && fs=$add
+						[ -n "$fs" ] && fs="$fs|$add"
+					done
 				fi
 			else
-				# an existing LV will be edited and it's settings updated
-				for lv in `sed '/|/ /' <<< $fs`
-				do
-					label=$(cut -d ';' -f 4 <<< $lv)
-					[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
-				done
-				interactive_filesystem $part $part_type $part_label "$found_lv"
-				fs=
-				for lv in `sed '/|/ /' <<< $fs`
-				do
-					label=$(cut -d ';' -f 4 <<< $lv)
-					add=$lv
-					[ "$label" = "$ANSWER_OPTION" ] && add=$NEW_FILESYSTEM
-					[ -z "$fs" ] && fs=$add
-					[ -n "$fs" ] && fs="$fs|$add"
-				done
+				interactive_filesystem $part $part_type $part_label $fs
+				[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
 			fi
-		else
-			interactive_filesystem $part $part_type $part_label $fs
-			[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
-		fi
 
-		# update the menu # NOTE that part_type remains raw for basic filesystems!
-		[ -z "$part_label" ] && part_label=no_label
-		[ -z "$fs"         ] && fs=no_fs
-		sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
+			# update the menu # NOTE that part_type remains raw for basic filesystems!
+			[ -z "$part_label" ] && part_label=no_label
+			[ -z "$fs"         ] && fs=no_fs
+			sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
+
+		done
+
+		# Check all conditions that need to be fixed and ask the user if he wants to go back and correct them
+		errors=
+		warnings=
+
+		grep -q ';/boot;' || warnings="$warnings\n-No separate /boot filesystem"
+		grep -q ';/;'     || errors="$errors\n-No filesystem with mountpoint /"
+		grep -q ' swap;' || grep -q '|swap;' || warnings="$warnings\n-No swap partition defined"
+
+		if [ -n "$errors$warnings" ]
+		then
+			str="The following issues have been detected:\n"
+			[ -n "$errors" ] && str="$str\n - Errors: $errors"
+			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
+			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1
+		fi
 
 	done
 
-	#TODO: If the user has forgotten one or more fundamental ones, send him back to the main editor
-	ALLOK=true
-	# TODO: check all conditions that would make ALLOK untrue again
-	while [ "$ALLOK" != "true" ]; do
-
-        _dia_DIALOG --menu "Select the partition to use as swap" 21 50 13 NONE - $PARTS 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-        if [ "$PART" != "NONE" ]; then
-            DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:swap:swap:$DOMKFS" >>/home/arch/aif/runtime/.parts
-        fi
-
-        _dia_DIALOG --menu "Select the partition to mount as /" 21 50 13 $PARTS 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-        PART_ROOT=$PART
-        # Select root filesystem type
-        _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-        FSTYPE=$(cat $ANSWER)
-        DOMKFS="no"
-        ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-        echo "$PART:$FSTYPE:/:$DOMKFS" >>/home/arch/aif/runtime/.parts
-
-        #
-        # Additional partitions
-        #
-        _dia_DIALOG --menu "Select any additional partitions to mount under your new root (select DONE when finished)" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
-        PART=$(cat $ANSWER)
-        while [ "$PART" != "DONE" ]; do
-            PARTS="$(echo $PARTS | sed -e "s#${PART}\ _##g")"
-            # Select a filesystem type
-            _dia_DIALOG --menu "Select a filesystem for $PART" 13 45 6 $FSOPTS 2>$ANSWER || return 1
-            FSTYPE=$(cat $ANSWER)
-            MP=""
-            while [ "${MP}" = "" ]; do
-                _dia_DIALOG --inputbox "Enter the mountpoint for $PART" 8 65 "/boot" 2>$ANSWER || return 1
-                MP=$(cat $ANSWER)
-                if grep ":$MP:" /home/arch/aif/runtime/.parts; then
-                    notify "ERROR: You have defined 2 identical mountpoints! Please select another mountpoint."
-                    MP=""
-                fi
-            done
-            DOMKFS="no"
-            ask_yesno "Would you like to create a filesystem on $PART?\n\n(This will overwrite existing data!)" && DOMKFS="yes"
-            echo "$PART:$FSTYPE:$MP:$DOMKFS" >>file
-            _dia_DIALOG --menu "Select any additional partitions to mount under your new root" 21 50 13 $PARTS DONE _ 2>$ANSWER || return 1
-            PART=$(cat $ANSWER)
-        done
-        ask_yesno "Would you like to create and mount the filesytems like this?\n\nSyntax\n------\nDEVICE:TYPE:MOUNTPOINT:FORMAT\n\n$(for i in $(cat /home/arch/aif/runtime/.parts); do echo "$i\n";done)"  && PARTFINISH="DONE"
-    done
-
-	# TODO: should not need this anymore    target_umountall
-	# TODO: prepend $var_TARGET_DIR before handing over
-	# TODO: convert our format to what process_filesystems will understand
-
 
 	process_filesystems && notify "Partitions were successfully created." && return 0
-	show_warning "Something went wrong while processing the filesystems"
+	show_warning "Filesystem processing" "Something went wrong while processing the filesystems"
 	return 1
 }
+
 
 # select_packages()
 # prompts the user to select packages to install
