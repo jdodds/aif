@@ -561,6 +561,7 @@ process_filesystem ()
 get_filesystem_program ()
 {
 	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
+	[ $1 = swap     ] && echo mkswap     && return 0
 	[ $1 = ext2     ] && echo mkfs.ext2  && return 0
 	[ $1 = ext3     ] && echo mkfs.ext3  && return 0
 	[ $1 = reiserfs ] && echo mkreiserfs && return 0

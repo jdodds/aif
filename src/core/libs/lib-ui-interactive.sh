@@ -133,7 +133,7 @@ interactive_autoprepare()
 	do
 		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" && ROOT_PART_SET=1
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
         done
 
 	CHOSEN_FS=""
@@ -257,6 +257,7 @@ interactive_filesystem ()
 
 	# Determine which filesystems/blockdevices are possible for this blockdevice
 	FSOPTS=
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program swap`     &>/dev/null && FSOPTS="$FSOPTS swap Swap"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
 	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
@@ -282,7 +283,7 @@ interactive_filesystem ()
 		fi
 
 		# ask mountpoint, if relevant
-		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt ]]
+		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
 		then
 			default=
 			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
