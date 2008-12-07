@@ -137,6 +137,28 @@ ask_checklist ()
 
 
 
+ask_datetime ()
+{
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		# display and ask to set date/time
+		dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
+		local _date="$(cat $ANSWER)" # form like: 07/12/2008
+		dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
+		local _time="$(cat $ANSWER)" # form like: 15:26:46
+		echo "date: $_date time: $_time" >$LOG
+
+		# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
+		# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
+		# DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss ( date string format, set like date -s $ANSWER_DATETIME)
+		ANSWER_DATETIME="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
+	elif [ "$var_UI_TYPE" = cli ]
+		ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
+		ANSWER_DATETIME=$ANSWER_STRING
+	fi
+}
+
+
 # TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?, maybe a wrapper that wraps all functions
 # ask for a number.
 # $1 question
@@ -188,6 +210,12 @@ ask_string ()
 	[ -z "$1" ] && die_error "ask_string needs a question!"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$1" "$2" "$3"; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$1" "$2" "$3"; return $? ; }
+}
+
+
+ask_timezone () # TODO: how to do this in dia?
+{
+	ANSWER_TIMEZONE=`tzselect`
 }
 
 

@@ -62,45 +62,38 @@ interactive_configure_system()
 # returns: 1 on failure
 interactive_set_clock()   
 {
-    # utc or local?
-	ask_option no "Is your hardware clock in UTC or local time?" \
-        "UTC" " " \
-        "local" " " \
-        || return 1
-    HARDWARECLOCK=$ANSWER_OPTION
+	# utc or local?
+	ask_option no "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
+	HARDWARECLOCK=$ANSWER_OPTION
 
-    # timezone?
-    TIMEZONE=`tzselect` || return 1
+	# timezone?
+	ask_timezone || return 1
+	TIMEZONE=$ANSWER_TIMEZONE
 
+	# set system clock from hwclock - stolen from rc.sysinit
+	local HWCLOCK_PARAMS=""
+	if [ "$HARDWARECLOCK" = "UTC" ]
+	then
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
+	else
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
+	fi
 
-    # set system clock from hwclock - stolen from rc.sysinit
-    local HWCLOCK_PARAMS=""
-    if [ "$HARDWARECLOCK" = "UTC" ]; then
-        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
-    else
-        HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
-    fi  
-    if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]; then
-        /bin/rm -f /etc/localtime
-        /bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-    fi
-    /sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
+	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+	then
+		/bin/rm -f /etc/localtime
+		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+	fi
+	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
 
-    # display and ask to set date/time
-    dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
-    local _date="$(cat $ANSWER)"
-    dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
-    local _time="$(cat $ANSWER)"
-    echo "date: $_date time: $_time" >$LOG
+	# display and ask to set date/time
+	ask_datetime
 
-    # save the time
-    # DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss
-    local _datetime="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
-    echo "setting date to: $_datetime" >$LOG
-    date -s "$_datetime" 2>&1 >$LOG
-    /sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
+	# save the time
+	date -s $ANSWER_DATETIME || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
+	/sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
 
-    return 0
+	return 0
 }
 
 

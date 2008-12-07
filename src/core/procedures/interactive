@@ -1,5 +1,5 @@
 #!/bin/sh
-depend_procedure core base # esp for auto_{network,locale,fstab} workers
+depend_procedure core base # esp for auto_{network,locale,fstab} and set_clock workers
 
 
 # This is a port of the original /arch/setup script.  It doesn't use aif phases but uses it's own menu-based flow (phase) control
@@ -173,16 +173,6 @@ worker_prepare_disks()
         esac
     done
     return $ret
-}
-
-
-# set_clock()
-# prompts user to set hardware clock and timezone
-#
-# params: none
-set_clock()   
-{
-	interactive_set_clock
 }
 
 
