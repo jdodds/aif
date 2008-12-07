@@ -153,6 +153,7 @@ ask_datetime ()
 		# DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss ( date string format, set like date -s $ANSWER_DATETIME)
 		ANSWER_DATETIME="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
 	elif [ "$var_UI_TYPE" = cli ]
+	then
 		ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
 		ANSWER_DATETIME=$ANSWER_STRING
 	fi
