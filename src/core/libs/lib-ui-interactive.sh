@@ -133,7 +133,7 @@ interactive_autoprepare()
 	do
 		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
         done
 
 	CHOSEN_FS=""
@@ -273,7 +273,7 @@ interactive_filesystem ()
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
 		then
-			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
+			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices" #TODO:  ${fsopts[1]} is empty when making an LV on a VG
 			fs_type=${fsopts[0]}
 		else
 			default=

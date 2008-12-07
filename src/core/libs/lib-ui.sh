@@ -329,7 +329,7 @@ _dia_ask_option ()
  
  	DIA_MENU_TITLE=$2
  	shift 2
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER
+	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER #TODO: size not good! dynamically adapt?
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
