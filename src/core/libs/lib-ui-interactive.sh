@@ -288,16 +288,16 @@ interactive_filesystem () #TODO: make it possible to edit 1 specific aspect of a
 
 	# Determine which filesystems/blockdevices are possible for this blockdevice
 	FSOPTS=
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext2  &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.ext3  &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkreiserfs &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.xfs   &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.jfs   &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which mkfs.vfat  &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	[ $part_type = raw                        -o $part_type = dm_crypt ] && which pvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM_Physical_Volume"
-	[ $part_type = lvm-pv                                              ] && which vgcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM_Volumegroup"
-	[ $part_type = lvm-vg                                              ] && which lvcreate   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
-	[ $part_type = raw -o $part_type = lvm-lv                          ] && which cryptsetup &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
+	[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	[ $part_type = raw                        -o $part_type = dm_crypt ] && which `get_filesystem_program lvm-pv`   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM_Physical_Volume"
+	[ $part_type = lvm-pv                                              ] && which `get_filesystem_program lvm-vg`   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM_Volumegroup"
+	[ $part_type = lvm-vg                                              ] && which `get_filesystem_program lvm-lv`   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
+	[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
 		# determine FS
 		fsopts=($FSOPTS);
