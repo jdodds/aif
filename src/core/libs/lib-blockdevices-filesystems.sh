@@ -554,6 +554,9 @@ process_filesystem ()
 	fi
 
 	return 0
+
+#TODO: if target has LVM volumes, copy /etc/lvm/backup to /etc on target (or maybe it can be regenerated with a command, i should look that up)
+
 }
 
 

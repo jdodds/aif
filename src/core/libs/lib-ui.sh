@@ -131,10 +131,9 @@ ask_checklist ()
 {
 	[ -z "$1" ] && die_error "ask_checklist needs a question!"
 	[ -z "$3" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (incl ON/OFF switch)"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_option "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_checklist "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_checklist "$@" ; return $? ; }
 }
-
 
 
 ask_datetime ()

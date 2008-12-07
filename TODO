@@ -1,24 +1,21 @@
 See also the FIXME's and TODO's in the code.
 
-* test refactored disk code
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
 * write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
+* test refactored disk code
 
 Specifically:
 * core/interactive: gui transparancy: interactive autoprepare, package selection
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
-* core/interactive: manual filesystem mountpoints sometimes ok, sometimes filesystem creation is "very fast" and the filesystems are not mounted under /mnt
-* core/interactive or lib-ui: don't echo the name/id of selection options in dia mode
+* lib-ui: don't echo the results, just use the $ANSWER_<foo> variables
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
-* time totally incorrect during install -> filesystem creation date is newer then current date -> on reboot in new system fsck. sometimes even forced reboot. (i've had this with /arch/setup too). a tool to configure the date? run ntp? (not always network available!) -> ASKDEV
-* /home doesn't get made separately in automatic installer. it's not formatted in sfdisk or _mkfs'd.  is this only in virtualbox or elsewhere too?
-
+* find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * involve broader community
@@ -32,12 +29,8 @@ skip that check or something.  Alternatively, maybe just show which steps are do
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
 * bribe devs
-* core/interactive: more control over filesystems (lvm, dm_crypt, choose each FS and each size yourself)
-	when doing lvm install. copy /etc/lvm/backup to /etc on target (or maybe
-	it can be regenerated with a command, i should look that up)
 * core/interactive: when auto-setting up hard disk. show with a bit more detail what is happening (not 'partitioning <disk>' but partitioning, and each FS)
-* core/interactive: do pacman -Sy in the background during early phases, to
-  lessen the wait period before selecting packages
+* core/interactive: do pacman -Sy in the background during early phases, to lessen the wait period before selecting packages
 * write bash completion thing for aif modules/procedures
 
 
