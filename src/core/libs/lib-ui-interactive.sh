@@ -97,7 +97,7 @@ interactive_set_clock()
 }
 
 
-interactive_autoprepare() #TODO: port this to use the $BLOCK_DATA format
+interactive_autoprepare()
 {
     DISCS=$(finddisks)
     if [ $(echo $DISCS | wc -w) -gt 1 ]; then
@@ -178,10 +178,11 @@ interactive_autoprepare() #TODO: port this to use the $BLOCK_DATA format
 	PART_ROOT="${DISC}3"
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
-	echo "${DISC}1:ext2:/boot:yes:target"     >$TMP_FILESYSTEMS
-	echo "${DISC}2:swap:null:yes:target"      >$TMP_FILESYSTEMS
-	echo "${DISC}3:$FSTYPE:/:yes:target"      >$TMP_FILESYSTEMS
-	echo "${DISC}4:$FSTYPE:/home:yes:target"  >$TMP_FILESYSTEMS
+
+	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >$BLOCK_DATA
+	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >$BLOCK_DATA
+	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >$BLOCK_DATA
+	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >$BLOCK_DATA
 
 
 	process_disks       || die_error "Something went wrong while partitioning"
@@ -252,7 +253,7 @@ interactive_filesystem ()
 			fs_label=`      cut -d ';' -f 6 <<< $fs`
 			fs_params=`     cut -d ';' -f 7 <<< $fs`
 			[ "$fs_type"   = no_type   ] && fs_type=
-			[ "$fs_mountpoint"  = no_mount  ] && fs_mountpoint=
+			[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
 			[ "$fs_opts"   = no_opts   ] && fs_opts=
 			[ "$fs_label"  = no_label  ] && fs_label=
 			[ "$fs_params" = no_params ] && fs_params=
@@ -366,7 +367,7 @@ interactive_filesystem ()
 		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
 
 		[ -z "$fs_type"   ] && fs_type=no_type
-		[ -z "$fs_mountpoint"  ] && fs_mountpoint=no_mount
+		[ -z "$fs_mountpoint"  ] && fs_mountpoint=no_mountpoint
 		[ -z "$fs_opts"   ] && fs_opts=no_opts
 		[ -z "$fs_label"  ] && fs_label=no_label
 		[ -z "$fs_params" ] && fs_params=no_params
