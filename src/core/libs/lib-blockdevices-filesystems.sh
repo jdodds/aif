@@ -1,5 +1,21 @@
 #!/bin/sh
 
+
+# FORMAT DEFINITIONS:
+
+# MAIN FORMAT FOR $BLOCK_DATA (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
+# $BLOCK_DATA entry.
+# <blockdevice> type label/no_label <FS-string>/no_fs
+# FS-string:
+# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+# NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
+
+
+# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
+# part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+
+
+
 #TODO: this should be fixed on the installcd.
 modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
 modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
@@ -226,52 +242,6 @@ mapdev() {
 }
 
 
-# _mkfs() taken from setup code and altered.
-# Create and mount filesystems in our destination system directory.
-#
-# args:
-#  $1 device: target block device
-#  $2 fstype: type of filesystem located at the device (or what to create)
-#  $3 label:  label/name for the FS (you can pass an empty string) (optional)
-#  $4 opts:   extra opts for the mkfs program (optional)
-
-
-# returns: 1 on failure
-_mkfs() {
-	local _device=$1
-	local _fstype=$2
-	local _label=$3
-	local opts=$4
-
-	debug "_mkfs: _device: $1, fstype: $2, label: $3, opts: $4"
-	# make sure the fstype is one we can handle
-	local knownfs=0
-	for fs in xfs jfs reiserfs ext2 ext3 vfat swap dm_crypt lvm-pv lvm-vg lvm-lv; do
-		[ "${_fstype}" = "${fs}" ] && knownfs=1 && break
-	done
-
-	[ -z "$_label" ] && _label=default #TODO. when creating more then 1 VG we will get errors that it exists already. we should (per type) add incrementing numbers or something
-	[ $knownfs -eq 0 ] && ( show_warning 'mkfs' "unknown fstype ${_fstype} for ${_device}" ; return 1 )
-	local ret
-	case ${_fstype} in
-		xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
-		jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
-		reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
-		ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
-		ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-		vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-		swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
-		dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
-		          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
-		lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
-		lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
-		lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
-		# don't handle anything else here, we will error later
-	esac
-	[ "$ret" != 0 ] && ( show_warning mkfs "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
-	sleep 2
-}
-
 
 # auto_fstab(). taken from setup
 # preprocess fstab file
@@ -347,46 +317,6 @@ EOF
 }
 
 
-# makes and mounts filesystems #TODO: don't use files but pass variables, integrate this with other functions
-# $1 file with setup
-fix_filesystems_deprecated ()
-{
-	[ -z "$1" -o ! -f "$1" ] && die_error "Fix_filesystems needs a file with the setup structure in it"
-
-	# Umount all things first, umount / last.  After that create/mount stuff again, with / first
-	# TODO: we now rely on the fact that the manual mountpoint selecter uses this order 'swap,/, /<*>'.  It works for now but it's not the most solid
-
-    for line in $(tac $1); do
-        MP=$(echo $line | cut -d: -f 3)
-        umount ${var_TARGET_DIR}${MP}
-    done
-    for line in $(cat $1); do
-        PART=$(echo $line | cut -d: -f 1)
-        FSTYPE=$(echo $line | cut -d: -f 2)
-        MP=$(echo $line | cut -d: -f 3)
-        DOMKFS=$(echo $line | cut -d: -f 4)
-        if [ "$DOMKFS" = "yes" ]; then
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Creating and activating swapspace on $PART"
-            else
-                infofy "Creating $FSTYPE on $PART, mounting to ${var_TARGET_DIR}${MP}"
-            fi
-            _mkfs yes $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        else
-            if [ "$FSTYPE" = "swap" ]; then
-                infofy "Activating swapspace on $PART"
-            else
-                infofy "Mounting $PART to ${var_TARGET_DIR}${MP}"
-            fi
-            _mkfs no $PART $FSTYPE $var_TARGET_DIR $MP || return 1
-        fi
-        sleep 1
-    done
-
-	return 0
-}
-
-
 # file layout:
 #TMP_PARTITIONS
 # disk partition-scheme
@@ -440,16 +370,16 @@ process_filesystems ()
 
 	# phase 1: deconstruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
-
+	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $BLOCK_DATA ? that needs to be cleaned up too.
 	sort -t \  -k 2 test $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
 		then
-			swapoff $part
+			swapoff $part # could be that it was not swappedon yet.  that's not a problem at all.
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
 			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
-			umount $fs_mountpoint
+			umount $fs_mountpoint # could be that this was not mounted yet. no problem.
 		fi
 	done
 
@@ -497,27 +427,12 @@ process_filesystems ()
 		fi
 	done
 
-	# TODO: phase 3: create all blockdevices in the correct order (for each fs, the underlying block device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc, but all device mapper devices need attention)
+	# TODO: phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 
 	# TODO: phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
-	# reorder file by strlen of mountpoint (or alphabetically), so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good -> sort -t \  -k 2
+
 
 }
-
-# NOTE:  beware, the 'mount?' for now just matters for the location (if 'target', the target path gets prepended)
-
-# FORMAT DEFINITION:
-
-# MAIN FORMAT FOR $BLOCK_DATA (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
-# $BLOCK_DATA entry.
-# <blockdevice> type label/no_label <FS-string>/no_fs
-# FS-string:
-# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
-
-
-# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can be on multiple lines
-# part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
-
 
 # make a filesystem on a blockdevice and mount if requested.
 process_filesystem ()
@@ -571,23 +486,60 @@ process_filesystem ()
 	fi
 
 	return 0
+
+	local _device=$1
+	local _fstype=$2
+	local _label=$3
+	local opts=$4
+
+	debug "_mkfs: _device: $1, fstype: $2, label: $3, opts: $4"
+	# make sure the fstype is one we can handle TODO: we can use get_filesystem_program for that
+	local knownfs=0
+	for fs in xfs jfs reiserfs ext2 ext3 vfat swap dm_crypt lvm-pv lvm-vg lvm-lv; do
+		[ "${_fstype}" = "${fs}" ] && knownfs=1 && break
+	done
+
+	[ -z "$_label" ] && _label=default #TODO. when creating more then 1 VG we will get errors that it exists already. we should (per type) add incrementing numbers or something
+	[ $knownfs -eq 0 ] && ( show_warning 'mkfs' "unknown fstype ${_fstype} for ${_device}" ; return 1 )
+	local ret
+	case ${_fstype} in
+		xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
+		jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
+		reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
+		ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
+		ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+		vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
+		swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
+		dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
+		          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
+		lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
+		lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
+		lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+		# don't handle anything else here, we will error later
+	esac
+	[ "$ret" != 0 ] && ( show_warning mkfs "Error creating filesystem ${_fstype} on ${_device}" ; return 1 )
+	sleep 2
 }
+
+
+
 
 
 # $1 filesystem type
 get_filesystem_program ()
 {
 	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
-	[ $1 = ext2     ] && echo mkfs.ext2
-	[ $1 = ext3     ] && echo mkfs.ext3
-	[ $1 = reiserfs ] && echo mkreiserfs
-	[ $1 = xfs      ] && echo mkfs.xfs
-	[ $1 = jfs      ] && echo mkfs.jfs
-	[ $1 = vfat     ] && echo mkfs.vfat
-	[ $1 = lvm-pv   ] && echo pvcreate
-	[ $1 = lvm-vg   ] && echo vgcreate
-	[ $1 = lvg-lv   ] && echo lvcreate
-	[ $1 = dm_crypt ] && echo cryptsetup
+	[ $1 = ext2     ] && echo mkfs.ext2 && return 0
+	[ $1 = ext3     ] && echo mkfs.ext3 && return 0
+	[ $1 = reiserfs ] && echo mkreiserfs && return 0
+	[ $1 = xfs      ] && echo mkfs.xfs && return 0
+	[ $1 = jfs      ] && echo mkfs.jfs && return 0
+	[ $1 = vfat     ] && echo mkfs.vfat && return 0
+	[ $1 = lvm-pv   ] && echo pvcreate && return 0
+	[ $1 = lvm-vg   ] && echo vgcreate && return 0
+	[ $1 = lvg-lv   ] && echo lvcreate && return 0
+	[ $1 = dm_crypt ] && echo cryptsetup && return 0
+	return 1
 }
 
 
