@@ -434,6 +434,8 @@ generate_filesystem_list ()
 # process all entries in $BLOCK_DATA, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
 process_filesystems ()
 {
+	debug "process_filesystems Called.  checking all entries in $BLOCK_DATA"
+	rm -f $TMP_FSTAB
 	generate_filesystem_list
 
 	# phase 1: deconstruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
@@ -451,13 +453,34 @@ process_filesystems ()
 		fi
 	done
 
-	# TODO: phase 2: deconstruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
+#	devs_avail=1
+#	while [ $devs_avail = 1 ]
+#	do
+#		devs_avail=0
+#		for part in `findpartitions`
+#		do
+#			if entry=`grep ^$part $BLOCK_DATA`
+#			then
+#				process_filesystem "$entry" && sed -i "/^$part/d" $BLOCK_DATA && debug "$part processed and removed from $BLOCK_DATA"
+#				devs_avail=1
+#			fi
+#		done
+#	done
+#	entries=`wc -l $BLOCK_DATA`
+#	if [ $entries -gt 0 ]
+#	then
+#		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $BLOCK_DATA`"
+#	else
+#		debug "All entries processed..."
+#	fi
+
+	# phase 2: deconstruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
 	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should deconstruct things we need and who are in /etc/mtab or something.
 	# targets for deconstruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
 	# after deconstructing. the parent must be updated to reflect the vanished child.
 
-# TODO: as long as devices in this list remains and exist physically
-# TODO: abort when there still are physical devices listed, but we tried to deconstruct them already, give error
+	# TODO: do this as long as devices in this list remains and exist physically
+	# TODO: abort when there still are physical devices listed, but we tried to deconstruct them already, give error
 
 	egrep '\+|mapper' $BLOCK_DATA | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
 	do
@@ -478,31 +501,7 @@ process_filesystems ()
 
 	# TODO: phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 	# reorder file by strlen of mountpoint (or alphabetically), so that we don't get 'overridden' mountpoints (eg you don't mount /a/b/c and then /a/b.  checking whether the parent dir exists is not good -> sort -t \  -k 2
-	 sort -t \  -k 2 test
 
-
-	debug "process_filesystems Called.  checking all entries in $BLOCK_DATA"
-	rm -f $TMP_FSTAB
-	devs_avail=1
-	while [ $devs_avail = 1 ]
-	do
-		devs_avail=0
-		for part in `findpartitions`
-		do
-			if entry=`grep ^$part $BLOCK_DATA`
-			then
-				process_filesystem "$entry" && sed -i "/^$part/d" $BLOCK_DATA && debug "$part processed and removed from $BLOCK_DATA"
-				devs_avail=1
-			fi
-		done
-	done
-	entries=`wc -l $BLOCK_DATA`
-	if [ $entries -gt 0 ]
-	then
-		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $BLOCK_DATA`"
-	else
-		debug "All entries processed..."
-	fi
 }
 
 # NOTE:  beware, the 'mount?' for now just matters for the location (if 'target', the target path gets prepended)
