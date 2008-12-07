@@ -358,6 +358,13 @@ interactive_filesystem ()
 			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
 			fs_params=$ANSWER_STRING
 		fi
+		if [ "$fs_type" = dm_crypt ]
+		then
+			[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
+			[ -n "$fs_params" ] && default="${fs_params//_/ }"
+			ask_string "Enter the options for this $fs_type on $part" "$default" || return 1
+			fs_params="${ANSWER_STRING// /_}"
+		fi
 
 		# ask opts
 		default=
@@ -406,7 +413,7 @@ interactive_filesystems() {
 	# $BLOCK_DATA entry. easily parsable.:
 	# <blockdevice> type label/no_label <FS-string>/no_fs
 	# FS-string:
-	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
 
 	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
 

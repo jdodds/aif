@@ -449,8 +449,11 @@ process_filesystems ()
 	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 	sort -t \  -k 2 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
-		debug "mounting/swaponning $part"
-		process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+		if [ "$part_type" = raw ]
+		then
+			debug "mounting/swaponning $part"
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+		fi
 	done
 
 
@@ -492,74 +495,66 @@ process_filesystem ()
 		[ "$fs_label" = no_label ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
 		ret=0
-		case ${_fstype} in
-			xfs)      mkfs.xfs -f ${_device}           $opts >$LOG 2>&1; ret=$? ;;
-			jfs)      yes | mkfs.jfs ${_device}        $opts >$LOG 2>&1; ret=$? ;;
-			reiserfs) yes | mkreiserfs ${_device}      $opts >$LOG 2>&1; ret=$? ;;
-			ext2)     mke2fs "${_device}"              $opts >$LOG 2>&1; ret=$? ;;
-			ext3)     mke2fs -j ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-			vfat)     mkfs.vfat ${_device}             $opts >$LOG 2>&1; ret=$? ;;
-			swap)     mkswap ${_device}                $opts >$LOG 2>&1; ret=$? ;;
-			dm_crypt) [ -z "$opts" ] && opts='-c aes-xts-plain -y -s 512';
-			          cryptsetup $opts luksFormat ${_device} >$LOG 2>&1; ret=$? ;;
-			          cryptsetup       luksOpen $BLOCK $dst >$LOG 2>&1; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $BLOCK on $dst" )
-			lvm-pv)   pvcreate $opts ${_device}              >$LOG 2>&1; ret=$? ;;
-			lvm-vg)   vgcreate $opts $_label ${_device}      >$LOG 2>&1; ret=$? ;;
-			lvm-lv)   lvcreate $opts -n $_label ${_device}   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+		#TODO: health checks on $fs_params etc
+		case ${_fstype} in #TODO: implement label, opts etc decently
+			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
+			jfs)      yes | mkfs.jfs $part        $opts >$LOG 2>&1; ret=$? ;;
+			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
+			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
+			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
+			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
+			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
+			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
+			          fs_params=${fs_params//_/ }
+			          cryptsetup $fs_params $opts luksFormat $part >$LOG 2>&1; ret=$? ;;
+			          cryptsetup       luksOpen $part /dev/mapper/$fs_label >$LOG 2>&1; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" )
+			lvm-pv)   pvcreate $opts $part              >$LOG 2>&1; ret=$? ;;
+			lvm-vg)   # $fs_params: ':'-separated list of PV's
+			          vgcreate $opts $_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
+			lvm-lv)   # $fs_params = size string (eg '5G')
+			          lvcreate -L $fs_params $fs_opts -n $_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
 			# don't handle anything else here, we will error later
 		esac
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
 		sleep 2
 	fi
 
-	# Mount it, if requested
-	if [ "$DOMNT" = runtime -o "$DOMNT" = target ] #TODO: ONLY RAW TYPE I THINK
+	# Mount it, if requested.  Note that it's your responsability to figure out if you want this or not before calling me.  This will only work for 'raw' filesystems (ext,reiser,xfs, swap etc. not lvm stuff,dm_crypt etc)
+	if [ "$fs_mount" = runtime -o "$fs_mount" = target ]
 	then
-		if [ "$FSTYPE" = swap ]
+		if [ "$fs_type" = swap ]
 		then
-			debug "swaponning $BLOCK"
-			swapon $BLOCK >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $BLOCK"  ;  return 1 )
-		elif [ "$FSTYPE" = dm_crypt ]
-		then
-			debug "cryptsetup luksOpen $BLOCK $dst"
+			debug "swaponning $part"
+			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
 		else
-			[ "$DOMNT" = runtime ] && dst=$MP
-			[ "$DOMNT" = target  ] && dst=$var_TARGET_DIR$MP
-			debug "mounting $BLOCK on $dst"
-			mount -t $FSTYPE $BLOCK $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $BLOCK on $dst"  ;  return 1 )
+			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
+			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
+			debug "mounting $part on $dst"
+			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
 		fi
 	fi
 
-			if [ "$fs_type" = swap ]
-		then
-			swapon $part
-		elif [ "$fs_mountpoint" != no_mount ]
-		then
-			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
-			mount $part $fs_mountpoint
-		fi
 
-
-	# Add to temp fstab, if not already there: TODO: check if it's already there
-	if [ $MP != null -a $DOMNT = target ]
+	# Add to temp fstab, if not already there.
+	if [ $fs_mountpoint != no_mountpoint -a $fs_mount = target ]
 	then
-		local _uuid="$(getuuid $BLOCK)"
+		local _uuid="$(getuuid $part)"
 		if [ -n "${_uuid}" ]; then
 			_device="UUID=${_uuid}"
 		fi
-		echo -n "$BLOCK ${_mountpoint} $FSTYPE defaults 0 " >>$TMP_FSTAB
-		if [ "$FSTYPE" = "swap" ]; then
-			echo "0" >>$TMP_FSTAB
-		else
-			echo "1" >>$TMP_FSTAB
+		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB
+		then
+			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
+			if [ "$FSTYPE" = "swap" ]; then
+				echo "0" >>$TMP_FSTAB
+			else
+				echo "1" >>$TMP_FSTAB
+			fi
 		fi
 	fi
 
 	return 0
 }
-
-
-
 
 
 # $1 filesystem type
