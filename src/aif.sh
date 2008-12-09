@@ -10,11 +10,11 @@ LOGFILE=/home/arch/aif/runtime/aif.log
 usage ()
 {
 	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
-	msg="$0 -p <procedurename>  Select a procedure\n
-	        -i <dia/cli>        Override interface type (optional)\n
-	        -d                  Explicitly enable debugging (optional)\n
-	        -l                  Explicitly enable logging to file (optional)\n
-	        -h                  Help: show usage  (optional)
+	msg="aif -p <procedurename>  Select a procedure\n
+    -i <dia/cli>         Override interface type (optional)\n
+    -d                   Explicitly enable debugging (optional)\n
+    -l                   Explicitly enable logging to file (optional)\n
+    -h                   Help: show usage  (optional)
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
 Available procedures on the filesystem:
@@ -255,17 +255,6 @@ log "################## START OF INSTALLATION ##################"
 mount -o remount,rw / &>/dev/null 
 
 
-load_module core
-[ "$module" != core -a "$module" != http ] && load_module "$module"
-
-load_procedure "$module" "$procedure"
-
-# Set pacman vars.  allow procedures to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)
-# flags like --noconfirm should not be specified here.  it's up to the procedure to decide the interactivity
-PACMAN=pacman
-PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
-
-
 ### Set configuration values ###
 # note : you're free to use or ignore these in your procedure.  probably you want to use these variables to override defaults in your configure worker
 
@@ -287,18 +276,18 @@ do
 	p)
 		[ -z "$OPTARG" ] && usage && exit 1
 		# note that we allow procedures like http://foo/bar. module -> http:, procedure -> http://foo/bar.
-		if [[ $1 =~ ^http:// ]]
+		if [[ $OPTARG =~ ^http:// ]]
 		then
 			module=http
-			procedure="$1"
-		elif grep -q '\/' <<< "$1"
+			procedure="$OPTARG"
+		elif grep -q '\/' <<< "$OPTARG"
 		then
 			#user specified module/procedure
-			module=`dirname "$1"`
-			procedure=`basename "$1"`
+			module=`dirname "$OPTARG"`
+			procedure=`basename "$OPTARG"`
 		else
 			module=core
-			procedure="$1"
+			procedure="$OPTARG"
 		fi
 		;;
 	h)
@@ -315,6 +304,16 @@ do
 done
 
 [ -z "$procedure" ] && usage && stop_installer 5
+
+load_module core
+[ "$module" != core -a "$module" != http ] && load_module "$module"
+
+load_procedure "$module" "$procedure"
+
+# Set pacman vars.  allow procedures to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)
+# flags like --noconfirm should not be specified here.  it's up to the procedure to decide the interactivity
+PACMAN=pacman
+PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
 start_process
 
