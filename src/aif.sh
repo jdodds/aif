@@ -1,9 +1,10 @@
 #!/bin/bash
 
-###### Set some default variables or get them from the setup script ######
+###### Set some default variables ######
 TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
 LOGFILE=/home/arch/aif/runtime/aif.log
+
 
 ###### Miscalleaneous functions ######
 
@@ -36,9 +37,8 @@ notify ()
 log ()
 {
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
-	echo -e "$str"
 	echo -e "$str" > $LOG
-	echo -e "$str" >> $LOGFILE
+	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 }
 
 
@@ -47,9 +47,8 @@ debug ()
 	str="[DEBUG] $@"
 	if [ "$DEBUG" = "1" ]
 	then
-		echo -e "$str"
 		echo -e "$str" > $LOG
-		echo -e "$str" >> $LOGFILE
+		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 	fi
 }
 
@@ -256,6 +255,13 @@ mount -o remount,rw / &>/dev/null
 ### Set configuration values ###
 # note : you're free to use or ignore these in your procedure.  probably you want to use these variables to override defaults in your configure worker
 
+#DEBUG: don't touch it. it can be set in the env
+arg_ui_type=
+LOG_TO_FILE=0
+module=
+procedure=
+
+
 var_OPTS_STRING=":i:dlp:" # you can override this variable in your procedure.
 while getopts $var_OPTS_STRING OPTION
 do
@@ -267,9 +273,10 @@ do
 		;;
 	d)
 		export DEBUG=1
+		LOG_TO_FILE=1
 		;;
 	l)
-		LOG_TO_FILE=1 #TODO: implement using this variable
+		LOG_TO_FILE=1
 		;;
 	p)
 		[ -z "$OPTARG" ] && usage && exit 1
@@ -290,18 +297,18 @@ do
 		;;
 	h)
 		usage
-		stop_installer
+		exit
 		;;
 	?)
 		usage
-		stop_installer 5
+		exit 5
 		;;
 	esac
 
 	process_args $OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
 done
 
-[ -z "$procedure" ] && usage && stop_installer 5
+[ -z "$procedure" ] && usage && exit 5
 
 load_module core
 [ "$module" != core -a "$module" != http ] && load_module "$module"

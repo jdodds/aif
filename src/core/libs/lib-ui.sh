@@ -14,7 +14,7 @@ DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch 
 # display error message and die
 die_error ()
 {
-	[ -n "$LOGFILE" ] && debug "die_error: ERROR: $@" > $LOGFILE
+	debug "die_error: ERROR: $@"
 	notify "ERROR: $@"
         exit 2
 }
@@ -38,7 +38,7 @@ show_warning ()
         else
                 echo "WARNING: $1"
                 [ "${type}" = msg  ] && echo -e "$2"
-                [ "${type}" = text ] && cat $2 || die_error "Could not cat $2"
+                [ "${type}" = text ] && (cat $2 || die_error "Could not cat $2")
         fi
 
         return 0
@@ -79,10 +79,10 @@ log ()
 	then
 		echo -e "$str" >$LOG
 	else
-		echo -e "$str"
+		echo -e "$str" >$LOG
 	fi
 
-	echo -e "$str" >> $LOGFILE
+	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 }
 
 
@@ -95,9 +95,9 @@ debug ()
 		then
 			echo -e "$str" > $LOG
 		else
-			echo -e "$str"
+			echo -e "$str" > $LOG
 		fi
-		echo -e "$str" >> $LOGFILE
+		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 	fi
 }
 
