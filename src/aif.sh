@@ -10,11 +10,11 @@ LOGFILE=/home/arch/aif/runtime/aif.log
 usage ()
 {
 	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
-	msg="aif -p <procedurename>  Select a procedure\n
-    -i <dia/cli>         Override interface type (optional)\n
-    -d                   Explicitly enable debugging (optional)\n
-    -l                   Explicitly enable logging to file (optional)\n
-    -h                   Help: show usage  (optional)
+	msg="aif -p <procedurename>  Select a procedure
+    -i <dia/cli>         Override interface type (optional)
+    -d                   Explicitly enable debugging (optional)
+    -l                   Explicitly enable logging to file (optional)
+    -h                   Help: show usage  (optional)\n
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
 Available procedures on the filesystem:
