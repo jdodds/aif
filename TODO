@@ -9,6 +9,7 @@ General:
 * test refactored disk code
 
 Specifically:
+* lib/blockdevice: last partition/home in autoprepare does not get created
 * core/interactive: gui transparancy: interactive autoprepare, package selection
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
