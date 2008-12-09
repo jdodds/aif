@@ -533,6 +533,7 @@ process_filesystem ()
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
 			debug "mounting $part on $dst"
+			mkdir -p $dst &>/dev/null # directories may or may not already exist
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
 		fi
 	fi
