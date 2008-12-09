@@ -178,7 +178,7 @@ ask_datetime ()
 # $1 question
 # $2 lower limit (optional)
 # $3 upper limit (optional)
-# TODO: implement a default number
+# $4 default : TODO implement in cli
 # echo's the number the user said
 # returns 1 if the user cancelled or did not enter a numeric, 0 otherwise 
 ask_number ()
@@ -329,7 +329,7 @@ _dia_ask_number ()
 	echo "$ANSWER_NUMBER"
 	debug "_dia_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
-	return $?
+	return $ret
 }
 
 
