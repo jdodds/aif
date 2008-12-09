@@ -398,8 +398,11 @@ interactive_filesystems() {
 			menu_list=
 			while read part type label fs
 			do
-				infostring="type:$type,label:$label,fs:$fs"
-				[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
+				# leave out unneeded info from fs string
+				fs_display${fs//;yes/}
+				fs_display${fs//;target/}
+				infostring=" $type $label $fs_display"
+				[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="${BLOCKDEVICE_SIZE}MB $infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
