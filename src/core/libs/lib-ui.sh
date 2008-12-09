@@ -441,7 +441,7 @@ _cli_ask_option ()
 	#TODO: strip out color codes
 	#TODO: if user entered incorrect choice, ask him again
 	DEFAULT=""
-	[ "$1" != 'no' ] && DEFAULT=$1
+	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	[ -z "$6" ] && debug "_cli_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
 

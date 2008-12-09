@@ -139,7 +139,7 @@ interactive_autoprepare()
 	CHOSEN_FS=""
 	while [ "$CHOSEN_FS" = "" ]
 	do
-		ask_option "Select a filesystem for / and /home:" $FSOPTS || return 1
+		ask_option no "Select a filesystem for / and /home:" $FSOPTS || return 1
 		FSTYPE=$ANSWER_OPTION
 		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
         done
