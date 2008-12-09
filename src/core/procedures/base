@@ -10,6 +10,7 @@ var_UI_TYPE="cli" # set to cli or dia for dialog
 phase_preparation=(\
 	configure \
 	intro \
+	sysprep \
 	select_source \
 	runtime_network \
 	runtime_packages)
@@ -42,6 +43,12 @@ worker_intro ()
 	then
 		die_error "User aborted base profile execution"
 	fi
+}
+
+
+worker_sysprep ()
+{
+	mount -o remount,rw / &>/dev/null
 }
 
 

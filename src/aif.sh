@@ -249,8 +249,6 @@ stop_installer ()
 
 ###### perform actual logic ######
 echo "Welcome to $TITLE"
-log "################## START OF INSTALLATION ##################"
-[ -z "$1" ] && usage && exit 1
 
 mount -o remount,rw / &>/dev/null 
 
@@ -314,6 +312,8 @@ load_procedure "$module" "$procedure"
 # flags like --noconfirm should not be specified here.  it's up to the procedure to decide the interactivity
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
+
+log "################## START OF INSTALLATION ##################"
 
 start_process
 
