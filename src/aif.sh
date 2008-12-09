@@ -121,8 +121,8 @@ load_lib ()
 # $3... extra args for phase/worker (optional)
 execute ()
 {
-	[ -z "$1" -o -z "$2" ] && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
-	[ "$1" != phase -a "$1" != worker ] && die_error "execute's first argument must be a valid type (phase/worker)"
+	[ -z "$1" -o -z "$2" ] && debug "execute $@" && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
+	[ "$1" != phase -a "$1" != worker ] && debug "execute $@" && die_error "execute's first argument must be a valid type (phase/worker)"
 	PWD_BACKUP=`pwd`
 	object=$1_$2
 

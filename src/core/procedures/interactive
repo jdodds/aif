@@ -37,7 +37,7 @@ start_process ()
 
 	execute worker configure
 	execute worker intro
-	execute worken sysprep
+	execute worker sysprep
 
 	# menu item tracker- autoselect the next item
 	NEXTITEM="1"
