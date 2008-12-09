@@ -335,7 +335,7 @@ process_disks ()
 
 process_disk ()
 {
-	infofy "Partitioning $DEVICE" disks
+	infofy "Partitioning $1" disks
 	partition $1 "$2"
 }
 
@@ -508,7 +508,7 @@ process_filesystem ()
 
 		ret=0
 		#TODO: health checks on $fs_params etc
-		case ${_fstype} in #TODO: implement label, opts etc decently
+		case ${fs_type} in #TODO: implement label, opts etc decently
 			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
 			jfs)      yes | mkfs.jfs $part        $opts >$LOG 2>&1; ret=$? ;;
 			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
