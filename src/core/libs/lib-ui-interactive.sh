@@ -485,6 +485,8 @@ interactive_filesystems() {
 			[ -n "$errors" ] && str="$str\n - Errors: $errors"
 			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
 			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1
+		else
+			ALLOK=1
 		fi
 
 	done
