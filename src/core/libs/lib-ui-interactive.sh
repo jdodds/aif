@@ -109,6 +109,8 @@ interactive_autoprepare()
 		DISC=$DISCS
 	fi
 
+	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
+
 	get_blockdevice_size $DISC SI
 	FSOPTS=
 	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
@@ -152,10 +154,10 @@ interactive_autoprepare()
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
 
-	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >$TMP_BLOCKDEVICES
-	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >$TMP_BLOCKDEVICES
-	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >$TMP_BLOCKDEVICES
-	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >$TMP_BLOCKDEVICES
+	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >  $TMP_BLOCKDEVICES
+	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >> $TMP_BLOCKDEVICES
+	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >> $TMP_BLOCKDEVICES
+	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >> $TMP_BLOCKDEVICES
 
 
 	process_disks       || die_error "Something went wrong while partitioning"
