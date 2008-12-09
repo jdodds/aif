@@ -234,6 +234,7 @@ show_report () #TODO: abstract UI method (cli/dia)
 
 process_args ()
 {
+	true
 }
 
 
