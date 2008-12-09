@@ -329,14 +329,14 @@ process_disks ()
 {
 	while read disk scheme
 	do
-		process_disk $disk "$scheme"
+		process_disk $disk "$scheme" || return $?
 	done < $TMP_PARTITIONS
 }
 
 
 process_disk ()
 {
-	partition $1 $2
+	partition $1 "$2"
 }
 
 
