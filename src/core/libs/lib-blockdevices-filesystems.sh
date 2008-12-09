@@ -343,7 +343,7 @@ process_disk ()
 generate_filesystem_list ()
 {
 	echo -n > $TMP_FILESYSTEMS
-	while read part type label fs_string
+	while read part part_type part_label fs_string
 	do
 		if [ "$fs_string" != no_fs ]
 		then
@@ -384,7 +384,7 @@ process_filesystems ()
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
 			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
-			umount $fs_mountpoint # could be that this was not mounted yet. no problem.
+			umount $part # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
 		fi
 	done
 
