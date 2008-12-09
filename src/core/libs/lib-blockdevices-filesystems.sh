@@ -305,7 +305,6 @@ partition()
 	# invoke sfdisk
 	debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
 	printk off
-	infofy "Partitioning $DEVICE"
 	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
@@ -336,6 +335,7 @@ process_disks ()
 
 process_disk ()
 {
+	infofy "Partitioning $DEVICE" disks
 	partition $1 "$2"
 }
 
@@ -377,12 +377,16 @@ process_filesystems ()
 
 	sort -t \  -k 2 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
-		debug "umounting/swapoffing $part"
 		if [ "$fs_type" = swap ]
 		then
+			infofy "(Maybe) Swapoffing $part" disks
+			debug  "Swapoffing $part"
+
 			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
+			infofy "(Maybe) Umounting $part" disks
+			debug  "Umounting $part"
 			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
 			umount $part &>/dev/null # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
 		fi
@@ -426,6 +430,7 @@ process_filesystems ()
 		real_part=${part/+/}
 		if [ -b "$real_part" ]
 		then
+			infofy "(Maybe) Destruction of device $part (type $part_type)" disks
 			debug "Attempting destruction of device $part (type $part_type)"
 			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part")
 			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
@@ -443,6 +448,8 @@ process_filesystems ()
 	do
 		if [ -b "$part" -a "$fs_create" = yes ]
 		then
+			infofy "Making $fs_type filesystem on $part" disks
+			debug "Making $fs_type filesystem on $part"
 			# don't ask to mount. we take care of all that ourselves in the next phase
 			process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params
 		fi
@@ -454,12 +461,14 @@ process_filesystems ()
 	do
 		if [ "$part_type" = raw ]
 		then
-			debug "mounting/swaponning $part"
+			infofy "Mounting/swaponning $part" disks
+			debug "Mounting/swaponning $part"
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
 		fi
 	done
 
-
+	infofy "Done processing filesystems/blockdevices" disks 1
+	debug "Done processing filesystems/blockdevices"
 }
 
 
@@ -546,7 +555,7 @@ process_filesystem ()
 		if [ -n "${_uuid}" ]; then
 			_device="UUID=${_uuid}"
 		fi
-		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB
+		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
 			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
 			if [ "$FSTYPE" = "swap" ]; then

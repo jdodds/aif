@@ -6,7 +6,7 @@
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
 ANSWER="/home/arch/aif/runtime/.dialog-answer"
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
-
+DIA_SUCCESSIVE_ITEMS="/home/arch/aif/runtime/.dia-successive-items"
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
@@ -59,14 +59,28 @@ notify ()
 
 
 # like notify, but user does not need to confirm explicitly when in dia mode
+# $1 str
+# $2 0/<listname> this infofy call is part of a successive list of things (eg repeat previous things, keep adding items to a list) (only needed for dia, cli does this by design).
+#   You can keep several "lists of successive things" by grouping them with <listname>
+#   this is somewhat similar to follow_progress.  Note that this list isn't cleared unless you set $3 to 1.  default 0. (optional).
+# $3 0/1 this is the last one of the group of several things (eg clear buffer).  default 0. (optional)
 infofy ()
 {
-	debug "infofy: $@"
+	successive=${2:-0}
+	succ_last=${3:-0}
+	debug "infofy: $1"
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		_dia_DIALOG --infobox "$@" 20 50
+		str="$1"
+		if [ "$successive" != 0 ]
+		then
+			echo "$1" >> $DIA_SUCCESSIVE_ITEMS-$successive
+			str=`cat $DIA_SUCCESSIVE_ITEMS-$successive`
+		fi
+		[ "$succ_last" = 1 ] && rm $DIA_SUCCESSIVE_ITEMS-$successive
+		_dia_DIALOG --infobox "$str" 20 50
 	else
-		echo -e "$@"
+		echo -e "$1"
 	fi
 }
 
