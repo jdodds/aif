@@ -55,7 +55,7 @@ target_special_fs ()
 }
 
 
-# taken from setup
+# taken from setup #TODO: we should be able to not need this function
 # Disable swap and all mounted partitions for the destination system. Unmount
 # the destination root partition last! TODO: only taking care of / is not enough, we can have the same problem on another level (eg /a/b/c and /a/b)
 target_umountall()
@@ -284,6 +284,8 @@ partition()
 	target_umountall
 
 	# setup input var for sfdisk
+	# format: each line=1 part.  <start> <size> <id> <bootable>[ <c,h,s> <c,h,s>]
+
 	for fsspec in $STRING; do
 		fssize=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
 		fssize_spec=",$fssize"
@@ -300,7 +302,7 @@ partition()
 		sfdisk_input="${sfdisk_input}${fssize_spec}${fstype_spec}${bootflag_spec}\n"
 	done
 
-	sfdisk_input=$(printf "$sfdisk_input")
+	sfdisk_input=$(printf "$sfdisk_input") # convert \n to newlines
 
 	# invoke sfdisk
 	debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"

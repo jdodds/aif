@@ -475,9 +475,9 @@ interactive_filesystems() {
 		errors=
 		warnings=
 
-		grep -q ';/boot;' || warnings="$warnings\n-No separate /boot filesystem"
-		grep -q ';/;'     || errors="$errors\n-No filesystem with mountpoint /"
-		grep -q ' swap;' || grep -q '|swap;' || warnings="$warnings\n-No swap partition defined"
+		grep -q ';/boot;' $TMP_BLOCKDEVICES || warnings="$warnings\n-No separate /boot filesystem"
+		grep -q ';/;'     $TMP_BLOCKDEVICES || errors="$errors\n-No filesystem with mountpoint /"
+		grep -q ' swap;'  $TMP_BLOCKDEVICES || grep -q '|swap;' $TMP_BLOCKDEVICES || warnings="$warnings\n-No swap partition defined"
 
 		if [ -n "$errors$warnings" ]
 		then
