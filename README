@@ -87,7 +87,11 @@ You can specify a core procedure on the command line by specifying
 '<procedure_name>', to specify a user contriubuted procedure, specify
 '<module_name>/<procedure_name>'
 
-
+Commandline arguments are parsed by aif.sh but you can extend/override it's
+behaviour by overriding $var_OPTS_STRING and the process_vars variable.
+Also, you do not _have_ to use the variables they set (eg arg_ui_type).  You
+usually will set defaults in the configure worker and override with
+arguments passed by the user (eg to use cli mode unless user wants dia)
 
 
 ** Procedures **

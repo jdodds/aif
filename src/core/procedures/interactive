@@ -35,7 +35,7 @@ start_process ()
 	#####################
 	## begin execution ##
 
-	var_UI_TYPE=dia
+	execute worker configure
 
 	execute worker intro
 
@@ -187,6 +187,12 @@ worker_intro ()
 	filesystems, you may want to consult some documentation before continuing. \
 	You can view all output from commands by viewing your VC7 console (ALT-F7). \
 	ALT-F1 will bring you back here."
+}
+
+
+worker_configure ()
+{
+	var_UI_TYPE=${arg_ui_type:-dia}
 }
 
 

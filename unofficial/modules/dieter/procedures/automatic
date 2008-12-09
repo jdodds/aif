@@ -5,6 +5,7 @@ depend_procedure core base
 var_RUNTIME_PACKAGES="svn"
 
 phase_preparation=(\
+	configure \
 	intro \
 	msg_manual \
 	runtime_network \
@@ -20,6 +21,12 @@ phase_finish=(configure_home msg_report)
 worker_intro ()
 {
 	notify "Dieter::automatic procedure running..."
+}
+
+
+worker_configure ()
+{
+	var_UI_TYPE=${arg_ui_type:-cli}
 }
 
 

@@ -8,6 +8,7 @@ var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific procedures) ######
 phase_preparation=(\
+	configure \
 	intro \
 	select_source \
 	runtime_network \
@@ -41,6 +42,12 @@ worker_intro ()
 	then
 		die_error "User aborted base profile execution"
 	fi
+}
+
+
+worker_configure ()
+{
+	var_UI_TYPE=${arg_ui_type:-cli}
 }
 
 

@@ -5,15 +5,16 @@ TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
 LOGFILE=/home/arch/aif/runtime/aif.log
 
-#TODO: maybe we could use optional flags to en/disable logging to a file, override UI_TYPE etc.
-
-
 ###### Miscalleaneous functions ######
 
 usage ()
 {
 	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
-	msg="$0 <procedurename>\n
+	msg="$0 -p <procedurename>  Select a procedure\n
+	        -i <dia/cli>        Override interface type (optional)\n
+	        -d                  Explicitly enable debugging (optional)\n
+	        -l                  Explicitly enable logging to file (optional)\n
+	        -h                  Help: show usage  (optional)
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
 Available procedures on the filesystem:
@@ -231,6 +232,11 @@ show_report () #TODO: abstract UI method (cli/dia)
 }
 
 
+process_args ()
+{
+}
+
+
 # use this function to stop the installation procedure.
 # $1 exit code (optional)
 stop_installer ()
@@ -247,20 +253,6 @@ log "################## START OF INSTALLATION ##################"
 
 mount -o remount,rw / &>/dev/null 
 
-# note that we allow procedures like http://foo/bar. module -> http:, procedure -> http://foo/bar. 
-if [[ $1 =~ ^http:// ]]
-then
-	module=http
-	procedure="$1"
-elif grep -q '\/' <<< "$1"
-then
-	#user specified module/procedure
-	module=`dirname "$1"`
-	procedure=`basename "$1"`
-else
-	module=core
-	procedure="$1"
-fi
 
 load_module core
 [ "$module" != core -a "$module" != http ] && load_module "$module"
@@ -272,6 +264,57 @@ load_procedure "$module" "$procedure"
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
+
+### Set configuration values ###
+# note : you're free to use or ignore these in your procedure.  probably you want to use these variables to override defaults in your configure worker
+
+var_OPTS_STRING=":i:dlp:" # you can override this variable in your procedure.
+while getopts $var_OPTS_STRING OPTION
+do
+	case $OPTION in
+	i)
+		[ -z "$OPTARG" ] && usage && exit 1 #TODO: check if it's necessary to do this. the ':' in $var_OPTS_STRING might be enough
+		[ "$OPTARG" != cli -a "$OPTARG" = !dia ] && die_error "-i must be dia or cli"
+		arg_ui_type=$OPTARG
+		;;
+	d)
+		export DEBUG=1
+		;;
+	l)
+		LOG_TO_FILE=1 #TODO: implement using this variable
+		;;
+	p)
+		[ -z "$OPTARG" ] && usage && exit 1
+		# note that we allow procedures like http://foo/bar. module -> http:, procedure -> http://foo/bar.
+		if [[ $1 =~ ^http:// ]]
+		then
+			module=http
+			procedure="$1"
+		elif grep -q '\/' <<< "$1"
+		then
+			#user specified module/procedure
+			module=`dirname "$1"`
+			procedure=`basename "$1"`
+		else
+			module=core
+			procedure="$1"
+		fi
+		;;
+	h)
+		usage
+		stop_installer
+		;;
+	?)
+		usage
+		stop_installer 5
+		;;
+	esac
+
+	process_args $OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
+done
+
+[ -z "$procedure" ] && usage && stop_installer 5
+
 start_process
 
-exit 0
+stop_installer
