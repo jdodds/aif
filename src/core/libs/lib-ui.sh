@@ -346,7 +346,7 @@ _dia_ask_option ()
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	echo $ANSWER_OPTION
-	debug "dia_ask_option: User choose $ANSWER_OPTION"
+	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
 	return $ret
 }
 
@@ -473,7 +473,7 @@ _cli_ask_option ()
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug "cli_ask_option: User choose $ANSWER_OPTION"
+	debug "cli_ask_option: User choose $ANSWER_OPTION ($2)"
 	echo "$ANSWER_OPTION"
 	[ "$ANSWER_OPTION" = CANCEL ] && return 1
 	return 0
