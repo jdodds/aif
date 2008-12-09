@@ -181,12 +181,12 @@ worker_select_source ()
 
 worker_intro ()
 {
-	notify "Welcome to the Arch Linux Installation program. The install \
-	process is fairly straightforward, and you should run through the options in \
-	the order they are presented. If you are unfamiliar with partitioning/making \
-	filesystems, you may want to consult some documentation before continuing. \
-	You can view all output from commands by viewing your VC7 console (ALT-F7). \
-	ALT-F1 will bring you back here."
+	notify "Welcome to the Arch Linux Installation program. The install\
+ process is fairly straightforward, and you should run through the options in\
+ the order they are presented. If you are unfamiliar with partitioning/making\
+ filesystems, you may want to consult some documentation before continuing.\
+ You can view all output from commands by viewing your VC7 console (ALT-F7).\
+ ALT-F1 will bring you back here."
 }
 
 
