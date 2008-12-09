@@ -3,11 +3,11 @@
 
 # FORMAT DEFINITIONS:
 
-# MAIN FORMAT FOR $BLOCK_DATA (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
-# $BLOCK_DATA entry.
+# MAIN FORMAT FOR $TMP_BLOCKDEVICES (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
+# $TMP_BLOCKDEVICES entry.
 # <blockdevice> type label/no_label <FS-string>/no_fs
 # FS-string:
-# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts have _'s instead of whitespace
+# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
 # NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
 
 
@@ -26,6 +26,9 @@ TMP_DEV_MAP=/home/arch/aif/runtime/dev.map
 TMP_FSTAB=/home/arch/aif/runtime/.fstab
 TMP_PARTITIONS=/home/arch/aif/runtime/.partitions
 TMP_FILESYSTEMS=/home/arch/aif/runtime/.filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
+TMP_BLOCKDEVICES=/home/arch/aif/runtime/.blockdata
+
+
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -356,21 +359,21 @@ generate_filesystem_list ()
 				echo "$part $part_type $part_label $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params" >> $TMP_FILESYSTEMS
 			done
 		fi
-	done < $BLOCK_DATA
+	done < $TMP_BLOCKDEVICES
 
 }
 
 
-# process all entries in $BLOCK_DATA, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
+# process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
 process_filesystems ()
 {
-	debug "process_filesystems Called.  checking all entries in $BLOCK_DATA"
+	debug "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
 
 	# phase 1: destruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
-	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $BLOCK_DATA ? that needs to be cleaned up too.
+	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $TMP_BLOCKDEVICES ? that needs to be cleaned up too.
 
 	sort -t \  -k 2 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
@@ -391,17 +394,17 @@ process_filesystems ()
 #		devs_avail=0
 #		for part in `findpartitions`
 #		do
-#			if entry=`grep ^$part $BLOCK_DATA`
+#			if entry=`grep ^$part $TMP_BLOCKDEVICES`
 #			then
-#				process_filesystem "$entry" && sed -i "/^$part/d" $BLOCK_DATA && debug "$part processed and removed from $BLOCK_DATA"
+#				process_filesystem "$entry" && sed -i "/^$part/d" $TMP_BLOCKDEVICES && debug "$part processed and removed from $TMP_BLOCKDEVICES"
 #				devs_avail=1
 #			fi
 #		done
 #	done
-#	entries=`wc -l $BLOCK_DATA`
+#	entries=`wc -l $TMP_BLOCKDEVICES`
 #	if [ $entries -gt 0 ]
 #	then
-#		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $BLOCK_DATA`"
+#		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $TMP_BLOCKDEVICES`"
 #	else
 #		debug "All entries processed..."
 #	fi
@@ -412,13 +415,13 @@ process_filesystems ()
 	# targets for destruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
 	# after destructing. the parent must be updated to reflect the vanished child.
 
-	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $BLOCK_DATA, or even better by using finddisks and only doing it if they are in $BLOCK_DATA  ) and attempt to destruct.
+	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $TMP_BLOCKDEVICES, or even better by using finddisks and only doing it if they are in $TMP_BLOCKDEVICES  ) and attempt to destruct.
 	#  do that a few times and the ones that blocked because something else on it will probable have become freed and possible to destruct
 
 	# TODO: do this as long as devices in this list remains and exist physically
 	# TODO: abort when there still are physical devices listed, but we tried to destruct them already, give error
 
-	egrep '\+|mapper' $BLOCK_DATA | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
+	egrep '\+|mapper' $TMP_BLOCKDEVICES | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
 	do
 		real_part=${part/+/}
 		if [ -b "$real_part" ]

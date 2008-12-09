@@ -152,10 +152,10 @@ interactive_autoprepare()
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
 
-	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >$BLOCK_DATA
-	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >$BLOCK_DATA
-	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >$BLOCK_DATA
-	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >$BLOCK_DATA
+	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >$TMP_BLOCKDEVICES
+	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >$TMP_BLOCKDEVICES
+	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >$TMP_BLOCKDEVICES
+	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >$TMP_BLOCKDEVICES
 
 
 	process_disks       || die_error "Something went wrong while partitioning"
@@ -311,7 +311,7 @@ interactive_filesystem ()
 			do
 				list="$list $pv ON"
 			done
-			for pv in `grep '+ lvm-pv' $BLOCK_DATA | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
+			for pv in `grep '+ lvm-pv' $TMP_BLOCKDEVICES | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
 			do
 				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
 			done
@@ -357,16 +357,16 @@ interactive_filesystem ()
 		# add new theoretical blockdevice, if relevant
 		if [ "$fs_type" = lvm-vg ]
 		then
-			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $BLOCK_DATA
+			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $TMP_BLOCKDEVICES
 		elif [ "$fs_type" = lvm-pv ]
 		then
-			echo "$part+ $fs_type no_label no_fs" >> $BLOCK_DATA
+			echo "$part+ $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
 		elif [ "$fs_type" = lvm-lv ]
 		then
-			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
+			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
 		elif  [ "$fs_type" = dm_crypt ]
 		then
-			echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $BLOCK_DATA
+			echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
 		fi
 
 		# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
@@ -374,7 +374,7 @@ interactive_filesystem ()
 		then
 			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
 			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
-			sed -i "#$target#d" $BLOCK_DATA #TODO: check affected items, delete those, etc etc.
+			sed -i "#$target#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
 		fi
 }
 
@@ -382,14 +382,7 @@ interactive_filesystems() {
 
 	notify "Available Disks:\n\n$(_getavaildisks)\n"
 
-	BLOCK_DATA=/home/arch/aif/runtime/.blockdata
-
-	# $BLOCK_DATA entry. easily parsable.:
-	# <blockdevice> type label/no_label <FS-string>/no_fs
-	# FS-string:
-	# type;recreate;mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
-
-	findpartitions 0 'no_fs' ' raw no_label' > $BLOCK_DATA
+	findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
 
 	ALLOK=0
 	while [ "$ALLOK" = 0 ]
@@ -406,7 +399,7 @@ interactive_filesystems() {
 				infostring="type:$type,label:$label,fs:$fs"
 				[ -b "$part" ] && get_blockdevice_size ${part/+/} && infostring="size:${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
-			done < $BLOCK_DATA
+			done < $TMP_BLOCKDEVICES
 
 			ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
 			[ $? -gt 0                 ] && USERHAPPY=1 && break
@@ -416,9 +409,9 @@ interactive_filesystems() {
 
 			declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
 			declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
-			part_type=$( awk "/^$part_escaped/ {print \$2}" $BLOCK_DATA)
-			part_label=$(awk "/^$part_escaped/ {print \$3}" $BLOCK_DATA)
-			fs=$(        awk "/^$part_escaped/ {print \$4}" $BLOCK_DATA)
+			part_type=$( awk "/^$part_escaped/ {print \$2}" $TMP_BLOCKDEVICES)
+			part_label=$(awk "/^$part_escaped/ {print \$3}" $TMP_BLOCKDEVICES)
+			fs=$(        awk "/^$part_escaped/ {print \$4}" $TMP_BLOCKDEVICES)
 			[ "$part_label" == no_label ] && part_label=
 			[ "$fs"         == no_fs    ] && fs=
 
@@ -472,7 +465,7 @@ interactive_filesystems() {
 			# update the menu # NOTE that part_type remains raw for basic filesystems!
 			[ -z "$part_label" ] && part_label=no_label
 			[ -z "$fs"         ] && fs=no_fs
-			sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $BLOCK_DATA # '#' is a forbidden character !
+			sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $TMP_BLOCKDEVICES # '#' is a forbidden character !
 
 		done
 
