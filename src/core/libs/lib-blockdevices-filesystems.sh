@@ -377,7 +377,7 @@ process_filesystems ()
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
 	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $TMP_BLOCKDEVICES ? that needs to be cleaned up too.
 
-	sort -t \  -k 2 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
 		then
@@ -459,7 +459,7 @@ process_filesystems ()
 
 
 	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
-	sort -t \  -k 2 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$part_type" = raw ]
 		then
