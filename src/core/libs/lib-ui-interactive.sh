@@ -565,7 +565,7 @@ interactive_runtime_network() {
     fi
 
     ask_option no "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
-    INTERFACE=$ANSWER_OPTION ;;
+    INTERFACE=$ANSWER_OPTION
 
 
     ask_yesno "Do you want to use DHCP?"
