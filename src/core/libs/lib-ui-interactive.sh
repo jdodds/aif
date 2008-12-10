@@ -308,17 +308,18 @@ interactive_filesystem ()
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default
 			pv=${part/+/}
 			grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
+			list=
 
 			for pv in `sed 's/:/ /' <<< $fs_params`
 			do
-				list="$list $pv ON"
+				list="$list $pv ^ ON"
 			done
 			for pv in `grep '+ lvm-pv' $TMP_BLOCKDEVICES | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
 			do
-				grep -q "$pv ON" <<< "$list" || list="$list $pv OFF"
+				grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
 			done
 			list2=($list)
-			if [ ${#list2[*]} -lt 4 ] # less then 4 words in the list. eg only one option
+			if [ ${#list2[*]} -lt 6 ] # less then 6 words in the list. eg only one option
 			then
 				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
 				fs_params=${list2[0]}
@@ -512,7 +513,7 @@ interactive_select_packages() {
 
     # set up our install location if necessary and sync up
     # so we can get package lists
-    target_prepare_pacman || ( notify "Pacman preparation failed! Check $LOG for errors." && return 1 )
+    target_prepare_pacman || ( show_warning "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _catlist="base ^ ON"
@@ -520,8 +521,8 @@ interactive_select_packages() {
         _catlist="${_catlist} ${i} - OFF"
     done
 
-    _dia_DIALOG --checklist "Select Package Categories\nDO NOT deselect BASE unless you know what you're doing!" 19 55 12 $_catlist 2>$ANSWER || return 1
-    _catlist="$(cat $ANSWER)" # _catlist now contains all categories (the tags from the dialog checklist)
+    ask_checklist "Select Package Categories\nDO NOT deselect BASE unless you know what you're doing!" $_catlist || return 1
+    _catlist=$ANSWER_CHECKLIST # _catlist now contains all categories (the tags from the dialog checklist)
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
@@ -542,8 +543,8 @@ interactive_select_packages() {
     # sort by category
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
 
-    _dia_DIALOG --checklist "Select Packages To Install." 19 60 12 $_pkglist 2>$ANSWER || return 1
-	TARGET_PACKAGES="$(cat $ANSWER)" # contains now all package names
+    ask_checklist "Select Packages To Install." $_pkglist || return 1
+	TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
     return 0
 }
 

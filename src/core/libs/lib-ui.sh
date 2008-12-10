@@ -1,6 +1,7 @@
 #!/bin/sh
-# TODO: lot's of implementation work still open in this library. especially the dialog & $var_UI_TYPE stuff
+# TODO: implement 'retry until user does it correctly' everywhere
 # TODO: get rid of the echoing of the variables at the end.  passing output as $ANSWER_<foo> is more useful
+# TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
@@ -140,11 +141,12 @@ _getavaildisks()
 
 # ask the user to make a selection from a certain group of things
 # $1 question
-# shift;shift; $@ list of options. first tag. then ON/OFF
+# shift;shift; $@ list of options. first tag, then item then ON/OFF. if item == ^ or - it will not be shown in cli mode.
+# for nostalgic reasons, you can set item to ^ for ON items and - for OFF items. afaik this doesn't have any meaning other then extra visual separation though
 ask_checklist ()
 {
 	[ -z "$1" ] && die_error "ask_checklist needs a question!"
-	[ -z "$3" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (incl ON/OFF switch)"
+	[ -z "$4" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (tag,item and ON/OFF switch)"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_checklist "$@" ; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_checklist "$@" ; return $? ; }
 }
@@ -157,7 +159,6 @@ ask_datetime ()
 }
 
 
-# TODO: we should have a wrapper around this function that keeps trying until the user entered a valid numeric?, maybe a wrapper that wraps all functions
 # ask for a number.
 # $1 question
 # $2 lower limit (optional)
@@ -271,10 +272,11 @@ _dia_ask_checklist ()
 	list=
 	while [ -n "$1" ]
 	do
-		[ -z "$2" ] && die_error "no ON/OFF switch given for element $1"
-		[ "$2" = ON  ] && newlist="$1 ^ ON"
-		[ "$2" = OFF ] && newlist="$1 - OFF"
-		shift 2
+		[ -z "$2" ] && die_error "no item given for element $1"
+		[ -z "$3" ] && die_error "no ON/OFF switch given for element $1 (item $2)"
+		[ "$3" != ON -a "$3" != OFF ] && die_error "element $1 (item $2) has status $3 instead of ON/OFF!"
+		list="$list $1 $2 $3"
+		shift 3
 	done
 	_dia_DIALOG --checklist "$str" $list 2>$ANSWER
 	ret=$?
@@ -423,9 +425,14 @@ _cli_ask_checklist ()
 	output=
 	while [ -n "$1" ]
 	do
-		[ -z "$2" ] && die_error "no ON/OFF switch given for element $1"
-		[ "$2" = ON  ] && ask_yesno "Enable $1 ?" yes && output="$output $1"
-		[ "$2" = OFF ] && ask_yesno "Enable $1 ?" no  && output="$output $1"
+		[ -z "$2" ] && die_error "no item given for element $1"
+		[ -z "$3" ] && die_error "no ON/OFF switch given for element $1 (item $2)"
+		[ "$3" != ON -a "$3" != OFF ] && die_error "element $1 (item $2) has status $3 instead of ON/OFF!"
+		item=$1
+		[ "$2" != '-' -a "$2" != '^' ] && item="$1 ($2)"
+		[ "$3" = ON  ] && ask_yesno "Enable $1 ?" yes && output="$output $1"
+		[ "$3" = OFF ] && ask_yesno "Enable $1 ?" no  && output="$output $1"
+		shift 3
 	done
 	ANSWER_CHECKLIST=$output
 	return 0
