@@ -8,7 +8,6 @@ General:
 * test refactored disk code
 
 Specifically:
-* lib/blockdevice: autoprepare does not take the last item in 'for fsspec in $STRING; do' (check debug output)
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
 * lib-ui: don't echo the results, just use the $ANSWER_<foo> variables

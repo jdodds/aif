@@ -286,7 +286,9 @@ partition()
 	# setup input var for sfdisk
 	# format: each line=1 part.  <start> <size> <id> <bootable>[ <c,h,s> <c,h,s>]
 
-	for fsspec in $STRING; do
+	read -r -a fsspecs <<< "$STRING"  # split up like this otherwise '*' will be globbed. which usually means an entry containing * is lost
+
+	for fsspec in "${fsspecs[@]}"; do
 		fssize=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
 		fssize_spec=",$fssize"
 		[ "$fssize" = "*" ] && fssize_spec=';'
