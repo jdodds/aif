@@ -425,6 +425,13 @@ _cli_ask_checklist ()
 }
 
 
+_cli_ask_datetime ()
+{
+	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
+	ANSWER_DATETIME=$ANSWER_STRING
+}
+
+
 _cli_ask_number ()
 {
 	#TODO: i'm not entirely sure this works perfectly. what if user doesnt give anything or wants to abort?
@@ -447,13 +454,6 @@ _cli_ask_number ()
 	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return 0
-}
-
-
-_cli_ask_datetime ()
-{
-	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
-	ANSWER_DATETIME=$ANSWER_STRING
 }
 
 
