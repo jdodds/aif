@@ -340,7 +340,8 @@ _dia_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	[ -z "$6" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+	#[ -z "$6" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	[ -z "$4" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)"
  
  	DIA_MENU_TITLE=$2
  	shift 2
@@ -475,7 +476,8 @@ _cli_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	[ -z "$6" ] && debug "_cli_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)"
+	#[ -z "$6" ] && debug "_cli_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	[ -z "$4" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)"
 
  	CLI_MENU_TITLE=$2
  	shift 2
