@@ -278,7 +278,7 @@ _dia_ask_checklist ()
 		list="$list $1 $2 $3"
 		shift 3
 	done
-	_dia_DIALOG --checklist "$str" $list 2>$ANSWER
+	_dia_DIALOG --checklist "$str" 30 60 20 $list 2>$ANSWER
 	ret=$?
 	ANSWER_CHECKLIST=`cat $ANSWER`
 	debug "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"

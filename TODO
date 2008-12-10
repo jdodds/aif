@@ -6,6 +6,7 @@ General:
 * setup bugtracker/roadmap thingie
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * test refactored disk code
+* check everywhere that if users cancels something, we return 1
 
 Specifically:
 * core/interactive: fix workaround needed for installpkg exitcode
