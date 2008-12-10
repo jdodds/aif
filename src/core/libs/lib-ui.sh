@@ -1,6 +1,5 @@
 #!/bin/sh
 # TODO: implement 'retry until user does it correctly' everywhere
-# TODO: get rid of the echoing of the variables at the end.  passing output as $ANSWER_<foo> is more useful
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 # TODO: standardize. eg everything $1= question/title, $2=default
 
@@ -294,7 +293,7 @@ _dia_ask_datetime ()
 	local _date="$(cat $ANSWER)" # form like: 07/12/2008
 	dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
 	local _time="$(cat $ANSWER)" # form like: 15:26:46
-	echo "date: $_date time: $_time" >$LOG
+	debug "Date as specified by user $_date time: $_time"
 
 	# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
 	# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
@@ -330,7 +329,6 @@ _dia_ask_number ()
 			fi
 		fi
 	done
-	echo "$ANSWER_NUMBER"
 	debug "_dia_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return $ret
@@ -349,7 +347,6 @@ _dia_ask_option ()
 	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER #TODO: size not good! dynamically adapt?
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
-	echo $ANSWER_OPTION
 	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
 	return $ret
 }
@@ -382,7 +379,6 @@ _dia_ask_string ()
 	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
 	ret=$?
 	ANSWER_STRING=`cat $ANSWER`
-	echo $ANSWER_STRING
 	debug "_dia_ask_string: user entered $ANSWER_STRING"
 	[ -z "$ANSWER_STRING" ] && return $exitcode
 	return $ret
@@ -444,6 +440,7 @@ _cli_ask_datetime ()
 {
 	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
 	ANSWER_DATETIME=$ANSWER_STRING
+	debug "Date as picked by user: $ANSWER_STRING"
 }
 
 
@@ -465,7 +462,6 @@ _cli_ask_number ()
 			break
 		fi
 	done
-	echo "$ANSWER_NUMBER"
 	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return 0
@@ -496,7 +492,6 @@ _cli_ask_option ()
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
 	debug "cli_ask_option: User choose $ANSWER_OPTION ($2)"
-	echo "$ANSWER_OPTION"
 	[ "$ANSWER_OPTION" = CANCEL ] && return 1
 	return 0
 }
@@ -530,7 +525,6 @@ _cli_ask_string ()
 	[ -n "$2" ] && echo "(Press enter for default.  Default: $2)"
 	echo -n ">"
 	read ANSWER_STRING
-	echo "$ANSWER_STRING"
 	debug "cli_ask_string: User entered: $ANSWER_STRING"
 	if [ -z "$ANSWER_STRING" ]
 	then
