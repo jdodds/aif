@@ -152,24 +152,8 @@ ask_checklist ()
 
 ask_datetime ()
 {
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		# display and ask to set date/time
-		dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
-		local _date="$(cat $ANSWER)" # form like: 07/12/2008
-		dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
-		local _time="$(cat $ANSWER)" # form like: 15:26:46
-		echo "date: $_date time: $_time" >$LOG
-
-		# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
-		# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
-		# DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss ( date string format, set like date -s "$ANSWER_DATETIME")
-		ANSWER_DATETIME="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
-	elif [ "$var_UI_TYPE" = cli ]
-	then
-		ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
-		ANSWER_DATETIME=$ANSWER_STRING
-	fi
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_datetime "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_datetime "$@" ; return $? ; }
 }
 
 
@@ -296,6 +280,22 @@ _dia_ask_checklist ()
 	ANSWER_CHECKLIST=`cat $ANSWER`
 	debug "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
 	return $ret
+}
+
+
+_dia_ask_datetime ()
+{
+	# display and ask to set date/time
+	dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 2> $ANSWER || return 1
+	local _date="$(cat $ANSWER)" # form like: 07/12/2008
+	dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
+	local _time="$(cat $ANSWER)" # form like: 15:26:46
+	echo "date: $_date time: $_time" >$LOG
+
+	# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
+	# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
+	# DD/MM/YYYY hh:mm:ss -> YYYY-MM-DD hh:mm:ss ( date string format, set like date -s "$ANSWER_DATETIME")
+	ANSWER_DATETIME="$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\3-\2-\1 \4:\5:\6#g')"
 }
 
 
@@ -447,6 +447,13 @@ _cli_ask_number ()
 	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return 0
+}
+
+
+_cli_ask_datetime ()
+{
+	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
+	ANSWER_DATETIME=$ANSWER_STRING
 }
 
 
