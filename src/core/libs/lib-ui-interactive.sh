@@ -749,7 +749,7 @@ EOF
 }
 
 
-# select_source(). taken from setup.  TODO: decouple ui
+# select_source(). taken from setup.
 # displays installation source selection menu
 # and sets up relevant config files
 #
@@ -764,7 +764,7 @@ interactive_select_source()
 
 	ask_option no "Please select an installation source" \
     "1" "CD-ROM or OTHER SOURCE" \
-    "2" "FTP/HTTP" 
+    "2" "FTP/HTTP" || return 1
 
     case $ANSWER_OPTION in
         "1") var_PKG_SOURCE_TYPE="cd" ;;
