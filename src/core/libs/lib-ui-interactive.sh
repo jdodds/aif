@@ -564,11 +564,9 @@ interactive_runtime_network() {
         return 1
     fi
 
-    _dia_DIALOG --nocancel --ok-label "Select" --menu "Select a network interface" 14 55 7 $ifaces 2>$ANSWER
-    case $? in
-        0) INTERFACE=$(cat $ANSWER) ;;
-        *) return 1 ;;
-    esac
+    ask_option no "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
+    INTERFACE=$ANSWER_OPTION ;;
+
 
     ask_yesno "Do you want to use DHCP?"
     if [ $? -eq 0 ]; then
@@ -588,20 +586,20 @@ interactive_runtime_network() {
     else
         NETPARAMETERS=""
         while [ "$NETPARAMETERS" = "" ]; do
-            _dia_DIALOG --inputbox "Enter your IP address" 8 65 "192.168.0.2" 2>$ANSWER || return 1
-            IPADDR=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your netmask" 8 65 "255.255.255.0" 2>$ANSWER || return 1
-            SUBNET=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your broadcast" 8 65 "192.168.0.255" 2>$ANSWER || return 1
-            BROADCAST=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your gateway (optional)" 8 65 "192.168.0.1" 2>$ANSWER || return 1
-            GW=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your DNS server IP" 8 65 "192.168.0.1" 2>$ANSWER || return 1
-            DNS=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 16 65 "" 2>$ANSWER || return 1
-            PROXY_HTTP=$(cat $ANSWER)
-            _dia_DIALOG --inputbox "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 16 65 "" 2>$ANSWER || return 1
-            PROXY_FTP=$(cat $ANSWER)
+            ask_string "Enter your IP address" "192.168.0.2" || return 1
+            IPADDR=$ANSWER_STRING
+            ask_string "Enter your netmask" "255.255.255.0" || return 1
+            SUBNET=$ANSWER_STRING
+            ask_string "Enter your broadcast" "192.168.0.255" || return 1
+            BROADCAST=$ANSWER_STRING
+            ask_string "Enter your gateway (optional)" "192.168.0.1" 0 || return 1
+            GW=$ANSWER_STRING
+            ask_string "Enter your DNS server IP" "192.168.0.1" || return 1
+            DNS=$ANSWER_STRING
+            ask_string "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 0 || return 1
+            PROXY_HTTP=$ANSWER_STRING
+            ask_string "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." 0 || return 1
+            PROXY_FTP=$ANSWER_STRING
             ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
             case $? in
                 1) ;;
@@ -694,8 +692,8 @@ EOF
         notify "No hard drives were found"
         return 1
     fi
-    _dia_DIALOG --menu "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." 14 55 7 $DEVS 2>$ANSWER || return 1
-    ROOTDEV=$(cat $ANSWER)
+    ask_option no "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." $DEVS || return 1
+    ROOTDEV=$ANSWER_OPTION
     infofy "Installing the GRUB bootloader..."
     cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
     sync
@@ -708,16 +706,16 @@ EOF
     bootpart=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
     if [ "$bootpart" = "" ]; then
         if [ "$PART_ROOT" = "" ]; then
-            _dia_DIALOG --inputbox "Enter the full path to your root device" 8 65 "/dev/sda3" 2>$ANSWER || return 1
-            bootpart=$(cat $ANSWER)
+            ask_string "Enter the full path to your root device" "/dev/sda3" || return 1
+            bootpart=$ANSWER_STRING
         else
             bootpart=$PART_ROOT
         fi
     fi
-    _dia_DIALOG --defaultno --yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." 0 0
+    ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
     if [ $? -eq 0 ]; then
-        _dia_DIALOG --menu "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" 14 55 7 $DEVS 2>$ANSWER || return 1
-        bootpart=$(cat $ANSWER)
+        ask_option no "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" $DEVS || return 1
+        bootpart=$ANSWER_OPTION
     fi
     bootpart=$(mapdev $bootpart)
     bootdev=$(mapdev $ROOTDEV)
@@ -798,14 +796,11 @@ interactive_select_mirror() {
         notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
         # FIXME: this regex doesn't honor commenting
         MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
-        _dia_DIALOG --menu "Select an FTP/HTTP mirror" 14 55 7 \
-                  $MIRRORS \
-                  "Custom" "_" 2>$ANSWER || return 1
-    local _server=$(cat $ANSWER)
+        ask_option no "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
+    local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
-        _dia_DIALOG --inputbox "Enter the full URL to core repo." 8 65 \
-                "ftp://ftp.archlinux.org/core/os/i686" 2>$ANSWER || return 1
-        var_SYNC_URL=$(cat $ANSWER)
+        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/i686" || return 1
+        var_SYNC_URL=$ANSWER_STRING
     else
         # Form the full URL for our mirror by grepping for the server name in
         # our mirrorlist and pulling the full URL out. Substitute 'core' in  

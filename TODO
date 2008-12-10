@@ -4,13 +4,11 @@ See also the FIXME's and TODO's in the code.
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 General:
 * setup bugtracker/roadmap thingie
-* write the ui functions for asking questions etc for both cli and dialog and port all code to use it. 
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * test refactored disk code
 
 Specifically:
 * lib/blockdevice: autoprepare does not take the last item in 'for fsspec in $STRING; do' (check debug output)
-* core/interactive: gui transparancy: interactive autoprepare, package selection
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap setting from installer does not go in $target/etc/rc.conf
 * lib-ui: don't echo the results, just use the $ANSWER_<foo> variables

@@ -2,6 +2,7 @@
 # TODO: implement 'retry until user does it correctly' everywhere
 # TODO: get rid of the echoing of the variables at the end.  passing output as $ANSWER_<foo> is more useful
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
+# TODO: standardize. eg everything $1= question/title, $2=default
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
