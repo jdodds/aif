@@ -488,7 +488,7 @@ interactive_filesystems() {
 			str="The following issues have been detected:\n"
 			[ -n "$errors" ] && str="$str\n - Errors: $errors"
 			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
-			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1
+			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1 # TODO: we should ask the user if he wants to continue, return or abort.
 		else
 			ALLOK=1
 		fi
