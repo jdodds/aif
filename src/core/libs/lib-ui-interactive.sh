@@ -513,7 +513,7 @@ interactive_select_packages() {
 
     # set up our install location if necessary and sync up
     # so we can get package lists
-    target_prepare_pacman || ( show_warning "Pacman preparation failed! Check $LOG for errors." && return 1 )
+    target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _catlist="base ^ ON"
