@@ -72,7 +72,8 @@ mainmenu()
         "3")
 		                                        execute worker prepare_disks                                                                              && NEXTITEM=4 ;;
         "4")
-		check_depend worker prepare_disks    && execute worker package_list                                                                               && NEXTITEM=5 ;;
+		check_depend worker prepare_disks && \
+		check_depend worker select_source    && execute worker package_list                                                                               && NEXTITEM=5 ;;
         "5")
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
