@@ -211,9 +211,10 @@ ask_string ()
 }
 
 
-ask_timezone () # TODO: how to do this in dia?
+ask_timezone ()
 {
-	ANSWER_TIMEZONE=`tzselect`
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_timezone "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_timezone "$@" ; return $? ; }
 }
 
 
@@ -385,6 +386,12 @@ _dia_ask_string ()
 }
 
 
+_dia_ask_timezone ()
+{
+	ANSWER_TIMEZONE=`tzselect` #TODO: implement nicer then this
+}
+
+
 _dia_ask_yesno ()
 {
 	height=$((`echo -e "$1" | wc -l` +7))
@@ -527,6 +534,12 @@ _cli_ask_string ()
 		fi
 	fi
 	return 0
+}
+
+
+_cli_ask_timezone ()
+{
+	ANSWER_TIMEZONE=`tzselect`
 }
 
 
