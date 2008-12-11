@@ -2,6 +2,7 @@
 # TODO: implement 'retry until user does it correctly' everywhere
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 # TODO: standardize. eg everything $1= question/title, $2=default
+# TODO: figure out something to make dia windows always big enough, yet fit nicely in the terminal
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
@@ -345,7 +346,7 @@ _dia_ask_option ()
  
  	DIA_MENU_TITLE=$2
  	shift 2
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 16 55 8 "$@" 2>$ANSWER #TODO: size not good! dynamically adapt?
+	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
