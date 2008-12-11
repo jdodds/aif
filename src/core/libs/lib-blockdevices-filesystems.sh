@@ -387,14 +387,10 @@ process_filesystems ()
 		if [ "$fs_type" = swap ]
 		then
 			infofy "(Maybe) Swapoffing $part" disks
-			debug  "Swapoffing $part"
-
 			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
 			infofy "(Maybe) Umounting $part" disks
-			debug  "Umounting $part"
-			[ "$fs_mount" = target ] && fs_mountpoint=$var_TARGET_DIR$fs_mountpoint
 			umount $part &>/dev/null # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
 		fi
 	done
