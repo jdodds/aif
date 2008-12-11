@@ -522,7 +522,7 @@ process_filesystem ()
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
 			          fs_params=${fs_params//_/ }
 			          cryptsetup $fs_params $opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
-			          cryptsetup       luksOpen $part /dev/mapper/$fs_label >$LOG 2>&1; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
+			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
 			lvm-pv)   pvcreate $opts $part              >$LOG 2>&1; ret=$? ;;
 			lvm-vg)   # $fs_params: ':'-separated list of PV's
 			          vgcreate $opts $_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
