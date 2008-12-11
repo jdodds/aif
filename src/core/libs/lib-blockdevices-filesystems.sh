@@ -55,15 +55,17 @@ target_special_fs ()
 }
 
 
-# taken from setup #TODO: we should be able to not need this function
-# Disable swap and all mounted partitions for the destination system. Unmount
-# the destination root partition last! TODO: only taking care of / is not enough, we can have the same problem on another level (eg /a/b/c and /a/b)
+# taken from setup #TODO: we should be able to not need this function. although it may still be useful. but maybe we shouldn't tie it to $var_TARGET_DIR, and let the user specify the base point as $1
+# Disable swap and umount all mounted filesystems for the target system in the correct order. (eg first $var_TARGET_DIR/a/b/c, then $var_TARGET_DIR/a/b, then $var_TARGET_DIR/a until lastly $var_TARGET_DIR
 target_umountall()
 {
-	infofy "Disabling swapspace, unmounting already mounted disk devices..."
+	infofy "Disabling all swapspace..." disks
 	swapoff -a >/dev/null 2>&1
-	umount $(mount | grep -v "${var_TARGET_DIR} " | grep "${var_TARGET_DIR}" | sed 's|\ .*||g') >/dev/null 2>&1
-	umount $(mount | grep    "${var_TARGET_DIR} "                            | sed 's|\ .*||g') >/dev/null 2>&1
+	for mountpoint in $(mount | awk "/\/$var_TARGET_DIR/ {print \$3}" | sort | tac )
+	do
+		infofy "Unmounting mountpoint $mountpoint" disks
+		umount $mountpoint >/dev/null 2>$LOG
+	done
 }
 
 
