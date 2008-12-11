@@ -26,7 +26,7 @@ interactive_configure_system()
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
-		ask_option $DEFAULT "Configuration"  \
+		ask_option $DEFAULT "Configuration" '' \
 		"/etc/rc.conf"              "System Config" \
 		"/etc/fstab"                "Filesystem Mountpoints" \
 		"/etc/mkinitcpio.conf"      "Initramfs Config" \
@@ -63,7 +63,7 @@ interactive_configure_system()
 interactive_set_clock()   
 {
 	# utc or local?
-	ask_option no "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
+	ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
 	HARDWARECLOCK=$ANSWER_OPTION
 
 	# timezone?
@@ -103,7 +103,7 @@ interactive_autoprepare()
 	if [ $(echo $DISCS | wc -w) -gt 1 ]
 	then
 		notify "Available Disks:\n\n$(_getavaildisks)\n"
-		ask_option no "Select the hard drive to use" $(finddisks 1 _) || return 1
+		ask_option no 'Harddrive selection' "Select the hard drive to use" $(finddisks 1 _) || return 1
 		DISC=$ANSWER_OPTION
 	else
 		DISC=$DISCS
@@ -141,7 +141,7 @@ interactive_autoprepare()
 	CHOSEN_FS=""
 	while [ "$CHOSEN_FS" = "" ]
 	do
-		ask_option no "Select a filesystem for / and /home:" $FSOPTS || return 1
+		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" $FSOPTS || return 1
 		FSTYPE=$ANSWER_OPTION
 		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
         done
@@ -178,7 +178,7 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
+        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
@@ -213,7 +213,7 @@ interactive_filesystem ()
 		fs_label=
 		fs_params=
 	else
-		ask_option edit "Alter $part (type:$part_type,label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
+		ask_option edit "Alter $part ?" "Alter $part (type:$part_type, label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
 		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs && return 0
 		if [ "$ANSWER_OPTION" = delete ]
 		then
@@ -280,7 +280,7 @@ interactive_filesystem ()
 		else
 			default=
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
-			ask_option no "Select a filesystem for $part:" $FSOPTS || return 1
+			ask_option no "Select filesystem" "Select a filesystem for $part:" $FSOPTS || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
@@ -407,7 +407,7 @@ interactive_filesystems() {
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
-			ask_option no "Manage filesystems, block devices and virtual devices. Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
 			[ $? -gt 0                 ] && USERHAPPY=1 && break
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
@@ -436,7 +436,7 @@ interactive_filesystems() {
 					list="XXX no-LV's-defined-yet-make-a-new-one"
 				fi
 				list="$list empty NEW"
-				ask_option empty "Edit/create new LV's on this VG:" $list
+				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" $list
 				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
 				then
 					# a new LV must be created on this VG
@@ -564,7 +564,7 @@ interactive_runtime_network() {
         return 1
     fi
 
-    ask_option no "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
+    ask_option no "Interface selection" "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
     INTERFACE=$ANSWER_OPTION
 
 
@@ -692,7 +692,7 @@ EOF
         notify "No hard drives were found"
         return 1
     fi
-    ask_option no "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." $DEVS || return 1
+    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." $DEVS || return 1
     ROOTDEV=$ANSWER_OPTION
     infofy "Installing the GRUB bootloader..."
     cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
@@ -714,7 +714,7 @@ EOF
     fi
     ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
     if [ $? -eq 0 ]; then
-        ask_option no "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" $DEVS || return 1
+        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" $DEVS || return 1
         bootpart=$ANSWER_OPTION
     fi
     bootpart=$(mapdev $bootpart)
@@ -762,7 +762,7 @@ interactive_select_source()
         var_SYNC_URL=
         var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 
-	ask_option no "Please select an installation source" \
+	ask_option no "Source selection" "Please select an installation source" \
     "1" "CD-ROM or OTHER SOURCE" \
     "2" "FTP/HTTP" || return 1
 
@@ -796,7 +796,7 @@ interactive_select_mirror() {
         notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
         # FIXME: this regex doesn't honor commenting
         MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
-        ask_option no "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
+        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
         ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/i686" || return 1
@@ -816,7 +816,7 @@ interactive_select_mirror() {
 # sets EDITOR global variable
 #
 interactive_get_editor() {
-	ask_option no "Select a Text Editor to Use" \
+	ask_option no "Text editor selection" "Select a Text Editor to Use" \
 	"1" "nano (easier)" \
 	"2" "vi" 
 	case $ANSWER_OPTION in

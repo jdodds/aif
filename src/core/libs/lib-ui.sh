@@ -180,6 +180,7 @@ ask_number ()
 # ask the user to choose something
 # $1 default item (set to 'no' for none)
 # $2 title
+# $3 additional explanation (default: '')
 # shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
 # the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
 # $? if user cancelled. 0 otherwise
@@ -341,12 +342,12 @@ _dia_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	#[ -z "$6" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
-	[ -z "$4" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)"
+	# $3 is optional more info
+	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
- 	shift 2
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT" 20 80 16 "$@" 2>$ANSWER
+	shift 3
+	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $3" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
@@ -477,13 +478,13 @@ _cli_ask_option ()
 	DEFAULT=""
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
-	#[ -z "$6" ] && debug "_cli_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least 2 things (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
-	[ -z "$4" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)"
+	# $3 is optional more info
+	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
- 	CLI_MENU_TITLE=$2
- 	shift 2
+	shift 3
 
-	echo "$CLI_MENU_TITLE"
+	echo "$2"
+	[ -n "$3" ] && echo "$3"
 	while [ -n "$1" ]
 	do
 		echo "$1 ] $2"
