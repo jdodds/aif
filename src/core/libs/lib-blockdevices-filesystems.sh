@@ -61,7 +61,8 @@ target_umountall()
 {
 	infofy "Disabling all swapspace..." disks
 	swapoff -a >/dev/null 2>&1
-	for mountpoint in $(mount | awk "/\/$var_TARGET_DIR/ {print \$3}" | sort | tac )
+	declare target=${var_TARGET_DIR//\//\\/} # escape all slashes otherwise awk complains
+	for mountpoint in $(mount | awk "/\/$target/ {print \$3}" | sort | tac )
 	do
 		infofy "Unmounting mountpoint $mountpoint" disks
 		umount $mountpoint >/dev/null 2>$LOG
