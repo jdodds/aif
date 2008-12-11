@@ -598,6 +598,7 @@ get_filesystem_program ()
 
 # $1 blockdevice
 # $2 standard SI for 1000*n, IEC for 1024*n (optional. defaults to SI)
+# --> Note that if you do SI on a partition, you get the size of the entire disk, so for now you need IEC for single partitions
 # output will be in $BLOCKDEVICE_SIZE in MB/MiB
 get_blockdevice_size ()
 {
