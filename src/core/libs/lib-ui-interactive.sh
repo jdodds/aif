@@ -200,44 +200,45 @@ interactive_partition() {
 # but I think it's better to go through them all and by default always show the previous choice.
 interactive_filesystem ()
 {
-	part=$1 # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
-	part_type=$2 # a part should always have a type
-	part_label=$3 # can be empty
-	fs=$4 # can be empty
+	local part=$1       # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
+	local part_type=$2  # a part should always have a type
+	local part_label=$3 # can be empty
+	local fs_string=$4  # can be empty
+	local fs_type=
+	local fs_mountpoint=
+	local fs_opts=
+	local fs_label=
+	local fs_params=
 	NEW_FILESYSTEM=
-	if [ -z "$fs" ]
+	if [ -n "$fs_string" ]
 	then
-		fs_type=
-		fs_mountpoint=
-		fs_opts=
-		fs_label=
-		fs_params=
-	else
-		ask_option edit "Alter $part ?" "Alter $part (type:$part_type, label:$part_label) ?" edit EDIT delete 'DELETE (revert to raw partition)'
-		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs && return 0
-		if [ "$ANSWER_OPTION" = delete ]
-		then
-			NEW_FILESYSTEM=empty
-			return 0
-		else
-			fs_type=`       cut -d ';' -f 1 <<< $fs`
-			fs_create=`     cut -d ';' -f 2 <<< $fs` #not asked for to the user. this is always 'yes' for now
-			fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
-			fs_mount=`      cut -d ';' -f 4 <<< $fs` #we dont need to ask this to the user. this is always 'target' for 99.99% of the users
-			fs_opts=`       cut -d ';' -f 5 <<< $fs`
-			fs_label=`      cut -d ';' -f 6 <<< $fs`
-			fs_params=`     cut -d ';' -f 7 <<< $fs`
-			[ "$fs_type"   = no_type   ] && fs_type=
-			[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
-			[ "$fs_opts"   = no_opts   ] && fs_opts=
-			[ "$fs_label"  = no_label  ] && fs_label=
-			[ "$fs_params" = no_params ] && fs_params=
-			old_fs_type=$fs_type
-			old_fs_mountpoint=$fs_mountpoint
-			old_fs_opts=$fs_opts
-			old_fs_label=$fs_label
-			old_fs_params=$fs_params
-		fi
+		fs_type=`       cut -d ';' -f 1 <<< $fs_string`
+		fs_create=`     cut -d ';' -f 2 <<< $fs_string` #not asked for to the user. this is always 'yes' for now
+		fs_mountpoint=` cut -d ';' -f 3 <<< $fs_string`
+		fs_mount=`      cut -d ';' -f 4 <<< $fs_string` #we dont need to ask this to the user. this is always 'target' for 99.99% of the users
+		fs_opts=`       cut -d ';' -f 5 <<< $fs_string`
+		fs_label=`      cut -d ';' -f 6 <<< $fs_string`
+		fs_params=`     cut -d ';' -f 7 <<< $fs_string`
+		[ "$fs_type"   = no_type             ] && fs_type=
+		[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
+		[ "$fs_opts"   = no_opts             ] && fs_opts=
+		[ "$fs_label"  = no_label            ] && fs_label=
+		[ "$fs_params" = no_params           ] && fs_params=
+		local old_fs_type=$fs_type
+		local old_fs_mountpoint=$fs_mountpoint
+		local old_fs_opts=$fs_opts
+		local old_fs_label=$fs_label
+		local old_fs_params=$fs_params
+
+		ask_option edit "Alter this $fs_type filesystem on $part ?" \
+		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" \
+		                edit EDIT delete DELETE #TODO: nicer display if label is empty etc
+
+		# Don't alter, and return if user cancels
+		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs_string && return 0
+		# Erase and return if that's what the user wants
+		[ "$ANSWER_OPTION" = delete ] && NEW_FILESYSTEM=empty && return 0
+		# Otherwise, time for fun!
 	fi
 
 	# Possible filesystems/software layers on partitions/block devices
@@ -271,114 +272,113 @@ interactive_filesystem ()
 	[ $part_type = lvm-vg                                              ] && which `get_filesystem_program lvm-lv`   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
 	[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
-		# determine FS
-		fsopts=($FSOPTS);
-		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
-		then
-			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
-			fs_type=${fsopts[0]}
-		else
-			default=
-			[ -n "$fs_type" ] && default="--default-item $fs_type"
-			ask_option no "Select filesystem" "Select a filesystem for $part:" $FSOPTS || return 1
-			fs_type=$ANSWER_OPTION
-		fi
-
-		# ask mountpoint, if relevant
-		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
-		then
-			default=
-			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
-			ask_string "Enter the mountpoint for $part" "$default" || return 1
-			fs_mountpoint=$ANSWER_STRING
-		fi
-
-		# ask label, if relevant
-		if [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
-		then
-			default=
-			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label/name for this $fs_type on $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
-			fs_label=$ANSWER_STRING
-		fi
-
-		# ask special params, if relevant
-		if [ "$fs_type" = lvm-vg ]
-		then
-			# add $part to $fs_params if it's not in there because the user wants this enabled by default
-			pv=${part/+/}
-			grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
-			list=
-
-			for pv in `sed 's/:/ /' <<< $fs_params`
-			do
-				list="$list $pv ^ ON"
-			done
-			for pv in `grep '+ lvm-pv' $TMP_BLOCKDEVICES | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
-			do
-				grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
-			done
-			list2=($list)
-			if [ ${#list2[*]} -lt 6 ] # less then 6 words in the list. eg only one option
-			then
-				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
-				fs_params=${list2[0]}
-			else
-				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
-				fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
-			fi
-		fi
-		if [ "$fs_type" = lvm-lv ]
-		then
-			[ -z "$fs_params" ] && default='5G'
-			[ -n "$fs_params" ] && default="$fs_params"
-			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
-			fs_params=$ANSWER_STRING
-		fi
-		if [ "$fs_type" = dm_crypt ]
-		then
-			[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
-			[ -n "$fs_params" ] && default="${fs_params//_/ }"
-			ask_string "Enter the options for this $fs_type on $part" "$default" || return 1
-			fs_params="${ANSWER_STRING// /_}"
-		fi
-
-		# ask opts
+	# determine FS
+	fsopts=($FSOPTS);
+	if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
+	then
+		notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
+		fs_type=${fsopts[0]}
+	else
 		default=
-		[ -n "$fs_opts" ] && default="$fs_opts"
-		program=`get_filesystem_program $fs_type`
-		ask_string "Enter any additional opts for $program" "$default" 0
-		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+		[ -n "$fs_type" ] && default="--default-item $fs_type"
+		ask_option no "Select filesystem" "Select a filesystem for $part:" $FSOPTS || return 1
+		fs_type=$ANSWER_OPTION
+	fi
 
-		[ -z "$fs_type"   ] && fs_type=no_type
-		[ -z "$fs_mountpoint"  ] && fs_mountpoint=no_mountpoint
-		[ -z "$fs_opts"   ] && fs_opts=no_opts
-		[ -z "$fs_label"  ] && fs_label=no_label
-		[ -z "$fs_params" ] && fs_params=no_params
-		NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
+	# ask mountpoint, if relevant
+	if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
+	then
+		default=
+		[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
+		ask_string "Enter the mountpoint for $part" "$default" || return 1
+		fs_mountpoint=$ANSWER_STRING
+	fi
 
-		# add new theoretical blockdevice, if relevant
-		if [ "$fs_type" = lvm-vg ]
+	# ask label, if relevant
+	if [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
+	then
+		default=
+		[ -n "$fs_label" ] && default="$fs_label"
+		ask_string "Enter the label/name for this $fs_type on $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
+		fs_label=$ANSWER_STRING
+	fi
+
+	# ask special params, if relevant
+	if [ "$fs_type" = lvm-vg ]
+	then
+		# add $part to $fs_params if it's not in there because the user wants this enabled by default
+		pv=${part/+/}
+		grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
+		list=
+		for pv in `sed 's/:/ /' <<< $fs_params`
+		do
+			list="$list $pv ^ ON"
+		done
+		for pv in `grep '+ lvm-pv' $TMP_BLOCKDEVICES | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
+		do
+			grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
+		done
+		list2=($list)
+		if [ ${#list2[*]} -lt 6 ] # less then 6 words in the list. eg only one option
 		then
-			echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $TMP_BLOCKDEVICES
-		elif [ "$fs_type" = lvm-pv ]
-		then
-			echo "$part+ $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
-		elif [ "$fs_type" = lvm-lv ]
-		then
-			echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
-		elif  [ "$fs_type" = dm_crypt ]
-		then
-			echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
+			notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
+			fs_params=${list2[0]}
+		else
+			ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
+			fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
 		fi
+	fi
+	if [ "$fs_type" = lvm-lv ]
+	then
+		[ -z "$fs_params" ] && default='5G'
+		[ -n "$fs_params" ] && default="$fs_params"
+		ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
+		fs_params=$ANSWER_STRING
+	fi
+	if [ "$fs_type" = dm_crypt ]
+	then
+		[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
+		[ -n "$fs_params" ] && default="${fs_params//_/ }"
+		ask_string "Enter the options for this $fs_type on $part" "$default" || return 1
+		fs_params="${ANSWER_STRING// /_}"
+	fi
 
-		# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
-		if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs != lvm-* && "$fs" != dm_crypt ]]
-		then
-			[ "$fs" = lvm-vg -o "$fs" = dm_cryp ] && target="/dev/mapper/$label"
-			[ "$fs" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
-			sed -i "#$target#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
-		fi
+	# ask opts
+	default=
+	[ -n "$fs_opts" ] && default="$fs_opts"
+	program=`get_filesystem_program $fs_type`
+	ask_string "Enter any additional opts for $program" "$default" 0
+	fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+
+	[ -z "$fs_type"       ] && fs_type=no_type
+	[ -z "$fs_mountpoint" ] && fs_mountpoint=no_mountpoint
+	[ -z "$fs_opts"       ] && fs_opts=no_opts
+	[ -z "$fs_label"      ] && fs_label=no_label
+	[ -z "$fs_params"     ] && fs_params=no_params
+	NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
+
+	# add new theoretical blockdevice, if relevant
+	if [ "$fs_type" = lvm-vg ]
+	then
+		echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $TMP_BLOCKDEVICES
+	elif [ "$fs_type" = lvm-pv ]
+	then
+		echo "$part+ $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
+	elif [ "$fs_type" = lvm-lv ]
+	then
+		echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
+	elif  [ "$fs_type" = dm_crypt ]
+	then
+		echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
+	fi
+
+	# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
+	if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs_string != lvm-* && "$fs_string" != dm_crypt ]]
+	then
+		[ "$fs_string" = lvm-vg -o "$fs_string" = dm_cryp ] && target="/dev/mapper/$label"
+		[ "$fs_string" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
+		sed -i "#$target#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
+	fi
 }
 
 interactive_filesystems() {
@@ -406,9 +406,9 @@ interactive_filesystems() {
 				[ "$label"  = no_label ] && label_display=
 				if [ -b ${part/+/} ] && get_blockdevice_size ${part/+/} IEC
 				then
-					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}-->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
+					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
 				else
-					infostring="${type}${label_display}-->$fs_display"
+					infostring="${type}${label_display}->$fs_display"
 				fi
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
