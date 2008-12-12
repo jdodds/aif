@@ -402,8 +402,14 @@ interactive_filesystems() {
 				# leave out unneeded info from fs string
 				fs_display=${fs//;yes/}
 				fs_display=${fs//;target/}
-				infostring="$type,$label,$fs_display"
-				[ -b ${part/+/} ] && get_blockdevice_size ${part/+/} IEC && infostring="${BLOCKDEVICE_SIZE}MB,$infostring" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty?
+				[ "$label" != no_label ] && label_display="($label)"
+				[ "$label"  = no_label ] && label_display=
+				if [ -b ${part/+/} ] && get_blockdevice_size ${part/+/} IEC
+				then
+					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}-->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
+				else
+					infostring="${type}${label_display}-->$fs_display"
+				fi
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
