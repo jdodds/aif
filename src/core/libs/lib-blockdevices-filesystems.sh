@@ -433,8 +433,7 @@ process_filesystems ()
 		real_part=${part/+/}
 		if [ -b "$real_part" ]
 		then
-			infofy "(Maybe) Destruction of device $part (type $part_type)" disks
-			debug "Attempting destruction of device $part (type $part_type)"
+			infofy "Attempting destruction of device $part (type $part_type)" disks
 			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part")
 			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
 			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
@@ -452,7 +451,6 @@ process_filesystems ()
 		if [ -b "$part" -a "$fs_create" = yes ]
 		then
 			infofy "Making $fs_type filesystem on $part" disks
-			debug "Making $fs_type filesystem on $part"
 			# don't ask to mount. we take care of all that ourselves in the next phase
 			process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params
 		fi
@@ -462,16 +460,18 @@ process_filesystems ()
 	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
-		if [ "$part_type" = raw ]
+		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
-			infofy "Mounting/swaponning $part" disks
-			debug "Mounting/swaponning $part"
+			infofy "Mounting $part" disks
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+		elif [ "$fs_type" = swap ]
+		then
+			infofy "Swaponning $part" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
 		fi
 	done
 
 	infofy "Done processing filesystems/blockdevices" disks 1
-	debug "Done processing filesystems/blockdevices"
 }
 
 
