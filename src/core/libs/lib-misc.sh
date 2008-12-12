@@ -20,7 +20,7 @@ run_background ()
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
 		var_exit=${1}_exitcode
 		eval "$2" >>$3 2>&1
-		read $var_exit <<< $? #TODO: bash complains about 'not a valid identifier' or something iirc -> maybe fixed now..
+		read $var_exit <<< $? #TODO: bash complains about 'not a valid identifier'
 		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3" #TODO ${!var_exit} doesn't show anything --> maybe fixed now
 		echo >> $3   
 		rm -f /home/arch/aif/runtime/$1-running

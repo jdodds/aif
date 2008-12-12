@@ -431,7 +431,7 @@ _cli_ask_checklist ()
 		item=$1
 		[ "$2" != '-' -a "$2" != '^' ] && item="$1 ($2)"
 		[ "$3" = ON  ] && ask_yesno "Enable $1 ?" yes && output="$output $1"
-		[ "$3" = OFF ] && ask_yesno "Enable $1 ?" no  && output="$output $1"
+		[ "$3" = OFF ] && ask_yesno "Enable $1 ?" no  && output="$output $1" #TODO: for some reason, default is always N when asked to select packages
 		shift 3
 	done
 	ANSWER_CHECKLIST=$output

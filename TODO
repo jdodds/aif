@@ -26,6 +26,7 @@ it can't kill the process or something...
 * core/interactive: do not check hard for the dependencies. a user could really know what he's doing or need to reboot after partitioning a disk and
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
+* auto-configure mkinitcpio.conf for dm_crypt and lvm
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
