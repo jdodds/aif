@@ -3,7 +3,8 @@
 ###### Set some default variables ######
 TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
-LOGFILE=/home/arch/aif/runtime/aif.log
+RUNTIME_DIR=/home/arch/aif/runtime
+LOGFILE=$RUNTIME_DIR/aif.log
 
 
 ###### Miscalleaneous functions ######
@@ -91,7 +92,7 @@ load_procedure()
 	if [ "$1" = 'http:' ]
 	then
 		log "Loading procedure $2 ..."
-		procedure=/home/arch/aif/runtime/procedure-downloaded-`basename $2`
+		procedure=$RUNTIME_DIR/procedure-downloaded-`basename $2`
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
 		log "Loading procedure $1/procedures/$2 ..."
@@ -237,11 +238,19 @@ process_args ()
 }
 
 
+start_installer ()
+{
+	log "################## START OF INSTALLATION ##################"
+	cleanup_runtime
+}
+
+
 # use this function to stop the installation procedure.
 # $1 exit code (optional)
 stop_installer ()
 {
 	log "-------------- STOPPING INSTALLATION ----------"
+	cleanup_runtime
 	exit $1
 }
 
@@ -320,7 +329,7 @@ load_procedure "$module" "$procedure"
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 
-log "################## START OF INSTALLATION ##################"
+start_installer
 
 start_process
 

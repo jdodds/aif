@@ -6,9 +6,9 @@
 
 
 # Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
-ANSWER="/home/arch/aif/runtime/.dialog-answer"
+ANSWER=$RUNTIME_DIR/.dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
-DIA_SUCCESSIVE_ITEMS="/home/arch/aif/runtime/.dia-successive-items"
+DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/.dia-successive-items
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 

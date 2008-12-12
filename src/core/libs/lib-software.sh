@@ -1,7 +1,7 @@
 #!/bin/sh
 
-TMP_MKINITCPIO_LOG=/home/arch/aif/runtime/mkinitcpio.log
-TMP_PACMAN_LOG=/home/arch/aif/runtime/pacman.log
+TMP_MKINITCPIO_LOG=$RUNTIME_DIR/mkinitcpio.log
+TMP_PACMAN_LOG=$RUNTIME_DIR/pacman.log
 
 # run_mkinitcpio() taken from setup. adapted a lot
 # runs mkinitcpio on the target system, displays output
