@@ -529,6 +529,11 @@ process_filesystem ()
 	fs_opts=${6:-no_opts}
 	fs_label=${7:-no_label}
 	fs_params=${8:-no_params}
+	[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=
+	[ "$fs_mount"      = no_mount      ] && fs_mount=
+	[ "$fs_opts"       = no_opts       ] && fs_opts=
+	[ "$fs_label"      = no_label      ] && fs_label=
+	[ "$fs_params"     = no_params     ] && fs_params=
 
 	# Create the FS
 	if [ "$fs_create" = yes ]
@@ -538,7 +543,7 @@ process_filesystem ()
 			show_warning "process_filesystem error" "Cannot determine filesystem program for $fs_type on $part.  Not creating this FS"
 			return 1
 		fi
-		[ "$fs_label" = no_label ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
+		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
 		ret=0
 		#TODO: health checks on $fs_params etc
@@ -587,7 +592,7 @@ process_filesystem ()
 
 
 	# Add to temp fstab, if not already there.
-	if [ $fs_mountpoint != no_mountpoint -a $fs_mount = target ]
+	if [ -n "$fs_mountpoint" -a $fs_mount = target ]
 	then
 		local _uuid="$(getuuid $part)"
 		if [ -n "${_uuid}" ]; then
