@@ -11,11 +11,11 @@ General:
 Specifically:
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap and timezone settings from installer dan't not go in $target/etc/rc.conf
-* lib-ui: don't echo the results, just use the $ANSWER_<foo> variables
 * core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
+* fix broken lvm support + test fancy dm_crypt/lvm etc setups
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * involve broader community
@@ -29,10 +29,9 @@ skip that check or something.  Alternatively, maybe just show which steps are do
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
 * bribe devs
-* core/interactive: when auto-setting up hard disk. show with a bit more detail what is happening (not 'partitioning <disk>' but partitioning, and each FS)
 * core/interactive: do pacman -Sy in the background during early phases, to lessen the wait period before selecting packages
 * write bash completion thing for aif modules/procedures
-
+* add dmraid/mdadm support -> patches welcome.  i don't care about this. 
 
 SOMEDAY/MAYBE/RANDOM THOUGHTS:
 * the quickinst assumes the user did some stuff by himself and does some

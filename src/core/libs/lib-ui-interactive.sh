@@ -383,7 +383,7 @@ interactive_filesystem ()
 
 interactive_filesystems() {
 
-	notify "Available Disks:\n\n$(_getavaildisks)\n"
+	#notify "Available Disks:\n\n$(_getavaildisks)\n" quite useless here I think
 
 	findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
 
