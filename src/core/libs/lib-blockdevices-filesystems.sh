@@ -592,7 +592,7 @@ process_filesystem ()
 
 
 	# Add to temp fstab, if not already there.
-	if [ -n "$fs_mountpoint" -a $fs_mount = target ]
+	if [ -n "$fs_mountpoint" -a "$fs_mount" = target ]
 	then
 		local _uuid="$(getuuid $part)"
 		if [ -n "${_uuid}" ]; then
