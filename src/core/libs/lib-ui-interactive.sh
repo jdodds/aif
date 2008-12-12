@@ -406,7 +406,7 @@ interactive_filesystems() {
 				fs_display=${fs//;target/}
 				[ "$label" != no_label ] && label_display="($label)"
 				[ "$label"  = no_label ] && label_display=
-				if [ -b ${part/+/} ] && get_blockdevice_size ${part/+/} IEC
+				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} IEC # test -b <-- exit's 0, test -b '' exits >0.
 				then
 					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
 				else
