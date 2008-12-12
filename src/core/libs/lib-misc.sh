@@ -45,3 +45,18 @@ wait_for ()
 	kill $(cat $ANSWER) #TODO: this may not work when mode = cli
 }
 
+
+# $1 set (array) haystack
+# $2 needle
+check_is_in ()
+{
+	[ -z "$2" ] && die_error "check_is_in needs a needle as \$2 and a haystack as \$1!"
+
+	local pattern="$1" element
+	shift
+	for element
+	do
+		[[ $element = $pattern ]] && return 0
+	done
+	return 1
+}

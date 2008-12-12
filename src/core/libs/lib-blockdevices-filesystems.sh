@@ -448,17 +448,44 @@ process_filesystems ()
 	done
 
 
-	# TODO: phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
+	# phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
+	# don't let them mount yet. we take care of all that ourselves in the next phase
 
-	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	done_filesystems=
+	for i in `seq 1 10`
 	do
-		if [ -b "$part" -a "$fs_create" = yes ]
-		then
-			infofy "Making $fs_type filesystem on $part" disks
-			# don't ask to mount. we take care of all that ourselves in the next phase
-			process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params
-		fi
-	done < $TMP_FILESYSTEMS
+		open_items=0
+		while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+		do
+			fs_string="$part $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params"
+			if [ "$fs_create" = yes ]
+			then
+				debug "Checking if I need to process $fs_string..."
+				if check_is_in "$fs_string" "${done_filesystems[@]}"
+				then
+					debug "->Already done"
+				else
+					if [ "$part_type" != lvm-pv -a -b "$part" ]
+					then
+						debug "->Still need to do it: Making the filesystem on a volume other then lvm PV"
+						infofy "Making $fs_type filesystem on $part" disks
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
+					elif [ "$part_type" = lvm-pv ] && pvdisplay ${part/+/} >/dev/null
+					then
+						debug "->Still need to do it: Making the filesystem on a volume which is a lvm PV"
+						infofy "Making $fs_type filesystem on $part" disks
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
+					else
+						debug "->Cannot do right now..."
+						open_items=1
+					fi
+				fi
+			fi
+		done < $TMP_FILESYSTEMS
+		[ $open_items -eq 0 ] && break
+	done
+	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't became available in 10 iterations, or process_filesystem failed"
+
 
 
 	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
