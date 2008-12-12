@@ -474,7 +474,7 @@ process_filesystems ()
 					then
 						debug "->Still need to do it: Making the filesystem on a volume which is a lvm PV"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
+						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
 					else
 						debug "->Cannot do right now..."
 						open_items=1
