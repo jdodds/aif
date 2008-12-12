@@ -391,7 +391,7 @@ process_filesystems ()
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
 			infofy "(Maybe) Umounting $part" disks
-			umount $part &>/dev/null # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
+			umount ${part/+/} &>/dev/null # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
 		fi
 	done
 

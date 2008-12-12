@@ -450,8 +450,8 @@ interactive_filesystems() {
 					# a new LV must be created on this VG
 					if interactive_filesystem $part $part_type $part_label '' 
 					then
-						[ -z "$fs" ] && fs=$NEW_FILESYSTEM
 						[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+						[ -z "$fs" ] && fs=$NEW_FILESYSTEM
 					fi
 				else
 					# an existing LV will be edited and it's settings updated
@@ -480,7 +480,6 @@ interactive_filesystems() {
 			[ -z "$part_label" ] && part_label=no_label
 			[ -z "$fs"         ] && fs=no_fs
 			sed -i "s#^$part $part_type $part_label.*#$part $part_type $part_label $fs#" $TMP_BLOCKDEVICES # '#' is a forbidden character !
-
 		done
 
 		# Check all conditions that need to be fixed and ask the user if he wants to go back and correct them
@@ -691,10 +690,10 @@ EOF
     fi
 
 	#TODO: handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed
-	# / on dm_crypt -> no substitution needed: specify physical device that hosts the encrypted /
-	# / on lvm
-	# / on lvm on dm_crypt
-	# / on dm_crypt on lvm
+	# / on dm_crypt        -> no substitution needed: specify physical device that hosts the encrypted /
+	# / on lvm             -> root=/dev/mapper/<volume-group>-<logical-volume-root> resume=/dev/mapper/<volume-group>-<logical-volume-swap> 
+	# / on lvm on dm_crypt -> root=/dev/mapper/<volume-group>-<logical-volume-root> cryptdevice=/dev/<luks-part>:<volume-group>
+	# / on dm_crypt on lvm -> specify the lvm device that hosts the encrypted /
 	# ...
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
