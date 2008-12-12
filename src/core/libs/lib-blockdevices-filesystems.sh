@@ -547,6 +547,10 @@ process_filesystem ()
 			debug "mounting $part on $dst"
 			mkdir -p $dst &>/dev/null # directories may or may not already exist
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
+			if [ "$fs_mount" = target -a $fs_mountpoint = '/' ]
+			then
+				PART_ROOT=$part
+			fi
 		fi
 	fi
 
