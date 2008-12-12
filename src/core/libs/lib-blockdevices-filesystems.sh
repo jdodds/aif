@@ -589,7 +589,7 @@ get_filesystem_program ()
 	[ $1 = vfat     ] && echo mkfs.vfat  && return 0
 	[ $1 = lvm-pv   ] && echo pvcreate   && return 0
 	[ $1 = lvm-vg   ] && echo vgcreate   && return 0
-	[ $1 = lvg-lv   ] && echo lvcreate   && return 0
+	[ $1 = lvm-lv   ] && echo lvcreate   && return 0
 	[ $1 = dm_crypt ] && echo cryptsetup && return 0
 	return 1
 }

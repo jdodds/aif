@@ -275,7 +275,7 @@ interactive_filesystem ()
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
 		then
-			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices" #TODO:  ${fsopts[1]} is empty when making an LV on a VG
+			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
 			fs_type=${fsopts[0]}
 		else
 			default=
