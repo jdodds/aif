@@ -50,7 +50,7 @@ wait_for ()
 # $2 needle
 check_is_in ()
 {
-	[ -z "$2" ] && die_error "check_is_in needs a needle as \$2 and a haystack as \$1!"
+	[ -z "$1" ] && debug "check_is_in $1 $2" && die_error "check_is_in needs a non-empty needle as \$2 and a haystack as \$1!" # haystack can be empty though
 
 	local pattern="$1" element
 	shift
