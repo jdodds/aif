@@ -690,6 +690,13 @@ EOF
         fi
     fi
 
+	#TODO: handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed
+	# / on dm_crypt -> no substitution needed: specify physical device that hosts the encrypted /
+	# / on lvm
+	# / on lvm on dm_crypt
+	# / on dm_crypt on lvm
+	# ...
+
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
     [ "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
