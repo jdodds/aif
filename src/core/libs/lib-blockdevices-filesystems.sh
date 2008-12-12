@@ -554,11 +554,11 @@ process_filesystem ()
 			          fs_params=${fs_params//_/ }
 			          cryptsetup $fs_params $opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
 			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
-			lvm-pv)   pvcreate $opts $part              >$LOG 2>&1; ret=$? ;;
+			lvm-pv)   pvcreate $fs_opts $part              >$LOG 2>&1; ret=$? ;;
 			lvm-vg)   # $fs_params: ':'-separated list of PV's
-			          vgcreate $opts $_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
+			          vgcreate $fs_opts $fs_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
 			lvm-lv)   # $fs_params = size string (eg '5G')
-			          lvcreate -L $fs_params $fs_opts -n $_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+			          lvcreate -L $fs_params $fs_opts -n $fs_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
 			# don't handle anything else here, we will error later
 		esac
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
