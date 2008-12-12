@@ -26,7 +26,9 @@ interactive_configure_system()
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
-		ask_option $DEFAULT "Configuration" '' \
+		helptext=
+		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="Don't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
+		ask_option $DEFAULT "Configuration" "$helptext" \
 		"/etc/rc.conf"              "System Config" \
 		"/etc/fstab"                "Filesystem Mountpoints" \
 		"/etc/mkinitcpio.conf"      "Initramfs Config" \
