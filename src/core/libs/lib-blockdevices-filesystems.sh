@@ -390,8 +390,12 @@ process_filesystems ()
 			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
-			infofy "(Maybe) Umounting $part" disks
-			umount ${part/+/} &>/dev/null # could be that this was not mounted yet. no problem. NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
+			part_real=${part/+/}
+			infofy "(Maybe) Umounting $part_real" disks
+			if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.  NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
+			then
+				umount $part_real >$LOG || show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
+			fi
 		fi
 	done
 
