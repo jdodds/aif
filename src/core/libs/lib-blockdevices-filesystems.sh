@@ -478,7 +478,7 @@ process_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						vgremove $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part") # we shouldn't need -f because we clean up the lv's first.
+						vgremove $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part" # we shouldn't need -f because we clean up the lv's first.
 					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
