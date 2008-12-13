@@ -461,7 +461,7 @@ process_filesystems ()
 				elif [ -b $real_part ]
 				then
 					infofy "Attempting destruction of device $part (type $part_type)" disks
-					cryptsetup luksClose $real_part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
+					cryptsetup luksClose $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
@@ -474,7 +474,7 @@ process_filesystems ()
 				elif [ -b $real_part ]
 				then
 					infofy "Attempting destruction of device $part (type $part_type)" disks
-					pvremove $real_part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
+					pvremove $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
@@ -489,14 +489,14 @@ process_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						vgremove $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part" # we shouldn't need -f because we clean up the lv's first.
+						vgremove $part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part" # we shouldn't need -f because we clean up the lv's first.
 					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
-				if lvdisplay $part >/dev/null && ! vgdisplay $part | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
+				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
 				then
 					have_crypt=0
 					for i in `ls /dev/mapper/`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done 
@@ -507,7 +507,7 @@ process_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						lvremove -f $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
+						lvremove -f $part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
 					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
