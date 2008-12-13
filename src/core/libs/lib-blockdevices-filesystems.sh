@@ -424,35 +424,91 @@ process_filesystems ()
 #	fi
 
 
-	# phase 2: destruct blockdevices if they would exist already (destroy any lvm things, dm_crypt devices etc in the correct order)
-	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should destruct things we need and who are in /etc/mtab or something.
-	# targets for destruction: /dev/mapper devices and lvm PV's who contain no fs, or a non-lvm/dm_crypt fs. TODO: improve regexes
-	# after destructing. the parent must be updated to reflect the vanished child.
+	# phase 2: destruct blockdevices if they would exist already and must be destructed, in the correct order (first lvm LV, then VG, then PV etc)
+	# targets are device-mapper devices such as any lvm things, dm_crypt devices, etc and lvm PV's.
+	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should destruct things we need and who are in /etc/mtab or something. TODO: example?? I should have noted it when i thought of this.
 
 	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $TMP_BLOCKDEVICES, or even better by using finddisks and only doing it if they are in $TMP_BLOCKDEVICES  ) and attempt to destruct.
 	#  do that a few times and the ones that blocked because something else on it will probable have become freed and possible to destruct
 
-	# TODO: do this as long as devices in this list remains and exist physically
-	# TODO: abort when there still are physical devices listed, but we tried to destruct them already, give error
+	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it -> requires updating of underlying block device when you clean something, on a copy of .block_data etc. too complicated
+	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
+	# the advantage of approach 2 over 1 is that 1) it's easier.  2) it's better, because the live environment can be different then what's described in $TMP_BLOCKDEVICES anyway.
 
-	egrep '\+|mapper' $TMP_BLOCKDEVICES | egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' | while read part part_type part_label fs
+	for i in `seq 1 10`
 	do
-		real_part=${part/+/}
-		if [ -b "$real_part" ]
-		then
-			infofy "Attempting destruction of device $part (type $part_type)" disks
-			[ "$part_type" = lvm-pv   ] && ( pvremove             $part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part")
-			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
-			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
-			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $part")
-		elif [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
-		then
-			infofy "Attempting destruction of device $part (type $part_type)" disks
-			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
-		else
-			debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
-		fi
+		open_items=0
+		egrep '\+|mapper' $TMP_BLOCKDEVICES | while read part part_type part_label fs_string # $fs_string can be ignored. TODO: improve regex
+		do
+			real_part=${part/+/}
+			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
+			then
+				if pvdisplay $real_part >/dev/null
+				then
+					debug "$part ->Cannot do right now..."
+					open_items=1
+				elif [ -b $real_part ]
+				then
+					infofy "Attempting destruction of device $part (type $part_type)" disks
+					cryptsetup luksClose $real_part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
+			then
+				if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
+				then
+					debug "$part ->Cannot do right now..."
+					open_items=1
+				elif [ -b $real_part ]
+				then
+					infofy "Attempting destruction of device $part (type $part_type)" disks
+					pvremove $real_part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part") 
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
+			then
+				if vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
+				then
+					open_lv=`vgdisplay -c $part | cut -d ':' -f6`
+					if [ $open_lv -gt 0 ]
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						vgremove $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part") # we shouldn't need -f because we clean up the lv's first.
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
+			then
+				if lvdisplay $part >/dev/null && ! vgdisplay $part | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
+				then
+					have_crypt=0
+					for i in `ls /dev/mapper/`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done 
+					# TODO: Find a way to determine if a volume is used for a dm_crypt device.  this is a hacky workaround that may not work (we check if we have we have dm_crypt devices in /dev/mapper.  we may have 'em, but not there, or we could have hits, but devices that don't use this LV) 
+					if [ $have_crypt -gt 0 ]
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			else
+				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
+			fi
+		done
+		[ $open_items -eq 0 ] && break
 	done
+
+	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
 
 
 	# phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
