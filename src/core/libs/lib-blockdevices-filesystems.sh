@@ -385,6 +385,7 @@ process_filesystems ()
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
 	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $TMP_BLOCKDEVICES ? that needs to be cleaned up too.
 
+	infofy "Phase 1: Umounting all needed mountpoints"
 	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
@@ -435,6 +436,7 @@ process_filesystems ()
 	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
 	# the advantage of approach 2 over 1 is that 1) it's easier.  2) it's better, because the live environment can be different then what's described in $TMP_BLOCKDEVICES anyway.
 
+	infofy "Phase 2: destructing blockdevices"
 	for i in `seq 1 10`
 	do
 		open_items=0
@@ -514,6 +516,7 @@ process_filesystems ()
 	# phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 	# don't let them mount yet. we take care of all that ourselves in the next phase
 
+	infofy "Phase 3: Creating blockdevices"
 	done_filesystems=
 	for i in `seq 1 10`
 	do
@@ -557,6 +560,8 @@ process_filesystems ()
 
 
 	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+
+	infofy "Phase 4: Mounting filesystems"
 	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
