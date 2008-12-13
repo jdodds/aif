@@ -445,6 +445,10 @@ process_filesystems ()
 			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
 			[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
 			[ "$part_type" = dm_crypt ] && ( cryptsetup luksClose $part || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $part")
+		elif [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
+		then
+			infofy "Attempting destruction of device $part (type $part_type)" disks
+			[ "$part_type" = lvm-vg   ] && ( vgremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not vgremove -f $part")
 		else
 			debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 		fi
