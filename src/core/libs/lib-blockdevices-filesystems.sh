@@ -9,7 +9,10 @@
 # FS-string:
 # type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
 # NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
-# NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
+# NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
+#       the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
+#       no '+' characters allowed for devices in $fs_params (eg use the real names)
+
 
 # ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
 # part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
@@ -464,14 +467,18 @@ process_filesystems ()
 				then
 					debug "$fs_id ->Already done"
 				else
-					#TODO: for lvm VG's, availability of all underlying PV's must be checked (fs_params)
-					#TODO: for lvm lv's, check vgdisplay as workaround
-					if [ "$part_type" != lvm-pv -a -b "$part" ]
+					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
+					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
+					then
+						debug "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
+						infofy "Making $fs_type filesystem on $part" disks
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
+					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
 						debug "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
-					elif [ "$part_type" = lvm-pv ] && pvdisplay ${part/+/} >/dev/null
+					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
