@@ -308,7 +308,7 @@ interactive_filesystem ()
 	# ask special params, if relevant
 	if [ "$fs_type" = lvm-vg ]
 	then
-		# add $part to $fs_params if it's not in there because the user wants this enabled by default
+		# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
 		pv=${part/+/}
 		grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
 		list=

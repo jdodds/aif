@@ -9,7 +9,7 @@
 # FS-string:
 # type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
 # NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
-
+# NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
 
 # ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
 # part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
@@ -457,26 +457,27 @@ process_filesystems ()
 		open_items=0
 		while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 		do
-			fs_string="$part $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params"
+			fs_id="$part $fs_type $fs_mountpoint $fs_opts $fs_label $fs_params"
 			if [ "$fs_create" = yes ]
 			then
-				debug "Checking if I need to process $fs_string..."
-				if check_is_in "$fs_string" "${done_filesystems[@]}"
+				if check_is_in "$fs_id" "${done_filesystems[@]}"
 				then
-					debug "->Already done"
+					debug "$fs_id ->Already done"
 				else
+					#TODO: for lvm VG's, availability of all underlying PV's must be checked (fs_params)
+					#TODO: for lvm lv's, check vgdisplay as workaround
 					if [ "$part_type" != lvm-pv -a -b "$part" ]
 					then
-						debug "->Still need to do it: Making the filesystem on a volume other then lvm PV"
+						debug "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${part/+/} >/dev/null
 					then
-						debug "->Still need to do it: Making the filesystem on a volume which is a lvm PV"
+						debug "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_string")
+						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
 					else
-						debug "->Cannot do right now..."
+						debug "$fs_id ->Cannot do right now..."
 						open_items=1
 					fi
 				fi
@@ -563,7 +564,7 @@ process_filesystem ()
 			lvm-vg)   # $fs_params: ':'-separated list of PV's
 			          vgcreate $fs_opts $fs_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
 			lvm-lv)   # $fs_params = size string (eg '5G')
-			          lvcreate -L $fs_params $fs_opts -n $fs_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G
+			          lvcreate -L $fs_params $fs_opts -n $fs_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # TODO: do i need to active them?
 			# don't handle anything else here, we will error later
 		esac
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
