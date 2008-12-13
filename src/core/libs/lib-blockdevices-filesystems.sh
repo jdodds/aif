@@ -463,7 +463,7 @@ process_filesystems ()
 				elif [ -b $real_part ]
 				then
 					infofy "Attempting destruction of device $part (type $part_type)" disks
-					pvremove $real_part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part") 
+					pvremove $real_part || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
@@ -496,7 +496,7 @@ process_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						[ "$part_type" = lvm-lv   ] && ( lvremove -f          $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part")
+						lvremove -f $part || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
 					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
