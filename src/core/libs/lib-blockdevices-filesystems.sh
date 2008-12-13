@@ -526,7 +526,7 @@ process_filesystems ()
 
 process_filesystem ()
 {
-	[ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1"
+	[ "$2" != lvm-lv ] && [ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1" # Don't do this for lv's.  It's a hack to workaround non-existence of VG device files.
 	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
 	debug "process_filesystem $@"
         part=$1
@@ -571,7 +571,7 @@ process_filesystem ()
 			lvm-vg)   # $fs_params: ':'-separated list of PV's
 			          vgcreate $fs_opts $fs_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
 			lvm-lv)   # $fs_params = size string (eg '5G')
-			          lvcreate -L $fs_params $fs_opts -n $fs_label $part   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # TODO: do i need to active them?
+			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
 		esac
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
