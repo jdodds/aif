@@ -444,6 +444,7 @@ process_filesystems ()
 	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it -> requires updating of underlying block device when you clean something, on a copy of .block_data etc. too complicated
 	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
 	# the advantage of approach 2 over 1 is that 1) it's easier.  2) it's better, because the live environment can be different then what's described in $TMP_BLOCKDEVICES anyway.
+	# TODO: what if eg /dev/sda2 is listed now as a PV but in the runtime system it's in use as a dm_crypt or something? then it won't be cleaned up and it will still be blocking.  Maybe we should start by looking at the actual runtime system and clean up from that.
 
 	infofy "Phase 2: destructing blockdevices" disks
 	for i in `seq 1 10`
@@ -454,27 +455,31 @@ process_filesystems ()
 			real_part=${part/+/}
 			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
-				if pvdisplay $real_part >/dev/null
+				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null
 				then
-					debug "$part ->Cannot do right now..."
-					open_items=1
-				elif [ -b $real_part ]
-				then
-					infofy "Attempting destruction of device $part (type $part_type)" disks
-					cryptsetup luksClose $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
+					if pvdisplay $real_part >/dev/null
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						cryptsetup luksClose $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
+					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
 			then
-				if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
+				if [ -b $real_part ] && pvdisplay $real_part &>/dev/null
 				then
-					debug "$part ->Cannot do right now..."
-					open_items=1
-				elif [ -b $real_part ]
-				then
-					infofy "Attempting destruction of device $part (type $part_type)" disks
-					pvremove $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
+					if if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						pvremove $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
+					fi
 				else
 					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
