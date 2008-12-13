@@ -386,6 +386,7 @@ process_filesystems ()
 	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $TMP_BLOCKDEVICES ? that needs to be cleaned up too.
 
 	infofy "Phase 1: Umounting all needed mountpoints" disks
+	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
 	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
@@ -395,10 +396,18 @@ process_filesystems ()
 		elif [ "$fs_mountpoint" != no_mount ]
 		then
 			part_real=${part/+/}
-			infofy "(Maybe) Umounting $part_real" disks
-			if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.  NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
+			if ! check_is_in "$part_real" "${done_umounts[@]}"
 			then
-				umount $part_real >$LOG || show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
+				infofy "(Maybe) Umounting $part_real" disks
+				if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.  NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
+				then
+					if umount $part_real >$LOG
+					then
+						done_umounts+=("$part_real")
+					else
+						show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
+					fi
+				fi
 			fi
 		fi
 	done
