@@ -385,7 +385,7 @@ process_filesystems ()
 	# phase 1: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 	# don't let them mount yet. we take care of all that ourselves in the next phase
 
-	infofy "Phase 1: Creating blockdevices" disks
+	infofy "Phase 1: Creating filesystems & blockdevices" disks
 	done_filesystems=
 	for i in `seq 1 10`
 	do
@@ -435,7 +435,7 @@ process_filesystems ()
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
-			infofy "Mounting $part" disks
+			infofy "Mounting $part ($fs_type) on $fs_mountpoint" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		elif [ "$fs_type" = swap ]
 		then
@@ -444,6 +444,7 @@ process_filesystems ()
 		fi
 	done
 
+	BLOCK_ROLLBACK_USELESS=0
 	[ $returncode -eq 0 ] && infofy "Done processing filesystems/blockdevices" disks 1 && return 0
 	return $returncode
 }
@@ -455,6 +456,7 @@ rollback_filesystems ()
 	infofy "Rolling back filesystems..." disks
 	generate_filesystem_list
 	local warnings=
+	rm -f $TMP_FSTAB
 
 	# phase 1: destruct all mounts in the vfs and swapoff swap volumes who are listed in $BLOCK_DATA
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
@@ -599,6 +601,7 @@ rollback_filesystems ()
 	fi
 	[ -n "$warnings" ] && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
 	infofy "Rollback succeeded" disks
+	BLOCK_ROLLBACK_USELESS=1
 	return 0
 }
 
@@ -662,6 +665,7 @@ process_filesystem ()
 			lvm-lv)   # $fs_params = size string (eg '5G')
 			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
+			BLOCK_ROLLBACK_USELESS=0
 		esac
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
 		sleep 2
@@ -670,6 +674,7 @@ process_filesystem ()
 	# Mount it, if requested.  Note that it's your responsability to figure out if you want this or not before calling me.  This will only work for 'raw' filesystems (ext,reiser,xfs, swap etc. not lvm stuff,dm_crypt etc)
 	if [ "$fs_mount" = runtime -o "$fs_mount" = target ]
 	then
+		BLOCK_ROLLBACK_USELESS=0
 		if [ "$fs_type" = swap ]
 		then
 			debug "swaponning $part"
