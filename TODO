@@ -14,7 +14,7 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * test fancy dm_crypt/lvm etc setups
 * automatically configure grub for dm_crypt and lvm
 * cannot destruct luks devices (cryptsetup isLuks exits 234 instead of 0 for the device) -> breaks rollback when you have a luks FS
-* rollback sometimes loops only once (eg with lvm setup only the LV is rolled back)
+* rollback sometimes loops only once (eg with lvm setup only the LV is rolled back). open_items=1 doesn't get set even though it skips stuff (like the VG)
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program

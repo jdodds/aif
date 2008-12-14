@@ -572,6 +572,7 @@ rollback_filesystems ()
 					for i in `awk '$2 ~ /dm_crypt/ {print $1}' $TMP_BLOCKDEVICES`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done
 					# TODO: Find a way to determine if a volume is used for a dm_crypt device.
 					# this is a workaround that checks if any of the specified dm_crypts is still active.  These devices may not be using this lvm LV, but we don't do much harm in skipping anyway.  The dm_crypts should be cleared otherwise there's a problem anyway. 
+					# TODO: beware though. isLuks can exit(234) even though the volume isLuks .. :s
 					if [ $have_crypt -gt 0 ]
 					then
 						debug "$part ->Cannot do right now..."
