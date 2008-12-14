@@ -346,8 +346,9 @@ _dia_ask_option ()
 	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
+	EXTRA_INFO=$3
 	shift 3
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $3" 20 80 16 "$@" 2>$ANSWER
+	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
@@ -481,10 +482,12 @@ _cli_ask_option ()
 	# $3 is optional more info
 	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
+	MENU_TITLE=$2
+	EXTRA_INFO=$3
 	shift 3
 
-	echo "$2"
-	[ -n "$3" ] && echo "$3"
+	echo "$MENU_TITLE"
+	[ -n "$EXTRA_INFO" ] && echo "$EXTRA_INFO"
 	while [ -n "$1" ]
 	do
 		echo "$1 ] $2"
@@ -495,7 +498,7 @@ _cli_ask_option ()
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug "cli_ask_option: User choose $ANSWER_OPTION ($2)"
+	debug "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
 	[ "$ANSWER_OPTION" = CANCEL ] && return 1
 	return 0
 }

@@ -14,7 +14,6 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * test fancy dm_crypt/lvm etc setups
 * automatically configure grub for dm_crypt and lvm
-* 'additional, optional info' not shown correctly in _dia_ask_option bug
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
