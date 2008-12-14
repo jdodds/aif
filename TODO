@@ -3,12 +3,11 @@ See also the FIXME's and TODO's in the code.
 
 ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and refactoring
 * setup bugtracker/roadmap thingie
-* check everywhere that if users cancels something, we return 1
+* check everywhere that if users cancels something, we return 1, empty string behavior etc
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: keymap and timezone settings from installer dan't not go in $target/etc/rc.conf
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
-* core/base: implement as specified in README
 * core/quickinst: figure out what needs to be done and do it.
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think

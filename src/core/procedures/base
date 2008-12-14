@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#TODO: make this profile work on itself, eg some stuff from inheriting profiles should be moved in, stuff implemented etc
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_PACKAGES=
