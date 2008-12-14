@@ -665,8 +665,8 @@ process_filesystem ()
 			lvm-lv)   # $fs_params = size string (eg '5G')
 			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
-			BLOCK_ROLLBACK_USELESS=0
 		esac
+		BLOCK_ROLLBACK_USELESS=0
 		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
 		sleep 2
 	fi

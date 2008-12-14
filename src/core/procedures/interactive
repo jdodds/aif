@@ -168,7 +168,7 @@ worker_prepare_disks()
 			interactive_filesystems && ret=0 && NEXTITEM=5 && DISK_CONFIG_TYPE=manual
 		fi
 		;;
-           "4"
+           "4")
 		if [ "$BLOCK_ROLLBACK_USELESS" = "1" ]
 		then
 			ask_yesno "It seems like you haven't partitioned/formatted/mounted anything yet (or rolled back already).  This operation is useless (unless the installer is buggy), but it doesn't harm.  Do you want to continue?" || NEXTITEM=5
@@ -182,6 +182,7 @@ worker_prepare_disks()
 				show_warning "Rollback failed" "Rollback failed"
 			fi
 		fi
+		;;
             *)
                 DONE=1 ;;
         esac
