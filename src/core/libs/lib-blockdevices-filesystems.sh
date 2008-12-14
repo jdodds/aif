@@ -450,7 +450,7 @@ process_filesystems ()
 }
 
 
-# Roll back everything specified in $BLOCK_DATA.  Doesn't restore data after you erased it, of course.
+# Roll back all "filesystems" (normal ones and dm-mapper based stuff) specified in $BLOCK_DATA.  Not partitions.  Doesn't restore data after you erased it, of course.
 rollback_filesystems ()
 {
 	infofy "Rolling back filesystems..." disks
@@ -508,7 +508,7 @@ rollback_filesystems ()
 			real_part=${part/+/}
 			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
-				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null
+				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null #TODO: if you have lukscreated and luksopened something, isLuks still returns exitcode 234 :@ WTF
 				then
 					if pvdisplay $real_part >/dev/null
 					then

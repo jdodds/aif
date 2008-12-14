@@ -13,6 +13,8 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * test fancy dm_crypt/lvm etc setups
 * automatically configure grub for dm_crypt and lvm
+* cannot destruct luks devices (cryptsetup isLuks exits 234 instead of 0 for the device) -> breaks rollback when you have a luks FS
+* rollback sometimes loops only once (eg with lvm setup only the LV is rolled back)
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
