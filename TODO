@@ -16,20 +16,6 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * automatically configure grub for dm_crypt and lvm
 * 'additional, optional info' not shown correctly in _dia_ask_option bug
 
-* Rethink umount/destruct blockdevice/filesystem stuff
-** Goals
-not break while trying to build the setup like the user requested (breakage could happen if a device mapper volume is still active or a filesystem is still mounted)
-still allow user to mount stuff himself behind the installers back. he is smarter then us.  just do what we're told.
-** Options
-*** umount/deconstruct before trying to build
-problems: - it's hard to know what we should delete, our 'build' plan might be different then the current environment (eg devices with same name but other function),
-           usually because of a previous run with the wrong settings, or which failed
-          - we can't base ourselves on things like "we should only have / and /dev/shm".  The user can mount things himself
-          - quite complicated code if want to make it smart, but it's a dead end anyway.
-*** if buildup fails, ask user to rollback
-- user should not ctrl-c and installer should not crash. this is doable.  a 'wrong' state can be an exception.
-
-
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * involve broader community

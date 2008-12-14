@@ -1,0 +1,13 @@
+* umounting/destructing blockdevice/filesystem stuff in the blockdevice library.
+** Goals
+not break while trying to build the setup like the user requested (breakage could happen if a device mapper volume is still active or a filesystem is still mounted)
+still allow user to mount stuff himself behind the installers back. he is smarter then us.  just do what we're told.
+** Options
+*** umount/deconstruct before trying to build
+problems: - it's hard to know what we should delete, our 'build' plan might be different then the current environment (eg devices with same name but other function),
+           usually because of a previous run with the wrong settings, or which failed
+          - we can't base ourselves on things like "we should only have / and /dev/shm".  The user can mount things himself
+          - quite complicated code if want to make it smart, but it's a dead end anyway.
+*** if buildup fails, ask user to rollback -> implemented approach
+- user should not ctrl-c and installer should not crash. this is doable.  a 'wrong' state can be an acceptable exception.
+- right now we can start repartitioning a disks that has filesystems mounted.  is this harmfull? this only happens if unclean rollback or user did it, so NP i think

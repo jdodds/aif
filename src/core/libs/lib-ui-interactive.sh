@@ -163,10 +163,20 @@ interactive_autoprepare()
 
 
 	process_disks       || die_error "Something went wrong while partitioning"
-	process_filesystems || die_error "Something went wrong while processing the filesystems"
-	notify "Auto-prepare was successful"
-	return 0
-
+	if ! process_filesystems
+	then
+		show_warning "Filesystem processing" "Something went wrong while processing the filesystems.  Attempting rollback."
+		if rollback_filesystems
+		then
+			show_warning "Filesystem rollback" "Rollback succeeded.  Please try to figure out what went wrong and try me again.  If you found a bug in the installer, please report it."
+			return 1
+		else
+			die_error "Filesystem processing and rollback failed.  Please try the installer again.  If you found a bug in the installer, please report it."
+		fi
+	else
+		notify "Auto-prepare was successful"
+		return 0
+	fi
 }
 
 
@@ -504,7 +514,7 @@ interactive_filesystems() {
 
 
 	process_filesystems && notify "Partitions were successfully created." && return 0
-	show_warning "Filesystem processing" "Something went wrong while processing the filesystems"
+	ask_yesno "Seems like some stuff went wrong while processing the filesystems.  do you want to rollback? (this cleans up the new mountpoints, filesystems, etc. not doing this can break the next run of the installer unless you clean it up yourself" yes && rollback_filesystems
 	return 1
 }
 

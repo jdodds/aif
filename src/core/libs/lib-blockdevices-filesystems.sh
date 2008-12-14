@@ -374,163 +374,18 @@ generate_filesystem_list ()
 }
 
 
-# process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly, destroying what's necessary first.
+# process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly
 process_filesystems ()
 {
 	debug "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
+	returncode=0
 
-	# phase 1: destruct all mounts in the vfs that are about to be reconstructed. (and also swapoff where appropriate)
-	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
-	# TODO: this is not entirely correct: what if something is mounted in a previous run that is now not anymore in $TMP_BLOCKDEVICES ? that needs to be cleaned up too.
-
-	infofy "Phase 1: Umounting all needed mountpoints" disks
-	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
-	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
-	do
-		if [ "$fs_type" = swap ]
-		then
-			infofy "(Maybe) Swapoffing $part" disks
-			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
-		elif [ "$fs_mountpoint" != no_mount ]
-		then
-			part_real=${part/+/}
-			if ! check_is_in "$part_real" "${done_umounts[@]}"
-			then
-				infofy "(Maybe) Umounting $part_real" disks
-				if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.  NOTE: umount part, not mountpoint. some other part could be mounted in this place, we don't want to affect that.
-				then
-					if umount $part_real >$LOG
-					then
-						done_umounts+=("$part_real")
-					else
-						show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
-					fi
-				fi
-			fi
-		fi
-	done
-
-#	devs_avail=1
-#	while [ $devs_avail = 1 ]
-#	do
-#		devs_avail=0
-#		for part in `findpartitions`
-#		do
-#			if entry=`grep ^$part $TMP_BLOCKDEVICES`
-#			then
-#				process_filesystem "$entry" && sed -i "/^$part/d" $TMP_BLOCKDEVICES && debug "$part processed and removed from $TMP_BLOCKDEVICES"
-#				devs_avail=1
-#			fi
-#		done
-#	done
-#	entries=`wc -l $TMP_BLOCKDEVICES`
-#	if [ $entries -gt 0 ]
-#	then
-#		die_error "Could not process all entries because not all available blockdevices became available.  Unprocessed:`awk '{print \$1}' $TMP_BLOCKDEVICES`"
-#	else
-#		debug "All entries processed..."
-#	fi
-
-
-	# phase 2: destruct blockdevices if they would exist already and must be destructed, in the correct order (first lvm LV, then VG, then PV etc)
-	# targets are device-mapper devices such as any lvm things, dm_crypt devices, etc and lvm PV's.
-	# in theory devices with same names could be stacked on each other with different dependencies.  I hope that's not the case for now.  In the future maybe we should destruct things we need and who are in /etc/mtab or something. TODO: example?? I should have noted it when i thought of this.
-
-	# NOTE: an alternative approach could be to just go over all /dev/mapper devices or normal devices that are lvm PV's (by using finddisks etc instead of $TMP_BLOCKDEVICES, or even better by using finddisks and only doing it if they are in $TMP_BLOCKDEVICES  ) and attempt to destruct.
-	#  do that a few times and the ones that blocked because something else on it will probable have become freed and possible to destruct
-
-	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it -> requires updating of underlying block device when you clean something, on a copy of .block_data etc. too complicated
-	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
-	# the advantage of approach 2 over 1 is that 1) it's easier.  2) it's better, because the live environment can be different then what's described in $TMP_BLOCKDEVICES anyway.
-	# TODO: what if eg /dev/sda2 is listed now as a PV but in the runtime system it's in use as a dm_crypt or something? then it won't be cleaned up and it will still be blocking.  Maybe we should start by looking at the actual runtime system and clean up from that.
-
-	infofy "Phase 2: destructing blockdevices" disks
-	for i in `seq 1 10`
-	do
-		open_items=0
-		egrep '\+|mapper' $TMP_BLOCKDEVICES | while read part part_type part_label fs_string # $fs_string can be ignored. TODO: improve regex
-		do
-			real_part=${part/+/}
-			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
-			then
-				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null
-				then
-					if pvdisplay $real_part >/dev/null
-					then
-						debug "$part ->Cannot do right now..."
-						open_items=1
-					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
-						cryptsetup luksClose $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
-					fi
-				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
-				fi
-			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
-			then
-				if [ -b $real_part ] && pvdisplay $real_part &>/dev/null
-				then
-					if if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
-					then
-						debug "$part ->Cannot do right now..."
-						open_items=1
-					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
-						pvremove $real_part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
-					fi
-				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
-				fi
-			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
-			then
-				if vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
-				then
-					open_lv=`vgdisplay -c $part | cut -d ':' -f6`
-					if [ $open_lv -gt 0 ]
-					then
-						debug "$part ->Cannot do right now..."
-						open_items=1
-					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
-						vgremove $part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part" # we shouldn't need -f because we clean up the lv's first.
-					fi
-				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
-				fi
-			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
-			then
-				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
-				then
-					have_crypt=0
-					for i in `ls /dev/mapper/`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done 
-					# TODO: Find a way to determine if a volume is used for a dm_crypt device.  this is a hacky workaround that may not work (we check if we have we have dm_crypt devices in /dev/mapper.  we may have 'em, but not there, or we could have hits, but devices that don't use this LV) 
-					if [ $have_crypt -gt 0 ]
-					then
-						debug "$part ->Cannot do right now..."
-						open_items=1
-					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
-						lvremove -f $part >$LOG || show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
-					fi
-				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
-				fi
-			else
-				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
-			fi
-		done
-		[ $open_items -eq 0 ] && break
-	done
-
-	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
-
-
-	# phase 3: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
+	# phase 1: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 	# don't let them mount yet. we take care of all that ourselves in the next phase
 
-	infofy "Phase 3: Creating blockdevices" disks
+	infofy "Phase 1: Creating blockdevices" disks
 	done_filesystems=
 	for i in `seq 1 10`
 	do
@@ -549,17 +404,17 @@ process_filesystems ()
 					then
 						debug "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
 						debug "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
-						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id")
+						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					else
 						debug "$fs_id ->Cannot do right now..."
 						open_items=1
@@ -569,27 +424,182 @@ process_filesystems ()
 		done < $TMP_FILESYSTEMS
 		[ $open_items -eq 0 ] && break
 	done
-	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't became available in 10 iterations, or process_filesystem failed"
+	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't became available in 10 iterations, or process_filesystem failed" && returncode=1
 
 
 
-	# phase 4: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
+	# phase 2: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 
-	infofy "Phase 4: Mounting filesystems" disks
+	infofy "Phase 2: Mounting filesystems" disks
 	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			infofy "Mounting $part" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		elif [ "$fs_type" = swap ]
 		then
 			infofy "Swaponning $part" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		fi
 	done
 
-	infofy "Done processing filesystems/blockdevices" disks 1
+	[ $returncode -eq 0 ] && infofy "Done processing filesystems/blockdevices" disks 1 && return 0
+	return $returncode
+}
+
+
+# Roll back everything specified in $BLOCK_DATA.  Doesn't restore data after you erased it, of course.
+rollback_filesystems ()
+{
+	infofy "Rolling back filesystems..." disks
+	generate_filesystem_list
+	local warnings=
+
+	# phase 1: destruct all mounts in the vfs and swapoff swap volumes who are listed in $BLOCK_DATA
+	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
+
+	infofy "Phase 1: Umounting all specified mountpoints" disks
+	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
+	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	do
+		if [ "$fs_type" = swap ]
+		then
+			infofy "(Maybe) Swapoffing $part" disks
+			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
+		elif [ "$fs_mountpoint" != no_mount ]
+		then
+			part_real=${part/+/}
+			if ! check_is_in "$part_real" "${done_umounts[@]}"
+			then
+				infofy "(Maybe) Umounting $part_real" disks
+				if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.
+				then
+					if umount $part_real >$LOG
+					then
+						done_umounts+=("$part_real")
+					else
+						warnings="$warnings\nCould not umount umount $part_real .  Probably device is still busy.  See $LOG"
+						show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
+					fi
+				fi
+			fi
+		fi
+	done
+
+
+	# phase 2: destruct blockdevices listed in $BLOCK_DATA if they would exist already, in the correct order (first lvm LV, then VG, then PV etc)
+	# targets are device-mapper devices such as any lvm things, dm_crypt devices, etc and lvm PV's.
+
+	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it 
+	#                      -> requires updating of underlying block device string when you clean something, on a copy of .block_data etc. too complicated
+	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
+	#                      -> easier (implemented)
+
+
+	infofy "Phase 2: destructing specified blockdevices" disks
+	for i in `seq 1 10`
+	do
+		open_items=0
+		egrep '\+|mapper' $TMP_BLOCKDEVICES | while read part part_type part_label fs_string # $fs_string can be ignored. TODO: improve regex
+		do
+			real_part=${part/+/}
+			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
+			then
+				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null
+				then
+					if pvdisplay $real_part >/dev/null
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						if ! cryptsetup luksClose $real_part >$LOG
+						then
+							warnings="$warnings\nCould not cryptsetup luksClose $real_part"
+							show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
+						fi
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
+			then
+				if [ -b $real_part ] && pvdisplay $real_part &>/dev/null
+				then
+					if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						if ! pvremove $real_part >$LOG
+						then
+							warnings="$warnings\nCould not pvremove $part"
+							show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
+						fi
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
+			then
+				if vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
+				then
+					open_lv=`vgdisplay -c $part | cut -d ':' -f6`
+					if [ $open_lv -gt 0 ]
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						if ! vgremove $part >$LOG # we shouldn't need -f because we clean up the lv's first. 
+						then
+							warnings="$warnings\nCould not vgremove $part"
+							show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part"
+						fi
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
+			then
+				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
+				then
+					have_crypt=0
+					for i in `awk '$2 ~ /dm_crypt/ {print $1}' $TMP_BLOCKDEVICES`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done
+					# TODO: Find a way to determine if a volume is used for a dm_crypt device.
+					# this is a workaround that checks if any of the specified dm_crypts is still active.  These devices may not be using this lvm LV, but we don't do much harm in skipping anyway.  The dm_crypts should be cleared otherwise there's a problem anyway. 
+					if [ $have_crypt -gt 0 ]
+					then
+						debug "$part ->Cannot do right now..."
+						open_items=1
+					else
+						infofy "Attempting destruction of device $part (type $part_type)" disks
+						if ! lvremove -f $part >$LOG
+						then
+							warnings="$warnings\nCould not lvremove -f $part"
+							show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
+						fi
+					fi
+				else
+					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+				fi
+			else
+				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
+			fi
+		done
+		[ $open_items -eq 0 ] && break
+	done
+
+	if [ $open_items -eq 1 ]
+	then
+		warnings="$warnings\nCould not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
+		show_warning "Filesystem/blockdevice processor problem" "Warning: Could not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
+	fi
+	[ -n "$warnings" ] && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
+	infofy "Rollback succeeded" disks
+	return 0
 }
 
 

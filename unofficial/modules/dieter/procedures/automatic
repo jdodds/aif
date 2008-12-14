@@ -79,7 +79,7 @@ worker_prepare_disks ()
 	cryptsetup luksClose sda2_crypt 2>/dev/null
 	dd if=/dev/urandom of=/dev/sda bs=512 count=1
 
-	#TODO: integrate this stuff into the functions in the libs + do error checking and handling
+	#TODO: integrate this stuff into the functions in the libs  (process_partitions and filesystems, rollback and bailout if needed) + do error checking and handling
 	#NOTE: i don't think i should quote to prevent globbing, but it does seem to help i think (hard to check as resource is busy and you can't reload kernel partition tables)
 	sfdisk /dev/sda 2>&1 | grep -v 'not have an msdos signature' << EOF
 ,10,L,'*'
