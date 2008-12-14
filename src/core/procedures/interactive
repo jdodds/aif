@@ -136,10 +136,12 @@ worker_prepare_disks()
 	ret=1 # 1 means unsuccessful. 0 for ok
 	NEXTITEM=
 	DISK_CONFIG_TYPE=
-	rollbackstr=" (you don't need to do this)"
-	ended_ok worker prepare_disks && rollbackstr=" (looks like you need to do this)" && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
+	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
 	while [ "$DONE" = "0" ]
 	do
+		rollbackstr=" (you don't need to do this)"
+		[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && rollbackstr=" (this will revert your last changes)"
+
 		default=no
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
