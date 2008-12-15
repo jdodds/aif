@@ -483,7 +483,7 @@ interactive_filesystems() {
 						[ -z "$newfs" ] && newfs=$add
 						[ -n "$newfs" ] && newfs="$newfs|$add"
 					done
-					fs=newfs
+					fs=$newfs
 				fi
 			else
 				interactive_filesystem $part $part_type $part_label $fs
