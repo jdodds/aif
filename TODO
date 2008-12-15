@@ -11,9 +11,11 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * core/quickinst: figure out what needs to be done and do it.
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
-* test fancy dm_crypt/lvm etc setups
 * automatically configure grub for dm_crypt and lvm
 * cannot destruct luks devices (cryptsetup isLuks exits 234 instead of 0 for the device) -> breaks rollback when you have a luks FS
+* removing an LV from a VG with more then 1 LV makes another LV be listed twice
+* when removing dm_mapper devices, their "results" are not cleaned up (eg remove a LV filesystem on a VG and the LV block device remains)
+
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
