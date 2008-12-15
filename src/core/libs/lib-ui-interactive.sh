@@ -370,19 +370,13 @@ interactive_filesystem ()
 	NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
 
 	# add new theoretical blockdevice, if relevant
-	if [ "$fs_type" = lvm-vg ]
-	then
-		echo "/dev/mapper/$fs_label $fs_type $fs_label no_fs" >> $TMP_BLOCKDEVICES
-	elif [ "$fs_type" = lvm-pv ]
-	then
-		echo "$part+ $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
-	elif [ "$fs_type" = lvm-lv ]
-	then
-		echo "/dev/mapper/$part_label-$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
-	elif  [ "$fs_type" = dm_crypt ]
-	then
-		echo "/dev/mapper/$fs_label $fs_type no_label no_fs" >> $TMP_BLOCKDEVICES
-	fi
+	new_device=
+	[ "$fs_type" = lvm-vg   ] && new_device="/dev/mapper/$fs_label $fs_type $fs_label"
+	[ "$fs_type" = lvm-pv   ] && new_device="$part+ $fs_type no_label"
+	[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type no_label"
+	[ "$fs_type" = dm_crypt ] && new_device="/dev/mapper/$fs_label $fs_type no_label"
+	[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
+
 
 	# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
 	if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs_string != lvm-* && "$fs_string" != dm_crypt ]]
