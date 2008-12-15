@@ -457,6 +457,7 @@ interactive_filesystems() {
 				fi
 				list="$list empty NEW"
 				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" $list
+				EDIT_VG=$ANSWER_OPTION
 				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
 				then
 					# a new LV must be created on this VG
@@ -469,16 +470,16 @@ interactive_filesystems() {
 					# an existing LV will be edited and it's settings updated
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
-						label=$(cut -d ';' -f 4 <<< $lv)
-						[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
+						label=$(cut -d ';' -f 6 <<< $lv)
+						[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
 					done
 					interactive_filesystem $part $part_type $part_label "$found_lv"
 					fs=
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
-						label=$(cut -d ';' -f 4 <<< $lv)
+						label=$(cut -d ';' -f 6 <<< $lv)
 						add=$lv
-						[ "$label" = "$ANSWER_OPTION" ] && add=$NEW_FILESYSTEM
+						[ "$label" = "$EDIT_VG" ] && add=$NEW_FILESYSTEM
 						[ -z "$fs" ] && fs=$add
 						[ -n "$fs" ] && fs="$fs|$add"
 					done
