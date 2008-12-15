@@ -503,7 +503,7 @@ rollback_filesystems ()
 	for i in `seq 1 10`
 	do
 		open_items=0
-		egrep '\+|mapper' $TMP_BLOCKDEVICES | while read part part_type part_label fs_string # $fs_string can be ignored. TODO: improve regex
+		while read part part_type part_label fs_string # $fs_string can be ignored
 		do
 			real_part=${part/+/}
 			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
@@ -591,7 +591,7 @@ rollback_filesystems ()
 			else
 				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
 			fi
-		done
+		done < <(egrep '\+|mapper' $TMP_BLOCKDEVICES) #TODO: improve regex
 		[ $open_items -eq 0 ] && break
 	done
 
