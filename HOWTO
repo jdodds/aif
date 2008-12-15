@@ -7,10 +7,10 @@
 
 2) Open 2 shells, one as user root, one as regular user (arch)
 
-3) Decide on a version.  See http://aur.archlinux.org/packages.php?K=aif for available packages
-- aif: recommended: latest 'stable' package
-- aif-git: latest from git: very bleeding edge.  Might not work as expected!
-I assume you'll pick aif.
+3) Decide on a package.  See http://aur.archlinux.org/packages.php?K=aif for available packages
+- aif-git: latest code from the git master (stable) branch: recommended!
+- aif-experimental-git: latest development code.  Code is tested here and if ok, merged into master.  Use at own risk!!
+I assume you'll pick aif-git.
 
 4) Copy paste the code below.
 
@@ -20,18 +20,20 @@ I assume you'll pick aif.
 pacman -Sy git fakeroot # You need about 192MB ram for this! 128MB is not enough.
 
 # arch shell
-wget http://aur.archlinux.org/packages/aif/aif.tar.gz
+wget http://aur.archlinux.org/packages/aif-git/aif-git.tar.gz
 tar -xzf
-cd aif
+cd aif-git
 makepkg
 
 # root shell:
-pacman -U /home/arch/aif/aif*.pkg.tar.gz
+pacman -U /home/arch/aif-git/aif*.pkg.tar.gz
 
 
 4) Fire it up! (as root)
 
-/arch/aif <procedurename> #you can skip networking.  See readme on howto specify procedures
+/arch/aif -p <procedurename> #you can skip networking.
+
+For more info see README or /arch/aif -h.
 
 
 
