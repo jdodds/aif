@@ -446,8 +446,8 @@ interactive_filesystems() {
 				then
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
-						label=$(cut -d ';' -f 4 <<< $lv)
-						mountpoint=$(cut -d ';' -f 2 <<< $lv)
+						label=$(     cut -d ';' -f 6 <<< $lv)
+						mountpoint=$(cut -d ';' -f 3 <<< $lv)
 						list="$list $label $mountpoint"
 					done
 				else
