@@ -600,7 +600,7 @@ rollback_filesystems ()
 		warnings="$warnings\nCould not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
 		show_warning "Filesystem/blockdevice processor problem" "Warning: Could not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
 	fi
-	[ -n "$warnings" ] && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
+	[ -n "$warnings" ] && infofy "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
 	infofy "Rollback succeeded" disks 1
 	BLOCK_ROLLBACK_USELESS=1
 	return 0
