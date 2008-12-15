@@ -66,7 +66,7 @@ notify ()
 #   You can keep several "lists of successive things" by grouping them with <listname>
 #   this is somewhat similar to follow_progress.  Note that this list isn't cleared unless you set $3 to 1.  default 0. (optional).
 # $3 0/1 this is the last one of the group of several things (eg clear buffer).  default 0. (optional)
-infofy ()
+infofy () #TODO: when using successive things, the screen can become full and you only see the old stuff, not the new
 {
 	successive=${2:-0}
 	succ_last=${3:-0}
