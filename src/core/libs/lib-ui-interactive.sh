@@ -217,7 +217,9 @@ interactive_filesystem ()
 	local part_label=$3 # can be empty
 	local fs_string=$4  # can be empty
 	local fs_type=
+	local fs_create
 	local fs_mountpoint=
+	local fs_mount
 	local fs_opts=
 	local fs_label=
 	local fs_params=
@@ -233,11 +235,14 @@ interactive_filesystem ()
 		fs_params=`     cut -d ';' -f 7 <<< $fs_string`
 		[ "$fs_type"   = no_type             ] && fs_type=
 		[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
+		[ "$fs_mount"  = no_mount            ] && fs_mount=
 		[ "$fs_opts"   = no_opts             ] && fs_opts=
 		[ "$fs_label"  = no_label            ] && fs_label=
 		[ "$fs_params" = no_params           ] && fs_params=
 		local old_fs_type=$fs_type
+		local old_fs_create=$fs_create
 		local old_fs_mountpoint=$fs_mountpoint
+		local old_fs_mount=$fs_mount
 		local old_fs_opts=$fs_opts
 		local old_fs_label=$fs_label
 		local old_fs_params=$fs_params
@@ -378,11 +383,14 @@ interactive_filesystem ()
 	[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
 
 
-	# TODO: cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of something, etc)
-	if [[ $old_fs = lvm-* || $old_fs = dm_crypt ]] && [[ $fs_string != lvm-* && "$fs_string" != dm_crypt ]]
+	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
+	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$old_fs_type" != "$fs_type" || "$old_fs_label" != "$fs_label" ]
 	then
-		[ "$fs_string" = lvm-vg -o "$fs_string" = dm_cryp ] && target="/dev/mapper/$label"
-		[ "$fs_string" = lvm-lv ] && target="/dev/mapper/$vg-$label" #TODO: $vg not set
+		target=
+		[ "$old_fs_type" = lvm-vg   ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
+		[ "$old_fs_type" = lvm-pv   ] && target="$part+ $old_fs_type $old_fs_label"
+		[ "$old_fs_type" = lvm-lv   ] && target="/dev/mapper/$part_label-$old_fs_label $old_fs_type $old_fs_label"
+		[ "$old_fs_type" = dm_crypt ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
 		sed -i "#$target#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
 	fi
 }
