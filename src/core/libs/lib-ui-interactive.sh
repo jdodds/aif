@@ -465,14 +465,14 @@ interactive_filesystems() {
 					fi
 				else
 					# an existing LV will be edited and it's settings updated
-					for lv in `sed '/|/ /g' <<< $fs`
+					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 4 <<< $lv)
 						[ "$label" = "$ANSWER_OPTION" ] && found_lv="$lv"
 					done
 					interactive_filesystem $part $part_type $part_label "$found_lv"
 					fs=
-					for lv in `sed '/|/ /g' <<< $fs`
+					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 4 <<< $lv)
 						add=$lv
