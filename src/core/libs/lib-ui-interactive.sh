@@ -474,15 +474,16 @@ interactive_filesystems() {
 						[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
 					done
 					interactive_filesystem $part $part_type $part_label "$found_lv"
-					fs=
+					newfs=
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 6 <<< $lv)
 						add=$lv
 						[ "$label" = "$EDIT_VG" ] && add=$NEW_FILESYSTEM
-						[ -z "$fs" ] && fs=$add
-						[ -n "$fs" ] && fs="$fs|$add"
+						[ -z "$newfs" ] && newfs=$add
+						[ -n "$newfs" ] && newfs="$newfs|$add"
 					done
+					fs=newfs
 				fi
 			else
 				interactive_filesystem $part $part_type $part_label $fs
