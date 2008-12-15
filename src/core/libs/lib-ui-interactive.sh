@@ -254,7 +254,7 @@ interactive_filesystem ()
 		# Don't alter, and return if user cancels
 		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs_string && return 0
 		# Erase and return if that's what the user wants
-		[ "$ANSWER_OPTION" = delete ] && NEW_FILESYSTEM=empty && return 0
+		[ "$ANSWER_OPTION" = delete ] && NEW_FILESYSTEM=no_fs && return 0
 		# Otherwise, time for fun!
 	fi
 
@@ -463,8 +463,11 @@ interactive_filesystems() {
 					# a new LV must be created on this VG
 					if interactive_filesystem $part $part_type $part_label '' 
 					then
-						[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
-						[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+						if [ "$NEW_FILESYSTEM" != no_fs ]
+						then
+							[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+							[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+						fi
 					fi
 				else
 					# an existing LV will be edited and it's settings updated
@@ -478,10 +481,17 @@ interactive_filesystems() {
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 6 <<< $lv)
-						add=$lv
-						[ "$label" = "$EDIT_VG" ] && add=$NEW_FILESYSTEM
-						[ -z "$newfs" ] && newfs=$add
-						[ -n "$newfs" ] && newfs="$newfs|$add"
+						if [ "$label" != "$EDIT_VG" ]
+						then
+							add=$lv
+						elif [ $NEW_FILESYSTEM != no_fs ]
+						then
+							add=$NEW_FILESYSTEM
+						else
+							add=
+						fi
+						[ -n "$add" -a -z "$newfs" ] && newfs=$add
+						[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
 					done
 					fs=$newfs
 				fi
