@@ -384,7 +384,7 @@ interactive_filesystem ()
 
 
 	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
-	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$old_fs_type" != "$fs_type" || "$old_fs_label" != "$fs_label" ]
+	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ]
 	then
 		target=
 		[ "$old_fs_type" = lvm-vg   ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
