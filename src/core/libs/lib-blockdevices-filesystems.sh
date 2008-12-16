@@ -469,7 +469,7 @@ rollback_filesystems ()
 		then
 			infofy "(Maybe) Swapoffing $part" disks
 			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
-		elif [ "$fs_mountpoint" != no_mount ]
+		elif [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			part_real=${part/+/}
 			if ! check_is_in "$part_real" "${done_umounts[@]}"
