@@ -394,7 +394,7 @@ interactive_filesystem ()
 		[ "$old_fs_type" = lvm-lv   ] && target="/dev/mapper/$part_label-$old_fs_label $old_fs_type $old_fs_label"
 		[ "$old_fs_type" = dm_crypt ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
 		declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign
-		sed -i "#$target_escaped#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
+		sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
 	fi
 
 	return 0
