@@ -386,14 +386,15 @@ interactive_filesystem ()
 
 
 	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
-	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$NEW_FILESYSTEM" = no_fs -o "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ] #TODO: deletion doesn't work when you delete an lvm LV, maybe otherwise too
+	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$NEW_FILESYSTEM" = no_fs -o "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ]
 	then
 		target=
 		[ "$old_fs_type" = lvm-vg   ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
 		[ "$old_fs_type" = lvm-pv   ] && target="$part+ $old_fs_type $old_fs_label"
 		[ "$old_fs_type" = lvm-lv   ] && target="/dev/mapper/$part_label-$old_fs_label $old_fs_type $old_fs_label"
 		[ "$old_fs_type" = dm_crypt ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
-		sed -i "#$target#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
+		declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign
+		sed -i "#$target_escaped#d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
 	fi
 
 	return 0
