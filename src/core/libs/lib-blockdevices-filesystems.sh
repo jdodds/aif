@@ -568,11 +568,7 @@ rollback_filesystems ()
 			then
 				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
 				then
-					have_crypt=0
-					for i in `awk '$2 ~ /dm_crypt/ {print $1}' $TMP_BLOCKDEVICES`; do cryptsetup status $i >/dev/null && have_crypt=1; done
-					# TODO: Find a way to determine if a volume is used for a dm_crypt device.
-					# this is a workaround that checks if any of the specified dm_crypts is still active.  These devices may not be using this lvm LV, but we don't do much harm in skipping anyway.  The dm_crypts should be cleared otherwise there's a problem anyway. 
-					if [ $have_crypt -gt 0 ]
+					if cryptsetup isLuks $part &>/dev/null
 					then
 						debug "$part ->Cannot do right now..."
 						open_items=1
