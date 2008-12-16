@@ -508,7 +508,7 @@ rollback_filesystems ()
 			real_part=${part/+/}
 			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
-				if [ -b $real_part ] && cryptsetup isLuks $real_part &>/dev/null #TODO: if you have lukscreated and luksopened something, isLuks still returns exitcode 234 :@ WTF
+				if [ -b $real_part ] && cryptsetup status $real_part &>/dev/null # don't use 'isLuks' it only works for the "underlying" device (eg in /dev/sda1 -> luksOpen -> /dev/mapper/foo, isLuks works only on the former. status works on the latter too)
 				then
 					if pvdisplay $real_part >/dev/null
 					then
@@ -569,10 +569,9 @@ rollback_filesystems ()
 				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
 				then
 					have_crypt=0
-					for i in `awk '$2 ~ /dm_crypt/ {print $1}' $TMP_BLOCKDEVICES`; do cryptsetup isLuks $i >/dev/null && have_crypt=1; done
+					for i in `awk '$2 ~ /dm_crypt/ {print $1}' $TMP_BLOCKDEVICES`; do cryptsetup status $i >/dev/null && have_crypt=1; done
 					# TODO: Find a way to determine if a volume is used for a dm_crypt device.
 					# this is a workaround that checks if any of the specified dm_crypts is still active.  These devices may not be using this lvm LV, but we don't do much harm in skipping anyway.  The dm_crypts should be cleared otherwise there's a problem anyway. 
-					# TODO: beware though. isLuks can exit(234) even though the volume isLuks .. :s
 					if [ $have_crypt -gt 0 ]
 					then
 						debug "$part ->Cannot do right now..."
