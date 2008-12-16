@@ -405,8 +405,9 @@ remove_blockdevice ()
 	local part_label=$3 # must be given
 
 	target="$part $part_type $part_label"
-	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign
-	fs_string=`awk "/^$target_escaped / { print \$4}" $TMP_BLOCKDEVICES`
+	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign for sed.
+	declare target_escawk=${target_escaped/+/\\+} # ...but that doesn't cound for awk
+	fs_string=`awk "/^$target_escawk / { print \$4}" $TMP_BLOCKDEVICES`
 	debug "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
 	sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES || show_warning "blockdevice removal" "Could not remove partition $part (type $part_type, label $part_label).  This is a bug. please report it"
 	for fs in `sed 's/|/ /g' <<< $fs_string`
