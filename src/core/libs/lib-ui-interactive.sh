@@ -379,7 +379,7 @@ interactive_filesystem ()
 		new_device=
 		[ "$fs_type" = lvm-vg   ] && new_device="/dev/mapper/$fs_label $fs_type $fs_label"
 		[ "$fs_type" = lvm-pv   ] && new_device="$part+ $fs_type no_label"
-		[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type $fs_label" #TODO: we get entries like '/dev/mapper/myvg-mylv lvm-lv no_label' wtf?? this causes deletion (see below) to break
+		[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type $fs_label"
 		[ "$fs_type" = dm_crypt ] && new_device="/dev/mapper/$fs_label $fs_type no_label"
 		[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
 	fi
@@ -388,17 +388,38 @@ interactive_filesystem ()
 	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
 	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$NEW_FILESYSTEM" = no_fs -o "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ]
 	then
-		target=
-		[ "$old_fs_type" = lvm-vg   ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
-		[ "$old_fs_type" = lvm-pv   ] && target="$part+ $old_fs_type $old_fs_label"
-		[ "$old_fs_type" = lvm-lv   ] && target="/dev/mapper/$part_label-$old_fs_label $old_fs_type $old_fs_label"
-		[ "$old_fs_type" = dm_crypt ] && target="/dev/mapper/$old_fs_label $old_fs_type $old_fs_label"
-		declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign
-		sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES #TODO: check affected items, delete those, etc etc.
+		[ "$old_fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$old_fs_label"             "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                                "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = lvm-lv   ] && remove_blockdevice "/dev/mapper/$part_label-$old_fs_label" "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$old_fs_label"             "$old_fs_type" "$old_fs_label"
 	fi
 
 	return 0
 }
+
+
+remove_blockdevice ()
+{
+	local part=$1       # must be given but doesn't need to exist
+	local part_type=$2  # a part should always have a type
+	local part_label=$3 # must be given
+
+	target="$part $part_type $part_label"
+	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign
+	fs_string=`awk "/^$target_escaped / { print \$4}" $TMP_BLOCKDEVICES`
+	debug "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
+	sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES || show_warning "blockdevice removal" "Could not remove partition $part (type $part_type, label $part_label).  This is a bug. please report it"
+	for fs in `sed 's/|/ /g' <<< $fs_string`
+	do
+		fs_type=`       cut -d ';' -f 1 <<< $fs`
+		fs_label=`      cut -d ';' -f 6 <<< $fs`
+		[ "$fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$fs_label"             "$fs_type" "$fs_label"
+		[ "$fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                            "$fs_type" "$fs_label"
+		[ "$fs_type" = lvm-lv   ] && remove_blockdevice "/dev/mapper/$part_label-$fs_label" "$fs_type" "$fs_label"
+		[ "$fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$fs_label"             "$fs_type" "$fs_label"
+	done
+}
+
 
 interactive_filesystems() {
 
