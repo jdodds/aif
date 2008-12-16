@@ -510,13 +510,13 @@ rollback_filesystems ()
 			then
 				if [ -b $real_part ] && cryptsetup status $real_part &>/dev/null # don't use 'isLuks' it only works for the "underlying" device (eg in /dev/sda1 -> luksOpen -> /dev/mapper/foo, isLuks works only on the former. status works on the latter too)
 				then
-					if pvdisplay $real_part >/dev/null
+					if pvdisplay $real_part &>/dev/null
 					then
 						debug "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						if ! cryptsetup luksClose $real_part >$LOG
+						if ! cryptsetup luksClose $real_part &>$LOG
 						then
 							warnings="$warnings\nCould not cryptsetup luksClose $real_part"
 							show_warning "process_filesystems blockdevice destruction" "Could not cryptsetup luksClose $real_part"
@@ -535,7 +535,7 @@ rollback_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						if ! pvremove $real_part >$LOG
+						if ! pvremove $real_part &>$LOG
 						then
 							warnings="$warnings\nCould not pvremove $part"
 							show_warning "process_filesystems blockdevice destruction" "Could not pvremove $part"
@@ -548,14 +548,14 @@ rollback_filesystems ()
 			then
 				if vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
 				then
-					open_lv=`vgdisplay -c $part | cut -d ':' -f6`
+					open_lv=`vgdisplay -c $part 2>/dev/null | cut -d ':' -f6`
 					if [ $open_lv -gt 0 ]
 					then
 						debug "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						if ! vgremove $part >$LOG # we shouldn't need -f because we clean up the lv's first. 
+						if ! vgremove $part &>$LOG # we shouldn't need -f because we clean up the lv's first.
 						then
 							warnings="$warnings\nCould not vgremove $part"
 							show_warning "process_filesystems blockdevice destruction" "Could not vgremove $part"
@@ -566,7 +566,7 @@ rollback_filesystems ()
 				fi
 			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
-				if lvdisplay $part >/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
+				if lvdisplay $part &>/dev/null && ! vgdisplay $part 2>/dev/null | grep -q 'VG Name' # it exists: lvdisplay works, and it's not a volume group (you can do lvdisplay $volumegroup)
 				then
 					if cryptsetup isLuks $part &>/dev/null
 					then
@@ -574,7 +574,7 @@ rollback_filesystems ()
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
-						if ! lvremove -f $part >$LOG
+						if ! lvremove -f $part &>$LOG
 						then
 							warnings="$warnings\nCould not lvremove -f $part"
 							show_warning "process_filesystems blockdevice destruction" "Could not lvremove -f $part"
