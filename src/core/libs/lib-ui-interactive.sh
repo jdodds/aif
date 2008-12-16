@@ -474,7 +474,7 @@ interactive_filesystems() {
 						fi
 					fi
 				else
-					# an existing LV will be edited and it's settings updated #TODO: if we have 2 LV's, and we delete one, the result is twice the other lv
+					# an existing LV will be edited and it's settings updated
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 6 <<< $lv)
@@ -494,8 +494,8 @@ interactive_filesystems() {
 						else
 							add=
 						fi
-						[ -n "$add" -a -z "$newfs" ] && newfs=$add
 						[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
+						[ -n "$add" -a -z "$newfs" ] && newfs=$add
 					done
 					fs=$newfs
 				fi

@@ -12,7 +12,6 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * automatically configure grub for dm_crypt and lvm
-* removing an LV from a VG with more then 1 LV makes another LV be listed twice
 * when removing dm_mapper devices, their "results" are not cleaned up (eg remove a LV filesystem on a VG and the LV block device remains)
 
 
