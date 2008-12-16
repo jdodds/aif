@@ -454,8 +454,8 @@ interactive_filesystems() {
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(     cut -d ';' -f 6 <<< $lv)
-						mountpoint=$(cut -d ';' -f 3 <<< $lv)
-						list="$list $label $mountpoint"
+						size=$(cut -d ';' -f 7 <<< $lv)
+						list="$list $label $size"
 					done
 				else
 					list="XXX no-LV's-defined-yet-make-a-new-one"
