@@ -501,7 +501,7 @@ interactive_filesystems() {
 					fs=$newfs
 				fi
 			else
-				interactive_filesystem $part $part_type $part_label $fs
+				interactive_filesystem $part $part_type "$part_label" "$fs"
 				[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
 			fi
 
