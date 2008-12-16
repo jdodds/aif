@@ -546,7 +546,7 @@ rollback_filesystems ()
 				fi
 			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
 			then
-				if vgdisplay $part | grep -q 'VG Name' # workaround for non-existing lvm VG device files
+				if vgdisplay $part 2>/dev/null | grep -q 'VG Name' # workaround for non-existing lvm VG device files
 				then
 					open_lv=`vgdisplay -c $part 2>/dev/null | cut -d ':' -f6`
 					if [ $open_lv -gt 0 ]
