@@ -351,7 +351,7 @@ _dia_ask_option ()
 	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
-	debug "dia_ask_option: User choose $ANSWER_OPTION ($2)"
+	debug "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
 	return $ret
 }
 
