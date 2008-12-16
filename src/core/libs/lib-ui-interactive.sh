@@ -379,7 +379,7 @@ interactive_filesystem ()
 		new_device=
 		[ "$fs_type" = lvm-vg   ] && new_device="/dev/mapper/$fs_label $fs_type $fs_label"
 		[ "$fs_type" = lvm-pv   ] && new_device="$part+ $fs_type no_label"
-		[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type no_label"
+		[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type $fs_label"
 		[ "$fs_type" = dm_crypt ] && new_device="/dev/mapper/$fs_label $fs_type no_label"
 		[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
 	fi
