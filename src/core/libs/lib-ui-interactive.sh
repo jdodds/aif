@@ -384,6 +384,7 @@ interactive_filesystem ()
 		[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
 	fi
 
+	[ -z "$old_fs_label" ] && old_fs_label=no_label
 
 	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
 	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$NEW_FILESYSTEM" = no_fs -o "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ]
@@ -406,7 +407,7 @@ remove_blockdevice ()
 
 	target="$part $part_type $part_label"
 	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign for sed.
-	declare target_escawk=${target_escaped/+/\\+} # ...but that doesn't cound for awk
+	declare target_escawk=${target_escaped/+/\\+} # ...but that doesn't count for awk
 	fs_string=`awk "/^$target_escawk / { print \$4}" $TMP_BLOCKDEVICES`
 	debug "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
 	sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES || show_warning "blockdevice removal" "Could not remove partition $part (type $part_type, label $part_label).  This is a bug. please report it"
