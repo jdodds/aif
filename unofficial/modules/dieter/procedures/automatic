@@ -48,10 +48,9 @@ worker_runtime_network ()
 {
 	if ask_yesno "Do you want to (re)-configure your networking?"
 	then
-		#TODO: which function do i need here?
-		donetwork #configure network by using library
+		interactive_runtime_network
 	else
-		notify "Ok. skipping network config"
+		infofy "Ok. skipping network config"
 	fi
 }
 
@@ -62,7 +61,8 @@ worker_runtime_svn ()
 	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
 	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	SVN_BASE=https://192.168.1.2/svn/repos
-	TARGET_HOST=desktop-a7n8x #TODO: prompt user for this, or let him pass it as cmdline argument (and check with svn info)
+	ask_string "Which host are you installing?" desktop-a7nx8
+	TARGET_HOST=$ANSWER_STRING #TODO: allow passing cmdline argument (and check with svn info). handle -z $ANSWER_STRING
 	_accept_ssl_cert
 }
 
