@@ -76,7 +76,7 @@ do
 	#TODO: this is a VERY, VERY dirty hack.  we fall back to ftp for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
 	if [ "$repo" != core ]
 	then
-		add_pacman_repo target ${repo} 'Include = /etc/pacman.d/mirrorlist'
+		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST"
 	else
 		add_pacman_repo target ${repo} "Server = ${serverurl}"
 	fi

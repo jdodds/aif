@@ -115,7 +115,9 @@ worker_configure_system()
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist
 	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${SYNC_URL}" != "" ]; then
-		awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/etc/pacman.d/mirrorlist"
+		debug "Adding choosen mirror (${SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
+		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
 	fi
 
 	# /etc/rc.conf
