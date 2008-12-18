@@ -271,6 +271,12 @@ module=
 procedure=
 
 
+# TODO: you cannot override $var_OPTS_STRING, nor process_args. because profile not sourced yet
+# we will hit '?)' and exit 5
+# solutions? don't make $var_OPTS_STRING overridable, source correct profile as early as possible so process_args gets known.  remove the '?)' catchall (eg put it in the default process_args) so we don't hit it accidentially
+# in that case -p needs to be the first option, but that's doable imho
+# an alternative would be to provide an argumentstring for the profile. eg aif -p profile -a "-a a -b b -c c"
+
 var_OPTS_STRING=":i:dlp:" # you can override this variable in your procedure.
 while getopts $var_OPTS_STRING OPTION
 do

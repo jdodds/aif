@@ -5,6 +5,7 @@ var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_PACKAGES=
 var_PKG_FILE=$RUNTIME_DIR/package-list
+var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
 
 ###### Phases ( can be overridden by more specific procedures) ######
@@ -64,7 +65,6 @@ worker_select_source ()
 	var_PKG_SOURCE_TYPE='cd'
 	var_FILE_URL="file:///src/core/pkg"
 	var_SYNC_URL=
-	var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 	# if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
 }
 

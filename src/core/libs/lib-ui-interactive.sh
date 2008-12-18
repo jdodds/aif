@@ -38,7 +38,7 @@ interactive_configure_system()
 		"/etc/hosts.deny"           "Denied Network Services" \
 		"/etc/hosts.allow"          "Allowed Network Services" \
 		"/etc/locale.gen"           "Glibc Locales" \
-		"/etc/pacman.d/mirrorlist"  "Pacman Mirror List" \
+		"$var_MIRRORLIST"           "Pacman Mirror List" \
 		"Root-Password"             "Set the root password" \
 		"Return"        "Return to Main Menu" || FILE="Return"
 		FILE=$ANSWER_OPTION
@@ -826,7 +826,6 @@ interactive_select_source()
 	var_PKG_SOURCE_TYPE=
         var_FILE_URL="file:///src/core/pkg"
         var_SYNC_URL=
-        var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 
 	ask_option no "Source selection" "Please select an installation source" \
     "1" "CD-ROM or OTHER SOURCE" \
