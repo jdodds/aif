@@ -1,0 +1,9 @@
+ddeploy is a module for deploying a system automatically.
+
+Right now I use convention over configuration.
+Your disk layout, package list, /etc/, ~ etc are expected to be in certain places inside svn/ddm/git repositories.
+(although I'll probably make this more configurable in the future to allow more choice in vcs technology etc.)
+
+Right now I (Dieter) am probably the only one using this, but everyone can have a similar setup!
+For now the conventions are not documented yet.
+Just look at the source of the procedures to see what is expected where.
