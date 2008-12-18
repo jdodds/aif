@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO: I think it would be best that *nothing* is asked , eg everything passed as cmdline arg, or make 'ddeploy profiles' containing username, svn host, etc etc etc
 depend_module yaourt
 depend_procedure core base
 
@@ -21,7 +22,7 @@ phase_finish=(configure_home msg_report)
 
 worker_intro ()
 {
-	notify "Dieter::automatic procedure running..."
+	notify "DDeploy::automatic procedure running..."
 }
 
 
@@ -57,52 +58,27 @@ worker_runtime_network ()
 
 worker_runtime_svn ()
 {
-	SVN_USERNAME=dieter
+	SVN_USERNAME=dieter #TODO: softcode this
 	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
 	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	SVN_BASE=https://192.168.1.2/svn/repos
 	ask_string "Which host are you installing?" desktop-a7nx8
-	TARGET_HOST=$ANSWER_STRING #TODO: allow passing cmdline argument (and check with svn info). handle -z $ANSWER_STRING
+	TARGET_HOST=$ANSWER_STRING #TODO: allow passing as cmdline argument (and check with svn info). handle -z $ANSWER_STRING
 	_accept_ssl_cert
 }
 
 
 worker_prepare_disks ()
 {
-	modprobe dm-crypt || die_error "Cannot modprobe dm-crypt"
-	modprobe -q aes-x86-64 || modprobe aes-i586 || die_error "Cannot modprobe aes-x86-64 or aes-i586"
+	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata  $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata into $RUNTIME_DIR"
+	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions into $RUNTIME_DIR"
 
-	# Cleanup whatever state the disk is in (that includes previous, failed runs of this script)
-	umount /dev/mapper/cryptpool-* 2>/dev/null
-	vgremove -f cryptpool 2>/dev/null
-	pvremove /dev/mapper/sda2_crypt 2>/dev/null
-	cryptsetup luksClose sda2_crypt 2>/dev/null
-	dd if=/dev/urandom of=/dev/sda bs=512 count=1
+	process_disks       || die_error "Could not process_disks"
+	process_filesystems || die_error "Could not process_filesystems"
 
-	#TODO: integrate this stuff into the functions in the libs  (process_partitions and filesystems, rollback and bailout if needed) + do error checking and handling
-	#NOTE: i don't think i should quote to prevent globbing, but it does seem to help i think (hard to check as resource is busy and you can't reload kernel partition tables)
-	sfdisk /dev/sda 2>&1 | grep -v 'not have an msdos signature' << EOF
-,10,L,'*'
-,,L
-EOF
-	[ $? -gt 0 ] && die_error "Could not sfdisk /dev/sda.  Return code is $?"
-	#TODO: when sfdisk is done, i still have an invalid partition table?
-	cryptsetup --batch-mode -c aes-xts-plain -y -s 512 luksFormat /dev/sda2 || die_error "Cannot cryptsetup luksFormat /dev/sda2"
-	cryptsetup luksOpen /dev/sda2 sda2_crypt || die_error "Cannot cryptsetup luksOpen /dev/sda2"
-	pvcreate /dev/mapper/sda2_crypt || die_error "Cannot pvcreate the PV on the encrypted blockdevice"
-	vgcreate cryptpool /dev/mapper/sda2_crypt || die_error "Cannot create the VG an the PV on the encrypted blockdevice"
-	lvcreate -L 2G   -n swap cryptpool && \
-	lvcreate -L 500M -n tmp  cryptpool && \
-	lvcreate -L 10G  -n home cryptpool && \
-	lvcreate -L 10G  -n root cryptpool && \
-	lvcreate -L 3G   -n var  cryptpool || die_error "Could not create at least one of the LV's"
-	for i in home root tmp var
-	do
-		mkdir -p $var_TARGET_DIR/$i
-		mke2fs -j /dev/cryptpool/$i && mount /dev/cryptpool/$i $var_TARGET_DIR/$i || die_error "Could not format or mount $var_TARGET_DIR/$i"
-	done
+	#TODO: support rollback
 
-	# TODO: swapon the thing and don't forget to swapoff it in the cleanup part above
+
 	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	
 }
