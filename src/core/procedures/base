@@ -85,7 +85,7 @@ worker_runtime_repositories ()
 	do
 		repo=${var_RUNTIME_REPOSITORIES[$(($i*2))]}
 		location=${var_RUNTIME_REPOSITORIES[$(($i*2+1))]}
-		list_pacman_repos runtime | grep -q $repo || add_pacman_repo runtime $repo $location
+		list_pacman_repos runtime | grep -q $repo || add_pacman_repo runtime $repo "$location"
 	done
 }
 
