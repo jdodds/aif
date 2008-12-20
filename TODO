@@ -20,7 +20,7 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
   useful for: profiles for the automatic procedures, or all other procedures
   -> optional pre/post callbacks (for workers and phases)?
-  -> disadvantages?
+  -> disadvantages? ended_ok must comprise callbacks too.. or if callback didn't exit cleanly, maybe we should update the exit code of the worker/phase
 
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
