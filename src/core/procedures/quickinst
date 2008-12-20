@@ -25,11 +25,7 @@ usage() {
 	echo
 	echo "Examples:"
 	if [ -e /usr/bin/wget ]; then
-		if [ "$(uname -m)" = "x86_64" ]; then
-    			echo "  quickinst ftp /mnt ftp://ftp.archlinux.org/core/os/x86_64"
-		else 	
-			echo "  quickinst ftp /mnt ftp://ftp.archlinux.org/core/os/i686"
-		fi
+		echo "  quickinst ftp /mnt ftp://ftp.archlinux.org/core/os/$var_ARCH"
 	fi
 
 	echo "  quickinst cd  /mnt /src/core/pkg"

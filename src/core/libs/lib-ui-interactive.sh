@@ -864,7 +864,7 @@ interactive_select_mirror() {
         ask_option no "Mirror selection" "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
-        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/i686" || return 1
+        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
         var_SYNC_URL=$ANSWER_STRING
     else
         # Form the full URL for our mirror by grepping for the server name in

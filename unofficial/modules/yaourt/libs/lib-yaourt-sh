@@ -6,16 +6,17 @@ _runtime_yaourt ()
 {
 	if ! list_pacman_repos runtime | grep -q archlinuxfr
 	then
-		add_pacman_repo runtime archlinuxfr 'Server = http://repo.archlinux.fr/i686'
+		add_pacman_repo runtime archlinuxfr "Server = http://repo.archlinux.fr/$var_ARCH"
 	fi
-	$PACMAN -Sy yaourt || die_error "_runtime_yaourt Cannot install yaourt"
-	YAOURT=`sed 's/pacman/yaourt/' <<< $PACMAN`
-	YAOURT_TARGET=`sed 's/pacman/yaourt/' <<< $PACMAN_TARGET`
+	$PACMAN -Sy yaourt || die_error "_runtime_yaourt Cannot install yaourt" #TODO: library-ize package installation
+	YAOURT=${PACMAN//pacman/yaourt}
+	YAOURT_TARGET=${PACMAN_TARGET//pacman/yaourt}
 }
 
 
 _yaourt_replace_pacman ()
 {
+	show_warning "Security warning!" "Keep in mind that packages on AUR are untrusted!  Install them on your own risk"
 	_runtime_yaourt
 	PACMAN=$YAOURT
 	PACMAN_TARGET=$YAOURT_TARGET

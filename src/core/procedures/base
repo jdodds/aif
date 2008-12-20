@@ -7,6 +7,8 @@ var_RUNTIME_PACKAGES=
 var_PKG_FILE=$RUNTIME_DIR/package-list
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
+var_ARCH=`uname -m` #works for i686 TODO: check if it works for x86_64
+[ -z "$var_ARCH" ] && die_error "Could not determine your architecture"
 
 ###### Phases ( can be overridden by more specific procedures) ######
 phase_preparation=(\
