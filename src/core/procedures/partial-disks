@@ -26,5 +26,5 @@ start_process ()
 	elif [ "$OPERATION" = rollback ]
 	then
 		rollback_filesystems
-	else
+	fi
 }
