@@ -347,7 +347,7 @@ do
 		;;
 	?)
 		# If we hit something elso, call process_args
-		process_args $OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
+		process_args -$OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
 		;;
 	esac
 
