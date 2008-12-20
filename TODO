@@ -16,11 +16,16 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * hmm wasn't there a hwdetect/hwd or something in /arch/setup? this seems to have disappeared.
 * shouldn't we put /etc/hostname in 'configure system' ? ASKDEV
 * a nice way to be able to "inject" functions without:
-  * needing to redefine phases with only 1 entry different
+  * needing to redefine phases with only 1 entry different (duplicate code is not nice, less maintainable etc)
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
   useful for: profiles for the automatic procedures, or all other procedures
   -> optional pre/post callbacks (for workers and phases)?
-  -> disadvantages? ended_ok must comprise callbacks too.. or if callback didn't exit cleanly, maybe we should update the exit code of the worker/phase
+  -> disadvantages?
+     * ended_ok must comprise callbacks too.. or if callback didn't exit cleanly, maybe we should update the exit code of the worker/phase
+     * we lose semantics: a function usually has a better suited name then 'pre_<something else>'.
+       -> maybe we should in the callback do an execute call for another worker, then we also can check it's exitcode in a good way
+       -> too. although that's only good for separate functions, not the 'copypaste 90% and add 10% to the same worker scenario'
+  -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
 
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
