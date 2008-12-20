@@ -2,15 +2,17 @@
 # This procedure is EARLY in development!!
 # This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
 
-# In theory, the only manual thing should maybe be configuring the runtime network
+# In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
-# TODO: check_is_in <somestuff> runtime packages and check needed args, if not known ask (eg svn password)
 
 depend_module yaourt
 depend_procedure core base
 
 var_OPTS_STRING="c:"
-var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (Mandatory)" # TODO: don't check if the option is specified, but do checking on all variables that we need
+var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (optional)" #if we need some settings that we're missing, we'll ask for them
+
+phase_preparation+=(runtime_settings)
+phase_preparation+=(msg_automatic) # this can happen probably a bit earlier..
 
 process_args ()
 {
@@ -23,19 +25,6 @@ process_args ()
 		exit 5
         fi
 }
-
-phase_preparation=(\
-	configure \
-	intro \
-	sysprep \
-	runtime_network \
-	runtime_svn \
-	msg_automatic \
-	select_source \
-	runtime_packages \
-	runtime_yaourt)
-
-phase_finish=(configure_home msg_report)
 
 
 worker_intro ()
@@ -50,9 +39,9 @@ worker_configure ()
 }
 
 
+# not used
 worker_msg_manual ()
 {
-	# All things that need to be done manually first
 	notify "A few manual things need to happen first..."
 }
 
@@ -74,28 +63,35 @@ worker_runtime_network ()
 }
 
 
-worker_runtime_svn ()
+# Check if we have all needed settings loaded from the profile
+worker_runtime_settings ()
 {
-	SVN_USERNAME=dieter #TODO: softcode this
-	ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
-	SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
-	SVN_BASE=https://192.168.1.2/svn/repos
-	ask_string "Which host are you installing?" desktop-a7nx8
-	TARGET_HOST=$ANSWER_STRING #TODO: allow passing as cmdline argument (and check with svn info). handle -z $ANSWER_STRING
-	_accept_ssl_cert
+	if check_is_in svn "$var_RUNTIME_PACKAGES"
+	then
+		[ -n "$SVN_USERNAME" ] || ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
+		[ -n "$SVN_PASSWORD" ] || ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+		[ -n "$SVN_BASE"     ] || ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
+		[ -n "$DEPLOY_CLASS" ] || ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
+		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
+	elif check_is_in moo "$var_RUNTIME_PACKAGES"
+		# Maybe more stuff later
+		true
+	fi
+	[ -n "$HOSTNAME" ] || ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
 }
 
 
 worker_prepare_disks ()
 {
-	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata  $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata into $RUNTIME_DIR"
-	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions into $RUNTIME_DIR"
-
 	process_disks       || die_error "Could not process_disks"
-	process_filesystems || die_error "Could not process_filesystems"
-
-	#TODO: support rollback
-
+	if ! process_filesystems
+	then
+		show_warning "Could not process_filesystems"
+		txt='also failed to execute properly'
+		rollback_filesystems && txt='ended successfully'
+		die_error "Something failed while processing the filesystem.  A rollback was executed, which $txt"
+	fi
+	infofy "Partitions and filesystems made successfully"
 
 	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	

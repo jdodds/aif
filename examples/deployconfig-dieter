@@ -4,11 +4,25 @@
 var_RUNTIME_PACKAGES="svn"
 
 DEPLOY_CLASS=desktop-a7n8x
+HOSTNAME=dieter-ws
 SVN_USER=dieter
 SVN_PASSWORD=
+SVN_BASE=https://192.168.1.2/svn/repos
+
+phase_preparation+=(accept_ssl_cert)
+phase_system+=(configure_home)
 
 
-_accept_ssl_cert ()
+
+worker_configure ()
+{
+	var_UI_TYPE=${arg_ui_type:-cli}
+	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata  $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata into $RUNTIME_DIR"
+	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions into $RUNTIME_DIR"
+}
+
+
+worker_accept_ssl_cert ()
 {
 	mkdir -p /root/.subversion/auth/svn.ssl.server
 	cat > /root/.subversion/auth/svn.ssl.server/1123d3c8b27895efee3848cc779e526a << EOF
