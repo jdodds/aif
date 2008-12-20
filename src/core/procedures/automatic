@@ -13,7 +13,7 @@ var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (optional
 
 phase_preparation+=(runtime_settings)
 phase_preparation+=(msg_automatic) # this can happen probably a bit earlier..
-
+phase_preparation+=(fetch_configs)
 process_args ()
 {
 	if [ "$1" = '-c' ]
@@ -49,6 +49,12 @@ worker_msg_manual ()
 worker_msg_automatic ()
 {
 	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
+}
+
+
+worker_fetch_configs ()
+{
+	true
 }
 
 

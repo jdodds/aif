@@ -14,9 +14,8 @@ phase_system+=(configure_home)
 
 
 
-worker_configure ()
+worker_fetch_configs ()
 {
-	var_UI_TYPE=${arg_ui_type:-cli}
 	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata  $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.blockdata into $RUNTIME_DIR"
 	svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions $RUNTIME_DIR || die_error "Could not svn export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/disks/.partitions into $RUNTIME_DIR"
 }
