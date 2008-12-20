@@ -12,7 +12,7 @@ LOGFILE=$RUNTIME_DIR/aif.log
 usage ()
 {
 	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
-	msg="aif -p <procedurename>  Select a procedure
+	msg="aif -p <procedurename>  Select a procedure # If given, this *must* be the first option
     -i <dia/cli>         Override interface type (optional)
     -d                   Explicitly enable debugging (optional)
     -l                   Explicitly enable logging to file (optional)
@@ -271,13 +271,55 @@ module=
 procedure=
 
 
-# TODO: you cannot override $var_OPTS_STRING, nor process_args. because profile not sourced yet
-# we will hit '?)' and exit 5
-# solutions? don't make $var_OPTS_STRING overridable, source correct profile as early as possible so process_args gets known.  remove the '?)' catchall (eg put it in the default process_args) so we don't hit it accidentially
+
 # in that case -p needs to be the first option, but that's doable imho
 # an alternative would be to provide an argumentstring for the profile. eg aif -p profile -a "-a a -b b -c c"
 
 var_OPTS_STRING=":i:dlp:" # you can override this variable in your procedure.
+
+
+# Processes args that were not already matched by the basic rules.
+process_args ()
+{
+	# known options: we don't know any yet
+	# return 0
+
+	# if we are still here, we didn't return 0 for a known option. hence this is an unknown option
+	usage
+	exit 5
+}
+
+
+# Check if the first args are -p <procedurename>.  If so, we can load the procedure, and hence $var_OPTS_STRING and process_args can be overridden
+if [ "$1" = '-p' ]
+then
+	[ -z "$2" ] && usage && exit 1
+	# note that we allow procedures like http://foo/bar. module -> http:, procedure -> http://foo/bar.
+	if [[ $2 =~ ^http:// ]]
+	then
+		module=http
+		procedure="$2"
+	elif grep -q '\/' <<< "$2"
+	then
+		#user specified module/procedure
+		module=`dirname "$2"`
+		procedure=`basename "$2"`
+	else
+		module=core
+		procedure="$2"
+	fi
+
+	shift 2
+fi
+
+# If no procedure given, bail out
+[ -z "$procedure" ] && usage && exit 5
+
+load_module core
+[ "$module" != core -a "$module" != http ] && load_module "$module"
+
+load_procedure "$module" "$procedure"
+
 while getopts $var_OPTS_STRING OPTION
 do
 	case $OPTION in
@@ -294,41 +336,20 @@ do
 		LOG_TO_FILE=1
 		;;
 	p)
-		[ -z "$OPTARG" ] && usage && exit 1
-		# note that we allow procedures like http://foo/bar. module -> http:, procedure -> http://foo/bar.
-		if [[ $OPTARG =~ ^http:// ]]
-		then
-			module=http
-			procedure="$OPTARG"
-		elif grep -q '\/' <<< "$OPTARG"
-		then
-			#user specified module/procedure
-			module=`dirname "$OPTARG"`
-			procedure=`basename "$OPTARG"`
-		else
-			module=core
-			procedure="$OPTARG"
-		fi
+		die_error "If you pass -p <procedurename>, it must be the FIRST option"
 		;;
 	h)
 		usage
 		exit
 		;;
 	?)
-		usage
-		exit 5
+		# If we hit something elso, call process_args
+		process_args $OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
 		;;
 	esac
 
-	process_args $OPTION $OPTARG # you can override this function in your profile to parse additional arguments and/or override the behavior above
 done
 
-[ -z "$procedure" ] && usage && exit 5
-
-load_module core
-[ "$module" != core -a "$module" != http ] && load_module "$module"
-
-load_procedure "$module" "$procedure"
 
 # Set pacman vars.  allow procedures to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)
 # flags like --noconfirm should not be specified here.  it's up to the procedure to decide the interactivity
