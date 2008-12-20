@@ -34,7 +34,6 @@ phase_system=(\
 	locales \
 	install_bootloader)
 
-
 phase_finish=(msg_report)
 
 
