@@ -99,6 +99,14 @@ core/base:        basic, little-interactivity installation with some common defa
                   want to run this one, although it's useful for other procedures to inherit from.
 core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
 core/quickinst:   mostly DIY.  port of /arch/quickinst
+core/automatic:   automatic installer/deployment tool, can use config files
+
+** Partial Procedures **
+These procedures allow you to run a select few functions, in order to reach
+a specific goal, usually not installing a system
+
+partial-configure-network.sh Configure network on the runtime system
+partial-disks.sh             Process disk subsystem or do a rollback
 
 
 ** Contributing **
