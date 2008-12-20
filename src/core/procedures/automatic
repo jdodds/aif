@@ -1,15 +1,18 @@
 #!/bin/bash
-# TODO: I think it would be best that *nothing* is asked , eg everything passed as cmdline arg, or make 'ddeploy profiles' containing username, svn host, etc etc etc
+# This procedure is EARLY in development!!
+# This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
+
+# In theory, the only manual thing should maybe be configuring the runtime network
+# TODO: implement profile reading
+# TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
+
 depend_module yaourt
 depend_procedure core base
-
-var_RUNTIME_PACKAGES="svn"
 
 phase_preparation=(\
 	configure \
 	intro \
 	sysprep \
-	msg_manual \
 	runtime_network \
 	runtime_svn \
 	msg_automatic \
@@ -22,7 +25,7 @@ phase_finish=(configure_home msg_report)
 
 worker_intro ()
 {
-	notify "DDeploy::automatic procedure running..."
+	notify "Automatic procedure running..."
 }
 
 
