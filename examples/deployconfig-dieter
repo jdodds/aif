@@ -5,7 +5,6 @@
 # TODO * dieter/automatic: wait for yaourt --config fix ( http://forums.archlinux.fr/post23171.html#23171 )
 # TODO:* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
 
-depend_module yaourt
 
 var_RUNTIME_REPOSITORIES=(archlinuxfr "Server = http://repo.archlinux.fr/$var_ARCH")
 var_RUNTIME_PACKAGES="svn"
@@ -25,19 +24,6 @@ worker_fetch_configs ()
 {
 	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/.blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/.blockdata"
 	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/.partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/.partitions"
-}
-
-
-worker_runtime_packages ()
-{
-        for pkg in $var_RUNTIME_PACKAGES
-        do
-                $PACMAN -Sy --noconfirm --needed $pkg
-        done
-
-	# We'll install packages on the target system, for that we need yaourt
-        _runtime_yaourt
-        _yaourt_replace_pacman
 }
 
 
