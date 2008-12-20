@@ -15,6 +15,13 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
 * hmm wasn't there a hwdetect/hwd or something in /arch/setup? this seems to have disappeared.
 * shouldn't we put /etc/hostname in 'configure system' ?
+* a nice way to be able to "inject" functions without:
+  * needing to redefine phases with only 1 entry different
+  * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
+  useful for: profiles for the automatic procedures, or all other procedures
+  -> optional pre/post callbacks (for workers and phases)?
+  -> disadvantages?
+
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
