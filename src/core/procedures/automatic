@@ -5,7 +5,6 @@
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
 
-depend_module yaourt
 depend_procedure core base
 
 var_OPTS_STRING="c:"
