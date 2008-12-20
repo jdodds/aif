@@ -22,7 +22,7 @@ If the procedurename is prefixed with '<modulename>/' it will be loaded from use
 Available procedures on the filesystem:
 `find /home/arch/aif/core/procedures -type f`\n
 `find /home/arch/aif/user/*/procedures -type f 2>/dev/null`" 
-	[ -z "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
+	[ -n "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
 
 	echo -e "$msg"
 
