@@ -4,11 +4,14 @@
 
 # In theory, the only manual thing should maybe be configuring the runtime network
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
+# TODO: check_is_in <somestuff> runtime packages and check needed args, if not known ask (eg svn password)
 
 depend_module yaourt
 depend_procedure core base
 
 var_OPTS_STRING="c:"
+var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (Mandatory)" # TODO: don't check if the option is specified, but do checking on all variables that we need
+
 process_args ()
 {
 	[ "$1" = '-c' ]

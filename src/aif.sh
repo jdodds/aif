@@ -22,6 +22,8 @@ If the procedurename is prefixed with '<modulename>/' it will be loaded from use
 Available procedures on the filesystem:
 `find /home/arch/aif/core/procedures -type f`\n
 `find /home/arch/aif/user/*/procedures -type f 2>/dev/null`" 
+	[ -z "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
+
 	echo -e "$msg"
 
 }
@@ -275,8 +277,9 @@ procedure=
 # in that case -p needs to be the first option, but that's doable imho
 # an alternative would be to provide an argumentstring for the profile. eg aif -p profile -a "-a a -b b -c c"
 
-var_OPTS_STRING="" # you can override this variable in your procedure.
-
+# you can override these variables in your procedures
+var_OPTS_STRING=""
+var_ARGS_USAGE=""
 
 # Processes args that were not already matched by the basic rules.
 process_args ()
