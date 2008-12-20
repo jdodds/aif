@@ -19,6 +19,8 @@ process_args ()
 
 start_process ()
 {
+	[ -z "$OPERATION" ] && usage && exit 5
+
 	if [ "$OPERATION" = process ]
 	then
 		process_disks
