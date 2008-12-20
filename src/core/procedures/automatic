@@ -74,17 +74,17 @@ worker_runtime_settings ()
 {
 	if check_is_in svn "$var_RUNTIME_PACKAGES"
 	then
-		[ -n "$SVN_USERNAME" ] || ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
-		[ -n "$SVN_PASSWORD" ] || ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
-		[ -n "$SVN_BASE"     ] || ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
-		[ -n "$DEPLOY_CLASS" ] || ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
+		[ -z "$SVN_USERNAME" ] && ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
+		[ -z "$SVN_PASSWORD" ] && ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+		[ -z "$SVN_BASE"     ] && ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
+		[ -z "$DEPLOY_CLASS" ] && ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
 		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	elif check_is_in moo "$var_RUNTIME_PACKAGES"
 	then
 		# Maybe more stuff later
 		true
 	fi
-	[ -n "$HOSTNAME" ] || ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
+	[ -z "$HOSTNAME" ] && ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
 }
 
 
