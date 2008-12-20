@@ -104,27 +104,12 @@ worker_prepare_disks ()
 	true	
 }
 
-worker_package_list ()
-{
-	$SVN export $SVN_BASE/ddm-configs/$TARGET_HOST/trunk/package-list $var_PKG_FILE || die_error "Could not export package list!"
-	# cat -> there are newlines in it -> var=`echo $var` -> not anymore :)
-	TARGET_PACKAGES=`cat $var_PKG_FILE` && TARGET_PACKAGES=`echo $TARGET_PACKAGES` || die_error "Could not cat package list. THIS SHOULD NEVER HAPPEN."
-	true
-}
-
 
 worker_install_packages ()
 {
         target_prepare_pacman core extra community #TODO: it would be better if this was a separate worker, i think
         [ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
         installpkg
-}
-
-
-worker_configure_home ()
-{
-	#checkout from svn
-	true
 }
 
 

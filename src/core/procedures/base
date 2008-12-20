@@ -4,7 +4,7 @@
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_PACKAGES=
-var_PKG_FILE=$RUNTIME_DIR/package-list
+var_PKG_FILE=$RUNTIME_DIR/package-list # not used by default in base/interactive. can be used by custom procedures or profiles for the automatic procedure
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
 var_ARCH=`uname -m` #works for i686 TODO: check if it works for x86_64

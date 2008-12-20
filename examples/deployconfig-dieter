@@ -1,6 +1,8 @@
 #!/bin/bash
 # An example config for the deployment procedure
 
+#TODO: install ruby-gems too
+
 var_RUNTIME_PACKAGES="svn"
 
 DEPLOY_CLASS=desktop-a7n8x
@@ -21,6 +23,13 @@ worker_fetch_configs ()
 }
 
 
+worker_package_list ()
+{
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/package-list $var_PKG_FILE || die_error "Could not export package list!"
+	# cat -> there are newlines in it -> var=`echo $var` -> not anymore :)
+	TARGET_PACKAGES=`cat $var_PKG_FILE` && TARGET_PACKAGES=`echo $TARGET_PACKAGES` || die_error "Could not cat package list. THIS SHOULD NEVER HAPPEN."
+}
+
 worker_accept_ssl_cert ()
 {
 	mkdir -p /root/.subversion/auth/svn.ssl.server
@@ -39,4 +48,11 @@ V 23
 https://192.168.1.2:443
 END
 EOF
+}
+
+
+worker_configure_home ()
+{
+	#TODO checkout from svn
+	true
 }
