@@ -97,7 +97,7 @@ list_pacman_repos ()
 	[ "$1" != runtime -a "$1" != target ] && die_error "list_pacman_repos needs target/runtime argument"
 	[ "$1" = target  ] && conf=/tmp/pacman.conf
 	[ "$1" = runtime ] && conf=/etc/pacman.conf
-	grep '\[.*\]' $conf | grep -v options | sed 's/\[//g' | sed 's/\]//g'
+	grep '\[.*\]' $conf | grep -v options | grep -v '^#' | sed 's/\[//g' | sed 's/\]//g'
 }
 
 
