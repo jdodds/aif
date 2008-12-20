@@ -3,11 +3,23 @@
 # This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
 
 # In theory, the only manual thing should maybe be configuring the runtime network
-# TODO: implement profile reading
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
 
 depend_module yaourt
 depend_procedure core base
+
+var_OPTS_STRING="c:"
+process_args ()
+{
+	[ "$1" = '-c' ]
+	then
+		[ -z "$2" ] && die_error "You must specify a config"
+		source $2 || die_error "Could not source config $2"
+	else
+		usage
+		exit 5
+        fi
+}
 
 phase_preparation=(\
 	configure \

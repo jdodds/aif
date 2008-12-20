@@ -275,7 +275,7 @@ procedure=
 # in that case -p needs to be the first option, but that's doable imho
 # an alternative would be to provide an argumentstring for the profile. eg aif -p profile -a "-a a -b b -c c"
 
-var_OPTS_STRING=":i:dlp:" # you can override this variable in your procedure.
+var_OPTS_STRING="" # you can override this variable in your procedure.
 
 
 # Processes args that were not already matched by the basic rules.
@@ -320,7 +320,7 @@ load_module core
 
 load_procedure "$module" "$procedure"
 
-while getopts $var_OPTS_STRING OPTION
+while getopts ":i:dlp:$var_OPTS_STRING" OPTION
 do
 	case $OPTION in
 	i)
