@@ -74,6 +74,7 @@ worker_runtime_settings ()
 		[ -n "$DEPLOY_CLASS" ] || ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
 		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
 	elif check_is_in moo "$var_RUNTIME_PACKAGES"
+	then
 		# Maybe more stuff later
 		true
 	fi
