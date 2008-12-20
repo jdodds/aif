@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile

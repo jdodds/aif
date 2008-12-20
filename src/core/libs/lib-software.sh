@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TMP_MKINITCPIO_LOG=$RUNTIME_DIR/mkinitcpio.log
 TMP_PACMAN_LOG=$RUNTIME_DIR/pacman.log

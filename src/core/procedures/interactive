@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 depend_procedure core base # esp for auto_{network,locale,fstab}, intro and set_clock workers
 
 

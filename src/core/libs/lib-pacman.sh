@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # taken and slightly modified from the quickinst script.
 # don't know why one should need a static pacman because we already have a working one on the livecd.

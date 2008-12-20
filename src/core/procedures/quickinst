@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 depend_procedure core base
 
 # This is a port of the original /arch/quickinst script.
