@@ -16,7 +16,7 @@ phase_preparation+=(msg_automatic) # this can happen probably a bit earlier..
 
 process_args ()
 {
-	[ "$1" = '-c' ]
+	if [ "$1" = '-c' ]
 	then
 		[ -z "$2" ] && die_error "You must specify a config"
 		source $2 || die_error "Could not source config $2"
