@@ -1,4 +1,12 @@
 #!/bin/bash
+# An example config for the deployment procedure
+
+var_RUNTIME_PACKAGES="svn"
+
+DEPLOY_CLASS=desktop-a7n8x
+SVN_USER=dieter
+SVN_PASSWORD=
+
 
 _accept_ssl_cert ()
 {
