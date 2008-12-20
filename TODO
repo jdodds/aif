@@ -14,7 +14,7 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * automatically configure grub for dm_crypt and lvm
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
 * hmm wasn't there a hwdetect/hwd or something in /arch/setup? this seems to have disappeared.
-* shouldn't we put /etc/hostname in 'configure system' ?
+* shouldn't we put /etc/hostname in 'configure system' ? ASKDEV
 * a nice way to be able to "inject" functions without:
   * needing to redefine phases with only 1 entry different
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
