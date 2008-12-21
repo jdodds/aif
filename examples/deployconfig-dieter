@@ -34,7 +34,7 @@ worker_package_list ()
 	TARGET_PACKAGES=`cat $var_PKG_FILE` && TARGET_PACKAGES=`echo $TARGET_PACKAGES` || die_error "Could not cat package list. THIS SHOULD NEVER HAPPEN."
 	# Strip away all packages not known by pacman. To get all packages, you'll need to do that when the system is installed TODO: don't do this.  WAITINGFOR: --config support in yaourt + 'list of md5s of trusted pkgbuilds' support in yaourt
 	# NOTE: maybe chrooting could be an option too (to avoid --config support, but problem 2 stays)
-	TARGET_PACKAGES=`pacman -Si $TARGET_PACKAGES 2>/dev/null | awk '/Name/ {print $3}'`
+	TARGET_PACKAGES=`$PACMAN_TARGET -Si $TARGET_PACKAGES 2>/dev/null | awk '/Name/ {print $3}'`
 	TARGET_PACKAGES=`echo $TARGET_PACKAGES`
 }
 
