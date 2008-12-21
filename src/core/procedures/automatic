@@ -71,14 +71,14 @@ worker_runtime_network ()
 # Check if we have all needed settings loaded from the profile
 worker_runtime_settings ()
 {
-	if check_is_in "$var_RUNTIME_PACKAGES" svn
+	if check_is_in $var_RUNTIME_PACKAGES svn
 	then
 		[ -z "$SVN_USERNAME" ] && ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
 		[ -z "$SVN_PASSWORD" ] && ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
 		[ -z "$SVN_BASE"     ] && ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
 		[ -z "$DEPLOY_CLASS" ] && ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
 		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
-	elif check_is_in "$var_RUNTIME_PACKAGES" moo
+	elif check_is_in $var_RUNTIME_PACKAGES moo
 	then
 		# Maybe more stuff later
 		true
