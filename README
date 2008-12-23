@@ -16,6 +16,7 @@ The code of the old installer has been madly refactored, reorganized and cleaned
 AIF comes by default with these procedures:
 - interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
 - quickinst:   A port of /arch/quickinst.  Work in progress.  Don't use this yet.
+- automatic:   An automated, deploy-tool-alike procedure.  Work in progress.  Don't use this yet.
 
 AIF may or may not bring much additional value for you when compared with the previous
 installer, it depends on what you want to do:
