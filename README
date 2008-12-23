@@ -4,22 +4,53 @@ AIF is the Arch Linux Installation Framework.
 
 
 License:     GPL3. See COPYING.
-Author:       Dieter Plaetinck
-Homepage:     http://github.com/Dieterbe/aif
+Author:      Dieter Plaetinck
+Homepage:    http://github.com/Dieterbe/aif
+
+
+** Intro / Current state of things **
+
+AIF is included on the 2008-12 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
+The code of the old installer has been madly refactored, reorganized and cleaned up.
+
+AIF comes by default with these procedures:
+- interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
+- quickinst:   A port of /arch/quickinst.  Work in progress.  Don't use this yet.
+
+AIF may or may not bring much additional value for you when compared with the previous
+installer, it depends on what you want to do:
+- End users:
+  On the frontend, the interactive profile is very similar to /arch/setup. 
+  The features are more or less the same, with two notable exceptions:
+  * Different partition/filesystem editor with support for LVM and dm_crypt
+  * Rollback functionality if you change your mind after having formatted filesystems
+- Hackers:
+  The code base that AIF runs on is very usable for hacking.  The code is
+  modular, reusable and quite complete.  If you want to build your own
+  installation procedures, or want to modify specific aspects of the
+  out-of-the-box installation procedures, definitely check out how AIF
+  works.  It is built for hacking, reusing code and making writing custom installers
+  as easy as possible.
+
+Keep in mind that AIF is still in ALPHA phase.
+There are some known issues (see the TODO file and various TODO's in the source code) 
+
+AIF is expected to become the new official installer in the not too distant
+future, so go ahead and try it !
 
 
 ** Goals **
 The goal of this project is 
-1) to allow you to install Arch Linux in more flexible and powerful ways.
-2) write an automated (unattended) installer
-3) Apply DRY patterns to the installation procedure, making it more easy to maintain the code.
+1) to make the code of the Arch Linux installer more clean, DRY, modular and maintainable.
+2) providing complete, easily-reusable libraries for disk partitioning, UI, package management, etc
+3) provide some sensible default installation methods (eg interative, quickinst, automatic (prescripted), ..)
+4) allowing power users to easily override certain aspects of the installation procedures
+   or creating customized procedures, leveraging the available code.
 
+The goal of AIF is not (yet):
+1) providing an installer who detects your stuff and tries to be smart and configures all your stuff.
+   If you're interested in this, feel free to build it and I may incorporate it someday.
 
-You can choose to use unattended (automatic) installation (you can write different
-modules/procedures for different scenario's, and/or use autodetection) or prompt the user for whatever you want to know (you could mimic the official installer like
-that).
-You can also take parts from different installation procedures and combine them
-together to come up with the procedure of your liking.
 
 
 ** File locations (on the install CD): **
@@ -67,6 +98,7 @@ be merged into core someday...  Also, don't name your custom module 'core' (it w
 ignored anyway).  Don't call it http either, because you can specify
 'http://some/path/to/a/procedure', aif will download that procedure and
 execute it (and the module will be 'http')
+
 
 Note that if you load a module and a library has the same function names as
 the core module, it will override the functions from core.
@@ -129,7 +161,7 @@ it isn't always the case like that now, I need to do more refactoring)
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
 scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
 to make the code more (re)useable and to separate backend code, user
-interface and flow control.  (intro libraries and procedures).  (which was tightly coupled in the original scripts)
+interface and flow control.  (into libraries and procedures).  (which was tightly coupled in the original scripts)
 
 I couldn't find what license the code is under, but I assume this
 is okay.. if not let me know.
