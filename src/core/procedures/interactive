@@ -19,7 +19,7 @@ PART_ROOT=
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 
 worker_select_source_title='Select Source'
-worker_runtime_network_title='Setup Network (Make sure the network is ok before continuing'
+worker_runtime_network_title='Setup Network'
 worker_select_mirror_title='Choose Mirror'
 worker_set_clock_title='Set clock'
 worker_prepare_disks_title='Prepare Hard Drive(s)'
@@ -95,7 +95,7 @@ mainmenu()
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" '' \
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
