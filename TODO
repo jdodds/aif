@@ -26,19 +26,24 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
        -> maybe we should in the callback do an execute call for another worker, then we also can check it's exitcode in a good way
        -> too. although that's only good for separate functions, not the 'copypaste 90% and add 10% to the same worker scenario'
   -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
-
+* mirrorlist config doesn't change after selecting mirror
+* 'keep in mind trottled' geen separate screen
+* cool, network setting coping into target/rc.conf seems to work wih aif. at least for dhcp.. it even asks nicely
+* split up lib-ui as sep project, make a generic 'LIF' project,..
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * involve broader community
 * fix everything
-* if dhcpd already runs for $reason, the installer will try again @ configure network and
-fail.  i tried killall dhcpd, killall -9 dhcpd first but that didn't help:
-it can't kill the process or something...
+* if dhcpd already runs for $reason, the installer will try again @ configure network and fail.
+  i tried killall dhcpd, killall -9 dhcpd first but that didn't help: it can't kill the process or something...
+  I can also add something like for iface in `moo` (or only the one selected iface); do ifconfig $iface down;
+  ifconfig $iface up; done, and then dhcpd again
 * core/interactive: do not check hard for the dependencies. a user could really know what he's doing or need to reboot after partitioning a disk and
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
+* ext4 support (once we have 2.6.28 or higher on install cd)
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
