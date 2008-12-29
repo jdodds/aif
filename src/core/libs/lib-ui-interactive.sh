@@ -117,6 +117,7 @@ interactive_autoprepare()
 	FSOPTS=
 	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+	which `get_filesystem_program ext4`     &>/dev/null && FSOPTS="$FSOPTS ext4 Ext4"
 	which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
 	which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
@@ -266,6 +267,7 @@ interactive_filesystem ()
 		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
 		# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+		# ext 4       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
@@ -281,6 +283,7 @@ interactive_filesystem ()
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program swap`     &>/dev/null && FSOPTS="$FSOPTS swap Swap"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
+		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext4`     &>/dev/null && FSOPTS="$FSOPTS ext4 Ext4"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
