@@ -649,6 +649,7 @@ process_filesystem ()
 			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
 			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
 			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
+			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;;
 			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
 			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
@@ -721,6 +722,7 @@ get_filesystem_program ()
 	[ $1 = swap     ] && echo mkswap     && return 0
 	[ $1 = ext2     ] && echo mkfs.ext2  && return 0
 	[ $1 = ext3     ] && echo mkfs.ext3  && return 0
+	[ $1 = ext4     ] && echo mkfs.ext4  && return 0
 	[ $1 = reiserfs ] && echo mkreiserfs && return 0
 	[ $1 = xfs      ] && echo mkfs.xfs   && return 0
 	[ $1 = jfs      ] && echo mkfs.jfs   && return 0

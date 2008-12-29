@@ -43,7 +43,6 @@ BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternati
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
-* ext4 support (once we have 2.6.28 or higher on install cd)
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
 * fix everything even more
