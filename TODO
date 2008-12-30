@@ -13,7 +13,7 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * automatically configure grub for dm_crypt and lvm
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
-
+* test ext4. i'm not sure if it works perfectly
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
