@@ -32,7 +32,7 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * split up lib-ui as sep project, make a generic 'LIF' project,..
 * in usage, procedure specific opts points to parent profile when using inheritance
 * we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
-* ( only in experimental?) grub sedding doesn't work. default config remains
+* ( only in experimental?) grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3), sometimes an incorrect UUID is generated
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
