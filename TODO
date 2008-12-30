@@ -30,11 +30,9 @@ ALPHA PHASE: get some people to test and suggest ideas, while fixing bugs and re
 * 'keep in mind trottled' geen separate screen
 * cool, network setting coping into target/rc.conf seems to work wih aif. at least for dhcp.. it even asks nicely
 * split up lib-ui as sep project, make a generic 'LIF' project,..
-bugs in experimental:
 * in usage, procedure specific opts points to parent profile when using inheritance
-* -i , -d etc options not handled ?
-* package installation works fine, however it tries to die instead of 'package installation complete'
-* it can't die because the --textbox fails in show_warning
+* we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
+* ( only in experimental?) grub sedding doesn't work. default config remains
 
 BETA PHASE: try to get aif on the (beta) installcd as an experimental, alternative installer.
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program

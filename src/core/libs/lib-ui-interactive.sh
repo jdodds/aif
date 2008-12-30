@@ -709,11 +709,8 @@ interactive_install_grub() {
         bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
         if [ "$grubdev" != "" -o "$bootdev" != "" ]; then
             subdir=
-            if [ "$bootdev" != "" ]; then
-                grubdev=$(mapdev $bootdev)
-            else
-                subdir="/boot"
-            fi
+            [ -n "$bootdev" != "" ] && grubdev=$(mapdev $bootdev) || subdir="/boot"
+
             # keep the file from being completely bogus
             if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
                 notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."

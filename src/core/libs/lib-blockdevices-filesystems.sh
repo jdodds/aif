@@ -649,7 +649,7 @@ process_filesystem ()
 			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
 			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
 			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
-			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;;
+			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
 			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
 			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
