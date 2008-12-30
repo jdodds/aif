@@ -15,7 +15,7 @@ SVN_USERNAME=dieter
 SVN_PASSWORD=
 SVN_BASE=https://192.168.1.2/svn/repos
 
-phase_preparation=("${phase_preparation[@]}" accept_ssl_cert) # make accept_ssl_cert the very first thing. it needs to go before fetch_configs and it's not easy to put it somewhere in the middle, so...
+phase_preparation=(accept_ssl_cert "${phase_preparation[@]}") # make accept_ssl_cert the very first thing. it needs to go before fetch_configs and it's not easy to put it somewhere in the middle, so...
 phase_system+=(configure_home)
 
 
