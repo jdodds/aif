@@ -8,7 +8,7 @@ var_RUNTIME_PACKAGES=
 var_PKG_FILE=$RUNTIME_DIR/package-list # not used by default in base/interactive. can be used by custom procedures or profiles for the automatic procedure
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
-var_ARCH=`uname -m` #works for i686 TODO: check if it works for x86_64
+var_ARCH=`uname -m` #i686 or x86_64
 [ -z "$var_ARCH" ] && die_error "Could not determine your architecture"
 
 ###### Phases ( can be overridden by more specific procedures) ######
