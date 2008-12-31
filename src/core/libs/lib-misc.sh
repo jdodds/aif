@@ -14,7 +14,7 @@ run_background ()
 
 	debug "run_background called. identifier: $1, command: $2, logfile: $3"
 	( \
-		touch $RUNTIME_DIR/$1-running
+		touch $RUNTIME_DIR/.$1-running
 		debug "run_background starting $1: $2 >>$3 2>&1"
 		[ -f $3 ] && echo -e "\n\n\n" >>$3
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
@@ -23,7 +23,7 @@ run_background ()
 		read $var_exit <<< $? #TODO: bash complains about 'not a valid identifier'
 		debug "run_background done with $1: exitcode (\$$1_exitcode): "${!var_exit}" .Logfile $3" #TODO ${!var_exit} doesn't show anything --> maybe fixed now
 		echo >> $3   
-		rm -f $RUNTIME_DIR/$1-running
+		rm -f $RUNTIME_DIR/.$1-running
 	) &
 
 	sleep 2
@@ -36,7 +36,7 @@ wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
 
-	while [ -f $RUNTIME_DIR/$1-running ]
+	while [ -f $RUNTIME_DIR/.$1-running ]
 	do
 		#TODO: follow_progress dialog mode = nonblocking (so check and sleep is good), cli mode (tail -f )= blocking? (so check is probably not needed as it will be done)
 		sleep 1
