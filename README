@@ -8,10 +8,10 @@ Author:      Dieter Plaetinck
 Homepage:    http://github.com/Dieterbe/aif
 
 
-** Intro / Current state of things **
+** --> Intro / Current state of things <-- **
 
-AIF is included on the 2008-12 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
-The code of the old installer has been madly refactored, reorganized and cleaned up.
+AIF is included on the 2009-01 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
+AIF is based on the old installer, but the code has been madly refactored, reorganized and cleaned up.
 
 AIF comes by default with these procedures:
 - interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
@@ -22,8 +22,8 @@ installer, it depends on what you want to do:
 - End users:
   On the frontend, the interactive profile is very similar to /arch/setup. 
   The features are more or less the same, with two notable exceptions:
-  * Different partition/filesystem editor with support for LVM and dm_crypt
-  * Rollback functionality if you change your mind after having formatted filesystems
+  * Different partition/filesystem editor offering more flexibility and options, such as support for LVM and dm_crypt
+  * Rollback functionality if you change your mind after having formatted filesystems or if something went wrong and you want to retry.
 - Hackers:
   The code base that AIF runs on is very usable for hacking.  The code is
   modular, reusable and quite complete.  If you want to build your own
@@ -37,6 +37,8 @@ There are some known issues (see the TODO file and various TODO's in the source 
 
 AIF is expected to become the new official installer in the not too distant
 future, so go ahead and try it !
+
+
 
 
 ** Goals **
@@ -64,7 +66,22 @@ Basically aif.sh is put in /arch (together with the default installer scripts), 
 
 A module can have 2 directories: libs, and procedures.
 
-** Workflow **
+
+** Procedures **
+core/base:        basic, little-interactivity installation with some common defaults.  You probably don't
+                  want to run this one, although it's useful for other procedures to inherit from.
+core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
+core/quickinst:   mostly DIY.  port of /arch/quickinst
+
+** Partial Procedures **
+These procedures allow you to run a select few functions, in order to reach
+a specific goal, usually not installing a system
+
+partial-configure-network.sh Configure network on the runtime system
+partial-disks.sh             Process disk subsystem or do a rollback
+
+
+** (Internal) Workflow **
 There is a very basic but powerful workflow defined by variables, phases and workers.
 Depending on the procedure you choose (or write yourself), these will differ
 In the code, they are very recognizable and are named like this:
@@ -126,31 +143,15 @@ usually will set defaults in the configure worker and override with
 arguments passed by the user (eg to use cli mode unless user wants dia)
 
 
-** Procedures **
-core/base:        basic, little-interactivity installation with some common defaults.  You probably don't
-                  want to run this one, although it's useful for other procedures to inherit from.
-core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
-core/quickinst:   mostly DIY.  port of /arch/quickinst
-core/automatic:   automatic installer/deployment tool, can use config files
-
-** Partial Procedures **
-These procedures allow you to run a select few functions, in order to reach
-a specific goal, usually not installing a system
-
-partial-configure-network.sh Configure network on the runtime system
-partial-disks.sh             Process disk subsystem or do a rollback
-
-
 ** Contributing **
-Install a VM (I use virtualbox-ose, works fine), make a vm, boot the install
-cd (only i686 works in vbox) and just follow the HOWTO.
+Install a VM (I use virtualbox-ose, works fine), make a vm, boot the install cd and just follow the HOWTO.
 It's probably easiest if you set up your own git clone that you can easily
-acces from the VM (You can open a github account and for my code).
+acces from the VM (You can open a github account and fork my code).
 You can edit on the cd itself, but given the low resolution of the VM and the limited
 choice of editors, you'll probably edit on your pc, commit, push to github
 and pull from the clone on the cd.
 If you want to do debugging, just call the debug function and export DEBUG=1
-before calling the scripts.
+before calling the scripts. (or pass -d)
 Keep in mind there are 3 kinds of variables.  Those that affect/belong to
 the runtime (install cd live environment), target (affects/belongs to the
 target installation) and TMP (everything in between or extra). Variablenames
@@ -160,8 +161,9 @@ it isn't always the case like that now, I need to do more refactoring)
 
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
 scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
-to make the code more (re)useable and to separate backend code, user
-interface and flow control.  (into libraries and procedures).  (which was tightly coupled in the original scripts)
+to make the code more (re)useable, to separate backend code, user
+interface and flow control (into libraries and procedures)  (which was tightly coupled in the original scripts)
+and to provide additional features.
 
 I couldn't find what license the code is under, but I assume this
 is okay.. if not let me know.
