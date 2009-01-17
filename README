@@ -11,7 +11,7 @@ Homepage:    http://github.com/Dieterbe/aif
 ** --> Intro / Current state of things <-- **
 
 AIF is included on the 2009-01 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
-AIF is based on the old installer, but the code has been madly refactored, reorganized and cleaned up.
+AIF is based on the old installer, but the code has been madly refactored, reorganized, cleaned up and in some places replaced.
 
 AIF comes by default with these procedures:
 - interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
@@ -22,19 +22,24 @@ AIF may or may not bring much additional value for you when compared with the pr
 installer, it depends on what you want to do:
 - End users:
   On the frontend, the interactive profile is very similar to /arch/setup. 
-  The features are more or less the same, with two notable exceptions:
+  The features are more or less the same, with a few exceptions:
   * Different partition/filesystem editor offering more flexibility and options, such as support for LVM and dm_crypt
   * Rollback functionality if you change your mind after having formatted filesystems or if something went wrong and you want to retry.
+  * Some miscellaneous features like the ability to choose between ncurses and CLI mode, debug output, and logging to a file.
 - Hackers:
   The code base that AIF runs on is very usable for hacking.  The code is
   modular, reusable and quite complete.  If you want to build your own
   installation procedures, or want to modify specific aspects of the
   out-of-the-box installation procedures, definitely check out how AIF
-  works.  It is built for hacking, reusing code and making writing custom installers
-  as easy as possible.
+  works.  It is built for hacking, reusing code, changing the behaviour in
+  specific places and making writing custom installers as easy as possible.
 
 Keep in mind that AIF is still in ALPHA phase.
 There are some known issues (see the TODO file and various TODO's in the source code) 
+
+If you encounter issues, please report them at http://bugs.archlinux.org/,
+under the "Release Engineering" project.
+There will also be a new mailing list, called arg-releng.
 
 AIF is expected to become the new official installer in the not too distant
 future, so go ahead and try it !
@@ -159,7 +164,7 @@ the runtime (install cd live environment), target (affects/belongs to the
 target installation) and TMP (everything in between or extra). Variablenames
 should have _TARGET or _TMP suffixes or none for runtime.  (Honestly though,
 it isn't always the case like that now, I need to do more refactoring)
-
+Bugs can be reported at http://bugs.archlinux.org/, project "Release Engineering"
 
 Much of the code in the core module is taken (and modified) from the 'real' arch linux install
 scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
