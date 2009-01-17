@@ -36,9 +36,11 @@ installer, it depends on what you want to do:
 Keep in mind that AIF is still in ALPHA phase.
 There are some known issues (see the TODO file and various TODO's in the source code) 
 
-If you encounter issues, please report them at http://bugs.archlinux.org/,
-under the "Release Engineering" project.
-There will also be a new mailing list, called arg-releng.
+If you encounter issues, please report them at the Arch Linux bugtracker under the "Release Engineering" project.
+( http://bugs.archlinux.org/toplevel/proj6 )
+
+You can also get in touch with the release engineers / aif developers on the arg-releng
+mailing list, http://www.archlinux.org/mailman/listinfo/arch-releng
 
 AIF is expected to become the new official installer in the not too distant
 future, so go ahead and try it !
