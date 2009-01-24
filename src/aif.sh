@@ -18,7 +18,8 @@ usage ()
     -l                   Explicitly enable logging to file (optional)
     -h                   Help: show usage  (optional)\n
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
-If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.  See README\n
+If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.\n
+For more info, see the README which you can find in /home/arch/aif/docs\n
 Available procedures on the filesystem:
 `find /home/arch/aif/core/procedures -type f`\n
 `find /home/arch/aif/user/*/procedures -type f 2>/dev/null`" 
