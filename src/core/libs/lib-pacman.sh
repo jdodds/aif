@@ -86,7 +86,7 @@ done
 	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
 
 	infofy "Refreshing package database..."
-	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1
+	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1 #TODO: make sure this also goes into the logfile. actually we should do this for many commands.
 	return 0
 }
 
