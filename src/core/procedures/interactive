@@ -81,7 +81,8 @@ mainmenu()
 		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=6 ;;
         "6")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
-		                                                                                                                  execute worker locales      ; } && NEXTITEM=7 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
+		                                                                                                                  execute worker locales      ;
+		                                                                                                                  execute worker initialtime  ; } && NEXTITEM=7 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
         "7")
 		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=8 ;;
         "8")

@@ -166,6 +166,12 @@ worker_locales ()
 }
 
 
+worker_initialtime ()
+{
+	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime
+}
+
+
 worker_install_bootlader ()
 {
 	#TODO: ask which disk, install grub on it
