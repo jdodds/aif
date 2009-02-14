@@ -865,13 +865,12 @@ interactive_select_mirror() {
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
         ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
-        var_SYNC_URL=$ANSWER_STRING
+        var_SYNC_URL=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
     else
         # Form the full URL for our mirror by grepping for the server name in
-        # our mirrorlist and pulling the full URL out. Substitute 'core' in  
-        # for the repository name, and ensure that if it was listed twice we 
-        # only return one line for the mirror.
-        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
+        # our mirrorlist and pulling the full URL out.
+        # Ensure that if it was listed twice we only return one line for the mirror.
+        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
     fi
     echo "Using mirror: $var_SYNC_URL" >$LOG
 }
