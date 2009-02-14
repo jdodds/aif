@@ -10,7 +10,7 @@ Homepage:    http://github.com/Dieterbe/aif
 
 ** --> Intro / Current state of things <-- **
 
-AIF is included on the 2009-01 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
+AIF is included on the 2009.02 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
 AIF is based on the old installer, but the code has been madly refactored, reorganized, cleaned up and in some places replaced.
 
 AIF comes by default with these procedures:
@@ -67,10 +67,11 @@ The goal of AIF is not (yet):
 Basically aif.sh is put in /arch (together with the default installer scripts), while all other aif-related files belong in /home/arch/aif
 
 * aif.sh        -> /arch/aif
-* docs          -> /home/arch/aif/docs/
-* core module   -> /home/arch/aif/core
-* user modules  -> /home/arch/aif/user/<module name> (put your own modules here)
-* runtime files -> /home/arch/aif/runtime (package list etc go here)
+* docs          -> /usr/share/aif/docs
+* core module   -> /usr/lib/aif/core
+* user modules  -> /usr/lib/aif/user/<module name> (put your own modules here)
+* runtime files -> /tmp/aif (package list etc go here)
+* logs          -> /var/log/aif
 
 A module can have 2 directories: libs, and procedures.
 

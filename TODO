@@ -43,8 +43,8 @@ ALPHA PHASE:
 
 
 BETA PHASE:
+* ext4 default options? -O dir_index,extent,uninit_bg ?
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
-* fix everything
 * if dhcpd already runs for $reason, the installer will try again @ configure network and fail.
   i tried killall dhcpd, killall -9 dhcpd first but that didn't help: it can't kill the process or something...
   I can also add something like for iface in `moo` (or only the one selected iface); do ifconfig $iface down;
@@ -55,7 +55,6 @@ skip that check or something.  Alternatively, maybe just show which steps are do
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
 
 PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
-* fix everything even more
 * bribe devs
 * core/interactive: do pacman -Sy in the background during early phases, to lessen the wait period before selecting packages
 * write bash completion thing for aif modules/procedures

@@ -62,8 +62,9 @@ check_is_in ()
 }
 
 
-# cleans up file in the runtime directory who can be deleted
+# cleans up file in the runtime directory who can be deleted, make dir first if needed
 cleanup_runtime ()
 {
+	mkdir -p $RUNTIME_DIR || die_error "Cannot create $RUNTIME_DIR"
 	rm -rf $RUNTIME_DIR/.dia*            &>/dev/null
 }

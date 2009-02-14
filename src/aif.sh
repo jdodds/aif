@@ -1,10 +1,14 @@
 #!/bin/bash
 
+
 ###### Set some default variables ######
 TITLE="Arch Linux Installation Framework"
 LOG="/dev/tty7"
-RUNTIME_DIR=/home/arch/aif/runtime
-LOGFILE=$RUNTIME_DIR/aif.log
+LIB_CORE=/usr/lib/aif/core
+LIB_USER=/usr/lib/aif/user
+RUNTIME_DIR=/tmp/aif
+LOG_DIR=/var/log/aif
+LOGFILE=$LOG_DIR/aif.log
 
 
 ###### Miscalleaneous functions ######
@@ -19,10 +23,10 @@ usage ()
     -h                   Help: show usage  (optional)\n
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.\n
-For more info, see the README which you can find in /home/arch/aif/docs\n
-Available procedures on the filesystem:
-`find /home/arch/aif/core/procedures -type f`\n
-`find /home/arch/aif/user/*/procedures -type f 2>/dev/null`" 
+For more info, see the README which you can find in /usr/share/aif/docs\n
+Available procedures:
+`find $LIB_CORE/procedures   -type f             | sed 's#$LIB_CORE##'`\n
+`find $LIB_USER/*/procedures -type f 2>/dev/null | sed 's#$LIB_USER##'`" 
 	[ -n "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
 
 	echo -e "$msg"
@@ -40,6 +44,7 @@ notify ()
 
 log ()
 {
+	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
 	echo -e "$str" > $LOG
 	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
@@ -48,6 +53,7 @@ log ()
 
 debug ()
 {
+	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
 	str="[DEBUG] $@"
 	if [ "$DEBUG" = "1" ]
 	then
