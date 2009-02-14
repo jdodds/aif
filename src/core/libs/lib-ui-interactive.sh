@@ -876,17 +876,21 @@ interactive_select_mirror() {
     echo "Using mirror: $var_SYNC_URL" >$LOG
 }
 
-# geteditor(). taken from original setup code. 
+# geteditor().
 # prompts the user to choose an editor
 # sets EDITOR global variable
 #
 interactive_get_editor() {
-	ask_option no "Text editor selection" "Select a Text Editor to Use" \
-	"1" "nano (easier)" \
-	"2" "vi" 
+	unset EDITOR_OPTS
+	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
+	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
+	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
+	ask_option no "Text editor selection" "Select a Text Editor to Use" "${EDITOR_OPTS[@]}"
+	#TODO: this code could be a little bit cleaner.
 	case $ANSWER_OPTION in
-		"1") EDITOR="nano" ;;
-		"2") EDITOR="vi" ;;
-		*)   EDITOR="nano" ;;
+		"nano") EDITOR="nano" ;;
+		"joe")  EDITOR="joe"  ;;
+		"vi")   EDITOR="vi"   ;;
+		*)      EDITOR="nano" ;;
 	esac
 }
