@@ -120,7 +120,8 @@ worker_configure_system()
 
 	# /etc/rc.conf
 	# Make sure timezone and utc info are what we want
-	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"$TIMEZONE\"/g" \
+	# NOTE: If a timezone string never contains more then 1 slash, we can use ${TIMEZONE/\//\\/}
+	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"${TIMEZONE//\//\\/}\"/g" \
 		-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
 		${var_TARGET_DIR}/etc/rc.conf
 
