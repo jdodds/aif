@@ -1,14 +1,13 @@
 See also the FIXME's and TODO's in the code.
 
 
-ALPHA PHASE:
+CURRENT ISSUES:
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * core/interactive: fix workaround needed for installpkg exitcode
-* core/interactive: keymap and timezone settings from installer dan't not go in $target/etc/rc.conf
+* core/interactive: keymap from installer don't not go in $target/etc/rc.conf
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
-* core/quickinst: figure out what needs to be done and do it.
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * automatically configure grub for dm_crypt and lvm
@@ -26,9 +25,7 @@ ALPHA PHASE:
        -> too. although that's only good for separate functions, not the 'copypaste 90% and add 10% to the same worker scenario'
   -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
 * mirrorlist config doesn't change after selecting mirror
-* 'keep in mind trottled' geen separate screen
-* cool, network setting coping into target/rc.conf seems to work wih aif. at least for dhcp.. it even asks nicely
-* split up lib-ui as sep project, make a generic 'LIF' project, set $DISTRO somewhere and use that everywhere...
+* 'keep in mind trottled' not on separate screen
 * in usage, procedure specific opts points to parent profile when using inheritance
 * we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
 * ( only in experimental?) grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
@@ -39,9 +36,6 @@ ALPHA PHASE:
 * in lvm VG editor you can press "cancel" (when 'new' is selected, maybe otherwise too) and create a new LV which will get a block entry, but no fs entry on the VG block!
 * aif : na "mijn" partitielayout: bij grub ( nog voor text editor op menu.lst) zegt iets ( op foreground van ncurses) Can't remove.. ik denk zelfs 'Grub: Can't remove..' en daarna een gewone entry, geen uuid's gewoon /dev/sda3 ro
 * port from /arch/setup: grub install chroot thing (waiting for ticket), 2 patches from foutrelis @ http://bugs.archlinux.org/task/12949
-
-
-BETA PHASE:
 * ext4 default options? -O dir_index,extent,uninit_bg ?
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * if dhcpd already runs for $reason, the installer will try again @ configure network and fail.
@@ -52,15 +46,15 @@ BETA PHASE:
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
+* core/quickinst: figure out what needs to be done and do it.
 
-PRODUCTION PHASE: be the primary installer.  deprecate /arch/setup and /arch/quickinst
-* bribe devs
+
+
+SOMEDAY/MAYBE/RANDOM THOUGHTS:
 * core/interactive: do pacman -Sy in the background during early phases, to lessen the wait period before selecting packages
 * write bash completion thing for aif modules/procedures
 * add dmraid/mdadm support -> patches welcome.  i don't care about this. 
 * check if it would be useful to support kickstart config files.  we can look at quickstart for that http://dev.gentoo.org/~agaffney/quickstart.php
-
-SOMEDAY/MAYBE/RANDOM THOUGHTS:
 * the quickinst assumes the user did some stuff by himself and does some
 after-processing.  Would it be useful to have a procedure that always tells
 the user what to do (manually) ? -> ASKDEV
@@ -74,8 +68,7 @@ whereas for interactive procedures it could provide some other defaults.
 * all dialog windows are equally sized.  noone cares, right?
 * we run mkinitcpio twice: one while installing kernel packages, once after configuring system (mkinitcpio.conf)
 configuring the system (mkinitcpio.conf). can we optimize this?
-* core/interactive -> install packages -> dependency cycles with glibc.  not
-a problem? -> ASKDEV
+* split up lib-ui as sep project, make a generic 'LIF' project, set $DISTRO somewhere and use that everywhere...
 
 
 WORRIES FOR MAYBE NO GOOD REASON
