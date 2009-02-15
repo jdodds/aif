@@ -25,13 +25,13 @@ Alternatively, if you have a recent version of AIF installed and it comes with t
 pacman -Sy git fakeroot # You need about 192MB ram for this! 128MB is not enough.
 
 # arch shell
-wget http://aur.archlinux.org/packages/aif-git/aif-git.tar.gz
-tar -xzf
-cd aif-git
+wget http://aur.archlinux.org/packages/aif-experimental-git/aif-experimental-git.tar.gz
+tar -xzf aif-experimental-git.tar.gz
+cd aif-experimental-git
 makepkg
 
 # root shell:
-pacman -U /home/arch/aif-git/aif*.pkg.tar.gz
+pacman -U /home/arch/aif-experimental-git/aif*.pkg.tar.gz
 
 4) Fire it up! (as root)
 
