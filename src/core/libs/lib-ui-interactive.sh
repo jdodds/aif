@@ -709,7 +709,7 @@ interactive_install_grub() {
         bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
         if [ "$grubdev" != "" -o "$bootdev" != "" ]; then
             subdir=
-            [ -n "$bootdev" != "" ] && grubdev=$(mapdev $bootdev) || subdir="/boot"
+            [ -n "$bootdev" ] && grubdev=$(mapdev $bootdev) || subdir="/boot"
 
             # keep the file from being completely bogus
             if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
