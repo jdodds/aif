@@ -31,6 +31,7 @@ cd aif-experimental-git
 makepkg
 
 # root shell:
+pacman -R aif # pacman can't replace with -U yet..
 pacman -U /home/arch/aif-experimental-git/aif*.pkg.tar.gz
 
 4) Fire it up! (as root)
@@ -38,7 +39,6 @@ pacman -U /home/arch/aif-experimental-git/aif*.pkg.tar.gz
 aif -p <procedurename> #you can skip networking.
 
 For more info see README or aif -h.
-
 
 
 
