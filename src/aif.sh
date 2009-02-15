@@ -71,8 +71,8 @@ load_module ()
 {
 	[ -z "$1" ] && die_error "load_module needs a module argument"
 	log "Loading module $1 ..."
-	path=/home/arch/aif/user/"$1"
-	[ "$1" = core ] && path=/home/arch/aif/core
+	path=$LIB_USER/"$1"
+	[ "$1" = core ] && path=$LIB_CORE
 	
 	for submodule in lib #procedure don't load procedures automatically!
 	do	
@@ -105,8 +105,8 @@ load_procedure()
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
 		log "Loading procedure $1/procedures/$2 ..."
-		procedure=/home/arch/aif/user/"$1"/procedures/"$2"
-		[ "$1" = core ] && procedure=/home/arch/aif/core/procedures/"$2"
+		procedure=$LIB_USER/"$1"/procedures/"$2"
+		[ "$1" = core ] && procedure=$LIB_CORE/procedures/"$2"
 	fi
 	[ -f "$procedure" ] && source "$procedure" || die_error "Something went wrong while sourcing procedure $procedure"
 }
@@ -119,8 +119,8 @@ load_lib ()
 	[ -z "$1" ] && die_error "load_library needs a module als \$1 and library as \$2"
 	[ -z "$2" ] && die_error "load_library needs a library as \$2"
 	log "Loading library $1/libs/$2 ..."
-	lib=/home/arch/aif/user/"$1"/libs/"$2"
-	[ "$1" = core ] && lib=/home/arch/aif/core/libs/"$2"
+	lib=$LIB_USER/"$1"/libs/"$2"
+	[ "$1" = core ] && lib=$LIB_CORE/libs/"$2"
 	source $lib || die_error "Something went wrong while sourcing library $lib"
 }
 

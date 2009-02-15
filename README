@@ -64,7 +64,6 @@ The goal of AIF is not (yet):
 
 
 ** File locations (on the install CD): **
-Basically aif.sh is put in /arch (together with the default installer scripts), while all other aif-related files belong in /home/arch/aif
 
 * aif.sh        -> /sbin/aif
 * docs          -> /usr/share/aif/docs
