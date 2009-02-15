@@ -25,8 +25,8 @@ If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's a
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.\n
 For more info, see the README which you can find in /usr/share/aif/docs\n
 Available procedures:
-`find $LIB_CORE/procedures   -type f             | sed \"s#$LIB_CORE##\"`\n
-`find $LIB_USER/*/procedures -type f 2>/dev/null | sed \"s#$LIB_USER##\"`"
+`find $LIB_CORE/procedures   -type f             | sed \"s#$LIB_CORE/procedures/##\"`\n
+`find $LIB_USER/*/procedures -type f 2>/dev/null | sed \"s#$LIB_USER/\(.*\)/procedures/#\1/#\"`"
 	[ -n "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
 
 	echo -e "$msg"
