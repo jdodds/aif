@@ -38,13 +38,7 @@ pacman -U /home/arch/aif-experimental-git/aif*.pkg.tar.gz
 
 aif -p <procedurename> #you can skip networking.
 
-For more info see README or aif -h.
 
-
-
-
-
-
-
-
-
+Notes:
+* For more info see README or aif -h.
+* Since you configured the network before starting aif, you need to reconfigure it in aif if you want the 'auto-update rc.conf' functionality.
