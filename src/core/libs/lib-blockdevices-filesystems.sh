@@ -24,7 +24,6 @@
 
 
 
-#TODO: this should be fixed on the installcd.
 modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
 modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
 

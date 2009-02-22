@@ -35,7 +35,7 @@ CURRENT ISSUES:
 * refactor all pacman stuff (modularize/functionize etc)
 * in lvm VG editor you can press "cancel" (when 'new' is selected, maybe otherwise too) and create a new LV which will get a block entry, but no fs entry on the VG block!
 * aif : na "mijn" partitielayout: bij grub ( nog voor text editor op menu.lst) zegt iets ( op foreground van ncurses) Can't remove.. ik denk zelfs 'Grub: Can't remove..' en daarna een gewone entry, geen uuid's gewoon /dev/sda3 ro
-* port from /arch/setup: grub install chroot thing (waiting for ticket), 2 patches from foutrelis @ http://bugs.archlinux.org/task/12949
+* port from /arch/setup: grub install chroot thing (http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=4565577dbd2182dd49612f1e0b68288f5573bf7b) (waiting for ticket http://bugs.archlinux.org/task/13277)
 * ext4 default options? -O dir_index,extent,uninit_bg ?
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * if dhcpd already runs for $reason, the installer will try again @ configure network and fail.
