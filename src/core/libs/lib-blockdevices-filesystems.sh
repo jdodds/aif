@@ -25,11 +25,11 @@ modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no supp
 
 
 
-TMP_DEV_MAP=$RUNTIME_DIR/dev.map
-TMP_FSTAB=$RUNTIME_DIR/.fstab
-TMP_PARTITIONS=$RUNTIME_DIR/.partitions
-TMP_FILESYSTEMS=$RUNTIME_DIR/.filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
-TMP_BLOCKDEVICES=$RUNTIME_DIR/.blockdata
+TMP_DEV_MAP=$RUNTIME_DIR/aif-dev.map
+TMP_FSTAB=$RUNTIME_DIR/aif-fstab
+TMP_PARTITIONS=$RUNTIME_DIR/aif-partitions
+TMP_FILESYSTEMS=$RUNTIME_DIR/aif-filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
+TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
 
 
 

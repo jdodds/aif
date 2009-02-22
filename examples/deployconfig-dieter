@@ -22,8 +22,8 @@ phase_system+=(configure_home)
 
 worker_fetch_configs ()
 {
-	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/.blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/.blockdata"
-	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/.partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/.partitions"
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/aif-blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/aif-blockdata"
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/aif-partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/aif-partitions"
 }
 
 

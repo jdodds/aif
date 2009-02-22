@@ -103,7 +103,7 @@ load_procedure()
 	if [ "$1" = 'http:' ]
 	then
 		log "Loading procedure $2 ..."
-		procedure=$RUNTIME_DIR/procedure-downloaded-`basename $2`
+		procedure=$RUNTIME_DIR/aif-procedure-downloaded-`basename $2`
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
 		log "Loading procedure $1/procedures/$2 ..."
