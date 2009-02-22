@@ -64,8 +64,8 @@ interactive_configure_system()
 # returns: 1 on failure
 interactive_set_clock()   
 {
-	# utc or local?
-	ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
+	# utc or localtime?
+	ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "localtime" " " || return 1
 	HARDWARECLOCK=$ANSWER_OPTION
 
 	# timezone?
