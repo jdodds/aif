@@ -12,7 +12,6 @@ CURRENT ISSUES:
 * lib things sometimes call die_error but we go back to the menu.. or something.. i think
 * automatically configure grub for dm_crypt and lvm
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
-* hmm wasn't there a hwdetect/hwd or something in /arch/setup? this seems to have disappeared.
 * a nice way to be able to "inject" functions/logic without:
   * needing to redefine phases with only 1 entry different (duplicate code is not nice, less maintainable etc)
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
