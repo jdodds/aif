@@ -113,7 +113,7 @@ interactive_autoprepare()
 
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
-	get_blockdevice_size $DISC MB
+	get_blockdevice_size $DISC MiB
 	FSOPTS=
 	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
@@ -123,12 +123,12 @@ interactive_autoprepare()
 	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
 
-	ask_number "Enter the size (MB) of your /boot partition.  Recommended size: 100MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 16 $BLOCKDEVICE_SIZE || return 1
+	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
 	BOOT_PART_SIZE=$ANSWER_NUMBER
 
 	BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$BOOT_PART_SIZE))
 
-	ask_number "Enter the size (MB) of your swap partition.  Recommended size: 256MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+	ask_number "Enter the size (MiB) of your swap partition.  Recommended size: 256MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 256 || return 1
 	SWAP_PART_SIZE=$ANSWER_NUMBER
 
         BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$SWAP_PART_SIZE))
@@ -136,9 +136,9 @@ interactive_autoprepare()
 	ROOT_PART_SET=""
 	while [ "$ROOT_PART_SET" = "" ]
 	do
-		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 7500 || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
         done
 
 	CHOSEN_FS=""
@@ -351,10 +351,11 @@ interactive_filesystem ()
 		fi
 		if [ "$fs_type" = lvm-lv ]
 		then
-			[ -z "$fs_params" ] && default='5G'
+			[ -z "$fs_params" ] && default='5000'
 			[ -n "$fs_params" ] && default="$fs_params"
-			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
-			fs_params=$ANSWER_STRING
+			ask_number "Enter the size for this $fs_type on $part in MiB" 1 0 "$default" || return 1 #TODO: can we get the upperlimit from somewhere?
+			# Lvm tools use binary units but have their own suffixes ( K,M,G,T,P,E, but they mean KiB, MiB etc)
+			fs_params="${ANSWER_NUMBER}M"
 		fi
 		if [ "$fs_type" = dm_crypt ]
 		then
@@ -449,9 +450,9 @@ interactive_filesystems() {
 				fs_display=${fs//;target/}
 				[ "$label" != no_label ] && label_display="($label)"
 				[ "$label"  = no_label ] && label_display=
-				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MB # test -b <-- exit's 0, test -b '' exits >0.
+				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MiB # test -b <-- exit's 0, test -b '' exits >0.
 				then
-					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
+					infostring="${type},${BLOCKDEVICE_SIZE}MiB${label_display}->$fs_display" # add size in MiB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				else
 					infostring="${type}${label_display}->$fs_display"
 				fi

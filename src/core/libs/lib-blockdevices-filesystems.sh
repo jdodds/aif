@@ -3,18 +3,23 @@
 
 # FORMAT DEFINITIONS:
 
-# MAIN FORMAT FOR $TMP_BLOCKDEVICES (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
-# $TMP_BLOCKDEVICES entry.
-# <blockdevice> type label/no_label <FS-string>/no_fs
-# FS-string:
-# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
-# NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
-# NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
-#       the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
-#       no '+' characters allowed for devices in $fs_params (eg use the real names)
+# -- formats used to interface with this library --
+# $TMP_PARTITIONS
+#    one line per partition, blockdevice + partioning string for sfdisk.  See docs for function partition for more info.
+# $TMP_BLOCKDEVICES
+#    one line per blockdevice, multiple fs'es in 1 'fs-string'
+#    $TMP_BLOCKDEVICES entry.
+#    <blockdevice> type label/no_label <FS-string>/no_fs
+#    FS-string:
+#    type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
+#    NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
+#    NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
+#          the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
+#          no '+' characters allowed for devices in $fs_params (eg use the real names)
 
 
-# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
+# -- ADDITIONAL INTERNAL FORMATS --
+# $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
 # part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 
 
@@ -271,7 +276,7 @@ target_configure_fstab()
 
 # partitions a disk. heavily altered
 # $1 device to partition
-# $2 a string of the form: <partsize>:<fstype>[:+] (the + is bootable flag)
+# $2 a string of the form: <partsize in MiB>:<fstype>[:+] (the + is bootable flag)
 partition()
 {
 	debug "Partition called like: partition '$1' '$2'"
@@ -328,10 +333,6 @@ EOF
     return 0
 }
 
-
-# file layout:
-#TMP_PARTITIONS
-# disk partition-scheme
 
 # go over each disk in $TMP_PARTITIONS and partition it
 process_disks ()
