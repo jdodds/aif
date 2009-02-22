@@ -131,14 +131,14 @@ printk()
 # TODO: pass disks as argument to decouple backend logic
 # Get a list of available disks for use in the "Available disks" dialogs.
 # Something like:
-#   /dev/sda: 640133 MB (640 GB)
-#   /dev/sdb: 640135 MB (640 GB)
+#   /dev/sda: 640133 MiB (640 GiB)
+#   /dev/sdb: 640135 MiB (640 GiB)
 _getavaildisks()
 {
     for i in $(finddisks)
     do
-	get_blockdevice_size $i MB
-	echo "$i: $BLOCKDEVICE_SIZE MB ($(($BLOCKDEVICE_SIZE/1000)) GB)\n"
+	get_blockdevice_size $i MiB
+	echo "$i: $BLOCKDEVICE_SIZE MiB ($(($BLOCKDEVICE_SIZE/2**10)) GiB)\n"
     done
 }
 
@@ -166,17 +166,18 @@ ask_datetime ()
 # ask for a number.
 # $1 question
 # $2 lower limit (optional)
-# $3 upper limit (optional)
-# $4 default : TODO implement in cli
-# echo's the number the user said
+# $3 upper limit (optional. set 0 for none)
+# $4 default (optional)
+# sets $ANSWER_NUMBER to the number the user specified
 # returns 1 if the user cancelled or did not enter a numeric, 0 otherwise 
 ask_number ()
 {
 	[ -z "$1" ] && die_error "ask_number needs a question!"
-	[ -n "$2" ] && [[ $2 = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
-	[ -n "$3" ] && [[ $3 = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" "$2" "$3" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" "$2" "$3" ; return $? ; }
+	[ -n "$2" ] && [[ "$2" = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
+	[ -n "$3" ] && [[ "$3" = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
+	[ -n "$4" ] && [[ "$4" = *[^0-9]* ]] && die_error "ask_number \$4 must be a number! not $4"
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" $2 $3 $4; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" $2 $3 $4; return $? ; }
 }
 
   
@@ -313,17 +314,17 @@ _dia_ask_number ()
 	while true
 	do
 		str="$1"
-		[ -n "$2" ] && str2="min $2"
-		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n $2 ] && str2="min $2"
+		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
 		[ -n "$str2" ] && str="$str ( $str2 )"
-		_dia_DIALOG --inputbox "$str" 8 65 "$4" 2>$ANSWER
+		_dia_DIALOG --inputbox "$str" 8 65 $4 2>$ANSWER
 		ret=$?
 		ANSWER_NUMBER=`cat $ANSWER`
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
 		then
 			show_warning "$ANSWER_NUMBER is not a number! try again."
 		else
-			if [ -n "$3" -a $ANSWER_NUMBER -gt $3 ]
+			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
 			then
 				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
 			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
@@ -457,8 +458,9 @@ _cli_ask_number ()
 	while true
 	do
 		str="$1"
-		[ -n "$2" ] && str2="min $2"
-		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n $2 ] && str2="min $2"
+		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
+		[ -n $4 ] && str2=" default $4"
 		[ -n "$str2" ] && str="$str ( $str2 )"
 		echo "$str"
 		read ANSWER_NUMBER
@@ -466,7 +468,15 @@ _cli_ask_number ()
 		then
 			show_warning "$ANSWER_NUMBER is not a number! try again."
 		else
-			break
+			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
+			then
+				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
+			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
+			then
+				show_warning "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
+			else
+				break
+			fi
 		fi
 	done
 	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
