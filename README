@@ -1,6 +1,6 @@
 AIF is the Arch Linux Installation Framework.
 
----  Alpha software.  Use at own risk!! ---
+---  Beta software.  Use at own risk!! ---
 
 
 License:     GPL3. See COPYING.
@@ -10,12 +10,13 @@ Homepage:    http://github.com/Dieterbe/aif
 
 ** --> Intro / Current state of things <-- **
 
-AIF is included on the 2009-01 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
+AIF is included on the 2009.02 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
 AIF is based on the old installer, but the code has been madly refactored, reorganized, cleaned up and in some places replaced.
 
 AIF comes by default with these procedures:
 - interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
 - quickinst:   A port of /arch/quickinst.  Work in progress.  Don't use this yet.
+- automatic:   An automated, deploy-tool-alike procedure.  Work in progress.  Don't use this yet.
 
 AIF may or may not bring much additional value for you when compared with the previous
 installer, it depends on what you want to do:
@@ -63,13 +64,13 @@ The goal of AIF is not (yet):
 
 
 ** File locations (on the install CD): **
-Basically aif.sh is put in /arch (together with the default installer scripts), while all other aif-related files belong in /home/arch/aif
 
-* aif.sh        -> /arch/aif
-* docs          -> /home/arch/aif/docs/
-* core module   -> /home/arch/aif/core
-* user modules  -> /home/arch/aif/user/<module name> (put your own modules here)
-* runtime files -> /home/arch/aif/runtime (package list etc go here)
+* aif.sh        -> /sbin/aif
+* docs          -> /usr/share/aif/docs
+* core module   -> /usr/lib/aif/core
+* user modules  -> /usr/lib/aif/user/<module name> (put your own modules here)
+* runtime files -> /tmp/aif (package list etc go here)
+* logs          -> /var/log/aif
 
 A module can have 2 directories: libs, and procedures.
 
@@ -79,6 +80,7 @@ core/base:        basic, little-interactivity installation with some common defa
                   want to run this one, although it's useful for other procedures to inherit from.
 core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
 core/quickinst:   mostly DIY.  port of /arch/quickinst
+core/automatic:   automatic installer/deployment tool, can use config files
 
 ** Partial Procedures **
 These procedures allow you to run a select few functions, in order to reach

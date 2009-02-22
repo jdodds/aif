@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 # FORMAT DEFINITIONS:
@@ -649,7 +649,7 @@ process_filesystem ()
 			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
 			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
 			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
-			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;;
+			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
 			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
 			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
@@ -739,6 +739,8 @@ get_filesystem_program ()
 # $2 standard SI for 1000*n, IEC for 1024*n (optional. defaults to SI)
 # --> Note that if you do SI on a partition, you get the size of the entire disk, so for now you need IEC for single partitions
 # output will be in $BLOCKDEVICE_SIZE in MB/MiB
+# WARNING: hdparm works - by design - only for ide/sata. not scsi et al
+# TODO: clean up all disk size related stuff.  see http://bugs.archlinux.org/task/12949
 get_blockdevice_size ()
 {
 	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
@@ -749,8 +751,9 @@ get_blockdevice_size ()
 		BLOCKDEVICE_SIZE=$(hdparm -I $1 | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
 	elif [ "$standard" = IEC ]
 	then
-		blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
-		#NOTE: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
-		BLOCKDEVICE_SIZE=$(($blocks/1024))
+		#NOTE: unreliable method: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
+		#blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
+		#BLOCKDEVICE_SIZE=$(($blocks/1024))
+		BLOCKDEVICE_SIZE=$((`fdisk -l $1 | sed -n '2p' | cut -d' ' -f5`/1024))
 	fi
 }

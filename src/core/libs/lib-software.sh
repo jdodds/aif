@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TMP_MKINITCPIO_LOG=$RUNTIME_DIR/mkinitcpio.log
 TMP_PACMAN_LOG=$RUNTIME_DIR/pacman.log
@@ -26,7 +26,7 @@ run_mkinitcpio()
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_special_fs on
-	run_background pacman-installpkg "$PACMAN_TARGET -S $TARGET_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
+	run_background pacman-installpkg "$PACMAN_TARGET --noconfirm -S $TARGET_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
 	follow_progress " Installing... Please Wait " $TMP_PACMAN_LOG
 
 	wait_for pacman-installpkg

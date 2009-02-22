@@ -1,46 +1,44 @@
-### This howto explains how to install aif on an installcd that does not have the aif package installed yet ###
-### You can also use this if you want to use another version than what's available on the installcd) ###
-### TODO: someday, have an iso that comes with aif by default) ###
+### This howto explains how to install/upgrade aif on an arch system / arch installation cd ###
 
+* an installation cd is in essence just an arch system, it just has the aif package installed. you can install aif on any system without problems.
+* install cd's from 2009.02 and up have aif on board, so probably you don't need to do anything at all.
+
+* there is a "binary" package in extra, containing a recent release
+* there are 2 source packages in AUR, one for each branch in git.  ( see http://aur.archlinux.org/packages.php?K=aif )
+- aif-git: latest code from the git master (stable) branch: recommended!
+- aif-experimental-git: latest development code.  Code is tested here and if ok, merged into master.  Use at own risk!!
+
+So, assuming you want to upgrade the aif package on an installation cd, to say aif-experimental-git from AUR, you would:
 
 1) Boot from the installcd
 
 2) Open 2 shells, one as user root, one as regular user (arch)
 
-3) Decide on a package.  See http://aur.archlinux.org/packages.php?K=aif for available packages
-- aif-git: latest code from the git master (stable) branch: recommended!
-- aif-experimental-git: latest development code.  Code is tested here and if ok, merged into master.  Use at own risk!!
-I assume you'll pick aif-git.
-
-4) Copy paste the code below.
+3) Copy paste the code below.
 
 # root shell:
 /arch/setup. # fake ftp install so it lets you run the network configure script
+
+Alternatively, if you have a recent version of AIF installed and it comes with the partial-network procedure, you can execute that to set up your network.
+
 # when network works, quit installer
 pacman -Sy git fakeroot # You need about 192MB ram for this! 128MB is not enough.
 
 # arch shell
-wget http://aur.archlinux.org/packages/aif-git/aif-git.tar.gz
-tar -xzf
-cd aif-git
+wget http://aur.archlinux.org/packages/aif-experimental-git/aif-experimental-git.tar.gz
+tar -xzf aif-experimental-git.tar.gz
+cd aif-experimental-git
 makepkg
 
 # root shell:
-pacman -U /home/arch/aif-git/aif*.pkg.tar.gz
-
+pacman -R aif # pacman can't replace with -U yet..
+pacman -U /home/arch/aif-experimental-git/aif*.pkg.tar.gz
 
 4) Fire it up! (as root)
 
-/arch/aif -p <procedurename> #you can skip networking.
-
-For more info see README or /arch/aif -h.
+aif -p <procedurename> #you can skip networking.
 
 
-
-
-
-
-
-
-
-
+Notes:
+* For more info see README or aif -h.
+* Since you configured the network before starting aif, you need to reconfigure it in aif if you want the 'auto-update rc.conf' functionality.

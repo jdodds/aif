@@ -1,0 +1,135 @@
+#!/bin/bash
+# This procedure is EARLY in development!!
+# This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
+
+# In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
+# TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
+
+depend_procedure core base
+
+var_OPTS_STRING="c:"
+var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (optional)" #if we need some settings that we're missing, we'll ask for them
+
+phase_preparation+=(runtime_settings)
+phase_preparation+=(msg_automatic) # this can happen probably a bit earlier..
+phase_preparation+=(fetch_configs)
+process_args ()
+{
+	if [ "$1" = '-c' ]
+	then
+		[ -z "$2" ] && die_error "You must specify a config"
+		source $2 || die_error "Could not source config $2"
+	else
+		usage
+		exit 5
+        fi
+}
+
+
+worker_intro ()
+{
+	notify "Automatic procedure running..."
+}
+
+
+worker_configure ()
+{
+	var_UI_TYPE=${arg_ui_type:-cli}
+}
+
+
+# not used
+worker_msg_manual ()
+{
+	notify "A few manual things need to happen first..."
+}
+
+
+worker_msg_automatic ()
+{
+	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
+}
+
+
+worker_fetch_configs ()
+{
+	true
+}
+
+
+worker_runtime_network ()
+{
+	if ask_yesno "Do you want to (re)-configure your networking?"
+	then
+		interactive_runtime_network
+	else
+		infofy "Ok. skipping network config"
+	fi
+}
+
+
+# Check if we have all needed settings loaded from the profile
+worker_runtime_settings ()
+{
+	if check_is_in $var_RUNTIME_PACKAGES svn
+	then
+		[ -z "$SVN_USERNAME" ] && ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
+		[ -z "$SVN_PASSWORD" ] && ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+		[ -z "$SVN_BASE"     ] && ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
+		[ -z "$DEPLOY_CLASS" ] && ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
+		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
+	elif check_is_in $var_RUNTIME_PACKAGES moo
+	then
+		# Maybe more stuff later
+		true
+	fi
+	[ -z "$HOSTNAME" ] && ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
+
+	return 0
+}
+
+
+worker_prepare_disks ()
+{
+	process_disks       || die_error "Could not process_disks"
+	if ! process_filesystems
+	then
+		show_warning "Could not process_filesystems"
+		txt='also failed to execute properly'
+		rollback_filesystems && txt='ended successfully'
+		die_error "Something failed while processing the filesystem.  A rollback was executed, which $txt"
+	fi
+	infofy "Partitions and filesystems made successfully"
+
+	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
+	true	
+}
+
+
+worker_install_packages ()
+{
+        target_prepare_pacman core extra community #TODO: it would be better if this was a separate worker, i think
+        [ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
+        installpkg
+}
+
+
+worker_set_clock ()
+{
+	#timezone="Europe/Brussels"
+	#Not doing anything. hwclock is set already and configs are coming from svn anyway..
+	true
+}
+
+
+worker_install_bootloader ()
+{
+	install-grub /dev/sda
+}
+
+
+worker_runtime_yaourt ()
+{
+	_yaourt_replace_pacman
+}
+

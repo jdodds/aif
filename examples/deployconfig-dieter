@@ -1,0 +1,87 @@
+#!/bin/bash
+# An example config for the deployment procedure
+
+# TODO: install ruby-gems too
+# TODO * dieter/automatic: wait for yaourt --config fix ( http://forums.archlinux.fr/post23171.html#23171 )
+# TODO:* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
+
+
+var_RUNTIME_REPOSITORIES=(archlinuxfr "Server = http://repo.archlinux.fr/$var_ARCH")
+var_RUNTIME_PACKAGES="svn yaourt"
+
+DEPLOY_CLASS=desktop-a7n8x
+HOSTNAME=dieter-ws
+SVN_USERNAME=dieter
+SVN_PASSWORD=
+SVN_BASE=https://192.168.1.2/svn/repos
+
+phase_preparation=(accept_ssl_cert "${phase_preparation[@]}") # make accept_ssl_cert the very first thing. it needs to go before fetch_configs and it's not easy to put it somewhere in the middle, so...
+phase_system+=(configure_home)
+
+
+
+worker_fetch_configs ()
+{
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/.blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/.blockdata"
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/.partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/.partitions"
+}
+
+
+worker_package_list ()
+{
+	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/package-list $var_PKG_FILE || die_error "Could not export package list!"
+	# cat -> there are newlines in it -> var=`echo $var` -> not anymore :)
+	TARGET_PACKAGES=`cat $var_PKG_FILE` && TARGET_PACKAGES=`echo $TARGET_PACKAGES` || die_error "Could not cat package list. THIS SHOULD NEVER HAPPEN."
+	# Strip away all packages not known by pacman. To get all packages, you'll need to do that when the system is installed TODO: don't do this.  WAITINGFOR: --config support in yaourt + 'list of md5s of trusted pkgbuilds' support in yaourt
+	# NOTE: maybe chrooting could be an option too (to avoid --config support, but problem 2 stays)
+	TARGET_PACKAGES=`$PACMAN_TARGET -Si $TARGET_PACKAGES 2>/dev/null | awk '/Name/ {print $3}'`
+	TARGET_PACKAGES=`echo $TARGET_PACKAGES` #TODO: some stuff goes wrong here
+}
+
+
+worker_accept_ssl_cert ()
+{
+	mkdir -p /root/.subversion/auth/svn.ssl.server
+	cat > /root/.subversion/auth/svn.ssl.server/1123d3c8b27895efee3848cc779e526a << EOF
+K 10
+ascii_cert
+V 716
+MIICFTCCAX6gAwIBAgIBAjANBgkqhkiG9w0BAQQFADBVMRswGQYDVQQKExJBcGFjaGUgSFRUUCBTZXJ2ZXIxIjAgBgNVBAsTGUZvciB0ZXN0aW5nIHB1cnBvc2VzIG9ubHkxEjAQBgNVBAMTCWxvY2FsaG9zdDAeFw0wNjA3MjQxMjUwMzdaFw0wNzA3MjQxMjUwMzdaMEwxGzAZBgNVBAoTEkFwYWNoZSBIVFRQIFNlcnZlcjEZMBcGA1UECxMQVGVzdCBDZXJ0aWZpY2F0ZTESMBAGA1UEAxMJbG9jYWxob3N0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDF5PB1NnUve2jkisDTGsxKC9qzpnl+eX8UIR/1s+yX2ZIPNnIryeqTc6sS3cBHz2/AufIr0xbpXkTa4V5Es5bXA7W1D7+ZzuFHjjyi4E2eqYVkhkv1sRL5TpAovfjAA+96iaFHp3yKYiuw/nWwQTSW9M1VrDEym4ODxyJOtNdgQQIDAQABMA0GCSqGSIb3DQEBBAUAA4GBABY0bnBf9tL1WMC1sLxB1eDXvs5qNY96mny+EKGAbyQROPaXwsRQB0HrAkuWfHzQlgIdD6AfGsd+YMcEuqSPzIz6t6mA45jl++WvI6we9t3eYChtdPD2xjgHti0aSiDyVLTJbXPnkdgzKvIjYZcXBwbmbQSrg0STO5m+cSYt3chx
+K 8
+failures
+V 2
+14
+K 15
+svn:realmstring
+V 23
+https://192.168.1.2:443
+END
+EOF
+}
+
+
+worker_configure_home ()
+{
+	#TODO checkout from svn
+	true
+}
+
+
+
+# See http://wiki.archlinux.org/index.php/Yaourt
+
+# Not needed yet...
+#worker_install_packages () #pre_ / post_ callbacks would be useful here
+#{
+#	PACMAN_BACKUP=$PACMAN
+#	PACMAN_TARGET_BACKUP=$PACMAN_TARGET
+#	PACMAN=${PACMAN//pacman/yaourt}
+#	PACMAN_TARGET=${PACMAN_TARGET//pacman/yaourt}
+
+#	target_prepare_pacman core
+#	[ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
+#	installpkg
+
+#	PACMAN=$PACMAN_BACKUP
+#	PACMAN_TARGET=$PACMAN_TARGET_BACKUP
+#}

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #TODO: get backend code out of here!!
 
 
@@ -709,11 +709,8 @@ interactive_install_grub() {
         bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
         if [ "$grubdev" != "" -o "$bootdev" != "" ]; then
             subdir=
-            if [ "$bootdev" != "" ]; then
-                grubdev=$(mapdev $bootdev)
-            else
-                subdir="/boot"
-            fi
+            [ -n "$bootdev" ] && grubdev=$(mapdev $bootdev) || subdir="/boot"
+
             # keep the file from being completely bogus
             if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
                 notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
@@ -867,29 +864,32 @@ interactive_select_mirror() {
         ask_option no "Mirror selection" "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
-        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/i686" || return 1
-        var_SYNC_URL=$ANSWER_STRING
+        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
+        var_SYNC_URL=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
     else
         # Form the full URL for our mirror by grepping for the server name in
-        # our mirrorlist and pulling the full URL out. Substitute 'core' in  
-        # for the repository name, and ensure that if it was listed twice we 
-        # only return one line for the mirror.
-        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | sed 's/\$repo/core/g' | head -n1)
+        # our mirrorlist and pulling the full URL out.
+        # Ensure that if it was listed twice we only return one line for the mirror.
+        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
     fi
     echo "Using mirror: $var_SYNC_URL" >$LOG
 }
 
-# geteditor(). taken from original setup code. 
+# geteditor().
 # prompts the user to choose an editor
 # sets EDITOR global variable
 #
 interactive_get_editor() {
-	ask_option no "Text editor selection" "Select a Text Editor to Use" \
-	"1" "nano (easier)" \
-	"2" "vi" 
+	unset EDITOR_OPTS
+	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
+	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
+	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
+	ask_option no "Text editor selection" "Select a Text Editor to Use" "${EDITOR_OPTS[@]}"
+	#TODO: this code could be a little bit cleaner.
 	case $ANSWER_OPTION in
-		"1") EDITOR="nano" ;;
-		"2") EDITOR="vi" ;;
-		*)   EDITOR="nano" ;;
+		"nano") EDITOR="nano" ;;
+		"joe")  EDITOR="joe"  ;;
+		"vi")   EDITOR="vi"   ;;
+		*)      EDITOR="nano" ;;
 	esac
 }

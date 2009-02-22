@@ -1,2 +1,0 @@
-module with stuff for my (Dieter) own environment.  Customized for my needs
-(my data and settings are in svn/ddm repositories)

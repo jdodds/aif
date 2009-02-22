@@ -1,11 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 depend_procedure core base # esp for auto_{network,locale,fstab}, intro and set_clock workers
 
 
 # This is a port of the original /arch/setup script.  It doesn't use aif phases but uses it's own menu-based flow (phase) control
 
-
-var_TARGET_DIR="/mnt"
 EDITOR=
 BLOCK_ROLLBACK_USELESS=1
 
@@ -21,7 +19,7 @@ PART_ROOT=
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 
 worker_select_source_title='Select Source'
-worker_runtime_network_title='Setup Network (Make sure the network is ok before continuing'
+worker_runtime_network_title='Setup Network'
 worker_select_mirror_title='Choose Mirror'
 worker_set_clock_title='Set clock'
 worker_prepare_disks_title='Prepare Hard Drive(s)'
@@ -83,7 +81,8 @@ mainmenu()
 		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=6 ;;
         "6")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
-		                                                                                                                  execute worker locales      ; } && NEXTITEM=7 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
+		                                                                                                                  execute worker locales      ;
+		                                                                                                                  execute worker initialtime  ; } && NEXTITEM=7 ;; #TODO: why is next item 4 if $?=0?. maybe fixed now
         "7")
 		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=8 ;;
         "8")
@@ -97,7 +96,7 @@ mainmenu()
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" '' \
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
@@ -114,15 +113,16 @@ worker_configure_system()
 	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already even if worker did not exit 0
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist
-	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${SYNC_URL}" != "" ]; then
-		debug "Adding choosen mirror (${SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
-		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
+	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${var_SYNC_URL}" != "" ]; then
+		debug "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
 		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
 	fi
 
 	# /etc/rc.conf
 	# Make sure timezone and utc info are what we want
-	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"$TIMEZONE\"/g" \
+	# NOTE: If a timezone string never contains more then 1 slash, we can use ${TIMEZONE/\//\\/}
+	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"${TIMEZONE//\//\\/}\"/g" \
 		-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
 		${var_TARGET_DIR}/etc/rc.conf
 

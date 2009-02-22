@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # TODO: implement 'retry until user does it correctly' everywhere
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 # TODO: standardize. eg everything $1= question/title, $2=default

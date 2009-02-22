@@ -3,10 +3,13 @@
 #TODO: make this profile work on itself, eg some stuff from inheriting profiles should be moved in, stuff implemented etc
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
+var_RUNTIME_REPOSITORIES= # array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
 var_RUNTIME_PACKAGES=
-var_PKG_FILE=$RUNTIME_DIR/package-list
+var_PKG_FILE=$RUNTIME_DIR/package-list # not used by default in base/interactive. can be used by custom procedures or profiles for the automatic procedure
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
+var_ARCH=`uname -m` #i686 or x86_64. NOTE: this assumes you want to install the same arch as the installation environment you're using. maybe we could decouple those someday..
+[ -z "$var_ARCH" ] && die_error "Could not determine your architecture"
 
 ###### Phases ( can be overridden by more specific procedures) ######
 phase_preparation=(\
@@ -15,6 +18,7 @@ phase_preparation=(\
 	sysprep \
 	select_source \
 	runtime_network \
+	runtime_repositories \
 	runtime_packages)
 
 phase_basics=(\
@@ -31,7 +35,6 @@ phase_system=(\
 	mkinitcpio \
 	locales \
 	install_bootloader)
-
 
 phase_finish=(msg_report)
 
@@ -64,7 +67,7 @@ worker_select_source ()
 {
 	var_PKG_SOURCE_TYPE='cd'
 	var_FILE_URL="file:///src/core/pkg"
-	var_SYNC_URL=
+	var_SYNC_URL= # optional, points to a repository string something like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/i686 (eg the same format as what you find in /etc/pacman.conf)
 	# if you override to use ftp (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
 }
 
@@ -73,6 +76,17 @@ worker_runtime_network ()
 {
 	#network is assumed to be functional for now because we do it first with /arch/setup. once that falls away, we'll need to implement it here
 	true
+}
+
+
+worker_runtime_repositories ()
+{
+	for i in `seq 0 $((${#var_RUNTIME_REPOSITORIES[@]}/2-1))`
+	do
+		repo=${var_RUNTIME_REPOSITORIES[$(($i*2))]}
+		location=${var_RUNTIME_REPOSITORIES[$(($i*2+1))]}
+		list_pacman_repos runtime | grep -q $repo || add_pacman_repo runtime $repo "$location"
+	done
 }
 
 
@@ -149,6 +163,12 @@ worker_mkinitcpio ()
 worker_locales ()
 {
 	target_locale-gen
+}
+
+
+worker_initialtime ()
+{
+	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime
 }
 
 

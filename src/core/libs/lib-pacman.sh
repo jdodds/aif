@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # taken and slightly modified from the quickinst script.
 # don't know why one should need a static pacman because we already have a working one on the livecd.
@@ -78,7 +78,7 @@ do
 	then
 		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST"
 	else
-		add_pacman_repo target ${repo} "Server = ${serverurl}"
+		add_pacman_repo target ${repo} "Server = ${serverurl/\/\$repo\//\/$repo\/}" # replace literal '/$repo/' in the serverurl string by "/$repo/" where $repo is our variable.
 	fi
 done
 	# Set up the necessary directories for pacman use
@@ -86,7 +86,7 @@ done
 	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
 
 	infofy "Refreshing package database..."
-	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1
+	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1 #TODO: make sure this also goes into the logfile. actually we should do this for many commands.
 	return 0
 }
 
@@ -97,7 +97,7 @@ list_pacman_repos ()
 	[ "$1" != runtime -a "$1" != target ] && die_error "list_pacman_repos needs target/runtime argument"
 	[ "$1" = target  ] && conf=/tmp/pacman.conf
 	[ "$1" = runtime ] && conf=/etc/pacman.conf
-	grep '\[.*\]' $conf | grep -v options | sed 's/\[//g' | sed 's/\]//g'
+	grep '\[.*\]' $conf | grep -v options | grep -v '^#' | sed 's/\[//g' | sed 's/\]//g'
 }
 
 
