@@ -129,14 +129,17 @@ printk()
 
 
 # TODO: pass disks as argument to decouple backend logic
-# Get a list of available disks for use in the "Available disks" dialogs. This
-# will print the disks as follows, getting size info from hdparm:
-#   /dev/sda: 640133 MBytes (640 GB)
-#   /dev/sdb: 640135 MBytes (640 GB)
+# Get a list of available disks for use in the "Available disks" dialogs.
+# Something like:
+#   /dev/sda: 640133 MB (640 GB)
+#   /dev/sdb: 640135 MB (640 GB)
 _getavaildisks()
 {
-    # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
-    for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
+    for i in $(finddisks)
+    do
+	get_blockdevice_size $i MB
+	echo "$i: $BLOCKDEVICE_SIZE MB ($(($BLOCKDEVICE_SIZE/1000)) GB)\n"
+    done
 }
 
 

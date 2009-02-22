@@ -113,7 +113,7 @@ interactive_autoprepare()
 
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
-	get_blockdevice_size $DISC SI
+	get_blockdevice_size $DISC MB
 	FSOPTS=
 	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
@@ -449,9 +449,9 @@ interactive_filesystems() {
 				fs_display=${fs//;target/}
 				[ "$label" != no_label ] && label_display="($label)"
 				[ "$label"  = no_label ] && label_display=
-				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} IEC # test -b <-- exit's 0, test -b '' exits >0.
+				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MB # test -b <-- exit's 0, test -b '' exits >0.
 				then
-					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
+					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				else
 					infostring="${type}${label_display}->$fs_display"
 				fi
