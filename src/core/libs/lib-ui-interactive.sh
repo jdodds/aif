@@ -82,7 +82,7 @@ interactive_time () {
                 else
                         show_warning 'Ntp failure' "An error has occured, time was not changed!"
                 fi
-        if
+        fi
 
 	# display and ask to set date/time
 	ask_datetime
