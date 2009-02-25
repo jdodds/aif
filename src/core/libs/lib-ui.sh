@@ -395,7 +395,25 @@ _dia_ask_string ()
 
 _dia_ask_timezone ()
 {
-	ANSWER_TIMEZONE=`tzselect` #TODO: implement nicer then this
+	REGIONS=""
+	SET_ZONE=""
+	for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
+		REGIONS="$REGIONS $i -"
+	done
+	while ! [ "$SET_ZONE" = "1" ]; do
+		SET_REGION=""
+		ask_option no "Please select a region" '' $REGIONS
+		region=ANSWER_OPTION
+		if [ $? -eq 0 ]; then
+			ZONES=""
+			for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
+				ZONES="$ZONES $i -"
+			done
+			ask_option no "Please select a timezone" '' $ZONES
+			zone=$ANSWER_OPTION
+			[ $? -gt 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
+		fi
+	done
 }
 
 

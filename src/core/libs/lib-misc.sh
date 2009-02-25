@@ -68,3 +68,20 @@ cleanup_runtime ()
 	mkdir -p $RUNTIME_DIR || die_error "Cannot create $RUNTIME_DIR"
 	rm -rf $RUNTIME_DIR/aif-dia* &>/dev/null
 }
+
+
+dohwclock() {
+	infofy "Syncing hardwareclock to systemclock ..."
+	if [ "$HARDWARECLOCK" = "UTC" ]; then
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
+	else
+		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
+	fi
+
+	[ ! -d /var/lib/hwclock ] && mkdir -p /var/lib/hwclock
+	if [ ! -f /var/lib/hwclock/adjtime ]; then
+		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime # what the hell is this for???
+	fi
+	hwclock $HWCLOCK_PARAMS #tpowa does it without, but i would add --noadjtime here
+}
+

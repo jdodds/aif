@@ -101,7 +101,29 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
-	interactive_set_clock
+        while true; do
+                default=no
+                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                ask_option $default "Date/time configuration" '' \
+                "1" "Select region and timezone" \
+                "2" "Set time and date" \
+                "3" "Return to Main Menu"
+                [ "$ANSWER_OPTION" = 1 ] && execute worker interactive_timezone && NEXTITEM=2
+                [ "$ANSWER_OPTION" = 2 ] && check_depend worker interactive_timezone && execute worker interactive_time && NEXTITEM=3
+                [ "$ANSWER_OPTION" = 3 ] && break
+        done
+}
+
+
+worker_interactive_timezone ()
+{
+	interactive_timezone
+}
+
+
+worker_interactive_time ()
+{
+	interactive_time
 }
 
 

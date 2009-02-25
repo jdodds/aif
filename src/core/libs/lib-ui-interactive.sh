@@ -57,46 +57,50 @@ interactive_configure_system()
 }
 
 
-# set_clock()
-# prompts user to set hardware clock and timezone
-#
-# params: none
-# returns: 1 on failure
-interactive_set_clock()   
-{
-	# utc or localtime?
-	ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "localtime" " " || return 1
-	HARDWARECLOCK=$ANSWER_OPTION
-
-	# timezone?
+interactive_timezone () {
 	ask_timezone || return 1
-	TIMEZONE=$ANSWER_TIMEZONE
+        TIMEZONE=$ANSWER_TIMEZONE
+        infofy "Setting Timezone to $TIMEZONE"
+        [ -e /etc/localtime ] && rm -f /etc/localtime #why do we do this?? tpowa?
+        dohwclock
+}
 
-	# set system clock from hwclock - stolen from rc.sysinit
-	local HWCLOCK_PARAMS=""
-	if [ "$HARDWARECLOCK" = "UTC" ]
-	then
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
-	else
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
-	fi
+
+
+interactive_time () {
+        # utc or localtime?
+        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "localtime" " " || return 1
+        HARDWARECLOCK=$ANSWER_OPTION
+
+	dohwclock
+
+        which ntpdate >/dev/null && ask_option yes "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?" "(You need a working internet connection for doing this!)" #TODO: only propose if network ok.
+        if [ $? -eq 0 ]; then
+                if ntpdate pool.ntp.org >/dev/null
+                then
+			notify "Synced clock with internet pool successfully.\n\nYour current time is now:\n$(date)"
+                else
+                        show_warning 'Ntp failure' "An error has occured, time was not changed!"
+                fi
+        else
+
+	# display and ask to set date/time
+	ask_datetime
+
 
 	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
 	then
 		/bin/rm -f /etc/localtime
 		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 	fi
-	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
-
-	# display and ask to set date/time
-	ask_datetime
 
 	# save the time
 	date -s "$ANSWER_DATETIME" || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
-	/sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
-
-	return 0
+	dohwclock
 }
+
+
+
 
 
 interactive_autoprepare()
