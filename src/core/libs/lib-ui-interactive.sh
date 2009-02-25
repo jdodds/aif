@@ -74,15 +74,15 @@ interactive_time () {
 
 	dohwclock
 
-        which ntpdate >/dev/null && ask_option yes "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?" "(You need a working internet connection for doing this!)" #TODO: only propose if network ok.
-        if [ $? -eq 0 ]; then
+	if which ntpdate >/dev/null && ask_option yes "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?" "(You need a working internet connection for doing this!)" #TODO: only propose if network ok.
+        then
                 if ntpdate pool.ntp.org >/dev/null
                 then
 			notify "Synced clock with internet pool successfully.\n\nYour current time is now:\n$(date)"
                 else
                         show_warning 'Ntp failure' "An error has occured, time was not changed!"
                 fi
-        else
+        if
 
 	# display and ask to set date/time
 	ask_datetime
