@@ -9,6 +9,8 @@
 ANSWER=$RUNTIME_DIR/aif-dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/aif-dia-successive-items
+var_KEYMAP=`sed -n '/^KEYMAP/p' /etc/rc.conf | sed 's/KEYMAP=//' | sed 's/"//g'` #default keymap as configured on install CD. can be overridden
+var_CONSOLEFONT=`sed -n '/^CONSOLEFONT/p' /etc/rc.conf | sed 's/KEYMAP=//' | sed 's/"//g'` #default consolefont as configured on install CD. can be overridden
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
@@ -400,7 +402,7 @@ _dia_ask_timezone ()
 	for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
 		REGIONS="$REGIONS $i -"
 	done
-	while ! [ "$SET_ZONE" = "1" ]; do
+	while [ "$SET_ZONE" != "1" ]; do
 		SET_REGION=""
 		ask_option no "Please select a region" '' $REGIONS
 		region=ANSWER_OPTION
@@ -609,4 +611,35 @@ _cli_follow_progress ()
 	echo "Title: $1"
 	tail -f $2
 	#TODO: don't block anymore when it's done
+}
+
+set_keymap ()
+{
+	KBDDIR="/usr/share/kbd"
+
+	KEYMAPS=
+	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
+		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
+	done
+	ask_option "$var_KEYMAP" "Select A Keymap" '' $KEYMAPS && {
+		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
+		var_KEYMAP=$ANSWER_OPTION
+	}
+
+	FONTS=
+	# skip .cp.gz and partialfonts files for now see bug #6112, #6111
+	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
+		FONTS="$FONTS $i -"
+	done
+	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' $FONTS && {
+		var_CONSOLEFONT=$ANSWER_OPTION
+		for i in 1 2 3 4
+		do
+			if [ -d /dev/vc ]; then
+				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/vc/$i
+			else
+				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/tty$i
+			fi
+		done
+	}
 }

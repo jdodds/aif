@@ -3,6 +3,7 @@ See also the FIXME's and TODO's in the code.
 
 CURRENT ISSUES:
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
+* select timezone -> it hangs :?
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * core/interactive: fix workaround needed for installpkg exitcode

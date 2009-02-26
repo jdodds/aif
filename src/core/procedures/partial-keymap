@@ -1,0 +1,6 @@
+#!/bin/bash
+
+start_process ()
+{
+	set_keymap	
+}
