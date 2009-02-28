@@ -2,13 +2,13 @@ See also the FIXME's and TODO's in the code.
 
 
 CURRENT ISSUES:
+* date/time setting stuff (see ML thread) hangs at select timezone?
+* keyboard stuff (setting consolefont and keymap + setting in $target/etc/rc.conf )
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
-* select timezone -> it hangs :?
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * core/interactive: fix workaround needed for installpkg exitcode
 * core/interactive: near end of pkg installation (after kernel) an error shows briefly: "aif: read..." this is probably related to the thing above.
-* core/interactive: keymap from installer don't not go in $target/etc/rc.conf
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
@@ -30,7 +30,6 @@ CURRENT ISSUES:
 * 'keep in mind trottled' not on separate screen
 * in usage, procedure specific opts points to parent profile when using inheritance
 * we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
-* debug "categories" (ui, disk,flowcontrol,...) so you can grep (-v) on what you want + make sure enough+correct debugging is everywhere
 * the old installer asked a lot of questions before actually configuring the system, eg like 'do you need support for booting from nfs/softraid/lvm2/encrypted, custom dst file?' etc.\
   do we still need this? why (not)?, and a select tag thingie would be nicer imho
 * refactor all pacman stuff (modularize/functionize etc)
