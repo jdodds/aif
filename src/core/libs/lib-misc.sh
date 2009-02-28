@@ -46,18 +46,20 @@ wait_for ()
 }
 
 
-# $1 set (array) haystack
-# $2 needle
+# $1 needle
+# $2 set (array) haystack
 check_is_in ()
 {
-	[ -z "$1" ] && debug 'MISC' "check_is_in $1 $2" && die_error "check_is_in needs a non-empty needle as \$2 and a haystack as \$1!" # haystack can be empty though
+	[ -z "$1" ] && debug 'MISC' "check_is_in $1 $2" && die_error "check_is_in needs a non-empty needle as \$1 and a haystack as \$2!" # haystack can be empty though
 
 	local pattern="$1" element
 	shift
 	for element
 	do
-		[[ $element = $pattern ]] && return 0
+		[[ $element = $pattern ]] && debug 'MISC' "Checking if $element = $pattern ..yes !" && return 0
+		                             debug 'MISC' "Checking if $element = $pattern ... no"
 	done
+	debug 'MISC' "Check_is_in could not find $1 in $2"
 	return 1
 }
 
