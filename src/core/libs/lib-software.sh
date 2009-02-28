@@ -26,14 +26,14 @@ run_mkinitcpio()
 installpkg() {
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 	target_special_fs on
-	run_background pacman-installpkg "$PACMAN_TARGET --noconfirm -S $TARGET_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
+	run_background pacman_installpkg "$PACMAN_TARGET --noconfirm -S $TARGET_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
 	follow_progress " Installing... Please Wait " $TMP_PACMAN_LOG
 
-	wait_for pacman-installpkg
+	wait_for pacman_installpkg
         
 
 	local _result=''
-	if [ ${pacman-installpkg_exitcode} -ne 0 ]; then
+	if [ ${pacman_installpkg_exitcode} -ne 0 ]; then
 		_result="Installation Failed (see errors below)"
 		echo -e "\nPackage Installation FAILED." >>$TMP_PACMAN_LOG
 	else
@@ -46,8 +46,7 @@ installpkg() {
 	target_special_fs off
 	sync
 
-	#return ${pacman-installpkg_exitcode} TODO: fix this. there is something wrong here
-	return 0
+	return ${pacman_installpkg_exitcode}
 }
 
 

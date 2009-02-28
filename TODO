@@ -6,8 +6,6 @@ CURRENT ISSUES:
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
-* core/interactive: fix workaround needed for installpkg exitcode
-* core/interactive: near end of pkg installation (after kernel) an error shows briefly: "aif: read..." this is probably related to the thing above.
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long

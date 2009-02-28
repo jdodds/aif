@@ -3,7 +3,7 @@
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile
 # returncode is stored in $<identifier>_exitcode
-# $1 identifier
+# $1 identifier -> WARNING: do never ever use -'s or other fancy characters here. only numbers, letters and _ please. (because $<identifier>_exitcode must be a valid bash variable!)
 # $2 command (will be eval'ed)
 # $3 logfile
 run_background ()
@@ -20,8 +20,8 @@ run_background ()
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
 		var_exit=${1}_exitcode
 		eval "$2" >>$3 2>&1
-		read $var_exit <<< $? #TODO: bash complains about 'not a valid identifier'
-		debug 'MISC' "run_background done with $1: exitcode (\$$1_exitcode): ${!var_exit} .Logfile $3" #TODO ${!var_exit} doesn't show anything --> maybe fixed now
+		read $var_exit <<< $?
+		debug 'MISC' "run_background done with $1: exitcode (\$$1_exitcode): ${!var_exit} .Logfile $3"
 		echo >> $3   
 		rm -f $RUNTIME_DIR/aif-$1-running
 	) &
@@ -31,7 +31,7 @@ run_background ()
 
 
 # wait until a process is done
-# $1 identifier
+# $1 identifier. WARNING! see above
 wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
