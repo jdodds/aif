@@ -18,7 +18,7 @@ var_CONSOLEFONT=`sed -n '/^CONSOLEFONT/p' /etc/rc.conf | sed 's/KEYMAP=//' | sed
 # display error message and die
 die_error ()
 {
-	debug "die_error: ERROR: $@"
+	debug 'UI' "die_error: ERROR: $@"
 	notify "ERROR: $@"
         exit 2
 }
@@ -35,7 +35,7 @@ show_warning ()
         [ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
         type=msg
         [ -n "$3" ] && type=$3
-        debug "show_warning '$1': $2 ($type)"
+        debug 'UI' "show_warning '$1': $2 ($type)"
         if [ "$var_UI_TYPE" = dia ]
         then
                 _dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
@@ -52,7 +52,7 @@ show_warning ()
 #notify user
 notify ()   
 {
-	debug "notify: $@"
+	debug 'UI' "notify: $@"
         if [ "$var_UI_TYPE" = dia ]
         then
                 _dia_DIALOG --msgbox "$@" 20 50
@@ -72,7 +72,7 @@ infofy () #TODO: when using successive things, the screen can become full and yo
 {
 	successive=${2:-0}
 	succ_last=${3:-0}
-	debug "infofy: $1"
+	debug 'UI' "infofy: $1"
 	if [ "$var_UI_TYPE" = dia ]
 	then
 		str="$1"
@@ -152,7 +152,7 @@ _getavaildisks()
 ask_checklist ()
 {
 	[ -z "$1" ] && die_error "ask_checklist needs a question!"
-	[ -z "$4" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (tag,item and ON/OFF switch)"
+	[ -z "$4" ] && debug 'UI' "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (tag,item and ON/OFF switch)"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_checklist "$@" ; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_checklist "$@" ; return $? ; }
 }
@@ -289,7 +289,7 @@ _dia_ask_checklist ()
 	_dia_DIALOG --checklist "$str" 30 60 20 $list 2>$ANSWER
 	ret=$?
 	ANSWER_CHECKLIST=`cat $ANSWER`
-	debug "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
+	debug 'UI' "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
 	return $ret
 }
 
@@ -301,7 +301,7 @@ _dia_ask_datetime ()
 	local _date="$(cat $ANSWER)" # form like: 07/12/2008
 	dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
 	local _time="$(cat $ANSWER)" # form like: 15:26:46
-	debug "Date as specified by user $_date time: $_time"
+	debug 'UI' "Date as specified by user $_date time: $_time"
 
 	# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
 	# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
@@ -337,7 +337,7 @@ _dia_ask_number ()
 			fi
 		fi
 	done
-	debug "_dia_ask_number: user entered: $ANSWER_NUMBER"
+	debug 'UI' "_dia_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return $ret
 }
@@ -349,7 +349,7 @@ _dia_ask_option ()
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	[ -z "$5" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
 	EXTRA_INFO=$3
@@ -357,7 +357,7 @@ _dia_ask_option ()
 	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
-	debug "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
+	debug 'UI' "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
 	return $ret
 }
 
@@ -378,7 +378,7 @@ _dia_ask_password ()
 	[ -n "$type_u" ] && read ${type_u}_PASSWORD < $ANSWER
 	[ -z "$type_u" ] && read           PASSWORD < $ANSWER
 	cat $ANSWER
-	debug "_dia_ask_password: user entered <<hidden>>"
+	debug 'UI' "_dia_ask_password: user entered <<hidden>>"
 	return $ret
 }
 
@@ -389,7 +389,7 @@ _dia_ask_string ()
 	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
 	ret=$?
 	ANSWER_STRING=`cat $ANSWER`
-	debug "_dia_ask_string: user entered $ANSWER_STRING"
+	debug 'UI' "_dia_ask_string: user entered $ANSWER_STRING"
 	[ -z "$ANSWER_STRING" ] && return $exitcode
 	return $ret
 }
@@ -427,8 +427,8 @@ _dia_ask_yesno ()
 	[ -n "$2" ] && str="$str (default: $2)"
 	dialog --yesno "$str" $height 55 # returns 0 for yes, 1 for no
 	ret=$?
-	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
-	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
+	[ $ret -eq 0 ] && debug 'UI' "dia_ask_yesno: User picked YES"
+	[ $ret -gt 0 ] && debug 'UI' "dia_ask_yesno: User picked NO"
 	return $ret
 }
 
@@ -468,7 +468,7 @@ _cli_ask_datetime ()
 {
 	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
 	ANSWER_DATETIME=$ANSWER_STRING
-	debug "Date as picked by user: $ANSWER_STRING"
+	debug 'UI' "Date as picked by user: $ANSWER_STRING"
 }
 
 
@@ -499,7 +499,7 @@ _cli_ask_number ()
 			fi
 		fi
 	done
-	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
+	debug 'UI' "cli_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return 0
 }
@@ -513,7 +513,7 @@ _cli_ask_option ()
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	[ -z "$5" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
 	MENU_TITLE=$2
 	EXTRA_INFO=$3
@@ -531,7 +531,7 @@ _cli_ask_option ()
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
+	debug 'UI' "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
 	[ "$ANSWER_OPTION" = CANCEL ] && return 1
 	return 0
 }
@@ -565,7 +565,7 @@ _cli_ask_string ()
 	[ -n "$2" ] && echo "(Press enter for default.  Default: $2)"
 	echo -n ">"
 	read ANSWER_STRING
-	debug "cli_ask_string: User entered: $ANSWER_STRING"
+	debug 'UI' "cli_ask_string: User entered: $ANSWER_STRING"
 	if [ -z "$ANSWER_STRING" ]
 	then
 		if [ -n "$2" ]
@@ -595,10 +595,10 @@ _cli_ask_yesno ()
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
 	if [ "$answer" = y -o "$answer" = yes ] || [ -z "$answer" -a "$2" = yes ]
 	then
-		debug "cli_ask_yesno: User picked YES"
+		debug 'UI' "cli_ask_yesno: User picked YES"
 		return 0
 	else
-		debug "cli_ask_yesno: User picked NO"
+		debug 'UI' "cli_ask_yesno: User picked NO"
 		return 1
 	fi
 }

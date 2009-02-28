@@ -278,7 +278,7 @@ target_configure_fstab()
 # $2 a string of the form: <partsize in MiB>:<fstype>[:+] (the + is bootable flag)
 partition()
 {
-	debug "Partition called like: partition '$1' '$2'"
+	debug 'FS' "Partition called like: partition '$1' '$2'"
 	[ -z "$1" ] && die_error "partition() requires a device file and a partition string"
 	[ -z "$2" ] && die_error "partition() requires a partition string"
 
@@ -317,7 +317,7 @@ partition()
 	sfdisk_input=$(printf "$sfdisk_input") # convert \n to newlines
 
 	# invoke sfdisk
-	debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
+	debug 'FS' "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
 	printk off
 	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
@@ -377,7 +377,7 @@ generate_filesystem_list ()
 # process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly
 process_filesystems ()
 {
-	debug "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
+	debug 'FS' "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
 	returncode=0
@@ -397,26 +397,26 @@ process_filesystems ()
 			then
 				if check_is_in "$fs_id" "${done_filesystems[@]}"
 				then
-					debug "$fs_id ->Already done"
+					debug 'FS' "$fs_id ->Already done"
 				else
 					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
 					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					else
-						debug "$fs_id ->Cannot do right now..."
+						debug 'FS' "$fs_id ->Cannot do right now..."
 						open_items=1
 					fi
 				fi
@@ -512,7 +512,7 @@ rollback_filesystems ()
 				then
 					if pvdisplay $real_part &>/dev/null
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -523,7 +523,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
 			then
@@ -531,7 +531,7 @@ rollback_filesystems ()
 				then
 					if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -542,7 +542,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
 			then
@@ -551,7 +551,7 @@ rollback_filesystems ()
 					open_lv=`vgdisplay -c $part 2>/dev/null | cut -d ':' -f6`
 					if [ $open_lv -gt 0 ]
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -562,7 +562,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
@@ -570,7 +570,7 @@ rollback_filesystems ()
 				then
 					if cryptsetup isLuks $part &>/dev/null
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -581,7 +581,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			else
 				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
@@ -616,7 +616,7 @@ process_filesystem ()
 {
 	[ "$2" != lvm-lv ] && [ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1" # Don't do this for lv's.  It's a hack to workaround non-existence of VG device files.
 	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
-	debug "process_filesystem $@"
+	debug 'FS' "process_filesystem $@"
         part=$1
         fs_type=$2
 	fs_create=${3:-yes}
@@ -674,12 +674,12 @@ process_filesystem ()
 		BLOCK_ROLLBACK_USELESS=0
 		if [ "$fs_type" = swap ]
 		then
-			debug "swaponning $part"
+			debug 'FS' "swaponning $part"
 			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
 		else
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
-			debug "mounting $part on $dst"
+			debug 'FS' "mounting $part on $dst"
 			mkdir -p $dst &>/dev/null # directories may or may not already exist
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
 			if [ "$fs_mount" = target -a $fs_mountpoint = '/' ]

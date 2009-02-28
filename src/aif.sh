@@ -40,6 +40,7 @@ Available procedures:
 
 notify ()
 {
+	debug 'UI' "notify: $@"
 	echo -e "$@"
 }
 
@@ -52,13 +53,17 @@ log ()
 	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 }
 
-
+# $1 = category. one of MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
+# $2 = string to log
 debug ()
 {
+	[ "$1" == 'MAIN' -o "$1" == 'PROCEDURE' -o "$1" == 'UI' -o "$1" == 'UI-INTERACTIVE' -o "$1" == 'FS' -o "$1" == 'MISC' -o "$1" == 'NETWORK' -o "$1" == 'PACMAN' -o "$1" == 'SOFTWARE' ] || die_error "debug \$1 ($1) is not a valid debug category"
+	[ -n "$2" ] || die_error "debug \$2 cannot be empty"
+
 	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
-	str="[DEBUG] $@"
 	if [ "$DEBUG" = "1" ]
 	then
+		str="[DEBUG $1 ] $2"
 		echo -e "$str" > $LOG
 		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
 	fi
@@ -132,8 +137,8 @@ load_lib ()
 # $3... extra args for phase/worker (optional)
 execute ()
 {
-	[ -z "$1" -o -z "$2" ] && debug "execute $@" && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
-	[ "$1" != phase -a "$1" != worker ] && debug "execute $@" && die_error "execute's first argument must be a valid type (phase/worker)"
+	[ -z "$1" -o -z "$2" ] && debug 'MAIN' "execute $@" && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
+	[ "$1" != phase -a "$1" != worker ] && debug 'MAIN' "execute $@" && die_error "execute's first argument must be a valid type (phase/worker)"
 	PWD_BACKUP=`pwd`
 	object=$1_$2
 
@@ -156,11 +161,11 @@ execute ()
 		exit_var=exit_$object
 		read $exit_var <<< 0
 		# TODO: for some reason the hack below does not work (tested in virtualbox), even though it really should.  Someday I must get indirect array variables working and clean this up...
-		# debug "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
-		# debug "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
+		# debug 'MAIN' "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
+		# debug 'MAIN' "declare: `declare | grep -e "^${object}=" | cut -d"=" -f 2-`"
 		# props to jedinerd at #bash for this hack.
 		# eval phase=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
-		#debug "\$phase: $phase - ${phase[@]}"
+		#debug 'MAIN' "\$phase: $phase - ${phase[@]}"
 		unset phase
 		[ "$2" = preparation ] && phase=( "${phase_preparation[@]}" )
 		[ "$2" = basics      ] && phase=( "${phase_basics[@]}" )
@@ -169,13 +174,13 @@ execute ()
 		# worker_str contains the name of the worker and optionally any arguments
 		for worker_str in "${phase[@]}"
 		do
-			debug "Loop iteration.  \$worker_str: $worker_str"
+			debug 'MAIN' "Loop iteration.  \$worker_str: $worker_str"
 			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
 		done
 		ret=${!exit_var}
 	fi
 
-	debug "Execute(): $object exit state was $ret"
+	debug 'MAIN' "Execute(): $object exit state was $ret"
 	cd $PWD_BACKUP
 	return $ret
 }
@@ -191,7 +196,7 @@ ended_ok ()
 	[ "$1" != phase -a "$1" != worker ] && die_error "ended_ok's first argument must be a valid type (phase/worker)"
 	object=$1_$2
 	exit_var=exit_$object
-	debug "Ended_ok? -> Exit state of $object was: ${!exit_var} (if empty. it's not executed yet)"
+	debug 'MAIN' "Ended_ok? -> Exit state of $object was: ${!exit_var} (if empty. it's not executed yet)"
 	[ "${!exit_var}" = '0' ] && return 0
 	[ "${!exit_var}" = '' ] && return 1
 	return ${!exit_var}
