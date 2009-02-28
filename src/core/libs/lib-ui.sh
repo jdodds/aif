@@ -366,7 +366,7 @@ _dia_ask_option ()
 	_dia_DIALOG $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
-	debug 'UI' "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
+	debug 'UI' "dia_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($DIA_MENU_TITLE)"
 	[ $TYPE == required ] && return $ret
 	return 0 # TODO: check if dialog returned >0 because of an other reason then the user hitting 'cancel/skip'
 }
@@ -544,11 +544,14 @@ _cli_ask_option ()
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
+	ret=0
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug 'UI' "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
-	[ "$ANSWER_OPTION" = CANCEL ] && return 1
-	[ -z "$ANSWER_OPTION" -a type == required ] && return 1
-	return 0
+	[ "$ANSWER_OPTION" == CANCEL ] && ret=1 && ANSWER_OPTION=
+	[ "$ANSWER_OPTION" == SKIP   ] && ret=0 && ANSWER_OPTION=
+	[ -z "$ANSWER_OPTION" -a "$TYPE" == required ] && ret=1
+
+	debug 'UI' "cli_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($MENU_TITLE)"
+	return $ret
 }
 
 
@@ -648,7 +651,7 @@ set_keymap ()
 	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
 		FONTS="$FONTS $i -"
 	done
-	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' optional $FONTS
+	ask_option "${var_CONSOLEFONT:-no}" "Select A Console Font" '' optional $FONTS
 	if [ -n "$ANSWER_OPTION" ]
 	then
 		var_CONSOLEFONT=$ANSWER_OPTION
