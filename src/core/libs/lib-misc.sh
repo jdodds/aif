@@ -51,15 +51,17 @@ wait_for ()
 check_is_in ()
 {
 	[ -z "$1" ] && debug 'MISC' "check_is_in $1 $2" && die_error "check_is_in needs a non-empty needle as \$1 and a haystack as \$2!" # haystack can be empty though
+	NEEDLE=$1
+	HAYSTACK=$2
 
-	local pattern="$1" element
+	local pattern="$NEEDLE" element
 	shift
 	for element
 	do
 		[[ $element = $pattern ]] && debug 'MISC' "Checking if $element = $pattern ..yes !" && return 0
 		                             debug 'MISC' "Checking if $element = $pattern ... no"
 	done
-	debug 'MISC' "Check_is_in could not find $1 in $2"
+	debug 'MISC' "Check_is_in could not find $NEEDLE in $HAYSTACK"
 	return 1
 }
 
