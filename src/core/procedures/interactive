@@ -53,7 +53,7 @@ mainmenu()
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
 	#TODO: why does a '2' appear instead of '' ??
-	ask_option $default "MAIN MENU" '' \
+	ask_option $default "MAIN MENU" '' required \
 	"1" "$worker_select_source_title" \
 	"2" "$worker_set_clock_title" \
 	"3" "$worker_prepare_disks_title" \
@@ -96,7 +96,7 @@ mainmenu()
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' \
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
@@ -147,7 +147,7 @@ worker_prepare_disks()
 		default=no
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
-		ask_option $default "Prepare Hard Drive" '' \
+		ask_option $default "Prepare Hard Drive" '' required \
 		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
 		"2" "Partition Hard Drives" \
 		"3" "Configure block devices, filesystems and mountpoints" \
@@ -246,7 +246,7 @@ worker_select_mirror ()
 
 worker_install_bootloader ()
 {
-	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." \
+	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
 			"Grub" "Use the GRUB bootloader (default)" \
 			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
 

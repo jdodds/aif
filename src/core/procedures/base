@@ -104,7 +104,7 @@ worker_set_clock ()
         while true; do
                 default=no
                 [ -n "$NEXTITEM" ] && default="$NEXTITEM"
-                ask_option $default "Date/time configuration" '' \
+                ask_option $default "Date/time configuration" '' required \
                 "1" "Select region and timezone" \
                 "2" "Set time and date" \
                 "3" "Return to Main Menu"

@@ -28,7 +28,7 @@ interactive_configure_system()
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
 		helptext=
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="Don't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
-		ask_option $DEFAULT "Configuration" "$helptext" \
+		ask_option $DEFAULT "Configuration" "$helptext" required \
 		"/etc/rc.conf"              "System Config" \
 		"/etc/fstab"                "Filesystem Mountpoints" \
 		"/etc/mkinitcpio.conf"      "Initramfs Config" \
@@ -69,7 +69,7 @@ interactive_timezone () {
 
 interactive_time () {
         # utc or localtime?
-        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "localtime" " " || return 1
+        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" required "UTC" " " "localtime" " " || return 1
         HARDWARECLOCK=$ANSWER_OPTION
 
 	dohwclock
@@ -109,7 +109,7 @@ interactive_autoprepare()
 	if [ $(echo $DISCS | wc -w) -gt 1 ]
 	then
 		notify "Available Disks:\n\n$(_getavaildisks)\n"
-		ask_option no 'Harddrive selection' "Select the hard drive to use" $(finddisks 1 _) || return 1
+		ask_option no 'Harddrive selection' "Select the hard drive to use" required $(finddisks 1 _) || return 1
 		DISC=$ANSWER_OPTION
 	else
 		DISC=$DISCS
@@ -148,7 +148,7 @@ interactive_autoprepare()
 	CHOSEN_FS=""
 	while [ "$CHOSEN_FS" = "" ]
 	do
-		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" $FSOPTS || return 1
+		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required $FSOPTS || return 1
 		FSTYPE=$ANSWER_OPTION
 		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
         done
@@ -195,7 +195,7 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
+        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" required $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
@@ -253,7 +253,7 @@ interactive_filesystem ()
 		local old_fs_params=$fs_params
 
 		ask_option edit "Alter this $fs_type filesystem on $part ?" \
-		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" \
+		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
 		                edit EDIT delete DELETE #TODO: nicer display if label is empty etc
 
 		# Don't alter, and return if user cancels
@@ -306,7 +306,7 @@ interactive_filesystem ()
 		else
 			default=
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
-			ask_option no "Select filesystem" "Select a filesystem for $part:" $FSOPTS || return 1
+			ask_option no "Select filesystem" "Select a filesystem for $part:" required $FSOPTS || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
@@ -463,7 +463,7 @@ interactive_filesystems() {
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
-			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required $menu_list DONE _
 			[ $? -gt 0                 ] && USERHAPPY=1 && break
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
@@ -492,7 +492,7 @@ interactive_filesystems() {
 					list="XXX no-LV's-defined-yet-make-a-new-one"
 				fi
 				list="$list empty NEW"
-				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" $list
+				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required $list
 				EDIT_VG=$ANSWER_OPTION
 				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
 				then
@@ -631,7 +631,7 @@ interactive_runtime_network() {
         return 1
     fi
 
-    ask_option no "Interface selection" "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
+    ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
     INTERFACE=$ANSWER_OPTION
 
 
@@ -763,7 +763,7 @@ EOF
         notify "No hard drives were found"
         return 1
     fi
-    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." $DEVS || return 1
+    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
     ROOTDEV=$ANSWER_OPTION
     infofy "Installing the GRUB bootloader..."
     cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
@@ -785,7 +785,7 @@ EOF
     fi
     ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
     if [ $? -eq 0 ]; then
-        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" $DEVS || return 1
+        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" required $DEVS || return 1
         bootpart=$ANSWER_OPTION
     fi
     bootpart=$(mapdev $bootpart)
@@ -832,7 +832,7 @@ interactive_select_source()
         var_FILE_URL="file:///src/core/pkg"
         var_SYNC_URL=
 
-	ask_option no "Source selection" "Please select an installation source" \
+	ask_option no "Source selection" "Please select an installation source" required \
     "1" "CD-ROM or OTHER SOURCE" \
     "2" "FTP/HTTP" || return 1
 
@@ -866,7 +866,7 @@ interactive_select_mirror() {
         notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
         # FIXME: this regex doesn't honor commenting
         MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
-        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
+        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" required $MIRRORS "Custom" "_" || return 1
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
         ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
@@ -889,7 +889,7 @@ interactive_get_editor() {
 	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
 	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
 	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
-	ask_option no "Text editor selection" "Select a Text Editor to Use" "${EDITOR_OPTS[@]}"
+	ask_option no "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}"
 	#TODO: this code could be a little bit cleaner.
 	case $ANSWER_OPTION in
 		"nano") EDITOR="nano" ;;

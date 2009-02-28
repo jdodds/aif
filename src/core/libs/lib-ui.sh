@@ -190,7 +190,8 @@ ask_number ()
 # $1 default item (set to 'no' for none)
 # $2 title
 # $3 additional explanation (default: '')
-# shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
+# $4 type (required or optional). '' means required. cancel labels will be 'Cancel' and 'Skip' respectively. if (canceled), required will return >0, optional not.
+# shift 4 ; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
 # the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
 # $? if user cancelled. 0 otherwise
 ask_option ()
@@ -352,16 +353,20 @@ _dia_ask_option ()
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	TYPE=${4:-required}
+	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
 	EXTRA_INFO=$3
-	shift 3
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
+	shift 4
+	CANCEL_LABEL=
+	[ $TYPE == optional ] && CANCEL_LABEL='--cancel-label "Skip"'
+	_dia_DIALOG $DEFAULT $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug 'UI' "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
-	return $ret
+	[ $type == required ] && return $ret
+	return 0 # TODO: check if dialog returned >0 because of an other reason then the user hitting 'cancel/skip'
 }
 
 
@@ -407,14 +412,14 @@ _dia_ask_timezone ()
 	done
 	while [ "$SET_ZONE" != "1" ]; do
 		SET_REGION=""
-		ask_option no "Please select a region" '' $REGIONS
+		ask_option no "Please select a region" '' required $REGIONS
 		region=ANSWER_OPTION
 		if [ $? -eq 0 ]; then
 			ZONES=""
 			for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
 				ZONES="$ZONES $i -"
 			done
-			ask_option no "Please select a timezone" '' $ZONES
+			ask_option no "Please select a timezone" '' required $ZONES
 			zone=$ANSWER_OPTION
 			[ $? -gt 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
 		fi
@@ -516,11 +521,12 @@ _cli_ask_option ()
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	TYPE=${4:-required} 
+	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
 	MENU_TITLE=$2
 	EXTRA_INFO=$3
-	shift 3
+	shift 4
 
 	echo "$MENU_TITLE"
 	[ -n "$EXTRA_INFO" ] && echo "$EXTRA_INFO"
@@ -529,7 +535,9 @@ _cli_ask_option ()
 		echo "$1 ] $2"
 		shift 2
 	done
-	echo "CANCEL ] CANCEL"
+	CANCEL_LABEL=CANCEL
+	[ $TYPE == optional ] && CANCEL_LABEL=SKIP
+	echo "$CANCEL_LABEL ] $CANCEL_LABEL"
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
@@ -624,7 +632,7 @@ set_keymap ()
 	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
 		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
 	done
-	ask_option "$var_KEYMAP" "Select A Keymap" '' $KEYMAPS && {
+	ask_option "$var_KEYMAP" "Select A Keymap" '' $KEYMAPS optional && {
 		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
 		var_KEYMAP=$ANSWER_OPTION
 	}
@@ -634,7 +642,7 @@ set_keymap ()
 	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
 		FONTS="$FONTS $i -"
 	done
-	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' $FONTS && {
+	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' optional $FONTS && {
 		var_CONSOLEFONT=$ANSWER_OPTION
 		for i in 1 2 3 4
 		do
