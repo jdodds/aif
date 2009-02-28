@@ -74,7 +74,7 @@ interactive_time () {
 
 	dohwclock
 
-	if which ntpdate >/dev/null && ask_option yes "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?" "(You need a working internet connection for doing this!)" #TODO: only propose if network ok.
+	if which ntpdate >/dev/null && ask_yesno "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?\n(You need a working internet connection for doing this!)" yes #TODO: only propose if network ok.
         then
                 if ntpdate pool.ntp.org >/dev/null
                 then
