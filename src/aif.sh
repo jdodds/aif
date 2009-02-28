@@ -91,6 +91,9 @@ load_module ()
 			shopt -s nullglob
 			for i in "$path/${submodule}s"/*
 			do
+				# I have the habit of editing files while testing, don't source my backup files!
+				[[ "$i" == *~ ]] && continue
+
 				load_${submodule} "$1" "`basename "$i"`"
 			done
 		fi
