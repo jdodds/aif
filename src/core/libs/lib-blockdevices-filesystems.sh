@@ -395,7 +395,7 @@ process_filesystems ()
 			fs_id="$part $fs_type $fs_mountpoint $fs_opts $fs_label $fs_params"
 			if [ "$fs_create" = yes ]
 			then
-				if check_is_in "$fs_id" "${done_filesystems[@]}"
+				if check_is_in "${done_filesystems[@]}" "$fs_id"
 				then
 					debug 'FS' "$fs_id ->Already done"
 				else
@@ -472,7 +472,7 @@ rollback_filesystems ()
 		elif [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			part_real=${part/+/}
-			if ! check_is_in "$part_real" "${done_umounts[@]}"
+			if ! check_is_in "${done_umounts[@]}" "$part_real"
 			then
 				infofy "(Maybe) Umounting $part_real" disks
 				if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.
@@ -744,7 +744,7 @@ get_blockdevice_size ()
 	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
 	unit=${2:-B}
 	allowed_units=(B KiB kB MiB MB GiB GB)
-	if ! is_in $unit "${allowed_units[@]}"
+	if ! check_is_in "${allowed_units[@]}" $unit
 	then
 		die_error "Unrecognized unit $unit!"
 	fi
