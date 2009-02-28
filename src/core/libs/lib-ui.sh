@@ -632,7 +632,7 @@ set_keymap ()
 	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
 		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
 	done
-	ask_option "$var_KEYMAP" "Select A Keymap" '' $KEYMAPS optional && {
+	ask_option "$var_KEYMAP" "Select A Keymap" '' optional $KEYMAPS && {
 		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
 		var_KEYMAP=$ANSWER_OPTION
 	}
