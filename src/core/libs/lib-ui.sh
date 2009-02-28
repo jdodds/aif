@@ -355,6 +355,7 @@ _dia_ask_option ()
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
 	TYPE=${4:-required}
+	[ "$TYPE" != required -a "$TYPE" != optional ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask option \$4 must be required or optional or ''. not $TYPE"
 	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
@@ -523,6 +524,7 @@ _cli_ask_option ()
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
 	TYPE=${4:-required} 
+	[ "$TYPE" != required -a "$TYPE" != optional ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask option \$4 must be required or optional or ''. not $TYPE"
 	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
 	MENU_TITLE=$2
