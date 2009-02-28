@@ -9,8 +9,11 @@
 ANSWER=$RUNTIME_DIR/aif-dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/aif-dia-successive-items
-var_KEYMAP=`sed -n '/^KEYMAP/p' /etc/rc.conf | sed 's/KEYMAP=//' | sed 's/"//g'` #default keymap as configured on install CD. can be overridden
-var_CONSOLEFONT=`sed -n '/^CONSOLEFONT/p' /etc/rc.conf | sed 's/KEYMAP=//' | sed 's/"//g'` #default consolefont as configured on install CD. can be overridden
+
+#default keymap and consolefont configured on install CD. can be overridden
+source /etc/rc.conf
+var_KEYMAP=$KEYMAP
+var_CONSOLEFONT=$CONSOLEFONT
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
