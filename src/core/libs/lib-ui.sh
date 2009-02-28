@@ -359,13 +359,13 @@ _dia_ask_option ()
  	DIA_MENU_TITLE=$2
 	EXTRA_INFO=$3
 	shift 4
-	CANCEL_LABEL=
-	[ $TYPE == optional ] && CANCEL_LABEL='--cancel-label "Skip"'
-	_dia_DIALOG $DEFAULT $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
+	CANCEL_LABEL=Cancel
+	[ $TYPE == optional ] && CANCEL_LABEL='Skip'
+	_dia_DIALOG $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug 'UI' "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
-	[ $type == required ] && return $ret
+	[ $TYPE == required ] && return $ret
 	return 0 # TODO: check if dialog returned >0 because of an other reason then the user hitting 'cancel/skip'
 }
 
