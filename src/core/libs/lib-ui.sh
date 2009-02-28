@@ -190,10 +190,11 @@ ask_number ()
 # $1 default item (set to 'no' for none)
 # $2 title
 # $3 additional explanation (default: '')
-# $4 type (required or optional). '' means required. cancel labels will be 'Cancel' and 'Skip' respectively. if (canceled), required will return >0, optional not.
+# $4 type (required or optional). '' means required. cancel labels will be 'Cancel' and 'Skip' respectively.
 # shift 4 ; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
-# the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
-# $? if user cancelled. 0 otherwise
+
+# $ANSWER_OPTION : selected answer (if none selected: default (if available), or empty string otherwise). if user hits cancel or skip, this is an empty string.
+# $?             : 0 if the user selected anything or skipped (when optional), when user cancelled: 1
 ask_option ()
 {
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
@@ -517,7 +518,7 @@ _cli_ask_option ()
 {
 	#TODO: strip out color codes
 	#TODO: if user entered incorrect choice, ask him again
-	DEFAULT=""
+	DEFAULT=
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
@@ -544,6 +545,7 @@ _cli_ask_option ()
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
 	debug 'UI' "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
 	[ "$ANSWER_OPTION" = CANCEL ] && return 1
+	[ -z "$ANSWER_OPTION" -a type == required ] && return 1
 	return 0
 }
 
