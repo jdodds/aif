@@ -3,7 +3,6 @@ See also the FIXME's and TODO's in the code.
 
 CURRENT ISSUES:
 * date/time setting stuff (see ML thread) hangs at select timezone?
-* keyboard stuff (setting consolefont and keymap + setting in $target/etc/rc.conf )
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
@@ -33,7 +32,6 @@ CURRENT ISSUES:
 * the old installer asked a lot of questions before actually configuring the system, eg like 'do you need support for booting from nfs/softraid/lvm2/encrypted, custom dst file?' etc.\
   do we still need this? why (not)?, and a select tag thingie would be nicer imho
 * refactor all pacman stuff (modularize/functionize etc)
-* in lvm VG editor you can press "cancel" (when 'new' is selected, maybe otherwise too) and create a new LV which will get a block entry, but no fs entry on the VG block!
 * aif : na "mijn" partitielayout: bij grub ( nog voor text editor op menu.lst) zegt iets ( op foreground van ncurses) Can't remove.. ik denk zelfs 'Grub: Can't remove..' en daarna een gewone entry, geen uuid's gewoon /dev/sda3 ro
 * port from /arch/setup: grub install chroot thing (http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=4565577dbd2182dd49612f1e0b68288f5573bf7b) (waiting for ticket http://bugs.archlinux.org/task/13277)
 * ext4 default options? -O dir_index,extent,uninit_bg ?

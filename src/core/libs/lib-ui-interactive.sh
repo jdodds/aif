@@ -484,53 +484,52 @@ interactive_filesystems() {
 				then
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
-						label=$(     cut -d ';' -f 6 <<< $lv)
-						size=$(cut -d ';' -f 7 <<< $lv)
+						label=$(cut -d ';' -f 6 <<< $lv)
+						size=$( cut -d ';' -f 7 <<< $lv)
 						list="$list $label $size"
 					done
-				else
-					list="XXX no-LV's-defined-yet-make-a-new-one"
 				fi
 				list="$list empty NEW"
-				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required $list
-				EDIT_VG=$ANSWER_OPTION
-				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
-				then
-					# a new LV must be created on this VG
-					if interactive_filesystem $part $part_type $part_label '' 
+				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required $list && {
+					EDIT_VG=$ANSWER_OPTION
+					if [ "$ANSWER_OPTION" = empty  ]
 					then
-						if [ "$NEW_FILESYSTEM" != no_fs ]
+						# a new LV must be created on this VG
+						if interactive_filesystem $part $part_type $part_label '' 
 						then
-							[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
-							[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+							if [ "$NEW_FILESYSTEM" != no_fs ]
+							then
+								[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+								[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+							fi
 						fi
+					else
+						# an existing LV will be edited and it's settings updated
+						for lv in `sed 's/|/ /g' <<< $fs`
+						do
+							label=$(cut -d ';' -f 6 <<< $lv)
+							[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
+						done
+						interactive_filesystem $part $part_type $part_label "$found_lv"
+						newfs=
+						for lv in `sed 's/|/ /g' <<< $fs`
+						do
+							label=$(cut -d ';' -f 6 <<< $lv)
+							if [ "$label" != "$EDIT_VG" ]
+							then
+								add=$lv
+							elif [ $NEW_FILESYSTEM != no_fs ]
+							then
+								add=$NEW_FILESYSTEM
+							else
+								add=
+							fi
+							[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
+							[ -n "$add" -a -z "$newfs" ] && newfs=$add
+						done
+						fs=$newfs
 					fi
-				else
-					# an existing LV will be edited and it's settings updated
-					for lv in `sed 's/|/ /g' <<< $fs`
-					do
-						label=$(cut -d ';' -f 6 <<< $lv)
-						[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
-					done
-					interactive_filesystem $part $part_type $part_label "$found_lv"
-					newfs=
-					for lv in `sed 's/|/ /g' <<< $fs`
-					do
-						label=$(cut -d ';' -f 6 <<< $lv)
-						if [ "$label" != "$EDIT_VG" ]
-						then
-							add=$lv
-						elif [ $NEW_FILESYSTEM != no_fs ]
-						then
-							add=$NEW_FILESYSTEM
-						else
-							add=
-						fi
-						[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
-						[ -n "$add" -a -z "$newfs" ] && newfs=$add
-					done
-					fs=$newfs
-				fi
+				}
 			else
 				interactive_filesystem $part $part_type "$part_label" "$fs"
 				[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
