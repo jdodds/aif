@@ -1,18 +1,15 @@
 basedir=$(dirname "`dirname $0`")
 source $basedir/src/core/libs/lib-ui.sh
-ANSWER="/tmp/.dialog-answer"
-
-
-var_UI_TYPE=dia
-ask_option no 'menu title is this yes yes' 'extra explanation is here mkay OPTIONAL' optional tagA itemA "tag B" 'item B' tag-c item\ C
-echo "return code was $?"
-
-ask_option no 'menu title is this yes yes' 'extra explanation is here mkay REQUIRED' required tagA itemA "tag B" 'item B' tag-c item\ C
-echo "return code was $?"
-
-var_UI_TYPE=cli
-ask_option tag-c 'menu title is this yes yes' 'extra explanation is here mkay OPTIONAL' optional tagA itemA "tag B" 'item B' tag-c item\ C
-echo "return code was $?"
-
-ask_option tag-c 'menu title is this yes yes' 'extra explanation is here mkay REQUIRED' required tagA itemA "tag B" 'item B' tag-c item\ C
-echo "return code was $?"
+ANSWER="/tmp/aif-test-dialog-answer"
+for ui in dia cli
+do
+	for type in required optional
+	do
+		for default in no tag-c
+		do
+			var_UI_TYPE=$ui
+			ask_option $default 'menu title ($2)' 'extra explanation ($3)'" settings: type: $type, default:$default" $type tagA itemA "tag B" 'item B' tag-c item\ C
+			notify "RETURN CODE: $?\nANSWER: $ANSWER_OPTION"
+		done
+	done
+done
