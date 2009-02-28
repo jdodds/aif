@@ -27,6 +27,7 @@ CURRENT ISSUES:
   -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
 * mirrorlist config doesn't change after selecting mirror
 * 'keep in mind trottled' not on separate screen
+* when you have 2 LV's and you delete one, both are erased from the VG, but there is still the entry for the other one as blockdevice
 * in usage, procedure specific opts points to parent profile when using inheritance
 * we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
 * the old installer asked a lot of questions before actually configuring the system, eg like 'do you need support for booting from nfs/softraid/lvm2/encrypted, custom dst file?' etc.\
