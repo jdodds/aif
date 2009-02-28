@@ -634,17 +634,21 @@ set_keymap ()
 	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
 		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
 	done
-	ask_option "$var_KEYMAP" "Select A Keymap" '' optional $KEYMAPS && {
+	ask_option "$var_KEYMAP" "Select A Keymap" '' optional $KEYMAPS
+	if [ -n "$ANSWER_OPTION" ]
+	then
 		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
 		var_KEYMAP=$ANSWER_OPTION
-	}
+	fi
 
 	FONTS=
 	# skip .cp.gz and partialfonts files for now see bug #6112, #6111
 	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
 		FONTS="$FONTS $i -"
 	done
-	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' optional $FONTS && {
+	ask_option "$var_CONSOLEFONT" "Select A Console Font" '' optional $FONTS
+	if [ -n "$ANSWER_OPTION" ]
+	then
 		var_CONSOLEFONT=$ANSWER_OPTION
 		for i in 1 2 3 4
 		do
@@ -654,5 +658,5 @@ set_keymap ()
 				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/tty$i
 			fi
 		done
-	}
+	fi
 }
