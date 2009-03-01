@@ -3,6 +3,7 @@ See also the FIXME's and TODO's in the code.
 
 CURRENT ISSUES:
 * date/time setting stuff (see ML thread) hangs at select timezone?
+* interactive_autoprepare : size in B instead of MiB
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
 * when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
@@ -44,7 +45,7 @@ skip that check or something.  Alternatively, maybe just show which steps are do
 * support maybe ntp to set clock
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
 * core/quickinst: figure out what needs to be done and do it.
-
+* right at the end of package installation something happens :/ also at configure system, before generation of locales
 
 
 SOMEDAY/MAYBE/RANDOM THOUGHTS:
