@@ -98,12 +98,12 @@ log ()
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		echo -e "$str" >$LOG
+		echo -e "$str" >$LOG || die_error "Cannot log $str to $LOG"
 	else
-		echo -e "$str" >$LOG
+		echo -e "$str" >$LOG || die_error "Cannot log $str to $LOG"
 	fi
 
-	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
+	[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" )
 }
 
 
@@ -114,11 +114,11 @@ debug ()
         then
 		if [ "$var_UI_TYPE" = dia ]
 		then
-			echo -e "$str" > $LOG
+			echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
 		else
-			echo -e "$str" > $LOG
+			echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
 		fi
-		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
+		[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
 	fi
 }
 
