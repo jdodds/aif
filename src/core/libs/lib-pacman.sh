@@ -78,7 +78,7 @@ do
 	then
 		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST"
 	else
-		add_pacman_repo target ${repo} "Server = ${serverurl/\/\$repo\//\/$repo\/}" # replace literal '/$repo/' in the serverurl string by "/$repo/" where $repo is our variable.
+		add_pacman_repo target ${repo} "Server = ${serverurl/\$repo/$repo}" # replace literal '$repo' in the serverurl string by "$repo" where $repo is our variable.
 	fi
 done
 	# Set up the necessary directories for pacman use
