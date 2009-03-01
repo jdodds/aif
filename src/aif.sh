@@ -58,7 +58,7 @@ log ()
 	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
 	echo -e "$str" > $LOG || die_error "Cannot log $str to $LOG"
-	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" 
+	[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" )
 }
 
 # $1 = category. one of MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
@@ -73,7 +73,7 @@ debug ()
 	then
 		str="[DEBUG $1 ] $2"
 		echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
-		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE"
+		[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
 	fi
 }
 
