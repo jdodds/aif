@@ -5,7 +5,6 @@ CURRENT ISSUES:
 * date/time setting stuff (see ML thread) hangs at select timezone?
 * interactive_autoprepare : size in B instead of MiB
 * grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
-* when invoking /arch/aif -p interactive on a "normal" pc, it always wants to abort
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
