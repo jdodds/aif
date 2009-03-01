@@ -9,7 +9,7 @@ CURRENT ISSUES:
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
-* lib things sometimes call die_error but we go back to the menu.. or something.. i think
+* sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * automatically configure grub for dm_crypt and lvm
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
 * a nice way to be able to "inject" functions/logic without:
