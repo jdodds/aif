@@ -19,10 +19,10 @@ var_CONSOLEFONT=$CONSOLEFONT
 
 
 # display error message and die
+# Do not call other functions like debug, notify, .. here because that might cause loops!
 die_error ()
 {
-	debug 'UI' "die_error: ERROR: $@"
-	notify "ERROR: $@"
+	echo "ERROR: $@" >&2
         exit 2
 }
  

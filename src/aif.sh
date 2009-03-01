@@ -35,7 +35,15 @@ Available procedures:
 
 }
 
-##### TMP functions that we need during early bootstrap but will be overidden with decent functions by libraries ######
+##### TMP functions that we need during early bootstrap but will be overidden with decent functions from libraries ######
+
+
+# Do not call other functions like debug, notify, .. here because that might cause loops!
+die_error ()
+{
+	echo "ERROR: $@" >&2
+	exit 2
+}
 
 
 notify ()
