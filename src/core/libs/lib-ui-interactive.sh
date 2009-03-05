@@ -637,8 +637,7 @@ interactive_runtime_network() {
     ask_yesno "Do you want to use DHCP?"
     if [ $? -eq 0 ]; then
         infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
-        killall dhcpd
-        killall -9 dhcpd
+        dhcpcd -k $INTERFACE >$LOG 2>&1
         sleep 1
         dhcpcd $INTERFACE >$LOG 2>&1
         if [ $? -ne 0 ]; then

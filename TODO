@@ -35,10 +35,6 @@ CURRENT ISSUES:
 * port from /arch/setup: grub install chroot thing (http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=4565577dbd2182dd49612f1e0b68288f5573bf7b) (waiting for ticket http://bugs.archlinux.org/task/13277)
 * ext4 default options? -O dir_index,extent,uninit_bg ?
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
-* if dhcpd already runs for $reason, the installer will try again @ configure network and fail.
-  i tried killall dhcpd, killall -9 dhcpd first but that didn't help: it can't kill the process or something...
-  I can also add something like for iface in `moo` (or only the one selected iface); do ifconfig $iface down;
-  ifconfig $iface up; done, and then dhcpd again
 * core/interactive: do not check hard for the dependencies. a user could really know what he's doing or need to reboot after partitioning a disk and
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
