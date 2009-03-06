@@ -1,4 +1,6 @@
 #!/bin/bash
+# Note that $var_UI_TYPE may not be set here. especially if being loaded in the "early bootstrap" phase
+
 # TODO: implement 'retry until user does it correctly' everywhere
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 # TODO: standardize. eg everything $1= question/title, $2=default
@@ -18,12 +20,13 @@ var_CONSOLEFONT=$CONSOLEFONT
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
 
+
 # display error message and die
 # Do not call other functions like debug, notify, .. here because that might cause loops!
 die_error ()
 {
 	echo "ERROR: $@" >&2
-        exit 2
+	exit 2
 }
  
  
@@ -33,25 +36,25 @@ die_error ()
 # $3 type of item.  msg or text if it's a file. (optional. defaults to msg)
 show_warning ()
 {
-        [ -z "$1" ] && die_error "show_warning needs a title"
-        [ -z "$2" ] && die_error "show_warning needs an item to show"
-        [ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
-        type=msg
-        [ -n "$3" ] && type=$3
-        debug 'UI' "show_warning '$1': $2 ($type)"
-        if [ "$var_UI_TYPE" = dia ]
-        then
-                _dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
-        else
-                echo "WARNING: $1"
-                [ "${type}" = msg  ] && echo -e "$2"
-                [ "${type}" = text ] && (cat $2 || die_error "Could not cat $2")
-        fi
+	[ -z "$1" ] && die_error "show_warning needs a title"
+	[ -z "$2" ] && die_error "show_warning needs an item to show"
+	[ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
+	type=msg
+	[ -n "$3" ] && type=$3
+	debug 'UI' "show_warning '$1': $2 ($type)"
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		_dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
+	else
+		echo "WARNING: $1"
+		[ "${type}" = msg  ] && echo -e "$2"
+		[ "${type}" = text ] && (cat $2 || die_error "Could not cat $2")
+	fi
 
         return 0
 }
- 
- 
+
+
 #notify user
 notify ()   
 {
@@ -91,36 +94,33 @@ infofy () #TODO: when using successive things, the screen can become full and yo
 	fi
 }
 
-
 # logging of stuff
 log ()
 {
+	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		echo -e "$str" >$LOG || die_error "Cannot log $str to $LOG"
-	else
-		echo -e "$str" >$LOG || die_error "Cannot log $str to $LOG"
-	fi
+	echo -e "$str" > $LOG || die_error "Cannot log $str to $LOG"
 
 	[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" )
 }
 
 
+# $1 = category. one of MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
+# $2 = string to log
 debug ()
 {
-        str="[DEBUG] $@"
+        [ "$1" == 'MAIN' -o "$1" == 'PROCEDURE' -o "$1" == 'UI' -o "$1" == 'UI-INTERACTIVE' -o "$1" == 'FS' -o "$1" == 'MISC' -o "$1" == 'NETWORK' -o "$1" == 'PACMAN' -o "$1" == 'SOFTWARE' ] || die_error "debug \$1 ($1) is not a valid debug category"
+        [ -n "$2" ] || die_error "debug \$2 cannot be empty"
+
+        mkdir -p $LOG_DIR || die_error "Cannot create log directory"
         if [ "$DEBUG" = "1" ]
         then
-		if [ "$var_UI_TYPE" = dia ]
-		then
-			echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
-		else
-			echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
-		fi
-		[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
-	fi
+                str="[DEBUG $1 ] $2"
+                echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
+                [ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
+        fi
 }
+
 
 
 # taken from setup

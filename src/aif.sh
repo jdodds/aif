@@ -11,11 +11,15 @@ LOG_DIR=/var/log/aif
 LOGFILE=$LOG_DIR/aif.log
 
 
+###### Early bootstrap ######
+
+# load the lib-ui, it is one we need everywhere so we must load it early.
+source $LIB_CORE/libs/lib-ui.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-ui.sh" >&2 && exit 2)
+
 ###### Miscalleaneous functions ######
 
 usage ()
 {
-	#NOTE: you can't use dia mode here yet because lib-ui isn't sourced yet.  But cli is ok for this anyway.
 	msg="aif -p <procedurename>  Select a procedure # If given, this *must* be the first option
     -i <dia/cli>         Override interface type (optional)
     -d                   Explicitly enable debugging (optional)
@@ -32,49 +36,6 @@ Available procedures:
 	[ -n "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
 
 	echo -e "$msg"
-
-}
-
-##### TMP functions that we need during early bootstrap but will be overidden with decent functions from libraries ######
-
-
-# Do not call other functions like debug, notify, .. here because that might cause loops!
-die_error ()
-{
-	echo "ERROR: $@" >&2
-	exit 2
-}
-
-
-notify ()
-{
-	debug 'UI' "notify: $@"
-	echo -e "$@"
-}
-
-
-log ()
-{
-	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
-	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
-	echo -e "$str" > $LOG || die_error "Cannot log $str to $LOG"
-	[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" )
-}
-
-# $1 = category. one of MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
-# $2 = string to log
-debug ()
-{
-	[ "$1" == 'MAIN' -o "$1" == 'PROCEDURE' -o "$1" == 'UI' -o "$1" == 'UI-INTERACTIVE' -o "$1" == 'FS' -o "$1" == 'MISC' -o "$1" == 'NETWORK' -o "$1" == 'PACMAN' -o "$1" == 'SOFTWARE' ] || die_error "debug \$1 ($1) is not a valid debug category"
-	[ -n "$2" ] || die_error "debug \$2 cannot be empty"
-
-	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
-	if [ "$DEBUG" = "1" ]
-	then
-		str="[DEBUG $1 ] $2"
-		echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
-		[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
-	fi
 }
 
 
