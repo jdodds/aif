@@ -44,7 +44,7 @@ show_warning ()
 	debug 'UI' "show_warning '$1': $2 ($type)"
 	if [ "$var_UI_TYPE" = dia ]
 	then
-		_dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
+		_dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 0 0 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
 	else
 		echo "WARNING: $1"
 		[ "${type}" = msg  ] && echo -e "$2"
@@ -61,7 +61,7 @@ notify ()
 	debug 'UI' "notify: $@"
         if [ "$var_UI_TYPE" = dia ]
         then
-                _dia_DIALOG --msgbox "$@" 20 50
+                _dia_DIALOG --msgbox "$@" 0 0
         else
                 echo -e "$@"
         fi
@@ -88,7 +88,7 @@ infofy () #TODO: when using successive things, the screen can become full and yo
 			str=`cat $DIA_SUCCESSIVE_ITEMS-$successive`
 		fi
 		[ "$succ_last" = 1 ] && rm $DIA_SUCCESSIVE_ITEMS-$successive
-		_dia_DIALOG --infobox "$str" 20 50
+		_dia_DIALOG --infobox "$str" 0 0
 	else
 		echo -e "$1"
 	fi
@@ -291,7 +291,7 @@ _dia_ask_checklist ()
 		list="$list $1 $2 $3"
 		shift 3
 	done
-	_dia_DIALOG --checklist "$str" 30 60 20 $list 2>$ANSWER
+	_dia_DIALOG --checklist "$str" 0 0 0 $list 2>$ANSWER
 	ret=$?
 	ANSWER_CHECKLIST=`cat $ANSWER`
 	debug 'UI' "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
@@ -324,7 +324,7 @@ _dia_ask_number ()
 		[ -n $2 ] && str2="min $2"
 		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
 		[ -n "$str2" ] && str="$str ( $str2 )"
-		_dia_DIALOG --inputbox "$str" 8 65 $4 2>$ANSWER
+		_dia_DIALOG --inputbox "$str" 0 0 $4 2>$ANSWER
 		ret=$?
 		ANSWER_NUMBER=`cat $ANSWER`
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
@@ -363,7 +363,7 @@ _dia_ask_option ()
 	shift 4
 	CANCEL_LABEL=Cancel
 	[ $TYPE == optional ] && CANCEL_LABEL='Skip'
-	_dia_DIALOG $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
+	_dia_DIALOG $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 0 0 0 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug 'UI' "dia_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($DIA_MENU_TITLE)"
@@ -396,7 +396,7 @@ _dia_ask_password ()
 _dia_ask_string ()
 {
 	exitcode=${3:-1}
-	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
+	_dia_DIALOG --inputbox "$1" 0 0 "$2" 2>$ANSWER
 	ret=$?
 	ANSWER_STRING=`cat $ANSWER`
 	debug 'UI' "_dia_ask_string: user entered $ANSWER_STRING"
@@ -447,7 +447,7 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
-	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 18 70 2>$ANSWER
+	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 0 0 2>$ANSWER
 }
 
 
