@@ -26,8 +26,8 @@ interactive_configure_system()
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
-		helptext=
-		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="Don't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
+		helptext="Note that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
+		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\nDon't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
 		ask_option $DEFAULT "Configuration" "$helptext" required \
 		"/etc/rc.conf"              "System Config" \
 		"/etc/fstab"                "Filesystem Mountpoints" \
@@ -38,6 +38,7 @@ interactive_configure_system()
 		"/etc/hosts.deny"           "Denied Network Services" \
 		"/etc/hosts.allow"          "Allowed Network Services" \
 		"/etc/locale.gen"           "Glibc Locales" \
+		"/etc/pacman.conf"          "Pacman.conf" \
 		"$var_MIRRORLIST"           "Pacman Mirror List" \
 		"Root-Password"             "Set the root password" \
 		"Done"                      "Return to Main Menu" || return 1
