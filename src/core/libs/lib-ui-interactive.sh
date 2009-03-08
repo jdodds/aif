@@ -440,7 +440,7 @@ interactive_filesystems() {
 	ALLOK=0
 	while [ "$ALLOK" = 0 ]
 	do
-		# Let the user make filesystems and mountpoints
+		# Let the user make filesystems and mountpoints. USERHAPPY becomes 1 when the user hits DONE.
 		USERHAPPY=0
 
 		while [ "$USERHAPPY" = 0 ]
@@ -554,7 +554,14 @@ interactive_filesystems() {
 			str="The following issues have been detected:\n"
 			[ -n "$errors" ] && str="$str\n - Errors: $errors"
 			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
-			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1 # TODO: we should ask the user if he wants to continue, return or abort.
+			[ -n "$errors" ] && str="$str\nIt is highly recommended you go back to fix at least the errors."
+			str="$str\nIf you hit cancel, we will abort here and go back to the menu"
+			if ask_option back "Issues detected. what do you want to do?" "$str" required back "go back to fix the issues" ignore "continue, ignoring the issues"
+			then
+				[ "$ANSWER_OPTION" == ignore ] && ALLOK=1
+			else
+				return 1
+			fi
 		else
 			ALLOK=1
 		fi
