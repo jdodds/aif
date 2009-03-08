@@ -2,15 +2,14 @@ See also the FIXME's and TODO's in the code.
 
 
 CURRENT ISSUES:
-* date/time setting stuff (see ML thread) hangs at select timezone?
-* interactive_autoprepare : size in B instead of MiB
-* grub sedding sometimes does, and sometimes doesn't work. default config remains (eg /dev/hda3)
+* differentiate between framework and installer in src/aif.sh, some things should be in base
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * automatically configure grub for dm_crypt and lvm
+* fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
 * a nice way to be able to "inject" functions/logic without:
   * needing to redefine phases with only 1 entry different (duplicate code is not nice, less maintainable etc)

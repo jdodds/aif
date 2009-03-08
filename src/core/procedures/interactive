@@ -96,7 +96,7 @@ mainmenu()
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \ #TODO: display the "make sure network is okay" in a better way
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
@@ -148,7 +148,7 @@ worker_prepare_disks()
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
 		ask_option $default "Prepare Hard Drive" '' required \
-		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
+		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \ #TODO: inform user (using dialog's --item-help or so) that this uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
 		"2" "Partition Hard Drives" \
 		"3" "Configure block devices, filesystems and mountpoints" \
 		"4" "Rollback last filesystem changes$rollbackstr" \
