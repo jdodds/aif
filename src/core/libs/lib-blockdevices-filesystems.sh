@@ -738,7 +738,6 @@ get_filesystem_program ()
 # $1 blockdevice
 # $2 unit: B, KiB, kB, MiB, MB, GiB or GB.  defaults to B (we follow IEEE 1541-2002 )
 # output will be in $BLOCKDEVICE_SIZE
-# WARNING: hdparm works - by design - only for ide/sata. not scsi et al
 get_blockdevice_size ()
 {
 	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
@@ -754,13 +753,13 @@ get_blockdevice_size ()
 	# - unreliable method: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seemed to work for me.
 	# blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
 	# BLOCKDEVICE_SIZE=$(($blocks/1024))
-	#
+
 	bytes=$((`fdisk -l $1 2>/dev/null | sed -n '2p' | cut -d' ' -f5`))
-	[ $unit = B ]   && BLOCKDEVICE_SIZE=$bytes
-	[ $unit = KiB ] && BLOCKDEVICE_SIZE=$(($bytes/2*10))  # /1024
-	[ $unit = kB ]  && BLOCKDEVICE_SIZE=$(($bytes/10**3)) # /1000
-	[ $unit = MiB ] && BLOCKDEVICE_SIZE=$(($bytes/2*20))  # ...
-	[ $unit = MB ]  && BLOCKDEVICE_SIZE=$(($bytes/10**6))
-	[ $unit = GiB ] && BLOCKDEVICE_SIZE=$(($bytes/2*30))
-	[ $unit = GB ]  && BLOCKDEVICE_SIZE=$(($bytes/10**9))
+	[ $unit = B   ] && BLOCKDEVICE_SIZE=$bytes
+	[ $unit = KiB ] && BLOCKDEVICE_SIZE=$((bytes/2**10)) # /1024
+	[ $unit = kB  ] && BLOCKDEVICE_SIZE=$((bytes/10**3)) # /1000
+	[ $unit = MiB ] && BLOCKDEVICE_SIZE=$((bytes/2**20)) # ...
+	[ $unit = MB  ] && BLOCKDEVICE_SIZE=$((bytes/10**6))
+	[ $unit = GiB ] && BLOCKDEVICE_SIZE=$((bytes/2**30))
+	[ $unit = GB  ] && BLOCKDEVICE_SIZE=$((bytes/10**9))
 }
