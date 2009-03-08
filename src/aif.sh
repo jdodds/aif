@@ -30,9 +30,9 @@ If the procedurename is prefixed with '<modulename>/' it will be loaded from use
 For more info, see the README which you can find in /usr/share/aif/docs\n
 Available procedures:
 ==core==
-`find $LIB_CORE/procedures   -type f             | sed \"s#$LIB_CORE/procedures/##\"`
+`find $LIB_CORE/procedures   -type f             | sed \"s#$LIB_CORE/procedures/##\"           | sort`
 ==user==
-`find $LIB_USER/*/procedures -type f 2>/dev/null | sed \"s#$LIB_USER/\(.*\)/procedures/#\1/#\"`"
+`find $LIB_USER/*/procedures -type f 2>/dev/null | sed \"s#$LIB_USER/\(.*\)/procedures/#\1/#\" | sort`"
 	[ -n "$procedure" ] && msg="$msg\nProcedure ($procedure) specific options:\n$var_ARGS_USAGE"
 
 	echo -e "$msg"
