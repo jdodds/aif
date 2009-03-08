@@ -634,18 +634,19 @@ interactive_runtime_network() {
     INTERFACE=$ANSWER_OPTION
 
 
-    ask_yesno "Do you want to use DHCP?"
-    if [ $? -eq 0 ]; then
+    if ask_yesno "Do you want to use DHCP?"
+    then
         infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
         dhcpcd -k $INTERFACE >$LOG 2>&1
-        sleep 1
-        dhcpcd $INTERFACE >$LOG 2>&1
-        if [ $? -ne 0 ]; then
-            notify "Failed to run dhcpcd.  See $LOG for details."
+        if ! dhcpcd $INTERFACE >$LOG 2>&1
+        then
+            show_warning "Dhcpcd problem" "Failed to run dhcpcd.  See $LOG for details."
             return 1
         fi
-        if [ ! $(ifconfig $INTERFACE | grep 'inet addr:') ]; then
-            notify "DHCP request failed." || return 1
+        if ! ifconfig $INTERFACE | grep -q 'inet addr:'
+	then
+            show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
+            return 1
         fi
         S_DHCP=1
     else
@@ -672,16 +673,20 @@ interactive_runtime_network() {
             esac
         done
         echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
-        ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1 || notify "Failed to setup $INTERFACE interface." || return 1
-        if [ "$GW" != "" ]; then
+        if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
+        then
+        	show_warning "Ifconfig problem" "Failed to setup interface $INTERFACE"
+        	return 1
+        fi
+        if [ -n "$GW" ]; then
             route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
         fi
-        if [ "$PROXY_HTTP" = "" ]; then
+        if [ -z "$PROXY_HTTP" ]; then
             unset http_proxy
         else
             export http_proxy=$PROXY_HTTP
         fi
-        if [ "$PROXY_FTP" = "" ]; then
+        if [ -z "$PROXY_FTP" ]; then
             unset ftp_proxy
         else
             export ftp_proxy=$PROXY_FTP
