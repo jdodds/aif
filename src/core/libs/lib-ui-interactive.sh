@@ -40,10 +40,10 @@ interactive_configure_system()
 		"/etc/locale.gen"           "Glibc Locales" \
 		"$var_MIRRORLIST"           "Pacman Mirror List" \
 		"Root-Password"             "Set the root password" \
-		"Return"        "Return to Main Menu" || FILE="Return"
+		"Done"                      "Return to Main Menu" || return 1
 		FILE=$ANSWER_OPTION
 
-		if [ "$FILE" = "Return" -o -z "$FILE" ]; then       # exit
+		if [ "$FILE" = "Done" ]; then       # exit
 			break
 		elif [ "$FILE" = "Root-Password" ]; then            # non-file
 			while true; do
@@ -56,6 +56,7 @@ interactive_configure_system()
 
 	# temporary backup files are not useful anymore past this point.
 	find "${var_TARGET_DIR}/etc/" -name '*~' -delete &>/dev/null
+	return 0
 }
 
 
