@@ -105,11 +105,17 @@ log ()
 }
 
 
-# $1 = category. one of MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
+# $1 = one or more categories (separated by spaces) from: MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
+#      You should always at least specify where you are (main, procedure or the name of the lib) and optionally further specification: eg in a ui function that works with pacman.
+#      This is very useful in ui-interactive where we always work with something else.
 # $2 = string to log
 debug ()
 {
-        [ "$1" == 'MAIN' -o "$1" == 'PROCEDURE' -o "$1" == 'UI' -o "$1" == 'UI-INTERACTIVE' -o "$1" == 'FS' -o "$1" == 'MISC' -o "$1" == 'NETWORK' -o "$1" == 'PACMAN' -o "$1" == 'SOFTWARE' ] || die_error "debug \$1 ($1) is not a valid debug category"
+	valid_cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
+	for cat in $1
+	do
+		check_is_in $cat "${valid_cats[@]}" || die_error "debug \$1 contains a value ($cat) which is not a valid debug category"
+	done
         [ -n "$2" ] || die_error "debug \$2 cannot be empty"
 
         mkdir -p $LOG_DIR || die_error "Cannot create log directory"
