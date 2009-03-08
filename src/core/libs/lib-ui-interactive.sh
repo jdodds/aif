@@ -53,6 +53,17 @@ interactive_configure_system()
 		else                                                #regular file
 			$EDITOR ${var_TARGET_DIR}${FILE}
 		fi
+
+		# if user edited /etc/rc.conf, add the hostname to /etc/hosts if it's not already there.
+		# note that if the user edits rc.conf several times to change the hostname more then once, we will add them all to /etc/hosts.  this is not perfect, but to avoid this, too much code would be required (feel free to prove me wrong :))
+		if [ "$FILE" = "/etc/rc.conf" ]
+		then
+			HOSTNAME=`sed -n '/^HOSTNAME/s/HOSTNAME=//p' ${var_TARGET_DIR}${FILE} | sed 's/"//'`
+			if ! grep '127\.0\.0\.1' ${var_TARGET_DIR}/etc/hosts | grep -q "$HOSTNAME"
+			then
+				sed -i "s/127\.0\.0\.1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
+			fi
+		fi
 	done
 
 	# temporary backup files are not useful anymore past this point.
