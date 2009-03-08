@@ -54,6 +54,8 @@ interactive_configure_system()
 		fi
 	done
 
+	# temporary backup files are not useful anymore past this point.
+	find "${var_TARGET_DIR}/etc/" -name '*~' -delete &>/dev/null
 }
 
 
