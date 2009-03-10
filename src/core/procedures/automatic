@@ -128,6 +128,7 @@ worker_set_clock ()
 
 worker_auto_network () {
 	# temporary override because i need to implement this
+	true
 }
 
 
