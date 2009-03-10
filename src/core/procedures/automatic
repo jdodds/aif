@@ -21,6 +21,7 @@ depend_procedure core base
 var_OPTS_STRING="c:"
 var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used"
 var_AUTOMATIC_PROFILE=""
+# TODO: if the user does aif -p automatic -c, then $1 is ":-" ??? if you do -c <something> then it's ok.
 process_args ()
 {
 	if [ "$1" = '-c' ]
@@ -47,8 +48,8 @@ worker_configure ()
 	source $var_AUTOMATIC_PROFILE   || die_error "Could not source config $var_AUTOMATIC_PROFILE"
 	var_RUNTIME_REPOSITORIES=$AUTOMATIC_RUNTIME_REPOSITORIES
 	var_RUNTIME_PACKAGES=$AUTOMATIC_RUNTIME_PACKAGES
-	[ - z "$var_PARTITIONS" ] && die_error "You did not specify a partition scheme"
-	[ - z "$var_BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
+	[ -z "$var_PARTITIONS" ] && die_error "You did not specify a partition scheme"
+	[ -z "$var_BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
 }
 
 worker_select_source ()
