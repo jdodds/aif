@@ -1,24 +1,32 @@
 #!/bin/bash
-# This procedure is EARLY in development!!
+# This procedure is in development!!
 # This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
+# check /usr/share/aif/examples for some example config files.
+# This procedure can easily replace the old quickinst script if you look at the "generic install" config file
+# Look at the base procedure to see the phases and which workers they'll execute.
+# It should be:
+# phase_preparation=(configure intro sysprep select_source runtime_network runtime_repositories runtime_packages)
+# phase_basics=(set_clock prepare_disks)
+# phase_system=(package_listTODO install_packages auto_fstab auto_networkTODO auto_locale configure_system mkinitcpio locales install_bootloader)
+# phase_finish=(msg_report)
 
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
+# TODO: for worker_configure_system, we probably want the user to specify hostname, root pass etc.
+
+# for a list of recognized variables, see examples/generic-install-on-sda
 
 depend_procedure core base
 
 var_OPTS_STRING="c:"
-var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used (optional)" #if we need some settings that we're missing, we'll ask for them
-
-phase_preparation+=(runtime_settings)
-phase_preparation+=(msg_automatic) # this can happen probably a bit earlier..
-phase_preparation+=(fetch_configs)
+var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used"
+var_AUTOMATIC_PROFILE=""
 process_args ()
 {
 	if [ "$1" = '-c' ]
 	then
 		[ -z "$2" ] && die_error "You must specify a config"
-		source $2 || die_error "Could not source config $2"
+		var_AUTOMATIC_PROFILE=$2
 	else
 		usage
 		exit 5
@@ -35,36 +43,31 @@ worker_intro ()
 worker_configure ()
 {
 	var_UI_TYPE=${arg_ui_type:-cli}
+	[ -z "$var_AUTOMATIC_PROFILE" ] && die_error "You must specify a config file to use this procedure"
+	source $var_AUTOMATIC_PROFILE   || die_error "Could not source config $var_AUTOMATIC_PROFILE"
+	var_RUNTIME_REPOSITORIES=$AUTOMATIC_RUNTIME_REPOSITORIES
+	var_RUNTIME_PACKAGES=$AUTOMATIC_RUNTIME_PACKAGES
+	[ - z "$var_PARTITIONS" ] && die_error "You did not specify a partition scheme"
+	[ - z "$var_BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
 }
 
-
-# not used
-worker_msg_manual ()
+worker_select_source ()
 {
-	notify "A few manual things need to happen first..."
+        var_PKG_SOURCE_TYPE=${AUTOMATIC_SOURCE:-cd}
+        var_FILE_URL=${AUTOMATIC_FILE_URL:-file:///src/core/pkg}
+        var_SYNC_URL=${AUTOMATIC_SYNC_URL:-}
 }
-
-
-worker_msg_automatic ()
-{
-	notify "**** From now on. everything will be automatic. Enjoy the show!" # not true: you need pass for dm_crypt
-}
-
-
-worker_fetch_configs ()
-{
-	true
-}
-
 
 worker_runtime_network ()
 {
-	if ask_yesno "Do you want to (re)-configure your networking?"
-	then
-		interactive_runtime_network
-	else
-		infofy "Ok. skipping network config"
-	fi
+	true # for now. we assume the user has taken care of this himself already. doing this interactively wouldn't be a good default anyway.
+	# maybe check if network works, if not, try dhcp. let user override by using a static config in his config file
+	#if ask_yesno "Do you want to (re)-configure your networking?"
+	#then
+	#	interactive_runtime_network
+	#else
+	#	infofy "Ok. skipping network config"
+	#fi
 }
 
 
@@ -91,6 +94,8 @@ worker_runtime_settings ()
 
 worker_prepare_disks ()
 {
+	echo "$var_PARTITIONS" > $TMP_PARTITIONS
+	echo "$var_BLOCKDATA" > $TMP_BLOCKDEVICES
 	process_disks       || die_error "Could not process_disks"
 	if ! process_filesystems
 	then
@@ -116,15 +121,19 @@ worker_install_packages ()
 
 worker_set_clock ()
 {
-	#timezone="Europe/Brussels"
-	#Not doing anything. hwclock is set already and configs are coming from svn anyway..
+	#TODO implement this
 	true
+}
+
+
+worker_auto_network () {
+	# temporary override because i need to implement this
 }
 
 
 worker_install_bootloader ()
 {
-	install-grub /dev/sda
+	install-grub /dev/sda #TODO: this can be more flexible..
 }
 
 

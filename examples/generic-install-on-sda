@@ -1,0 +1,17 @@
+# these variables are defaults, but it doesn't hurt to define them.
+# TODO: put something here (preferably the group) to say which packages we want)
+AUTOMATIC_SOURCE=cd
+AUTOMATIC_FILE_URL=file:///src/core/pkg
+AUTOMATIC_SYNC_URL=
+
+AUTOMATIC_RUNTIME_REPOSITORIES=
+AUTOMATIC_RUNTIME_PACKAGES=
+worker_intro () {
+	infofy "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	sleep 10
+}
+
+var_PARTITIONS='/dev/sda 100:ext2:+ 512:swap *:ext4'
+var_BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label ext4;yes;/;target;no_opts;no_label;no_params'

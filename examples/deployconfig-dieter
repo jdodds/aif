@@ -1,6 +1,9 @@
 #!/bin/bash
 # An example config for the deployment procedure
 
+# Use var_* for "standard" variables recognized by the automatic procedure. these should work for everyone.
+# use all other variable names for your own stuff. (eg i use them to define some things needed to pull my stuff from svn.)
+
 # TODO: install ruby-gems too
 # TODO * dieter/automatic: wait for yaourt --config fix ( http://forums.archlinux.fr/post23171.html#23171 )
 # TODO:* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
@@ -15,16 +18,29 @@ SVN_USERNAME=dieter
 SVN_PASSWORD=
 SVN_BASE=https://192.168.1.2/svn/repos
 
+var_PARTITIONS='/dev/sda 100:ext2:+ 2048:swap *:xfs'
+var_BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c_aes-xts-plain_-y_-s_512
+/dev/mapper/sda3crypt dm_crypt no_label lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/mapper/sda3crypt+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;cryptpool;/dev/mapper/sda3crypt
+/dev/mapper/cryptpool lvm-vg cryptpool lvm-lv;yes;no_mountpoint;target;no_opts;cryptroot;5G|lvm-lv;yes;no_mountpoint;target;no_opts;crypthome;5G
+/dev/mapper/cryptpool-cryptroot lvm-lv no_label xfs;yes;/;target;no_opts;no_label;no_params
+/dev/mapper/cryptpool-crypthome lvm-lv no_label xfs;yes;/home;target;no_opts;no_label;no_params'
+
+
+
 phase_preparation=(accept_ssl_cert "${phase_preparation[@]}") # make accept_ssl_cert the very first thing. it needs to go before fetch_configs and it's not easy to put it somewhere in the middle, so...
 phase_system+=(configure_home)
 
 
+# Deprecated. I try to keep everything in 1 config file now. that's cooler.
+#worker_fetch_configs ()
+#{
+#	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/aif-blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/aif-blockdata"
+#	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/aif-partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/aif-partitions"
+#}
 
-worker_fetch_configs ()
-{
-	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata  $RUNTIME_DIR/aif-blockdata  || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.blockdata to $RUNTIME_DIR/aif-blockdata"
-	$SVN export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions $RUNTIME_DIR/aif-partitions || die_error "Could not svn export $SVN_BASE/ddm-configs/$DEPLOY_CLASS/trunk/disks/.partitions to $RUNTIME_DIR/aif-partitions"
-}
 
 
 worker_package_list ()
@@ -85,3 +101,30 @@ worker_configure_home ()
 #	PACMAN=$PACMAN_BACKUP
 #	PACMAN_TARGET=$PACMAN_TARGET_BACKUP
 #}
+
+
+# Check if we have all needed settings loaded from the profile
+post_worker_configure ()
+{
+        if check_is_in svn $var_RUNTIME_PACKAGES
+        then
+                [ -z "$SVN_USERNAME" ] && ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
+                [ -z "$SVN_PASSWORD" ] && ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
+                [ -z "$SVN_BASE"     ] && ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING   
+                [ -z "$DEPLOY_CLASS" ] && ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
+                SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"                                                              
+        elif check_is_in moo $var_RUNTIME_PACKAGES
+        then
+                # Maybe more stuff later
+                true                    
+        fi
+        [ -z "$HOSTNAME" ] && ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
+        
+        return 0
+}
+
+worker_set_clock ()
+{
+        #Not doing anything. hwclock is set already, configs are coming from svn anyway and we'll use ntp.
+        true
+}
