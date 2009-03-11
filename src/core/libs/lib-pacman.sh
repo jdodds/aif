@@ -145,7 +145,7 @@ list_package_groups ()
 # TODO: check the validity of the specified names in $2
 list_packages ()
 {
-	[ "$1" = repo -o "$2" = group ] || die_error "list_packages \$1 must be repo or group. not $1!"
+	[ "$1" = repo -o "$1" = group ] || die_error "list_packages \$1 must be repo or group. not $1!"
 	[ "$1" = repo  ] && $PACMAN_TARGET -Sl $2
 	[ "$1" = group ] && $PACMAN_TARGET -Sg $2
 }
