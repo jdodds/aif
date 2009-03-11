@@ -597,20 +597,22 @@ interactive_filesystems() {
 # returns: 1 on error
 interactive_select_packages() {
 
-    notify "Package selection is split into two stages.  First you will select package categories that contain packages you may be interested in.  Then you will be presented with a full list of packages for each category, allowing you to fine-tune.\n\n"
+	repos=`list_pacman_repos target`
+    notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
+    Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  One you have your Arch system up and running, you have access to more repositories and packages."
 
     # set up our install location if necessary and sync up
     # so we can get package lists
     target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
     # show group listing for group selection, base is ON by default, all others are OFF
-    local _catlist="base ^ ON"
+    local _grouplist="base ^ ON"
     for i in $(list_package_groups | sed "s/^base$/ /g"); do
-        _catlist="${_catlist} ${i} - OFF"
+        _grouplist="${_grouplist} ${i} - OFF"
     done
 
-    ask_checklist "Select Package Categories\nDO NOT deselect BASE unless you know what you're doing!" $_catlist || return 1
-    _catlist=$ANSWER_CHECKLIST # _catlist now contains all categories (the tags from the dialog checklist)
+    ask_checklist "Select Package groups\nDO NOT deselect BASE unless you know what you're doing!" $_grouplist || return 1
+    _grouplist=$ANSWER_CHECKLIST # _grouplist now contains all groups (the tags from the dialog checklist)
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
@@ -618,17 +620,17 @@ interactive_select_packages() {
     local _pkglist=''
 
     which_group $_pkgtmp
-    while read pkgname pkgcat; do
+    while read pkgname pkggroup; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
-        if [ "${_catlist/"\"$pkgcat\""/XXXX}" != "${_catlist}" ]; then
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkgcat} ON")"
+        if [ "${_grouplist/"\"$pkggroup\""/XXXX}" != "${_grouplist}" ]; then
+            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} ON")"
         else
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkgcat} OFF")"
+            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} OFF")"
         fi
     done <<< "$PACKAGE_GROUPS"
 
-    # sort by category
+    # sort by group
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
