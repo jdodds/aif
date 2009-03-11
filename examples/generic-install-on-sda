@@ -6,6 +6,11 @@ AUTOMATIC_SYNC_URL=
 
 AUTOMATIC_RUNTIME_REPOSITORIES=
 AUTOMATIC_RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base #all packages in this group will be installed
+TARGET_PACKAGES=openssh # you can also specify separate packages
+
 worker_intro () {
 	infofy "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
 	sleep 10
