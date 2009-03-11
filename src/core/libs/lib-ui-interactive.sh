@@ -605,7 +605,7 @@ interactive_select_packages() {
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _catlist="base ^ ON"
-    for i in $($PACMAN_TARGET -Sg | sed "s/^base$/ /g"); do
+    for i in $(list_package_groups | sed "s/^base$/ /g"); do
         _catlist="${_catlist} ${i} - OFF"
     done
 
@@ -614,10 +614,10 @@ interactive_select_packages() {
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
-    local _pkgtmp="$($PACMAN_TARGET -Sl core | awk '{print $2}')" # all packages in core repository
+    local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository
     local _pkglist=''
 
-    $PACMAN_TARGET -Si $_pkgtmp | awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }' > $ANSWER
+    which_group $_pkgtmp
     while read pkgname pkgcat; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
@@ -626,7 +626,7 @@ interactive_select_packages() {
         else
             _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkgcat} OFF")"
         fi
-    done < $ANSWER
+    done <<< "$PACKAGE_GROUPS"
 
     # sort by category
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"

@@ -132,3 +132,30 @@ pacman_what_is_this_for ()
 	! [ -d /var/lib/pacman ] && mkdir -p /var/lib/pacman
 }
 
+list_package_groups ()
+{
+	$PACMAN_TARGET -Sg
+}
+
+
+# List the packages in one or more repos or groups. output is one or more lines, each line being like this:
+# <repo/group name> packagename [version, if $1=repo]
+# $1 repo or group
+# $2 one or more repo or group names
+# TODO: check the validity of the specified names in $2
+list_packages ()
+{
+	[ "$1" = repo -o "$2" = group ] || die_error "list_packages \$1 must be repo or group. not $1!"
+	[ "$1" = repo  ] && $PACMAN_TARGET -Sl $2
+	[ "$1" = group ] && $PACMAN_TARGET -Sg $2
+}
+
+# find out the group to which one or more packages belong
+# $1 packages separated by spaces
+# output format: multiple lines, each line like:
+# <pkgname> <group>
+# TODO: check $1
+which_group ()
+{
+	PACKAGE_GROUPS=`$PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
+}
