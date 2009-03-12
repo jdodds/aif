@@ -148,8 +148,9 @@ worker_prepare_disks()
 		default=no
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
+		#TODO: inform user (using dialog's --item-help or so) that autoprepare uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
 		ask_option $default "Prepare Hard Drive" '' required \
-		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \ #TODO: inform user (using dialog's --item-help or so) that this uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
+		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
 		"2" "Partition Hard Drives" \
 		"3" "Configure block devices, filesystems and mountpoints" \
 		"4" "Rollback last filesystem changes$rollbackstr" \
