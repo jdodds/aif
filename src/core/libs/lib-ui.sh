@@ -7,7 +7,7 @@
 # TODO: figure out something to make dia windows always big enough, yet fit nicely in the terminal
 
 
-# Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
+# Taken from setup.  we store dialog output in a file.  TODO: a variable would be cleaner
 ANSWER=$RUNTIME_DIR/aif-dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/aif-dia-successive-items
