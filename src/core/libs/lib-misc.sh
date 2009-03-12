@@ -3,6 +3,7 @@
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile
 # returncode is stored in $<identifier>_exitcode
+# pid of the backgrounded wrapper process is stored in BACKGROUND_PID (this is _not_ the pid of $2)
 # $1 identifier -> WARNING: do never ever use -'s or other fancy characters here. only numbers, letters and _ please. (because $<identifier>_exitcode must be a valid bash variable!)
 # $2 command (will be eval'ed)
 # $3 logfile
@@ -25,6 +26,7 @@ run_background ()
 		echo >> $3   
 		rm -f $RUNTIME_DIR/aif-$1-running
 	) &
+	BACKGROUND_PID=$!
 
 	sleep 2
 }
@@ -38,11 +40,10 @@ wait_for ()
 
 	while [ -f $RUNTIME_DIR/aif-$1-running ]
 	do
-		#TODO: follow_progress dialog mode = nonblocking (so check and sleep is good), cli mode (tail -f )= blocking? (so check is probably not needed as it will be done)
 		sleep 1
 	done
 
-	kill $(cat $ANSWER) #TODO: this may not work when mode = cli
+	kill $(cat $ANSWER) #TODO: this may not work when mode = cli (<--i wrote this before i used tail -f --pid. i don't remember what i meant with it). TODO: huh?? ANSWER?
 }
 
 

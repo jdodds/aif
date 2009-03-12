@@ -262,6 +262,7 @@ ask_yesno ()
 # follow the progress of something by showing it's log, updating real-time
 # $1 title
 # $2 logfile
+# $3 pid to monitor. if process stopped, stop following (only used in cli mode)
 follow_progress ()
 {
 	[ -z "$1" ] && die_error "follow_progress needs a title!"
@@ -639,8 +640,8 @@ _cli_follow_progress ()
 	title=$1
 	logfile=$2
 	echo "Title: $1"
-	tail -f $2
-	#TODO: don't block anymore when it's done
+	[ -n "$3" ] && tail -f $2 --pid=$3
+	[ -z "$3" ] && tail -f $2
 }
 
 set_keymap ()
