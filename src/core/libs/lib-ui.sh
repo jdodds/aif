@@ -267,8 +267,8 @@ follow_progress ()
 {
 	[ -z "$1" ] && die_error "follow_progress needs a title!"
 	[ -z "$2" ] && die_error "follow_progress needs a logfile to follow!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress "$1" "$2" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$1" "$2" ; return $? ; }
+	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$@" ; return $? ; }
 }
 
 
