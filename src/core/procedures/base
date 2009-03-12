@@ -166,7 +166,7 @@ worker_auto_network ()
 
 worker_auto_locale ()
 {
-	target_configure_inital_locale
+	target_configure_initial_locale
 }
 
 

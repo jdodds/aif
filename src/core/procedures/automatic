@@ -7,7 +7,7 @@
 # It should be:
 # phase_preparation=(configure intro sysprep select_source runtime_network runtime_repositories runtime_packages)
 # phase_basics=(set_clock prepare_disks)
-# phase_system=(package_listTODO install_packages auto_fstab auto_networkTODO auto_locale configure_system mkinitcpio locales install_bootloader)
+# phase_system=(package_listTODO install_packages auto_fstab auto_networkTODO auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
 # phase_finish=(msg_report)
 
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place

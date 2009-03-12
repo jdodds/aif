@@ -56,7 +56,7 @@ installpkg() {
 
 # auto_locale(). taken from setup
 # enable glibc locales from rc.conf and build initial locale DB
-target_configure_inital_locale() 
+target_configure_initial_locale() 
 {
     for i in $(grep "^LOCALE" ${var_TARGET_DIR}/etc/rc.conf | sed -e 's/.*="//g' -e's/\..*//g'); do
         sed -i -e "s/^#$i/$i/g" ${var_TARGET_DIR}/etc/locale.gen
