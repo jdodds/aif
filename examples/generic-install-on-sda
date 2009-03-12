@@ -1,14 +1,15 @@
 # these variables are defaults, but it doesn't hurt to define them.
-# TODO: put something here (preferably the group) to say which packages we want)
+
 AUTOMATIC_SOURCE=cd
 AUTOMATIC_FILE_URL=file:///src/core/pkg
 AUTOMATIC_SYNC_URL=
 
+# Do you want to have additional pacman repositories or packages available at runtime (during installation)?
 AUTOMATIC_RUNTIME_REPOSITORIES=
 AUTOMATIC_RUNTIME_PACKAGES=
 
 # packages to install
-TARGET_GROUPS=base #all packages in this group will be installed
+TARGET_GROUPS=base      #all packages in this group will be installed
 TARGET_PACKAGES=openssh # you can also specify separate packages
 
 worker_intro () {
