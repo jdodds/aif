@@ -12,10 +12,16 @@ ANSWER=$RUNTIME_DIR/aif-dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
 DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/aif-dia-successive-items
 
-#default keymap and consolefont configured on install CD. can be overridden
-source /etc/rc.conf
-var_KEYMAP=$KEYMAP
-var_CONSOLEFONT=$CONSOLEFONT
+
+# get keymap/font (maybe configured by aif allready in another process or even in another shell)
+# otherwise, take default keymap and consolefont as configured in /etc/rc.conf. can be overridden
+# Note that the vars in /etc/rc.conf can also be empty!
+[ -e $RUNTIME_DIR/aif-keymap      ] && var_KEYMAP=`     cat $RUNTIME_DIR/aif-keymap`
+[ -e $RUNTIME_DIR/aif-consolefont ] && var_CONSOLEFONT=`cat $RUNTIME_DIR/aif-consolefont`
+[ -z "$var_KEYMAP"      ] && source /etc/rc.conf && var_KEYMAP=$KEYMAP
+[ -z "$var_CONSOLEFONT" ] && source /etc/rc.conf && var_CONSOLEFONT=$CONSOLEFONT
+
+
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
@@ -645,11 +651,12 @@ set_keymap ()
 	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
 		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
 	done
-	ask_option "$var_KEYMAP" "Select A Keymap" '' optional $KEYMAPS
+	ask_option "${var_KEYMAP:-no}" "Select A Keymap" '' optional $KEYMAPS
 	if [ -n "$ANSWER_OPTION" ]
 	then
 		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
 		var_KEYMAP=$ANSWER_OPTION
+		echo "$var_KEYMAP" > $RUNTIME_DIR/aif-keymap
 	fi
 
 	FONTS=
@@ -669,5 +676,6 @@ set_keymap ()
 				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/tty$i
 			fi
 		done
+		echo "$var_CONSOLEFONT" > $RUNTIME_DIR/aif-consolefont
 	fi
 }

@@ -78,7 +78,8 @@ mainmenu()
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
 		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
-		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=6 ;;
+		                                                                                                                  execute worker auto_locale  ; \
+		                                                                                                                  execute worker auto_keymap_font; } && NEXTITEM=6 ;;
         "6")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;

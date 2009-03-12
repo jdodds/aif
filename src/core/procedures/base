@@ -31,6 +31,7 @@ phase_system=(\
 	auto_fstab \
 	auto_network \
 	auto_locale \
+	auto_keymap_font \
 	configure_system \
 	mkinitcpio \
 	locales \
@@ -168,6 +169,11 @@ worker_auto_locale ()
 	target_configure_inital_locale
 }
 
+
+worker_auto_keymap_font ()
+{
+	target_configure_initial_keymap_font
+}
 
 worker_configure_system ()
 {
