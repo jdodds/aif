@@ -1,5 +1,4 @@
 #!/bin/bash
-# This procedure is in development!!
 # This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
 # check /usr/share/aif/examples for some example config files.
 # This procedure can easily replace the old quickinst script if you look at the "generic install" config file
@@ -7,13 +6,13 @@
 # It should be:
 # phase_preparation=(configure intro sysprep select_source runtime_network runtime_repositories runtime_packages)
 # phase_basics=(set_clock prepare_disks)
-# phase_system=(package_listTODO install_packages auto_fstab auto_networkTODO auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
+# phase_system=(package_list install_packages auto_fstab auto_networkTODO auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
 # phase_finish=(msg_report)
 
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
 # TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
 # TODO: for worker_configure_system, we probably want the user to specify hostname, root pass etc.
-
+# TODO: implement setting hostname, keymap, consolefont, network settings
 # for a list of recognized variables, see examples/generic-install-on-sda
 
 depend_procedure core base
@@ -37,7 +36,7 @@ process_args ()
 
 worker_intro ()
 {
-	notify "Automatic procedure running..."
+	notify "Automatic procedure running profile $var_AUTOMATIC_PROFILE ..."
 }
 
 
@@ -46,17 +45,23 @@ worker_configure ()
 	var_UI_TYPE=${arg_ui_type:-cli}
 	[ -z "$var_AUTOMATIC_PROFILE" ] && die_error "You must specify a config file to use this procedure"
 	source $var_AUTOMATIC_PROFILE   || die_error "Could not source config $var_AUTOMATIC_PROFILE"
-	var_RUNTIME_REPOSITORIES=$AUTOMATIC_RUNTIME_REPOSITORIES
-	var_RUNTIME_PACKAGES=$AUTOMATIC_RUNTIME_PACKAGES
-	[ -z "$var_PARTITIONS" ] && die_error "You did not specify a partition scheme"
-	[ -z "$var_BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
+	# Check mandatory options
+	[ -z "$PARTITIONS" ] && die_error "You did not specify a partition scheme"
+	[ -z "$BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
+	[ -z "$GRUB_DEVICE" ] && die_error "You did not specify a grub device"
+	# initialize internal variables based on variables set by the user (some of the vars are handled in other workers):
+	var_RUNTIME_REPOSITORIES=$RUNTIME_REPOSITORIES
+	var_RUNTIME_PACKAGES=$RUNTIME_PACKAGES
+	var_GRUB_DEVICE=$GRUB_DEVICE
+	var_PARTITIONS=$PARTITIONS
+	var_BLOCKDATA=$BLOCKDATA
 }
 
 worker_select_source ()
 {
-        var_PKG_SOURCE_TYPE=${AUTOMATIC_SOURCE:-cd}
-        var_FILE_URL=${AUTOMATIC_FILE_URL:-file:///src/core/pkg}
-        var_SYNC_URL=${AUTOMATIC_SYNC_URL:-}
+        var_PKG_SOURCE_TYPE=${SOURCE:-cd}
+        var_FILE_URL=${FILE_URL:-file:///src/core/pkg}
+        var_SYNC_URL=${SYNC_URL:-}
 }
 
 worker_runtime_network ()
@@ -69,27 +74,6 @@ worker_runtime_network ()
 	#else
 	#	infofy "Ok. skipping network config"
 	#fi
-}
-
-
-# Check if we have all needed settings loaded from the profile
-worker_runtime_settings ()
-{
-	if check_is_in svn $var_RUNTIME_PACKAGES
-	then
-		[ -z "$SVN_USERNAME" ] && ask_string "Please enter your svn username" && SVN_USERNAME=$ANSWER_STRING
-		[ -z "$SVN_PASSWORD" ] && ask_password svn #TODO: if user entered incorrect password, the install process will just fail..
-		[ -z "$SVN_BASE"     ] && ask_string "What's the base path of your svn repo? (no ending /) " && SVN_BASE=$ANSWER_STRING
-		[ -z "$DEPLOY_CLASS" ] && ask_string "Which hostclass are you installing? (optional)" '' 0 && DEPLOY_CLASS=$ANSWER_STRING
-		SVN="svn --username $SVN_USERNAME --password $SVN_PASSWORD"
-	elif check_is_in moo $var_RUNTIME_PACKAGES
-	then
-		# Maybe more stuff later
-		true
-	fi
-	[ -z "$HOSTNAME" ] && ask_string "Hostname of target system?" && HOSTNAME=$ANSWER_STRING
-
-	return 0
 }
 
 
@@ -111,11 +95,17 @@ worker_prepare_disks ()
 	true	
 }
 
+worker_package_list ()
+{
+	var_TARGET_PACKAGES=$TARGET_PACKAGES
+	var_TARGET_GROUPS=$TARGET_GROUPS
+	[ -z "$var_TARGET_PACKAGES" -a -z "$var_TARGET_GROUPS" ] && var_TARGET_GROUPS=base
+}
+
 
 worker_install_packages ()
 {
         target_prepare_pacman core extra community #TODO: it would be better if this was a separate worker, i think
-        [ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
         installpkg
 }
 
@@ -135,12 +125,5 @@ worker_auto_network () {
 
 worker_install_bootloader ()
 {
-	install-grub /dev/sda #TODO: this can be more flexible..
+	grub_install $var_GRUB_DEVICE --root-directory=/mnt
 }
-
-
-worker_runtime_yaourt ()
-{
-	_yaourt_replace_pacman
-}
-

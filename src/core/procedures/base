@@ -135,18 +135,16 @@ worker_prepare_disks ()
 }
 
 
-# Put the list of packages to be installed in $TARGET_PACKAGES
+# Put the list of packages to be installed in $var_TARGET_PACKAGES and $var_TARGET_GROUPS
 worker_package_list ()
 {
-	#TODO: sensible list of packages. maybe just 'base'
-	true
+	var_TARGET_GROUPS=base
 }
 
 
 worker_install_packages ()
 {
 	target_prepare_pacman core #TODO: it would be better if this was a separate worker, i think
-	[ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
 	installpkg
 }
 

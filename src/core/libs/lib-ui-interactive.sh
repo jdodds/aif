@@ -634,7 +634,7 @@ interactive_select_packages() {
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
-	TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
+	var_TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
     return 0
 }
 
