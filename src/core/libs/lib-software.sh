@@ -11,7 +11,7 @@ run_mkinitcpio()
 
 	run_background mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" $TMP_MKINITCPIO_LOG
 	follow_progress "Rebuilding initcpio images ..." $TMP_MKINITCPIO_LOG $BACKGROUND_PID
-	wait_for mkinitcpio
+	wait_for mkinitcpio $FOLLOW_PID
 
 	target_special_fs off
 
@@ -33,7 +33,7 @@ installpkg() {
 	run_background pacman_installpkg "$PACMAN_TARGET --noconfirm -S $ALL_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
 	follow_progress " Installing... Please Wait " $TMP_PACMAN_LOG $BACKGROUND_PID
 
-	wait_for pacman_installpkg
+	wait_for pacman_installpkg $FOLLOW_PID
         
 
 	local _result=''

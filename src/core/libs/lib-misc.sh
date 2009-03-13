@@ -34,6 +34,7 @@ run_background ()
 
 # wait until a process is done
 # $1 identifier. WARNING! see above
+# $2 pid of a process to kill when done (optional). useful for dialog --no-kill --tailboxbg's pid.
 wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
@@ -43,7 +44,7 @@ wait_for ()
 		sleep 1
 	done
 
-	kill $(cat $ANSWER) #TODO: this may not work when mode = cli (<--i wrote this before i used tail -f --pid. i don't remember what i meant with it). TODO: huh?? ANSWER?
+	[ -n "$2" ] && kill $2
 }
 
 

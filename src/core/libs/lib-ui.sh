@@ -460,7 +460,7 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
-	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 0 0 2>$ANSWER
+	FOLLOW_PID=`_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null`
 }
 
 
