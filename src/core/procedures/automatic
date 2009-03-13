@@ -125,5 +125,5 @@ worker_auto_network () {
 
 worker_install_bootloader ()
 {
-	grub_install $var_GRUB_DEVICE --root-directory=/mnt
+	grub-install $var_GRUB_DEVICE --root-directory=/mnt
 }
