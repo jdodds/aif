@@ -619,7 +619,7 @@ interactive_select_packages() {
     local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository
     local _pkglist=''
 
-    which_group $_pkgtmp
+    which_group "$_pkgtmp"
     while read pkgname pkggroup; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
