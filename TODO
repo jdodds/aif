@@ -1,17 +1,24 @@
 See also the FIXME's and TODO's in the code.
 
+SHOWSTOPPERS:
+- datetime refactoring
+- grub menu.lst updating
+- squashfs errors when typing reboot after automatic procedure
+- done_filesystems not being cleaned up on rollback
+
 CURRENT ISSUES:
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
 * differentiate between framework and installer in src/aif.sh, some things should be in base
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
+* lib-software line19: [ $mkinitcpio_exitcode -ne 0 ] unary operator expected when running automatic procedure (prolly otherwise too)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * automatically configure grub for dm_crypt and lvm
 * fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
-* not all packages are shown when automatic procedure invoked pacman to install packages
+* follow_progress in cli mode does not show all output. since we do a tail -f we miss some things, especially because we do a sleep in run_background.  maybe we should run in foreground when in cli mode?
 * a nice way to be able to "inject" functions/logic without:
   * needing to redefine phases with only 1 entry different (duplicate code is not nice, less maintainable etc)
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want
@@ -24,6 +31,7 @@ CURRENT ISSUES:
        -> too. although that's only good for separate functions, not the 'copypaste 90% and add 10% to the same worker scenario'
   -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
 * mirrorlist config doesn't change after selecting mirror
+* show_report does not show workers.
 * 'keep in mind trottled' not on separate screen
 * when you have 2 LV's and you delete one, both are erased from the VG, but there is still the entry for the other one as blockdevice
 * in usage, procedure specific opts points to parent profile when using inheritance
@@ -65,6 +73,7 @@ configuring the system (mkinitcpio.conf). can we optimize this?
 
 
 WORRIES FOR MAYBE NO GOOD REASON
+* dont load libs twice if not needed
 * base procedure is mostly to serve other procedures.  If we need to do much
 work to implement something in the base procedure that we will probably
 never use in other procedures, we're doing something wrong.  If that ever
