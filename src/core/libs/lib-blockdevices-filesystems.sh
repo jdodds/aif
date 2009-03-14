@@ -24,8 +24,8 @@
 
 
 
-modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
-modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
+modprobe -q dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
+modprobe -q aes-i586 || modprobe -q aes-x86-64 || show_warning modprobe 'Could not modprobe aes-i586 or aes-x86-64. no support for disk encryption'
 
 
 
