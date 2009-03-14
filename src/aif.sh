@@ -17,7 +17,8 @@ LOGFILE=$LOG_DIR/aif.log
 source $LIB_CORE/libs/lib-ui.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-ui.sh" >&2 && exit 2)
 # load the lib-flowcontrol. we also need some of it's functions early (like usage()).
 source $LIB_CORE/libs/lib-flowcontrol.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-flowcontrol.sh" >&2 && exit 2)
-
+# lib-misc. we need it early, at least for check_is_in whis is used by the debug function.
+source $LIB_CORE/libs/lib-misc.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-misc.sh" >&2 && exit 2)
 
 # default function to process additional arguments. can be overridden by procedures.
 process_args ()
