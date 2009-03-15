@@ -597,13 +597,12 @@ interactive_filesystems() {
 # returns: 1 on error
 interactive_select_packages() {
 
-	repos=`list_pacman_repos target`
-    notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
-    Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  One you have your Arch system up and running, you have access to more repositories and packages."
+	# set up our install location if necessary and sync up so we can get package lists
+	target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
-    # set up our install location if necessary and sync up
-    # so we can get package lists
-    target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
+	repos=`list_pacman_repos target`
+	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
+Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  One you have your Arch system up and running, you have access to more repositories and packages."
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _grouplist="base ^ ON"
