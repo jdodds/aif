@@ -349,6 +349,19 @@ process_disk ()
 	partition $1 "$2"
 }
 
+# $1 fs_string
+parse_filesystem_string ()
+{
+	fs="$1"
+	fs_type=`       cut -d ';' -f 1 <<< $fs`
+	fs_create=`     cut -d ';' -f 2 <<< $fs`
+	fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+	fs_mount=`      cut -d ';' -f 4 <<< $fs`
+	fs_opts=`       cut -d ';' -f 5 <<< $fs`
+	fs_label=`      cut -d ';' -f 6 <<< $fs`
+	fs_params=`     cut -d ';' -f 7 <<< $fs`
+}
+
 
 generate_filesystem_list ()
 {
@@ -359,13 +372,7 @@ generate_filesystem_list ()
 		then
 			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
 			do
-				fs_type=`       cut -d ';' -f 1 <<< $fs`
-				fs_create=`     cut -d ';' -f 2 <<< $fs`
-				fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
-				fs_mount=`      cut -d ';' -f 4 <<< $fs`
-				fs_opts=`       cut -d ';' -f 5 <<< $fs`
-				fs_label=`      cut -d ';' -f 6 <<< $fs`
-				fs_params=`     cut -d ';' -f 7 <<< $fs`
+				parse_filesystem_string "$fs"
 				echo "$part $part_type $part_label $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params" >> $TMP_FILESYSTEMS
 			done
 		fi
@@ -597,6 +604,7 @@ rollback_filesystems ()
 	fi
 	[ -n "$warnings" ] && infofy "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
 	infofy "Rollback succeeded" disks 1
+	done_filesystems=
 	BLOCK_ROLLBACK_USELESS=1
 	return 0
 }

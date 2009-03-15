@@ -4,7 +4,6 @@ SHOWSTOPPERS:
 - datetime refactoring
 - grub menu.lst updating
 - squashfs errors when typing reboot after automatic procedure
-- done_filesystems not being cleaned up on rollback
 
 CURRENT ISSUES:
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
