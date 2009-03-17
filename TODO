@@ -4,6 +4,13 @@ SHOWSTOPPERS:
 - datetime refactoring
 - grub menu.lst updating
 - squashfs errors when typing reboot after automatic procedure
+- pkg installation hangs at menu 'Package installation will begin now. You can watch the output.." 2 proccessen 'dialog --tailboxbg
+  pacman.log', als ge het 2e killt dan ziet ge de tailbox bg dinges en kunde continue klikken. same for mkinitcpio after configure
+  system. check if this also occurs before my little change.  i probably broke this in one of
+  these commits:
+  http://github.com/Dieterbe/aif/commit/a97a7ec396b082f8315a46bf57875c4088a9bbc8
+  http://github.com/Dieterbe/aif/commit/9b9ad8567f1246322904ee2a603b7e6f7f69c768
+
 
 CURRENT ISSUES:
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
@@ -17,7 +24,6 @@ CURRENT ISSUES:
 * automatically configure grub for dm_crypt and lvm
 * fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
-* follow_progress in cli mode does not show all output. since we do a tail -f we miss some things, especially because we do a sleep in run_background.  maybe we should run in foreground when in cli mode?
 * a nice way to be able to "inject" functions/logic without:
   * needing to redefine phases with only 1 entry different (duplicate code is not nice, less maintainable etc)
   * override worker functions which are 90% copy-pasted because the parent functionality is mostly okay, but not exactly what we want

@@ -9,9 +9,7 @@ run_mkinitcpio()
 {
 	target_special_fs on
 
-	run_background mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" $TMP_MKINITCPIO_LOG
-	follow_progress "Rebuilding initcpio images ..." $TMP_MKINITCPIO_LOG $BACKGROUND_PID
-	wait_for mkinitcpio $FOLLOW_PID
+	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
 
 	target_special_fs off
 
@@ -24,18 +22,17 @@ run_mkinitcpio()
 # installpkg(). taken from setup. modified bigtime
 # performs package installation to the target system
 installpkg() {
-	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
-	target_special_fs on
-
 	ALL_PACKAGES=$var_TARGET_PACKAGES
 	[ -n "$TARGET_GROUPS" ] && ALL_PACKAGES="$ALL_PACKAGES "`list_packages group "$TARGET_GROUPS" | awk '{print $2}'`
 	ALL_PACKAGES=`echo $ALL_PACKAGES`
 	[ -z "$ALL_PACKAGES" ] && die_error "No packages/groups specified to install"
-	run_background pacman_installpkg "$PACMAN_TARGET --noconfirm -S $ALL_PACKAGES" $TMP_PACMAN_LOG #TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
-	follow_progress " Installing... Please Wait " $TMP_PACMAN_LOG $BACKGROUND_PID
 
-	wait_for pacman_installpkg $FOLLOW_PID
-        
+	target_special_fs on
+
+	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
+
+	#TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
+	run_controlled pacman_installpkg "$PACMAN_TARGET --noconfirm -S $ALL_PACKAGES" $TMP_PACMAN_LOG "Installing... Please Wait" 
 
 	local _result=''
 	if [ ${pacman_installpkg_exitcode} -ne 0 ]; then

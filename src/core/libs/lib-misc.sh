@@ -1,6 +1,34 @@
 #!/bin/bash
 
 
+# runs a process and makes sure the output is shown to the user. sets the exit state of the executed program ($<identifier>_exitcode) so the caller can show a concluding message.
+# when in dia mode, we will run the program and a dialog instance in the background (cause that's just how it works with dia)
+# when in cli mode, the program will just run in the foreground. technically it can be run backgrounded but then we need tail -f (cli_follow_progress), and we miss the beginning of the output if it goes too fast, not to mention because of the sleep in run_background
+# $1 identifier
+# $2 command (will be eval'ed)
+# $3 logfile
+# $4 title to show while process is running
+run_controlled ()
+{
+	[ -z "$1" ] && die_error "run_controlled: please specify an identifier to keep track of the command!"
+	[ -z "$2" ] && die_error "run_controlled needs a command to execute!"
+	[ -z "$3" ] && die_error "run_controlled needs a logfile to redirect output to!"
+	[ -z "$4" ] && die_error "run_controlled needs a title to show while your process is running!"
+	
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		run_background $1 "$2" $3
+		follow_progress " $4 " $3 $BACKGROUND_PID # dia mode ignores the pid. cli uses it to know how long it must do tail -f
+		wait_for $1 $FOLLOW_PID
+	else
+		notify "$4"
+		var_exit=${1}_exitcode
+		eval "$2" >>$3 2>&1
+		read $var_exit <<< $?
+	fi
+}
+
+
 # run a process in the background, and log it's stdout and stderr to a specific logfile
 # returncode is stored in $<identifier>_exitcode
 # pid of the backgrounded wrapper process is stored in BACKGROUND_PID (this is _not_ the pid of $2)
