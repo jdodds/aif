@@ -171,9 +171,6 @@ interactive_autoprepare()
 	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
 
-	# we assume a /dev/hdX format (or /dev/sdX)
-	PART_ROOT="${DISC}3"
-
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
 
 	echo "${DISC}1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params"         >  $TMP_BLOCKDEVICES
