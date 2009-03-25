@@ -727,6 +727,7 @@ interactive_install_grub() {
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
     # try to auto-configure GRUB...
+    debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
     if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
     GRUB_OK=0
         grubdev=$(mapdev $PART_ROOT)

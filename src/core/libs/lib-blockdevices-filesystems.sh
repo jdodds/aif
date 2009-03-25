@@ -692,6 +692,7 @@ process_filesystem ()
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
 			if [ "$fs_mount" = target -a $fs_mountpoint = '/' ]
 			then
+				debug FS "setting \$PART_ROOT to $part"
 				PART_ROOT=$part
 			fi
 		fi
