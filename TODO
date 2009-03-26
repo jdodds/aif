@@ -38,6 +38,7 @@ CURRENT ISSUES:
 * mirrorlist config doesn't change after selecting mirror
 * show_report does not show workers.
 * 'keep in mind trottled' not on separate screen
+* look if you can hook into bash so that on any syntax/.. error you can bind the debug/log function
 * when you have 2 LV's and you delete one, both are erased from the VG, but there is still the entry for the other one as blockdevice
 * in usage, procedure specific opts points to parent profile when using inheritance
 * we may have an issue with ftp based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
