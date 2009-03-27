@@ -438,7 +438,7 @@ process_filesystems ()
 	# phase 2: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 
 	infofy "Phase 2: Mounting filesystems" disks
-	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
@@ -449,7 +449,7 @@ process_filesystems ()
 			infofy "Swaponning $part" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		fi
-	done
+	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
 	BLOCK_ROLLBACK_USELESS=0
 	[ $returncode -eq 0 ] && infofy "Done processing filesystems/blockdevices" disks 1 && return 0
@@ -470,7 +470,7 @@ rollback_filesystems ()
 
 	infofy "Phase 1: Umounting all specified mountpoints" disks
 	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
-	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
 		then
@@ -494,7 +494,7 @@ rollback_filesystems ()
 				fi
 			fi
 		fi
-	done
+	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS | tac)
 
 
 	# phase 2: destruct blockdevices listed in $BLOCK_DATA if they would exist already, in the correct order (first lvm LV, then VG, then PV etc)
