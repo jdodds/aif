@@ -1,16 +1,4 @@
-See also the FIXME's and TODO's in the code.
-
-SHOWSTOPPERS:
-- datetime refactoring
-- grub menu.lst updating
-- squashfs errors when typing reboot after automatic procedure
-- pkg installation hangs at menu 'Package installation will begin now. You can watch the output.." 2 proccessen 'dialog --tailboxbg
-  pacman.log', als ge het 2e killt dan ziet ge de tailbox bg dinges en kunde continue klikken. same for mkinitcpio after configure
-  system. check if this also occurs before my little change.  i probably broke this in one of
-  these commits:
-  http://github.com/Dieterbe/aif/commit/a97a7ec396b082f8315a46bf57875c4088a9bbc8
-  http://github.com/Dieterbe/aif/commit/9b9ad8567f1246322904ee2a603b7e6f7f69c768
-
+See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
 CURRENT ISSUES:
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
