@@ -423,7 +423,7 @@ _dia_ask_timezone ()
 {
 	REGIONS=""
 	SET_ZONE=""
-	for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
+	for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
 		REGIONS="$REGIONS $i -"
 	done
 	while [ "$SET_ZONE" != "1" ]; do
@@ -432,7 +432,7 @@ _dia_ask_timezone ()
 		region=ANSWER_OPTION
 		if [ $? -eq 0 ]; then
 			ZONES=""
-			for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
+			for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
 				ZONES="$ZONES $i -"
 			done
 			ask_option no "Please select a timezone" '' required $ZONES
