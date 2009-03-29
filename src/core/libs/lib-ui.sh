@@ -426,10 +426,10 @@ _dia_ask_timezone ()
 	for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
 		REGIONS="$REGIONS $i -"
 	done
-	while [ "$SET_ZONE" != "1" ]; do
+	while true; do
 		SET_REGION=""
 		ask_option no "Please select a region" '' required $REGIONS
-		region=ANSWER_OPTION
+		region=$ANSWER_OPTION
 		if [ $? -eq 0 ]; then
 			ZONES=""
 			for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
