@@ -5,7 +5,7 @@ var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_REPOSITORIES= # array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
 var_RUNTIME_PACKAGES=
-var_PKG_FILE=$RUNTIME_DIR/package-list # not used by default in base/interactive. can be used by custom procedures or profiles for the automatic procedure
+var_PKG_FILE=$RUNTIME_DIR/aif-package-list # not used by default in base/interactive. can be used by custom procedures or profiles for the automatic procedure
 var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
 var_ARCH=`uname -m` #i686 or x86_64. NOTE: this assumes you want to install the same arch as the installation environment you're using. maybe we could decouple those someday..
@@ -31,6 +31,7 @@ phase_system=(\
 	auto_fstab \
 	auto_network \
 	auto_locale \
+	auto_keymap_font \
 	configure_system \
 	mkinitcpio \
 	locales \
@@ -101,7 +102,29 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
-	interactive_set_clock
+        while true; do
+                default=no
+                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                ask_option $default "Date/time configuration" '' required \
+                "1" "Select region and timezone" \
+                "2" "Set time and date" \
+                "3" "Return to Main Menu"
+                [ "$ANSWER_OPTION" = 1 ] && execute worker interactive_timezone && NEXTITEM=2
+                [ "$ANSWER_OPTION" = 2 ] && check_depend worker interactive_timezone && execute worker interactive_time && NEXTITEM=3
+                [ "$ANSWER_OPTION" = 3 ] && break
+        done
+}
+
+
+worker_interactive_timezone ()
+{
+	interactive_timezone
+}
+
+
+worker_interactive_time ()
+{
+	interactive_time
 }
 
 
@@ -112,18 +135,16 @@ worker_prepare_disks ()
 }
 
 
-# Put the list of packages to be installed in $TARGET_PACKAGES
+# Put the list of packages to be installed in $var_TARGET_PACKAGES and $var_TARGET_GROUPS
 worker_package_list ()
 {
-	#TODO: sensible list of packages. maybe just 'base'
-	true
+	var_TARGET_GROUPS=base
 }
 
 
 worker_install_packages ()
 {
 	target_prepare_pacman core #TODO: it would be better if this was a separate worker, i think
-	[ -z "$TARGET_PACKAGES" ] && die_error "No packages listed to be installed!"
 	installpkg
 }
 
@@ -143,9 +164,14 @@ worker_auto_network ()
 
 worker_auto_locale ()
 {
-	target_configure_inital_locale
+	target_configure_initial_locale
 }
 
+
+worker_auto_keymap_font ()
+{
+	target_configure_initial_keymap_font
+}
 
 worker_configure_system ()
 {

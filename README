@@ -15,7 +15,6 @@ AIF is based on the old installer, but the code has been madly refactored, reorg
 
 AIF comes by default with these procedures:
 - interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
-- quickinst:   A port of /arch/quickinst.  Work in progress.  Don't use this yet.
 - automatic:   An automated, deploy-tool-alike procedure.  Work in progress.  Don't use this yet.
 
 AIF may or may not bring much additional value for you when compared with the previous
@@ -34,7 +33,7 @@ installer, it depends on what you want to do:
   works.  It is built for hacking, reusing code, changing the behaviour in
   specific places and making writing custom installers as easy as possible.
 
-Keep in mind that AIF is still in ALPHA phase.
+Keep in mind that AIF is still in beta phase.
 There are some known issues (see the TODO file and various TODO's in the source code) 
 
 If you encounter issues, please report them at the Arch Linux bugtracker under the "Release Engineering" project.
@@ -43,8 +42,7 @@ If you encounter issues, please report them at the Arch Linux bugtracker under t
 You can also get in touch with the release engineers / aif developers on the arg-releng
 mailing list, http://www.archlinux.org/mailman/listinfo/arch-releng
 
-AIF is expected to become the new official installer in the not too distant
-future, so go ahead and try it !
+AIF will soon become the new official installer so go ahead and try it !
 
 
 
@@ -53,7 +51,7 @@ future, so go ahead and try it !
 The goal of this project is 
 1) to make the code of the Arch Linux installer more clean, DRY, modular and maintainable.
 2) providing complete, easily-reusable libraries for disk partitioning, UI, package management, etc
-3) provide some sensible default installation methods (eg interative, quickinst, automatic (prescripted), ..)
+3) provide some sensible default installation methods (eg interative, automatic (prescripted), ..)
 4) allowing power users to easily override certain aspects of the installation procedures
    or creating customized procedures, leveraging the available code.
 
@@ -79,7 +77,6 @@ A module can have 2 directories: libs, and procedures.
 core/base:        basic, little-interactivity installation with some common defaults.  You probably don't
                   want to run this one, although it's useful for other procedures to inherit from.
 core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
-core/quickinst:   mostly DIY.  port of /arch/quickinst
 core/automatic:   automatic installer/deployment tool, can use config files
 
 ** Partial Procedures **

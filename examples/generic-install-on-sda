@@ -1,0 +1,28 @@
+# these variables are optional, here are the defaults (feel free to omit them)
+
+SOURCE=cd
+FILE_URL=file:///src/core/pkg
+SYNC_URL=
+
+# Do you want to have additional pacman repositories or packages available at runtime (during installation)?
+RUNTIME_REPOSITORIES=
+RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base      #all packages in this group will be installed (defaults to base if no group and no packages are specified)
+TARGET_PACKAGES=openssh # you can also specify separate packages (this is empty by default)
+
+# you can optionally also override some functions...
+worker_intro () {
+	infofy "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	sleep 10
+}
+
+
+# These variables are mandatory
+
+GRUB_DEVICE=/dev/sda
+PARTITIONS='/dev/sda 100:ext2:+ 512:swap *:ext4'
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label ext4;yes;/;target;no_opts;no_label;no_params'

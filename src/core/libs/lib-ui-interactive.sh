@@ -26,9 +26,9 @@ interactive_configure_system()
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
-		helptext=
-		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="Don't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
-		ask_option $DEFAULT "Configuration" "$helptext" \
+		helptext="Note that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
+		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\nDon't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
+		ask_option $DEFAULT "Configuration" "$helptext" required \
 		"/etc/rc.conf"              "System Config" \
 		"/etc/fstab"                "Filesystem Mountpoints" \
 		"/etc/mkinitcpio.conf"      "Initramfs Config" \
@@ -38,12 +38,13 @@ interactive_configure_system()
 		"/etc/hosts.deny"           "Denied Network Services" \
 		"/etc/hosts.allow"          "Allowed Network Services" \
 		"/etc/locale.gen"           "Glibc Locales" \
+		"/etc/pacman.conf"          "Pacman.conf" \
 		"$var_MIRRORLIST"           "Pacman Mirror List" \
 		"Root-Password"             "Set the root password" \
-		"Return"        "Return to Main Menu" || FILE="Return"
+		"Done"                      "Return to Main Menu" || return 1
 		FILE=$ANSWER_OPTION
 
-		if [ "$FILE" = "Return" -o -z "$FILE" ]; then       # exit
+		if [ "$FILE" = "Done" ]; then       # exit
 			break
 		elif [ "$FILE" = "Root-Password" ]; then            # non-file
 			while true; do
@@ -52,51 +53,69 @@ interactive_configure_system()
 		else                                                #regular file
 			$EDITOR ${var_TARGET_DIR}${FILE}
 		fi
+
+		# if user edited /etc/rc.conf, add the hostname to /etc/hosts if it's not already there.
+		# note that if the user edits rc.conf several times to change the hostname more then once, we will add them all to /etc/hosts.  this is not perfect, but to avoid this, too much code would be required (feel free to prove me wrong :))
+		if [ "$FILE" = "/etc/rc.conf" ]
+		then
+			HOSTNAME=`sed -n '/^HOSTNAME/s/HOSTNAME=//p' ${var_TARGET_DIR}${FILE} | sed 's/"//g'`
+			if ! grep '127\.0\.0\.1' ${var_TARGET_DIR}/etc/hosts | grep -q "$HOSTNAME"
+			then
+				sed -i "s/127\.0\.0\.1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
+			fi
+		fi
 	done
 
+	# temporary backup files are not useful anymore past this point.
+	find "${var_TARGET_DIR}/etc/" -name '*~' -delete &>/dev/null
+	return 0
 }
 
 
-# set_clock()
-# prompts user to set hardware clock and timezone
-#
-# params: none
-# returns: 1 on failure
-interactive_set_clock()   
-{
-	# utc or local?
-	ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" "UTC" " " "local" " " || return 1
-	HARDWARECLOCK=$ANSWER_OPTION
-
-	# timezone?
+interactive_timezone () {
 	ask_timezone || return 1
-	TIMEZONE=$ANSWER_TIMEZONE
+        TIMEZONE=$ANSWER_TIMEZONE
+        infofy "Setting Timezone to $TIMEZONE"
+        [ -e /etc/localtime ] && rm -f /etc/localtime #why do we do this?? tpowa?
+        dohwclock
+}
 
-	# set system clock from hwclock - stolen from rc.sysinit
-	local HWCLOCK_PARAMS=""
-	if [ "$HARDWARECLOCK" = "UTC" ]
-	then
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
-	else
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
-	fi
+
+
+interactive_time () {
+        # utc or localtime?
+        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" required "UTC" " " "localtime" " " || return 1
+        HARDWARECLOCK=$ANSWER_OPTION
+
+	dohwclock
+
+	if which ntpdate >/dev/null && ask_yesno "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?\n(You need a working internet connection for doing this!)" yes #TODO: only propose if network ok.
+        then
+                if ntpdate pool.ntp.org >/dev/null
+                then
+			notify "Synced clock with internet pool successfully.\n\nYour current time is now:\n$(date)"
+                else
+                        show_warning 'Ntp failure' "An error has occured, time was not changed!"
+                fi
+        fi
+
+	# display and ask to set date/time
+	ask_datetime
+
 
 	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
 	then
 		/bin/rm -f /etc/localtime
 		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 	fi
-	/sbin/hwclock --hctosys $HWCLOCK_PARAMS --noadjfile
-
-	# display and ask to set date/time
-	ask_datetime
 
 	# save the time
 	date -s "$ANSWER_DATETIME" || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
-	/sbin/hwclock --systohc $HWCLOCK_PARAMS --noadjfile
-
-	return 0
+	dohwclock
 }
+
+
+
 
 
 interactive_autoprepare()
@@ -105,7 +124,7 @@ interactive_autoprepare()
 	if [ $(echo $DISCS | wc -w) -gt 1 ]
 	then
 		notify "Available Disks:\n\n$(_getavaildisks)\n"
-		ask_option no 'Harddrive selection' "Select the hard drive to use" $(finddisks 1 _) || return 1
+		ask_option no 'Harddrive selection' "Select the hard drive to use" required $(finddisks 1 _) || return 1
 		DISC=$ANSWER_OPTION
 	else
 		DISC=$DISCS
@@ -113,7 +132,7 @@ interactive_autoprepare()
 
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
-	get_blockdevice_size $DISC SI
+	get_blockdevice_size $DISC MiB
 	FSOPTS=
 	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
 	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
@@ -123,12 +142,12 @@ interactive_autoprepare()
 	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
 
-	ask_number "Enter the size (MB) of your /boot partition.  Recommended size: 100MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 16 $BLOCKDEVICE_SIZE || return 1
+	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
 	BOOT_PART_SIZE=$ANSWER_NUMBER
 
 	BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$BOOT_PART_SIZE))
 
-	ask_number "Enter the size (MB) of your swap partition.  Recommended size: 256MB\n\nDisk space left: $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+	ask_number "Enter the size (MiB) of your swap partition.  Recommended size: 256MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 256 || return 1
 	SWAP_PART_SIZE=$ANSWER_NUMBER
 
         BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$SWAP_PART_SIZE))
@@ -136,24 +155,21 @@ interactive_autoprepare()
 	ROOT_PART_SET=""
 	while [ "$ROOT_PART_SET" = "" ]
 	do
-		ask_number "Enter the size (MB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MB" 1 $BLOCKDEVICE_SIZE || return 1
+		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 7500 || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
         done
 
 	CHOSEN_FS=""
 	while [ "$CHOSEN_FS" = "" ]
 	do
-		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" $FSOPTS || return 1
+		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required $FSOPTS || return 1
 		FSTYPE=$ANSWER_OPTION
 		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
         done
 
 	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
-
-	# we assume a /dev/hdX format (or /dev/sdX)
-	PART_ROOT="${DISC}3"
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
 
@@ -191,7 +207,7 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" $DISCS || return 1
+        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" required $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
@@ -249,7 +265,7 @@ interactive_filesystem ()
 		local old_fs_params=$fs_params
 
 		ask_option edit "Alter this $fs_type filesystem on $part ?" \
-		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" \
+		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
 		                edit EDIT delete DELETE #TODO: nicer display if label is empty etc
 
 		# Don't alter, and return if user cancels
@@ -302,7 +318,7 @@ interactive_filesystem ()
 		else
 			default=
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
-			ask_option no "Select filesystem" "Select a filesystem for $part:" $FSOPTS || return 1
+			ask_option no "Select filesystem" "Select a filesystem for $part:" required $FSOPTS || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
@@ -351,10 +367,11 @@ interactive_filesystem ()
 		fi
 		if [ "$fs_type" = lvm-lv ]
 		then
-			[ -z "$fs_params" ] && default='5G'
+			[ -z "$fs_params" ] && default='5000'
 			[ -n "$fs_params" ] && default="$fs_params"
-			ask_string "Enter the size for this $fs_type on $part (suffix K,M,G,T,P,E. default is M)" "$default" || return 1
-			fs_params=$ANSWER_STRING
+			ask_number "Enter the size for this $fs_type on $part in MiB" 1 0 "$default" || return 1 #TODO: can we get the upperlimit from somewhere?
+			# Lvm tools use binary units but have their own suffixes ( K,M,G,T,P,E, but they mean KiB, MiB etc)
+			fs_params="${ANSWER_NUMBER}M"
 		fi
 		if [ "$fs_type" = dm_crypt ]
 		then
@@ -412,7 +429,7 @@ remove_blockdevice ()
 	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign for sed.
 	declare target_escawk=${target_escaped/+/\\+} # ...but that doesn't count for awk
 	fs_string=`awk "/^$target_escawk / { print \$4}" $TMP_BLOCKDEVICES` #TODO: fs_string is the entire line, incl part?
-	debug "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
+	debug 'UI-INTERACTIVE' "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
 	sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES || show_warning "blockdevice removal" "Could not remove partition $part (type $part_type, label $part_label).  This is a bug. please report it"
 	for fs in `sed 's/|/ /g' <<< $fs_string`
 	do
@@ -435,7 +452,7 @@ interactive_filesystems() {
 	ALLOK=0
 	while [ "$ALLOK" = 0 ]
 	do
-		# Let the user make filesystems and mountpoints
+		# Let the user make filesystems and mountpoints. USERHAPPY becomes 1 when the user hits DONE.
 		USERHAPPY=0
 
 		while [ "$USERHAPPY" = 0 ]
@@ -449,16 +466,16 @@ interactive_filesystems() {
 				fs_display=${fs//;target/}
 				[ "$label" != no_label ] && label_display="($label)"
 				[ "$label"  = no_label ] && label_display=
-				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} IEC # test -b <-- exit's 0, test -b '' exits >0.
+				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MiB # test -b <-- exit's 0, test -b '' exits >0.
 				then
-					infostring="${type},${BLOCKDEVICE_SIZE}MB${label_display}->$fs_display" # add size in MB for existing blockdevices (eg not for mapper devices that are not yet created yet) #TODO: ${BLOCKDEVICE_SIZE} is empty sometimes?
+					infostring="${type},${BLOCKDEVICE_SIZE}MiB${label_display}->$fs_display" # add size in MiB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				else
 					infostring="${type}${label_display}->$fs_display"
 				fi
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
-			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." $menu_list DONE _
+			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required $menu_list DONE _
 			[ $? -gt 0                 ] && USERHAPPY=1 && break
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
@@ -479,53 +496,52 @@ interactive_filesystems() {
 				then
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
-						label=$(     cut -d ';' -f 6 <<< $lv)
-						size=$(cut -d ';' -f 7 <<< $lv)
+						label=$(cut -d ';' -f 6 <<< $lv)
+						size=$( cut -d ';' -f 7 <<< $lv)
 						list="$list $label $size"
 					done
-				else
-					list="XXX no-LV's-defined-yet-make-a-new-one"
 				fi
 				list="$list empty NEW"
-				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" $list
-				EDIT_VG=$ANSWER_OPTION
-				if [ "$ANSWER_OPTION" = XXX -o "$ANSWER_OPTION" = empty  ]
-				then
-					# a new LV must be created on this VG
-					if interactive_filesystem $part $part_type $part_label '' 
+				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required $list && {
+					EDIT_VG=$ANSWER_OPTION
+					if [ "$ANSWER_OPTION" = empty  ]
 					then
-						if [ "$NEW_FILESYSTEM" != no_fs ]
+						# a new LV must be created on this VG
+						if interactive_filesystem $part $part_type $part_label '' 
 						then
-							[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
-							[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+							if [ "$NEW_FILESYSTEM" != no_fs ]
+							then
+								[ -n "$fs" ] && fs="$fs|$NEW_FILESYSTEM"
+								[ -z "$fs" ] && fs=$NEW_FILESYSTEM
+							fi
 						fi
+					else
+						# an existing LV will be edited and it's settings updated
+						for lv in `sed 's/|/ /g' <<< $fs`
+						do
+							label=$(cut -d ';' -f 6 <<< $lv)
+							[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
+						done
+						interactive_filesystem $part $part_type $part_label "$found_lv"
+						newfs=
+						for lv in `sed 's/|/ /g' <<< $fs`
+						do
+							label=$(cut -d ';' -f 6 <<< $lv)
+							if [ "$label" != "$EDIT_VG" ]
+							then
+								add=$lv
+							elif [ $NEW_FILESYSTEM != no_fs ]
+							then
+								add=$NEW_FILESYSTEM
+							else
+								add=
+							fi
+							[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
+							[ -n "$add" -a -z "$newfs" ] && newfs=$add
+						done
+						fs=$newfs
 					fi
-				else
-					# an existing LV will be edited and it's settings updated
-					for lv in `sed 's/|/ /g' <<< $fs`
-					do
-						label=$(cut -d ';' -f 6 <<< $lv)
-						[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
-					done
-					interactive_filesystem $part $part_type $part_label "$found_lv"
-					newfs=
-					for lv in `sed 's/|/ /g' <<< $fs`
-					do
-						label=$(cut -d ';' -f 6 <<< $lv)
-						if [ "$label" != "$EDIT_VG" ]
-						then
-							add=$lv
-						elif [ $NEW_FILESYSTEM != no_fs ]
-						then
-							add=$NEW_FILESYSTEM
-						else
-							add=
-						fi
-						[ -n "$add" -a -n "$newfs" ] && newfs="$newfs|$add"
-						[ -n "$add" -a -z "$newfs" ] && newfs=$add
-					done
-					fs=$newfs
-				fi
+				}
 			else
 				interactive_filesystem $part $part_type "$part_label" "$fs"
 				[ $? -eq 0 ] && fs=$NEW_FILESYSTEM
@@ -550,7 +566,14 @@ interactive_filesystems() {
 			str="The following issues have been detected:\n"
 			[ -n "$errors" ] && str="$str\n - Errors: $errors"
 			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
-			ask_yesno "$str\n Do you want to back to fix (one of) these issues?" || ALLOK=1 # TODO: we should ask the user if he wants to continue, return or abort.
+			[ -n "$errors" ] && str="$str\nIt is highly recommended you go back to fix at least the errors."
+			str="$str\nIf you hit cancel, we will abort here and go back to the menu"
+			if ask_option back "Issues detected. what do you want to do?" "$str" required back "go back to fix the issues" ignore "continue, ignoring the issues"
+			then
+				[ "$ANSWER_OPTION" == ignore ] && ALLOK=1
+			else
+				return 1
+			fi
 		else
 			ALLOK=1
 		fi
@@ -571,42 +594,43 @@ interactive_filesystems() {
 # returns: 1 on error
 interactive_select_packages() {
 
-    notify "Package selection is split into two stages.  First you will select package categories that contain packages you may be interested in.  Then you will be presented with a full list of packages for each category, allowing you to fine-tune.\n\n"
+	# set up our install location if necessary and sync up so we can get package lists
+	target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
 
-    # set up our install location if necessary and sync up
-    # so we can get package lists
-    target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
+	repos=`list_pacman_repos target`
+	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
+Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  One you have your Arch system up and running, you have access to more repositories and packages."
 
     # show group listing for group selection, base is ON by default, all others are OFF
-    local _catlist="base ^ ON"
-    for i in $($PACMAN_TARGET -Sg | sed "s/^base$/ /g"); do
-        _catlist="${_catlist} ${i} - OFF"
+    local _grouplist="base ^ ON"
+    for i in $(list_package_groups | sed "s/^base$/ /g"); do
+        _grouplist="${_grouplist} ${i} - OFF"
     done
 
-    ask_checklist "Select Package Categories\nDO NOT deselect BASE unless you know what you're doing!" $_catlist || return 1
-    _catlist=$ANSWER_CHECKLIST # _catlist now contains all categories (the tags from the dialog checklist)
+    ask_checklist "Select Package groups\nDO NOT deselect BASE unless you know what you're doing!" $_grouplist || return 1
+    _grouplist=$ANSWER_CHECKLIST # _grouplist now contains all groups (the tags from the dialog checklist)
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
-    local _pkgtmp="$($PACMAN_TARGET -Sl core | awk '{print $2}')" # all packages in core repository
+    local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository
     local _pkglist=''
 
-    $PACMAN_TARGET -Si $_pkgtmp | awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }' > $ANSWER
-    while read pkgname pkgcat; do
+    which_group "$_pkgtmp"
+    while read pkgname pkggroup; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
-        if [ "${_catlist/"\"$pkgcat\""/XXXX}" != "${_catlist}" ]; then
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkgcat} ON")"
+        if [ "${_grouplist/"\"$pkggroup\""/XXXX}" != "${_grouplist}" ]; then
+            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} ON")"
         else
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkgcat} OFF")"
+            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} OFF")"
         fi
-    done < $ANSWER
+    done <<< "$PACKAGE_GROUPS"
 
-    # sort by category
+    # sort by group
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
-	TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
+	var_TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
     return 0
 }
 
@@ -626,23 +650,23 @@ interactive_runtime_network() {
         return 1
     fi
 
-    ask_option no "Interface selection" "Select a network interface" $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
+    ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
     INTERFACE=$ANSWER_OPTION
 
 
-    ask_yesno "Do you want to use DHCP?"
-    if [ $? -eq 0 ]; then
+    if ask_yesno "Do you want to use DHCP?"
+    then
         infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
-        killall dhcpd
-        killall -9 dhcpd
-        sleep 1
-        dhcpcd $INTERFACE >$LOG 2>&1
-        if [ $? -ne 0 ]; then
-            notify "Failed to run dhcpcd.  See $LOG for details."
+        dhcpcd -k $INTERFACE >$LOG 2>&1
+        if ! dhcpcd $INTERFACE >$LOG 2>&1
+        then
+            show_warning "Dhcpcd problem" "Failed to run dhcpcd.  See $LOG for details."
             return 1
         fi
-        if [ ! $(ifconfig $INTERFACE | grep 'inet addr:') ]; then
-            notify "DHCP request failed." || return 1
+        if ! ifconfig $INTERFACE | grep -q 'inet addr:'
+	then
+            show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
+            return 1
         fi
         S_DHCP=1
     else
@@ -669,16 +693,20 @@ interactive_runtime_network() {
             esac
         done
         echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
-        ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1 || notify "Failed to setup $INTERFACE interface." || return 1
-        if [ "$GW" != "" ]; then
+        if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
+        then
+        	show_warning "Ifconfig problem" "Failed to setup interface $INTERFACE"
+        	return 1
+        fi
+        if [ -n "$GW" ]; then
             route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
         fi
-        if [ "$PROXY_HTTP" = "" ]; then
+        if [ -z "$PROXY_HTTP" ]; then
             unset http_proxy
         else
             export http_proxy=$PROXY_HTTP
         fi
-        if [ "$PROXY_FTP" = "" ]; then
+        if [ -z "$PROXY_FTP" ]; then
             unset ftp_proxy
         else
             export ftp_proxy=$PROXY_FTP
@@ -696,6 +724,7 @@ interactive_install_grub() {
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
     # try to auto-configure GRUB...
+    debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
     if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
     GRUB_OK=0
         grubdev=$(mapdev $PART_ROOT)
@@ -758,7 +787,7 @@ EOF
         notify "No hard drives were found"
         return 1
     fi
-    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." $DEVS || return 1
+    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
     ROOTDEV=$ANSWER_OPTION
     infofy "Installing the GRUB bootloader..."
     cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
@@ -780,7 +809,7 @@ EOF
     fi
     ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
     if [ $? -eq 0 ]; then
-        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" $DEVS || return 1
+        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" required $DEVS || return 1
         bootpart=$ANSWER_OPTION
     fi
     bootpart=$(mapdev $bootpart)
@@ -827,7 +856,7 @@ interactive_select_source()
         var_FILE_URL="file:///src/core/pkg"
         var_SYNC_URL=
 
-	ask_option no "Source selection" "Please select an installation source" \
+	ask_option no "Source selection" "Please select an installation source" required \
     "1" "CD-ROM or OTHER SOURCE" \
     "2" "FTP/HTTP" || return 1
 
@@ -861,7 +890,7 @@ interactive_select_mirror() {
         notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
         # FIXME: this regex doesn't honor commenting
         MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
-        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" $MIRRORS "Custom" "_" || return 1
+        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" required $MIRRORS "Custom" "_" || return 1
     local _server=$ANSWER_OPTION
     if [ "${_server}" = "Custom" ]; then
         ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
@@ -884,7 +913,7 @@ interactive_get_editor() {
 	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
 	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
 	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
-	ask_option no "Text editor selection" "Select a Text Editor to Use" "${EDITOR_OPTS[@]}"
+	ask_option no "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}"
 	#TODO: this code could be a little bit cleaner.
 	case $ANSWER_OPTION in
 		"nano") EDITOR="nano" ;;

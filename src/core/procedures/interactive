@@ -53,7 +53,7 @@ mainmenu()
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
 	#TODO: why does a '2' appear instead of '' ??
-	ask_option $default "MAIN MENU" '' \
+	ask_option $default "MAIN MENU" '' required \
 	"1" "$worker_select_source_title" \
 	"2" "$worker_set_clock_title" \
 	"3" "$worker_prepare_disks_title" \
@@ -78,7 +78,8 @@ mainmenu()
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
 		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
-		                                                                                                                  execute worker auto_locale  ; } && NEXTITEM=6 ;;
+		                                                                                                                  execute worker auto_locale  ; \
+		                                                                                                                  execute worker auto_keymap_font; } && NEXTITEM=6 ;;
         "6")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;
@@ -96,7 +97,7 @@ mainmenu()
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' \
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \ #TODO: display the "make sure network is okay" in a better way
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
@@ -114,7 +115,7 @@ worker_configure_system()
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist
 	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${var_SYNC_URL}" != "" ]; then
-		debug "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+		debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
 		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
 		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
 	fi
@@ -147,7 +148,8 @@ worker_prepare_disks()
 		default=no
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
-		ask_option $default "Prepare Hard Drive" '' \
+		#TODO: inform user (using dialog's --item-help or so) that autoprepare uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
+		ask_option $default "Prepare Hard Drive" '' required \
 		"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
 		"2" "Partition Hard Drives" \
 		"3" "Configure block devices, filesystems and mountpoints" \
@@ -246,7 +248,7 @@ worker_select_mirror ()
 
 worker_install_bootloader ()
 {
-	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." \
+	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
 			"Grub" "Use the GRUB bootloader (default)" \
 			"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
 

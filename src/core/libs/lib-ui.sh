@@ -1,24 +1,38 @@
 #!/bin/bash
+# Note that $var_UI_TYPE may not be set here. especially if being loaded in the "early bootstrap" phase
+
 # TODO: implement 'retry until user does it correctly' everywhere
 # TODO: at some places we should check if $1 etc is only 1 word because we often depend on that
 # TODO: standardize. eg everything $1= question/title, $2=default
 # TODO: figure out something to make dia windows always big enough, yet fit nicely in the terminal
 
 
-# Taken from setup.  we store dialog output in a file.  TODO: can't we do this with variables? ASKDEV
-ANSWER=$RUNTIME_DIR/.dialog-answer
+# Taken from setup.  we store dialog output in a file.  TODO: a variable would be cleaner
+ANSWER=$RUNTIME_DIR/aif-dialog-answer
 DIA_MENU_TEXT="Use the UP and DOWN arrows to navigate menus.  Use TAB to switch between buttons and ENTER to select."
-DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/.dia-successive-items
+DIA_SUCCESSIVE_ITEMS=$RUNTIME_DIR/aif-dia-successive-items
+
+
+# get keymap/font (maybe configured by aif allready in another process or even in another shell)
+# otherwise, take default keymap and consolefont as configured in /etc/rc.conf. can be overridden
+# Note that the vars in /etc/rc.conf can also be empty!
+[ -e $RUNTIME_DIR/aif-keymap      ] && var_KEYMAP=`     cat $RUNTIME_DIR/aif-keymap`
+[ -e $RUNTIME_DIR/aif-consolefont ] && var_CONSOLEFONT=`cat $RUNTIME_DIR/aif-consolefont`
+[ -z "$var_KEYMAP"      ] && source /etc/rc.conf && var_KEYMAP=$KEYMAP
+[ -z "$var_CONSOLEFONT" ] && source /etc/rc.conf && var_CONSOLEFONT=$CONSOLEFONT
+
+
 
 ### Functions that your code can use. Cli/dialog mode is fully transparant.  This library takes care of it ###
 
 
+
 # display error message and die
+# Do not call other functions like debug, notify, .. here because that might cause loops!
 die_error ()
 {
-	debug "die_error: ERROR: $@"
-	notify "ERROR: $@"
-        exit 2
+	echo "ERROR: $@" >&2
+	exit 2
 }
  
  
@@ -28,32 +42,32 @@ die_error ()
 # $3 type of item.  msg or text if it's a file. (optional. defaults to msg)
 show_warning ()
 {
-        [ -z "$1" ] && die_error "show_warning needs a title"
-        [ -z "$2" ] && die_error "show_warning needs an item to show"
-        [ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
-        type=msg
-        [ -n "$3" ] && type=$3
-        debug "show_warning '$1': $2 ($type)"
-        if [ "$var_UI_TYPE" = dia ]
-        then
-                _dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 18 70 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
-        else
-                echo "WARNING: $1"
-                [ "${type}" = msg  ] && echo -e "$2"
-                [ "${type}" = text ] && (cat $2 || die_error "Could not cat $2")
-        fi
+	[ -z "$1" ] && die_error "show_warning needs a title"
+	[ -z "$2" ] && die_error "show_warning needs an item to show"
+	[ -n "$3" -a "$3" != msg -a "$3" != text ] && die_error "show_warning \$3 must be text or msg"
+	type=msg
+	[ -n "$3" ] && type=$3
+	debug 'UI' "show_warning '$1': $2 ($type)"
+	if [ "$var_UI_TYPE" = dia ]
+	then
+		_dia_DIALOG --title "$1" --exit-label "Continue" --${type}box "$2" 0 0 || die_error "dialog could not show --${type}box $2. often this means a file does not exist"
+	else
+		echo "WARNING: $1"
+		[ "${type}" = msg  ] && echo -e "$2"
+		[ "${type}" = text ] && (cat $2 || die_error "Could not cat $2")
+	fi
 
         return 0
 }
- 
- 
+
+
 #notify user
 notify ()   
 {
-	debug "notify: $@"
+	debug 'UI' "notify: $@"
         if [ "$var_UI_TYPE" = dia ]
         then
-                _dia_DIALOG --msgbox "$@" 20 50
+                _dia_DIALOG --msgbox "$@" 0 0
         else
                 echo -e "$@"
         fi
@@ -70,7 +84,7 @@ infofy () #TODO: when using successive things, the screen can become full and yo
 {
 	successive=${2:-0}
 	succ_last=${3:-0}
-	debug "infofy: $1"
+	debug 'UI' "infofy: $1"
 	if [ "$var_UI_TYPE" = dia ]
 	then
 		str="$1"
@@ -80,42 +94,45 @@ infofy () #TODO: when using successive things, the screen can become full and yo
 			str=`cat $DIA_SUCCESSIVE_ITEMS-$successive`
 		fi
 		[ "$succ_last" = 1 ] && rm $DIA_SUCCESSIVE_ITEMS-$successive
-		_dia_DIALOG --infobox "$str" 20 50
+		_dia_DIALOG --infobox "$str" 0 0
 	else
 		echo -e "$1"
 	fi
 }
 
-
 # logging of stuff
 log ()
 {
+	mkdir -p $LOG_DIR || die_error "Cannot create log directory"
 	str="[LOG] `date +"%Y-%m-%d %H:%M:%S"` $@"
-	if [ "$var_UI_TYPE" = dia ]
-	then
-		echo -e "$str" >$LOG
-	else
-		echo -e "$str" >$LOG
-	fi
+	echo -e "$str" > $LOG || die_error "Cannot log $str to $LOG"
 
-	[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
+	[ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot log $str to $LOGFILE" )
 }
 
 
+# $1 = one or more categories (separated by spaces) from: MAIN, PROCEDURE, UI, UI-INTERACTIVE, FS, MISC, NETWORK, PACMAN, SOFTWARE
+#      You should always at least specify where you are (main, procedure or the name of the lib) and optionally further specification: eg in a ui function that works with pacman.
+#      This is very useful in ui-interactive where we always work with something else.
+# $2 = string to log
 debug ()
 {
-        str="[DEBUG] $@"
+	valid_cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
+	for cat in $1
+	do
+		check_is_in $cat "${valid_cats[@]}" || die_error "debug \$1 contains a value ($cat) which is not a valid debug category"
+	done
+        [ -n "$2" ] || die_error "debug \$2 cannot be empty"
+
+        mkdir -p $LOG_DIR || die_error "Cannot create log directory"
         if [ "$DEBUG" = "1" ]
         then
-		if [ "$var_UI_TYPE" = dia ]
-		then
-			echo -e "$str" > $LOG
-		else
-			echo -e "$str" > $LOG
-		fi
-		[ "$LOG_TO_FILE" = 1 ] && echo -e "$str" >> $LOGFILE
-	fi
+                str="[DEBUG $1 ] $2"
+                echo -e "$str" > $LOG || die_error "Cannot debug $str to $LOG"
+                [ "$LOG_TO_FILE" = 1 ] && ( echo -e "$str" >> $LOGFILE || die_error "Cannot debug $str to $LOGFILE" )
+        fi
 }
+
 
 
 # taken from setup
@@ -129,14 +146,17 @@ printk()
 
 
 # TODO: pass disks as argument to decouple backend logic
-# Get a list of available disks for use in the "Available disks" dialogs. This
-# will print the disks as follows, getting size info from hdparm:
-#   /dev/sda: 640133 MBytes (640 GB)
-#   /dev/sdb: 640135 MBytes (640 GB)
+# Get a list of available disks for use in the "Available disks" dialogs.
+# Something like:
+#   /dev/sda: 640133 MiB (640 GiB)
+#   /dev/sdb: 640135 MiB (640 GiB)
 _getavaildisks()
 {
-    # NOTE: to test as non-root, stick in a 'sudo' before the hdparm call
-    for i in $(finddisks); do echo -n "$i: "; hdparm -I $i | grep -F '1000*1000' | sed "s/.*1000:[ \t]*\(.*\)/\1/"; echo "\n"; done
+    for i in $(finddisks)
+    do
+	get_blockdevice_size $i MiB
+	echo "$i: $BLOCKDEVICE_SIZE MiB ($(($BLOCKDEVICE_SIZE/2**10)) GiB)\n"
+    done
 }
 
 
@@ -147,7 +167,7 @@ _getavaildisks()
 ask_checklist ()
 {
 	[ -z "$1" ] && die_error "ask_checklist needs a question!"
-	[ -z "$4" ] && debug "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (tag,item and ON/OFF switch)"
+	[ -z "$4" ] && debug 'UI' "ask_checklist args: $@" && die_error "ask_checklist makes only sense if you specify at least 1 thing (tag,item and ON/OFF switch)"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_checklist "$@" ; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_checklist "$@" ; return $? ; }
 }
@@ -163,17 +183,18 @@ ask_datetime ()
 # ask for a number.
 # $1 question
 # $2 lower limit (optional)
-# $3 upper limit (optional)
-# $4 default : TODO implement in cli
-# echo's the number the user said
+# $3 upper limit (optional. set 0 for none)
+# $4 default (optional)
+# sets $ANSWER_NUMBER to the number the user specified
 # returns 1 if the user cancelled or did not enter a numeric, 0 otherwise 
 ask_number ()
 {
 	[ -z "$1" ] && die_error "ask_number needs a question!"
-	[ -n "$2" ] && [[ $2 = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
-	[ -n "$3" ] && [[ $3 = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" "$2" "$3" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" "$2" "$3" ; return $? ; }
+	[ -n "$2" ] && [[ "$2" = *[^0-9]* ]] && die_error "ask_number \$2 must be a number! not $2"
+	[ -n "$3" ] && [[ "$3" = *[^0-9]* ]] && die_error "ask_number \$3 must be a number! not $3"
+	[ -n "$4" ] && [[ "$4" = *[^0-9]* ]] && die_error "ask_number \$4 must be a number! not $4"
+	[ "$var_UI_TYPE" = dia ] && { _dia_ask_number "$1" $2 $3 $4; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_ask_number "$1" $2 $3 $4; return $? ; }
 }
 
   
@@ -181,9 +202,11 @@ ask_number ()
 # $1 default item (set to 'no' for none)
 # $2 title
 # $3 additional explanation (default: '')
-# shift;shift; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
-# the response will be echoed to stdout. but also $ANSWER_OPTION will be set. take that because the former method seems to not work.
-# $? if user cancelled. 0 otherwise
+# $4 type (required or optional). '' means required. cancel labels will be 'Cancel' and 'Skip' respectively.
+# shift 4 ; $@ list of options. first tag. then name. (eg tagA itemA "tag B" 'item B' )
+
+# $ANSWER_OPTION : selected answer (if none selected: default (if available), or empty string otherwise). if user hits cancel or skip, this is an empty string.
+# $?             : 0 if the user selected anything or skipped (when optional), when user cancelled: 1
 ask_option ()
 {
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_option "$@" ; return $? ; }
@@ -239,12 +262,14 @@ ask_yesno ()
 # follow the progress of something by showing it's log, updating real-time
 # $1 title
 # $2 logfile
+# $3 pid to monitor. if process stopped, stop following (only used in cli mode)
 follow_progress ()
 {
 	[ -z "$1" ] && die_error "follow_progress needs a title!"
 	[ -z "$2" ] && die_error "follow_progress needs a logfile to follow!"
-	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress "$1" "$2" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$1" "$2" ; return $? ; }
+	FOLLOW_PID=
+	[ "$var_UI_TYPE" = dia ] && { _dia_follow_progress "$@" ; return $? ; }
+	[ "$var_UI_TYPE" = cli ] && { _cli_follow_progress "$@" ; return $? ; }
 }
 
 
@@ -280,10 +305,10 @@ _dia_ask_checklist ()
 		list="$list $1 $2 $3"
 		shift 3
 	done
-	_dia_DIALOG --checklist "$str" 30 60 20 $list 2>$ANSWER
+	_dia_DIALOG --checklist "$str" 0 0 0 $list 2>$ANSWER
 	ret=$?
 	ANSWER_CHECKLIST=`cat $ANSWER`
-	debug "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
+	debug 'UI' "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
 	return $ret
 }
 
@@ -295,7 +320,7 @@ _dia_ask_datetime ()
 	local _date="$(cat $ANSWER)" # form like: 07/12/2008
 	dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 2> $ANSWER || return 1
 	local _time="$(cat $ANSWER)" # form like: 15:26:46
-	debug "Date as specified by user $_date time: $_time"
+	debug 'UI' "Date as specified by user $_date time: $_time"
 
 	# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
 	# ANSWER_DATETIME=$(echo "$_date" "$_time" | sed 's#\(..\)/\(..\)/\(....\) \(..\):\(..\):\(..\)#\2\1\4\5\3\6#g')
@@ -310,17 +335,17 @@ _dia_ask_number ()
 	while true
 	do
 		str="$1"
-		[ -n "$2" ] && str2="min $2"
-		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n $2 ] && str2="min $2"
+		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
 		[ -n "$str2" ] && str="$str ( $str2 )"
-		_dia_DIALOG --inputbox "$str" 8 65 "$4" 2>$ANSWER
+		_dia_DIALOG --inputbox "$str" 0 0 $4 2>$ANSWER
 		ret=$?
 		ANSWER_NUMBER=`cat $ANSWER`
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
 		then
 			show_warning "$ANSWER_NUMBER is not a number! try again."
 		else
-			if [ -n "$3" -a $ANSWER_NUMBER -gt $3 ]
+			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
 			then
 				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
 			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
@@ -331,7 +356,7 @@ _dia_ask_number ()
 			fi
 		fi
 	done
-	debug "_dia_ask_number: user entered: $ANSWER_NUMBER"
+	debug 'UI' "_dia_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return $ret
 }
@@ -343,16 +368,21 @@ _dia_ask_option ()
 	[ "$1" != 'no' ] && DEFAULT="--default-item $1"
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	TYPE=${4:-required}
+	[ "$TYPE" != required -a "$TYPE" != optional ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask option \$4 must be required or optional or ''. not $TYPE"
+	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
  
  	DIA_MENU_TITLE=$2
 	EXTRA_INFO=$3
-	shift 3
-	_dia_DIALOG $DEFAULT --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 20 80 16 "$@" 2>$ANSWER
+	shift 4
+	CANCEL_LABEL=Cancel
+	[ $TYPE == optional ] && CANCEL_LABEL='Skip'
+	_dia_DIALOG $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 0 0 0 "$@" 2>$ANSWER
 	ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
-	debug "dia_ask_option: User choose $ANSWER_OPTION ($DIA_MENU_TITLE)"
-	return $ret
+	debug 'UI' "dia_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($DIA_MENU_TITLE)"
+	[ $TYPE == required ] && return $ret
+	return 0 # TODO: check if dialog returned >0 because of an other reason then the user hitting 'cancel/skip'
 }
 
 
@@ -372,7 +402,7 @@ _dia_ask_password ()
 	[ -n "$type_u" ] && read ${type_u}_PASSWORD < $ANSWER
 	[ -z "$type_u" ] && read           PASSWORD < $ANSWER
 	cat $ANSWER
-	debug "_dia_ask_password: user entered <<hidden>>"
+	debug 'UI' "_dia_ask_password: user entered <<hidden>>"
 	return $ret
 }
 
@@ -380,10 +410,10 @@ _dia_ask_password ()
 _dia_ask_string ()
 {
 	exitcode=${3:-1}
-	_dia_DIALOG --inputbox "$1" 8 65 "$2" 2>$ANSWER
+	_dia_DIALOG --inputbox "$1" 0 0 "$2" 2>$ANSWER
 	ret=$?
 	ANSWER_STRING=`cat $ANSWER`
-	debug "_dia_ask_string: user entered $ANSWER_STRING"
+	debug 'UI' "_dia_ask_string: user entered $ANSWER_STRING"
 	[ -z "$ANSWER_STRING" ] && return $exitcode
 	return $ret
 }
@@ -391,7 +421,25 @@ _dia_ask_string ()
 
 _dia_ask_timezone ()
 {
-	ANSWER_TIMEZONE=`tzselect` #TODO: implement nicer then this
+	REGIONS=""
+	SET_ZONE=""
+	for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
+		REGIONS="$REGIONS $i -"
+	done
+	while [ "$SET_ZONE" != "1" ]; do
+		SET_REGION=""
+		ask_option no "Please select a region" '' required $REGIONS
+		region=ANSWER_OPTION
+		if [ $? -eq 0 ]; then
+			ZONES=""
+			for i in $(grep ^[A-Z] /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
+				ZONES="$ZONES $i -"
+			done
+			ask_option no "Please select a timezone" '' required $ZONES
+			zone=$ANSWER_OPTION
+			[ $? -gt 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
+		fi
+	done
 }
 
 
@@ -403,8 +451,8 @@ _dia_ask_yesno ()
 	[ -n "$2" ] && str="$str (default: $2)"
 	dialog --yesno "$str" $height 55 # returns 0 for yes, 1 for no
 	ret=$?
-	[ $ret -eq 0 ] && debug "dia_ask_yesno: User picked YES"
-	[ $ret -gt 0 ] && debug "dia_ask_yesno: User picked NO"
+	[ $ret -eq 0 ] && debug 'UI' "dia_ask_yesno: User picked YES"
+	[ $ret -gt 0 ] && debug 'UI' "dia_ask_yesno: User picked NO"
 	return $ret
 }
 
@@ -413,7 +461,7 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
-	_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 18 70 2>$ANSWER
+	FOLLOW_PID=`_dia_DIALOG --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null`
 }
 
 
@@ -444,7 +492,7 @@ _cli_ask_datetime ()
 {
 	ask_string "Enter date [YYYY-MM-DD hh:mm:ss]"
 	ANSWER_DATETIME=$ANSWER_STRING
-	debug "Date as picked by user: $ANSWER_STRING"
+	debug 'UI' "Date as picked by user: $ANSWER_STRING"
 }
 
 
@@ -454,8 +502,9 @@ _cli_ask_number ()
 	while true
 	do
 		str="$1"
-		[ -n "$2" ] && str2="min $2"
-		[ -n "$3" ] && str2="$str2 max $3"
+		[ -n $2 ] && str2="min $2"
+		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
+		[ -n $4 ] && str2=" default $4"
 		[ -n "$str2" ] && str="$str ( $str2 )"
 		echo "$str"
 		read ANSWER_NUMBER
@@ -463,10 +512,18 @@ _cli_ask_number ()
 		then
 			show_warning "$ANSWER_NUMBER is not a number! try again."
 		else
-			break
+			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
+			then
+				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
+			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
+			then
+				show_warning "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
+			else
+				break
+			fi
 		fi
 	done
-	debug "cli_ask_number: user entered: $ANSWER_NUMBER"
+	debug 'UI' "cli_ask_number: user entered: $ANSWER_NUMBER"
 	[ -z "$ANSWER_NUMBER" ] && return 1
 	return 0
 }
@@ -476,15 +533,17 @@ _cli_ask_option ()
 {
 	#TODO: strip out color codes
 	#TODO: if user entered incorrect choice, ask him again
-	DEFAULT=""
+	DEFAULT=
 	[ "$1" != 'no' ] && DEFAULT=$1 #TODO: if user forgot to specify a default (eg all args are 1 pos to the left, we can end up in an endless loop :s)
 	[ -z "$2" ] && die_error "ask_option \$2 must be the title"
 	# $3 is optional more info
-	[ -z "$5" ] && debug "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
+	TYPE=${4:-required} 
+	[ "$TYPE" != required -a "$TYPE" != optional ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask option \$4 must be required or optional or ''. not $TYPE"
+	[ -z "$6" ] && debug 'UI' "_dia_ask_option args: $@" && die_error "ask_option makes only sense if you specify at least one option (with tag and name)" #nothing wrong with only 1 option.  it still shows useful info to the user
 
 	MENU_TITLE=$2
 	EXTRA_INFO=$3
-	shift 3
+	shift 4
 
 	echo "$MENU_TITLE"
 	[ -n "$EXTRA_INFO" ] && echo "$EXTRA_INFO"
@@ -493,14 +552,20 @@ _cli_ask_option ()
 		echo "$1 ] $2"
 		shift 2
 	done
-	echo "CANCEL ] CANCEL"
+	CANCEL_LABEL=CANCEL
+	[ $TYPE == optional ] && CANCEL_LABEL=SKIP
+	echo "$CANCEL_LABEL ] $CANCEL_LABEL"
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
+	ret=0
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
-	debug "cli_ask_option: User choose $ANSWER_OPTION ($MENU_TITLE)"
-	[ "$ANSWER_OPTION" = CANCEL ] && return 1
-	return 0
+	[ "$ANSWER_OPTION" == CANCEL ] && ret=1 && ANSWER_OPTION=
+	[ "$ANSWER_OPTION" == SKIP   ] && ret=0 && ANSWER_OPTION=
+	[ -z "$ANSWER_OPTION" -a "$TYPE" == required ] && ret=1
+
+	debug 'UI' "cli_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($MENU_TITLE)"
+	return $ret
 }
 
 
@@ -532,7 +597,7 @@ _cli_ask_string ()
 	[ -n "$2" ] && echo "(Press enter for default.  Default: $2)"
 	echo -n ">"
 	read ANSWER_STRING
-	debug "cli_ask_string: User entered: $ANSWER_STRING"
+	debug 'UI' "cli_ask_string: User entered: $ANSWER_STRING"
 	if [ -z "$ANSWER_STRING" ]
 	then
 		if [ -n "$2" ]
@@ -562,10 +627,10 @@ _cli_ask_yesno ()
 	answer=`tr '[:upper:]' '[:lower:]' <<< $answer`
 	if [ "$answer" = y -o "$answer" = yes ] || [ -z "$answer" -a "$2" = yes ]
 	then
-		debug "cli_ask_yesno: User picked YES"
+		debug 'UI' "cli_ask_yesno: User picked YES"
 		return 0
 	else
-		debug "cli_ask_yesno: User picked NO"
+		debug 'UI' "cli_ask_yesno: User picked NO"
 		return 1
 	fi
 }
@@ -576,6 +641,43 @@ _cli_follow_progress ()
 	title=$1
 	logfile=$2
 	echo "Title: $1"
-	tail -f $2
-	#TODO: don't block anymore when it's done
+	[ -n "$3" ] && tail -f $2 --pid=$3
+	[ -z "$3" ] && tail -f $2
+}
+
+set_keymap ()
+{
+	KBDDIR="/usr/share/kbd"
+
+	KEYMAPS=
+	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
+		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
+	done
+	ask_option "${var_KEYMAP:-no}" "Select A Keymap" '' optional $KEYMAPS
+	if [ -n "$ANSWER_OPTION" ]
+	then
+		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
+		var_KEYMAP=$ANSWER_OPTION
+		echo "$var_KEYMAP" > $RUNTIME_DIR/aif-keymap
+	fi
+
+	FONTS=
+	# skip .cp.gz and partialfonts files for now see bug #6112, #6111
+	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
+		FONTS="$FONTS $i -"
+	done
+	ask_option "${var_CONSOLEFONT:-no}" "Select A Console Font" '' optional $FONTS
+	if [ -n "$ANSWER_OPTION" ]
+	then
+		var_CONSOLEFONT=$ANSWER_OPTION
+		for i in 1 2 3 4
+		do
+			if [ -d /dev/vc ]; then
+				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/vc/$i
+			else
+				setfont $KBDDIR/consolefonts/$var_CONSOLEFONT -C /dev/tty$i
+			fi
+		done
+		echo "$var_CONSOLEFONT" > $RUNTIME_DIR/aif-consolefont
+	fi
 }

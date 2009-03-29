@@ -3,33 +3,37 @@
 
 # FORMAT DEFINITIONS:
 
-# MAIN FORMAT FOR $TMP_BLOCKDEVICES (format used to interface with this library): one line per blockdevice, multiple fs'es in 1 'fs-string'
-# $TMP_BLOCKDEVICES entry.
-# <blockdevice> type label/no_label <FS-string>/no_fs
-# FS-string:
-# type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
-# NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
-# NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
-#       the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
-#       no '+' characters allowed for devices in $fs_params (eg use the real names)
+# -- formats used to interface with this library --
+# $TMP_PARTITIONS
+#    one line per partition, blockdevice + partioning string for sfdisk.  See docs for function partition for more info.
+# $TMP_BLOCKDEVICES
+#    one line per blockdevice, multiple fs'es in 1 'fs-string'
+#    $TMP_BLOCKDEVICES entry.
+#    <blockdevice> type label/no_label <FS-string>/no_fs
+#    FS-string:
+#    type;recreate(yes/no);mountpoint;mount?(target,runtime,no);opts;label;params[|FS-string|...] where opts/params have _'s instead of whitespace if needed
+#    NOTE: the 'mount?' for now just matters for the location (if 'target', the target path gets prepended and mounted in the runtime system)
+#    NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
+#          the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
+#          no '+' characters allowed for devices in $fs_params (eg use the real names)
 
 
-# ADDITIONAL INTERNAL FORMAT FOR $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
+# -- ADDITIONAL INTERNAL FORMATS --
+# $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
 # part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 
 
 
-#TODO: this should be fixed on the installcd.
-modprobe dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
-modprobe aes-i586 || show_warning modprobe 'Could not modprobe aes-i586. no support for disk encryption'
+modprobe -q dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
+modprobe -q aes-i586 || modprobe -q aes-x86-64 || show_warning modprobe 'Could not modprobe aes-i586 or aes-x86-64. no support for disk encryption'
 
 
 
-TMP_DEV_MAP=$RUNTIME_DIR/dev.map
-TMP_FSTAB=$RUNTIME_DIR/.fstab
-TMP_PARTITIONS=$RUNTIME_DIR/.partitions
-TMP_FILESYSTEMS=$RUNTIME_DIR/.filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
-TMP_BLOCKDEVICES=$RUNTIME_DIR/.blockdata
+TMP_DEV_MAP=$RUNTIME_DIR/aif-dev.map
+TMP_FSTAB=$RUNTIME_DIR/aif-fstab
+TMP_PARTITIONS=$RUNTIME_DIR/aif-partitions
+TMP_FILESYSTEMS=$RUNTIME_DIR/aif-filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
+TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
 
 
 
@@ -271,10 +275,10 @@ target_configure_fstab()
 
 # partitions a disk. heavily altered
 # $1 device to partition
-# $2 a string of the form: <partsize>:<fstype>[:+] (the + is bootable flag)
+# $2 a string of the form: <partsize in MiB>:<fstype>[:+] (the + is bootable flag)
 partition()
 {
-	debug "Partition called like: partition '$1' '$2'"
+	debug 'FS' "Partition called like: partition '$1' '$2'"
 	[ -z "$1" ] && die_error "partition() requires a device file and a partition string"
 	[ -z "$2" ] && die_error "partition() requires a partition string"
 
@@ -313,7 +317,7 @@ partition()
 	sfdisk_input=$(printf "$sfdisk_input") # convert \n to newlines
 
 	# invoke sfdisk
-	debug "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
+	debug 'FS' "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
 	printk off
 	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
@@ -328,10 +332,6 @@ EOF
     return 0
 }
 
-
-# file layout:
-#TMP_PARTITIONS
-# disk partition-scheme
 
 # go over each disk in $TMP_PARTITIONS and partition it
 process_disks ()
@@ -349,6 +349,19 @@ process_disk ()
 	partition $1 "$2"
 }
 
+# $1 fs_string
+parse_filesystem_string ()
+{
+	fs="$1"
+	fs_type=`       cut -d ';' -f 1 <<< $fs`
+	fs_create=`     cut -d ';' -f 2 <<< $fs`
+	fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
+	fs_mount=`      cut -d ';' -f 4 <<< $fs`
+	fs_opts=`       cut -d ';' -f 5 <<< $fs`
+	fs_label=`      cut -d ';' -f 6 <<< $fs`
+	fs_params=`     cut -d ';' -f 7 <<< $fs`
+}
+
 
 generate_filesystem_list ()
 {
@@ -359,13 +372,7 @@ generate_filesystem_list ()
 		then
 			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
 			do
-				fs_type=`       cut -d ';' -f 1 <<< $fs`
-				fs_create=`     cut -d ';' -f 2 <<< $fs`
-				fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
-				fs_mount=`      cut -d ';' -f 4 <<< $fs`
-				fs_opts=`       cut -d ';' -f 5 <<< $fs`
-				fs_label=`      cut -d ';' -f 6 <<< $fs`
-				fs_params=`     cut -d ';' -f 7 <<< $fs`
+				parse_filesystem_string "$fs"
 				echo "$part $part_type $part_label $fs_type $fs_create $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params" >> $TMP_FILESYSTEMS
 			done
 		fi
@@ -377,7 +384,7 @@ generate_filesystem_list ()
 # process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly
 process_filesystems ()
 {
-	debug "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
+	debug 'FS' "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
 	returncode=0
@@ -397,26 +404,26 @@ process_filesystems ()
 			then
 				if check_is_in "$fs_id" "${done_filesystems[@]}"
 				then
-					debug "$fs_id ->Already done"
+					debug 'FS' "$fs_id ->Already done"
 				else
 					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
 					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
-						debug "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
+						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						infofy "Making $fs_type filesystem on $part" disks
 						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					else
-						debug "$fs_id ->Cannot do right now..."
+						debug 'FS' "$fs_id ->Cannot do right now..."
 						open_items=1
 					fi
 				fi
@@ -431,7 +438,7 @@ process_filesystems ()
 	# phase 2: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 
 	infofy "Phase 2: Mounting filesystems" disks
-	sort -t \  -k 6 $TMP_FILESYSTEMS | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
@@ -442,7 +449,7 @@ process_filesystems ()
 			infofy "Swaponning $part" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		fi
-	done
+	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
 	BLOCK_ROLLBACK_USELESS=0
 	[ $returncode -eq 0 ] && infofy "Done processing filesystems/blockdevices" disks 1 && return 0
@@ -463,7 +470,7 @@ rollback_filesystems ()
 
 	infofy "Phase 1: Umounting all specified mountpoints" disks
 	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
-	sort -t \  -k 6 $TMP_FILESYSTEMS | tac | while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
+	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
 		then
@@ -487,7 +494,7 @@ rollback_filesystems ()
 				fi
 			fi
 		fi
-	done
+	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS | tac)
 
 
 	# phase 2: destruct blockdevices listed in $BLOCK_DATA if they would exist already, in the correct order (first lvm LV, then VG, then PV etc)
@@ -512,7 +519,7 @@ rollback_filesystems ()
 				then
 					if pvdisplay $real_part &>/dev/null
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -523,7 +530,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-pv ] # Can be in use for: lvm-vg
 			then
@@ -531,7 +538,7 @@ rollback_filesystems ()
 				then
 					if vgdisplay -v 2>/dev/null | grep -q $real_part # check if it's in use
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -542,7 +549,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-vg ] #Can be in use for: lvm-lv
 			then
@@ -551,7 +558,7 @@ rollback_filesystems ()
 					open_lv=`vgdisplay -c $part 2>/dev/null | cut -d ':' -f6`
 					if [ $open_lv -gt 0 ]
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -562,7 +569,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			elif [ "$part_type" = lvm-lv ] #Can be in use for: dm_crypt or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
@@ -570,7 +577,7 @@ rollback_filesystems ()
 				then
 					if cryptsetup isLuks $part &>/dev/null
 					then
-						debug "$part ->Cannot do right now..."
+						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
 						infofy "Attempting destruction of device $part (type $part_type)" disks
@@ -581,7 +588,7 @@ rollback_filesystems ()
 						fi
 					fi
 				else
-					debug "Skipping destruction of device $part (type $part_type) because it doesn't exist"
+					debug 'FS' "Skipping destruction of device $part (type $part_type) because it doesn't exist"
 				fi
 			else
 				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
@@ -597,6 +604,7 @@ rollback_filesystems ()
 	fi
 	[ -n "$warnings" ] && infofy "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
 	infofy "Rollback succeeded" disks 1
+	done_filesystems=
 	BLOCK_ROLLBACK_USELESS=1
 	return 0
 }
@@ -616,7 +624,7 @@ process_filesystem ()
 {
 	[ "$2" != lvm-lv ] && [ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1" # Don't do this for lv's.  It's a hack to workaround non-existence of VG device files.
 	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
-	debug "process_filesystem $@"
+	debug 'FS' "process_filesystem $@"
         part=$1
         fs_type=$2
 	fs_create=${3:-yes}
@@ -674,16 +682,17 @@ process_filesystem ()
 		BLOCK_ROLLBACK_USELESS=0
 		if [ "$fs_type" = swap ]
 		then
-			debug "swaponning $part"
+			debug 'FS' "swaponning $part"
 			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
 		else
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
-			debug "mounting $part on $dst"
+			debug 'FS' "mounting $part on $dst"
 			mkdir -p $dst &>/dev/null # directories may or may not already exist
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
 			if [ "$fs_mount" = target -a $fs_mountpoint = '/' ]
 			then
+				debug FS "setting \$PART_ROOT to $part"
 				PART_ROOT=$part
 			fi
 		fi
@@ -736,24 +745,30 @@ get_filesystem_program ()
 
 
 # $1 blockdevice
-# $2 standard SI for 1000*n, IEC for 1024*n (optional. defaults to SI)
-# --> Note that if you do SI on a partition, you get the size of the entire disk, so for now you need IEC for single partitions
-# output will be in $BLOCKDEVICE_SIZE in MB/MiB
-# WARNING: hdparm works - by design - only for ide/sata. not scsi et al
-# TODO: clean up all disk size related stuff.  see http://bugs.archlinux.org/task/12949
+# $2 unit: B, KiB, kB, MiB, MB, GiB or GB.  defaults to B (we follow IEEE 1541-2002 )
+# output will be in $BLOCKDEVICE_SIZE
 get_blockdevice_size ()
 {
 	[ -b "$1" ] || die_error "get_blockdevice_size needs a blockdevice as \$1 ($1 given)"
-	standard=${2:-SI}
-
-	if [ "$standard" = SI ]
+	unit=${2:-B}
+	allowed_units=(B KiB kB MiB MB GiB GB)
+	if ! check_is_in $unit "${allowed_units[@]}"
 	then
-		BLOCKDEVICE_SIZE=$(hdparm -I $1 | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/")
-	elif [ "$standard" = IEC ]
-	then
-		#NOTE: unreliable method: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seems to work for me.  don't sue me if it doesn't for you
-		#blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
-		#BLOCKDEVICE_SIZE=$(($blocks/1024))
-		BLOCKDEVICE_SIZE=$((`fdisk -l $1 | sed -n '2p' | cut -d' ' -f5`/1024))
+		die_error "Unrecognized unit $unit!"
 	fi
+
+	# NOTES about older, deprecated methods:
+	# - BLOCKDEVICE_SIZE=$(hdparm -I $1 | grep -F '1000*1000' | sed "s/^.*:[ \t]*\([0-9]*\) MBytes.*$/\1/") # if you do this on a partition, you get the size of the entire disk ! + hdparm only supports sata and ide. not scsi.
+	# - unreliable method: on some interwebs they say 1 block = 512B, on other internets they say 1 block = 1kiB.  1kiB seemed to work for me.
+	# blocks=`fdisk -s $1` || show_warning "Fdisk problem" "Something failed when trying to do fdisk -s $1"
+	# BLOCKDEVICE_SIZE=$(($blocks/1024))
+
+	bytes=$((`fdisk -l $1 2>/dev/null | sed -n '2p' | cut -d' ' -f5`))
+	[ $unit = B   ] && BLOCKDEVICE_SIZE=$bytes
+	[ $unit = KiB ] && BLOCKDEVICE_SIZE=$((bytes/2**10)) # /1024
+	[ $unit = kB  ] && BLOCKDEVICE_SIZE=$((bytes/10**3)) # /1000
+	[ $unit = MiB ] && BLOCKDEVICE_SIZE=$((bytes/2**20)) # ...
+	[ $unit = MB  ] && BLOCKDEVICE_SIZE=$((bytes/10**6))
+	[ $unit = GiB ] && BLOCKDEVICE_SIZE=$((bytes/2**30))
+	[ $unit = GB  ] && BLOCKDEVICE_SIZE=$((bytes/10**9))
 }
