@@ -161,7 +161,7 @@ _getavaildisks()
 
 
 # ask for a timezone.
-# this is pretty similar to how tzselect looks, but we support dia+cli + we don't actually change the clock
+# this is pretty similar to how tzselect looks, but we support dia+cli + we don't actually change the clock + we don't show a date/time and ask whether it's okay. that comes later.
 ask_timezone ()
 {
 	REGIONS=""
