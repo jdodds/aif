@@ -77,17 +77,16 @@ interactive_timezone () {
         TIMEZONE=$ANSWER_TIMEZONE
         infofy "Setting Timezone to $TIMEZONE"
         [ -e /etc/localtime ] && rm -f /etc/localtime #why do we do this?? tpowa?
-        dohwclock
 }
 
 
 
 interactive_time () {
         # utc or localtime?
-        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" required "UTC" " " "localtime" " " || return 1
+        ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" " " "localtime" " " || return 1
         HARDWARECLOCK=$ANSWER_OPTION
 
-	dohwclock
+	dohwclock $HARDWARECLOCK
 
 	if which ntpdate >/dev/null && ask_yesno "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?\n(You need a working internet connection for doing this!)" yes #TODO: only propose if network ok.
         then
