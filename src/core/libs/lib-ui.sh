@@ -160,6 +160,30 @@ _getavaildisks()
 }
 
 
+# ask for a timezone.
+# this is pretty similar to how tzselect looks, but we support dia+cli + we don't actually change the clock
+ask_timezone ()
+{
+	REGIONS=""
+	for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
+		REGIONS="$REGIONS $i -"
+	done
+	while true; do
+		ask_option no "Please select a region" '' required $REGIONS
+		region=$ANSWER_OPTION
+		if [ $? -eq 0 ]; then
+			ZONES=""
+			for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
+				ZONES="$ZONES $i -"
+			done
+			ask_option no "Please select a timezone" '' required $ZONES
+			zone=$ANSWER_OPTION
+			[ $? -eq 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
+		fi
+	done
+}
+
+
 # ask the user to make a selection from a certain group of things
 # $1 question
 # shift;shift; $@ list of options. first tag, then item then ON/OFF. if item == ^ or - it will not be shown in cli mode.
@@ -234,13 +258,6 @@ ask_string ()
 	[ -z "$1" ] && die_error "ask_string needs a question!"
 	[ "$var_UI_TYPE" = dia ] && { _dia_ask_string "$1" "$2" "$3"; return $? ; }
 	[ "$var_UI_TYPE" = cli ] && { _cli_ask_string "$1" "$2" "$3"; return $? ; }
-}
-
-
-ask_timezone ()
-{
-	[ "$var_UI_TYPE" = dia ] && { _dia_ask_timezone "$@" ; return $? ; }
-	[ "$var_UI_TYPE" = cli ] && { _cli_ask_timezone "$@" ; return $? ; }
 }
 
 
@@ -419,27 +436,6 @@ _dia_ask_string ()
 }
 
 
-_dia_ask_timezone ()
-{
-	REGIONS=""
-	for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | cut -f 3 | sed -e 's#/.*##g'| sort -u); do
-		REGIONS="$REGIONS $i -"
-	done
-	while true; do
-		ask_option no "Please select a region" '' required $REGIONS
-		region=$ANSWER_OPTION
-		if [ $? -eq 0 ]; then
-			ZONES=""
-			for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
-				ZONES="$ZONES $i -"
-			done
-			ask_option no "Please select a timezone" '' required $ZONES
-			zone=$ANSWER_OPTION
-			[ $? -eq 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
-		fi
-	done
-}
-
 
 _dia_ask_yesno ()
 {
@@ -606,12 +602,6 @@ _cli_ask_string ()
 		fi
 	fi
 	return 0
-}
-
-
-_cli_ask_timezone ()
-{
-	ANSWER_TIMEZONE=`tzselect`
 }
 
 
