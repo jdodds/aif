@@ -792,7 +792,7 @@ EOF
 	# ...
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
-    [ "$EDITOR" ] || interactive_get_editor
+    [ -n "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
 
     DEVS=$(finddisks 1 _)
