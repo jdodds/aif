@@ -103,7 +103,7 @@ interactive_time () {
 			if ntpdate pool.ntp.org >/dev/null 
 			then
 				notify "Synced clock with internet pool successfully."
-				NEXTITEM=3
+				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
 			else
 				show_warning 'Ntp failure' "An error has occured, time was not changed!"
 			fi
