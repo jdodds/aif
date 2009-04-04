@@ -92,13 +92,12 @@ interactive_time () {
 		current=`date`
                 default=no
                 [ -n "$NEXTITEM" ] && default="$NEXTITEM"
-                EXTRA_1=
-                EXTRA_2=
                 #TODO: only propose if network ok
-		which ntpdate &>/dev/null && EXTRA_1='ntp' && EXTRA_2='Set time and date using ntp'
+                EXTRA=()
+		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
 
                 ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
-                $EXTRA_1 $EXTRA_2 "manual" "Set time and date manually" "return" "Looks good. back to main menu"
+                "${EXTRA[@]}" "manual" "Set time and date manually" "return" "Looks good. back to main menu"
                 if [ "$ANSWER_OPTION" = ntp ]
                 then
 			if ntpdate pool.ntp.org >/dev/null 
