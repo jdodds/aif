@@ -455,7 +455,9 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
-	FOLLOW_PID=`_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null`
+	_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>$RUNTIME_DIR/aif-follow-pid
+	FOLLOW_PID=`cat $RUNTIME_DIR/aif-follow-pid`
+	rm $RUNTIME_DIR/aif-follow-pid
 }
 
 
