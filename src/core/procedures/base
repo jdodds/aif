@@ -102,6 +102,7 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
+	NEXTITEM=
         while true; do
                 default=no
                 [ -n "$NEXTITEM" ] && default="$NEXTITEM"

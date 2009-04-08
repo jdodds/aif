@@ -1,6 +1,12 @@
 See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
 CURRENT ISSUES:
+* consider syslog as logging backend
+* add support for TARGET_PACKAGES_EXCLUDE to filter out packages from a group
+* more vars for automatic profile: hostname (check that adding to /etc/hosts can be done procedure-independently), 
+LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or take the config from runtime)
+* what to do with /etc/groups, passwd, modprobe.conf, mkinitcpio.conf, rc.local etc with automatic procedure? configure through automatic profile or let user check out files from svn or so? 
+* depend statements for automatic profiles (+ example)
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
 * differentiate between framework and installer in src/aif.sh, some things should be in base
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
@@ -41,7 +47,7 @@ CURRENT ISSUES:
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
 * support maybe ntp to set clock
 * auto-configure mkinitcpio.conf for dm_crypt and lvm
-* core/quickinst: figure out what needs to be done and do it.
+* support setting mount options for fs'es (to go into fstab) in at least automatic procedures. interactive > you can edit fstab right..
 * right at the end of package installation something happens :/ also at configure system, before generation of locales
 
 

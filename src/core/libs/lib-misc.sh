@@ -102,19 +102,22 @@ cleanup_runtime ()
 }
 
 
+# $1 UTC or localtime (hardwareclock)
+# $2 direction (systohc or hctosys)
 dohwclock() {
-	infofy "Syncing hardwareclock to systemclock ..."
-	if [ "$HARDWARECLOCK" = "UTC" ]; then
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --utc"
-	else
-		HWCLOCK_PARAMS="$HWCLOCK_PARAMS --localtime"
-	fi
-
+	# TODO: we probably only need to do this once and then actually use adjtime on next invocations
+	infofy "Resetting hardware clock adjustment file"
 	[ ! -d /var/lib/hwclock ] && mkdir -p /var/lib/hwclock
 	if [ ! -f /var/lib/hwclock/adjtime ]; then
-		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime # what the hell is this for???
+		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime
 	fi
-	hwclock $HWCLOCK_PARAMS #tpowa does it without, but i would add --noadjtime here
+
+	infofy "Syncing clocks ($2), hc being $1 ..."
+	if [ "$1" = "UTC" ]; then
+		hwclock --$2 --utc
+	else
+		hwclock --$2 --localtime
+	fi
 }
 
 target_configure_initial_keymap_font ()

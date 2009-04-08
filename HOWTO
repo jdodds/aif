@@ -3,25 +3,36 @@
 * an installation cd is in essence just an arch system, it just has the aif package installed. you can install aif on any system without problems.
 * install cd's from 2009.02 and up have aif on board, so probably you don't need to do anything at all.
 
-* there is a "binary" package in extra, containing a recent release
-* there are 2 source packages in AUR, one for each branch in git.  ( see http://aur.archlinux.org/packages.php?K=aif )
-- aif-git: latest code from the git master (stable) branch: recommended!
-- aif-experimental-git: latest development code.  Code is tested here and if ok, merged into master.  Use at own risk!!
+There are 3 aif packages available:
+> supported:
+  * aif (extra repo): "binary" package, containing latest stable release. this is used by default on the official arch media
+> unsupported: there are 2 source packages in AUR, one for each branch in git.  ( see http://aur.archlinux.org/packages.php?K=aif )
+  * aif-git: latest code from the git master (stable) branch: recommended for power users.
+  * aif-experimental-git: latest development code.  Code is tested here and if ok, merged into master.  Use at own risk!!
 
-So, assuming you want to upgrade the aif package on an installation cd, to say aif-experimental-git from AUR, you would:
+
+
+So, if you want to upgrade the aif package on an installation cd..
+
+> aif package from extra:
+  ----------------------
+  * pacman -Sy aif
+
+
+
+> aif git package from AUR: (for example aif-experimental-git. aif-git is the same procedure)
+  ------------------------------------------------------------------------------------------
 
 1) Boot from the installcd
 
 2) Open 2 shells, one as user root, one as regular user (arch)
 
-3) Copy paste the code below.
+3) Execute the code below.
 
 # root shell:
-/arch/setup. # fake ftp install so it lets you run the network configure script
+aif -p partial-configure-network # if you have a recent enough aif version installed that comes with this procedure.
+/arch/setup. # alternatively, use the old installer.  fake ftp install so it lets you run the network configure script, then exit the installer
 
-Alternatively, if you have a recent version of AIF installed and it comes with the partial-network procedure, you can execute that to set up your network.
-
-# when network works, quit installer
 pacman -Sy git fakeroot # You need about 192MB ram for this! 128MB is not enough.
 
 # arch shell

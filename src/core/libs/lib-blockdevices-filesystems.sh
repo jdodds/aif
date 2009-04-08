@@ -207,7 +207,7 @@ findpartitions() {
 
 # taken from setup
 get_grub_map() {
-	rm $TMP_DEV_MAP #TODO: this doesn't exist? is this a problem? ASKDEV
+	rm $TMP_DEV_MAP &>/dev/null #TODO: this doesn't exist? is this a problem? ASKDEV
 	infofy "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
 	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit

@@ -76,42 +76,56 @@ interactive_timezone () {
 	ask_timezone || return 1
         TIMEZONE=$ANSWER_TIMEZONE
         infofy "Setting Timezone to $TIMEZONE"
-        [ -e /etc/localtime ] && rm -f /etc/localtime #why do we do this?? tpowa?
-        dohwclock
 }
 
 
 
 interactive_time () {
         # utc or localtime?
-        ask_option no "Clock configuration" "Is your hardware clock in UTC or local time?" required "UTC" " " "localtime" " " || return 1
+        ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" " " "localtime" " " || return 1
         HARDWARECLOCK=$ANSWER_OPTION
+        [ -e /etc/localtime ] && rm -f /etc/localtime
 
-	dohwclock
+	NEXTITEM=
+        while true; do
+		dohwclock $HARDWARECLOCK hctosys
+		current=`date`
+                default=no
+                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                #TODO: only propose if network ok
+                EXTRA=()
+		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
 
-	if which ntpdate >/dev/null && ask_yesno "'ntpdate' was detected on your system.\n\nDo you want to use 'ntpdate' for syncing your clock,\nby using the internet clock pool?\n(You need a working internet connection for doing this!)" yes #TODO: only propose if network ok.
-        then
-                if ntpdate pool.ntp.org >/dev/null
+                ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
+                "${EXTRA[@]}" "manual" "Set time and date manually" "return" "Looks good. back to main menu"
+                if [ "$ANSWER_OPTION" = ntp ]
                 then
-			notify "Synced clock with internet pool successfully.\n\nYour current time is now:\n$(date)"
-                else
-                        show_warning 'Ntp failure' "An error has occured, time was not changed!"
-                fi
-        fi
-
-	# display and ask to set date/time
-	ask_datetime
-
+			if ntpdate pool.ntp.org >/dev/null 
+			then
+				notify "Synced clock with internet pool successfully."
+				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
+			else
+				show_warning 'Ntp failure' "An error has occured, time was not changed!"
+			fi
+		fi
+		if [ "$ANSWER_OPTION" = manual ]
+		then
+			ask_datetime 
+			if date -s "$ANSWER_DATETIME"
+			then
+				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
+			else
+				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME" 
+			fi
+		fi
+                [ "$ANSWER_OPTION" = return ] && break
+        done
 
 	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
 	then
 		/bin/rm -f /etc/localtime
 		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 	fi
-
-	# save the time
-	date -s "$ANSWER_DATETIME" || show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
-	dohwclock
 }
 
 
@@ -778,7 +792,7 @@ EOF
 	# ...
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
-    [ "$EDITOR" ] || interactive_get_editor
+    [ -n "$EDITOR" ] || interactive_get_editor
     $EDITOR $grubmenu
 
     DEVS=$(finddisks 1 _)
