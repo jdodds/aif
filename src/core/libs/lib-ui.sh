@@ -455,7 +455,18 @@ _dia_follow_progress ()
 {
 	title=$1
 	logfile=$2
-	FOLLOW_PID=`_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null | head -n 1`
+
+	_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>$RUNTIME_DIR/aif-follow-pid
+	FOLLOW_PID=`cat $RUNTIME_DIR/aif-follow-pid`
+	rm $RUNTIME_DIR/aif-follow-pid
+
+	# I wish something like this would work.  anyone who can explain me why it doesn't get's to be aif contributor of the month.
+	# FOLLOW_PID=`_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null | head -n 1`
+
+	# Also this doesn't work:
+	# _dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 &>/dev/null &
+	# FOLLOW_PID=$!
+
 }
 
 
