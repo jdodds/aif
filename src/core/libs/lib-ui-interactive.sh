@@ -805,7 +805,7 @@ interactive_runtime_network() {
     return 0
 }
 
-interactive_instal_bootloader () {
+interactive_install_bootloader () {
 	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
 	                "Grub" "Use the GRUB bootloader (default)" \
 	                "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
