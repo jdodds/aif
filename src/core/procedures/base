@@ -73,6 +73,12 @@ worker_select_source ()
 }
 
 
+worker_select_source_extras_menu ()
+{
+	select_source_extras_menu
+}
+
+
 worker_runtime_network ()
 {
 	#network is assumed to be functional for now because we do it first with /arch/setup. once that falls away, we'll need to implement it here

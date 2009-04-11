@@ -22,6 +22,24 @@ interactive_configure_system()
 	[ "$EDITOR" ] || interactive_get_editor
 	FILE=""
 
+	 ## PREPROCESSING ##
+
+	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already even if worker did not exit 0
+	# /etc/pacman.d/mirrorlist
+	# add installer-selected mirror to the top of the mirrorlist
+	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${var_SYNC_URL}" != "" ]; then
+		debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
+		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
+	fi
+
+	# /etc/rc.conf
+	# Make sure timezone and utc info are what we want
+	# NOTE: If a timezone string never contains more then 1 slash, we can use ${TIMEZONE/\//\\/}
+	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"${TIMEZONE//\//\\/}\"/g" \
+	-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
+	${var_TARGET_DIR}/etc/rc.conf
+
 	# main menu loop
 	while true; do
 		DEFAULT=no
@@ -129,6 +147,62 @@ interactive_time () {
 }
 
 
+interactive_prepare_disks ()
+{
+	DONE=0
+	ret=1 # 1 means unsuccessful. 0 for ok
+	NEXTITEM=
+	DISK_CONFIG_TYPE=
+	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
+	while [ "$DONE" = "0" ]
+	do
+		rollbackstr=" (you don't need to do this)"
+		[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && rollbackstr=" (this will revert your last changes)"
+		default=no
+		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
+
+		#TODO: inform user (using dialog's --item-help or so) that autoprepare uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
+		ask_option $default "Prepare Hard Drive" '' required \
+			"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
+			"2" "Partition Hard Drives" \
+			"3" "Configure block devices, filesystems and mountpoints" \
+			"4" "Rollback last filesystem changes$rollbackstr" \
+			"5" "Return to Main Menu"
+
+		case $ANSWER_OPTION in
+			"1")
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				interactive_autoprepare && NEXTITEM=5 && ret=0 && DISK_CONFIG_TYPE=auto;; #TODO: for some reason. if this completes $?=0, next item will be 1 :/
+			"2")
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				interactive_partition && ret=1 && NEXTITEM=3 && DISK_CONFIG_TYPE=manual
+				;;
+			"3")
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				PARTFINISH=""
+				interactive_filesystems && ret=0 && NEXTITEM=5 && DISK_CONFIG_TYPE=manual
+				;;
+			"4")
+				if [ "$BLOCK_ROLLBACK_USELESS" = "1" ]
+				then
+					ask_yesno "It seems like you haven't partitioned/formatted/mounted anything yet (or rolled back already).  This operation is useless (unless the installer is buggy), but it doesn't harm.  Do you want to continue?" || NEXTITEM=5
+				fi
+				if [ $? -eq 0 -o "$BLOCK_ROLLBACK_USELESS" = "0" ]
+				then
+					if rollback_filesystems #TODO: this part doesn't belong here. move it to ui-interactive. (interactive_rollback)
+					then
+						infofy "Rollback succeeded"
+					else
+						show_warning "Rollback failed" "Rollback failed"
+					fi
+				fi
+				;;
+			*)
+				DONE=1 ;;
+		esac
+	done
+	return $ret
+}
 
 
 
@@ -731,6 +805,15 @@ interactive_runtime_network() {
     return 0
 }
 
+interactive_instal_bootloader () {
+	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
+	                "Grub" "Use the GRUB bootloader (default)" \
+	                "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
+
+	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
+	[ "$bl" != grub ] && return 0
+	interactive_install_grub
+}
 
 interactive_install_grub() {
 	get_grub_map
@@ -935,4 +1018,18 @@ interactive_get_editor() {
 		"vi")   EDITOR="vi"   ;;
 		*)      EDITOR="nano" ;;
 	esac
+}
+
+
+select_source_extras_menu ()
+{
+	while true; do
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \ #TODO: display the "make sure network is okay" in a better way
+		"1" "$worker_runtime_network_title" \
+		"2" "$worker_select_mirror_title" \
+		"3" "Return to Main Menu"
+		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network
+		[ "$ANSWER_OPTION" = 2 ] && execute worker select_mirror
+		[ "$ANSWER_OPTION" = 3 ] && break
+	done
 }
