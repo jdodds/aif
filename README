@@ -1,21 +1,40 @@
 AIF is the Arch Linux Installation Framework.
 
----  Beta software.  Use at own risk!! ---
-
-
 License:     GPL3. See COPYING.
-Author:      Dieter Plaetinck
+Authors:     Dieter Plaetinck
+             Quite some code has been taken from the installer project @ http://projects.archlinux.org/?p=installer.git;a=summary
+             The main authors/contributors of that project are Judd Vinet, Tobias Powalowski, Simo Leone, Aaron Griffin and Dan McGee
 Homepage:    http://github.com/Dieterbe/aif
 
 
-** --> Intro / Current state of things <-- **
 
-AIF is included on the 2009.02 Arch install CD's as an experimental alternative for the old installer (/arch/setup).
-AIF is based on the old installer, but the code has been madly refactored, reorganized, cleaned up and in some places replaced.
+** Goals **
 
-AIF comes by default with these procedures:
-- interactive: A port of /arch/setup.  Should work okay if you don't try too hard to break it ;-)
-- automatic:   An automated, deploy-tool-alike procedure.  Work in progress.  Don't use this yet.
+The goal of this project is to:
+1) provide reasonable clean, DRY, modular and maintainable code for the Arch Linux installer
+2) provide complete, easily-reusable libraries for disk partitioning, UI, package management, etc
+3) provide some sensible default installation methods (eg interative, automatic (prescripted), ..)
+4) allow power users to easily override certain aspects of the installation procedures
+   or creating customized procedures, leveraging the available code.
+
+The goal of AIF is not (yet) to:
+1) provide an installer who detects your stuff and tries to be smart and configures all your stuff.
+   If you're interested in this, feel free to build it and I may incorporate it someday.
+2) be more fancy then needed
+
+
+
+** A bit of history **
+
+AIF is based on the old archlinux-installer (/arch/setup), but the code has been madly refactored, reorganized, cleaned
+up, improved and in some places replaced.
+The initial goal was to build an automated installer with a reusable
+backend, but the porting of the userfriendly, interactive installer from /arch/setup quickly became a proof of concept
+and even main focus point.  See http://www.nabble.com/Fifa:-Flexible-Installer-Framework-for-Arch-linux-td20256427.html
+
+
+
+** /arch/setup vs AIF **
 
 AIF may or may not bring much additional value for you when compared with the previous
 installer, it depends on what you want to do:
@@ -24,7 +43,8 @@ installer, it depends on what you want to do:
   The features are more or less the same, with a few exceptions:
   * Different partition/filesystem editor offering more flexibility and options, such as support for LVM and dm_crypt
   * Rollback functionality if you change your mind after having formatted filesystems or if something went wrong and you want to retry.
-  * Some miscellaneous features like the ability to choose between ncurses and CLI mode, debug output, and logging to a file.
+  * Some miscellaneous features like the ability to choose between ncurses and CLI mode,
+    nicer date/time setting, auto updating some config files, debug output, logging to a file etc.
 - Hackers:
   The code base that AIF runs on is very usable for hacking.  The code is
   modular, reusable and quite complete.  If you want to build your own
@@ -33,94 +53,125 @@ installer, it depends on what you want to do:
   works.  It is built for hacking, reusing code, changing the behaviour in
   specific places and making writing custom installers as easy as possible.
 
-Keep in mind that AIF is still in beta phase.
-There are some known issues (see the TODO file and various TODO's in the source code) 
-
-If you encounter issues, please report them at the Arch Linux bugtracker under the "Release Engineering" project.
-( http://bugs.archlinux.org/toplevel/proj6 )
-
-You can also get in touch with the release engineers / aif developers on the arg-releng
-mailing list, http://www.archlinux.org/mailman/listinfo/arch-releng
-
-AIF will soon become the new official installer so go ahead and try it !
 
 
+** Bug/feature request tracking.  Getting in touch ** 
 
+AIF developement happens under the umbrella of the release engineering project of Arch Linux.
 
-** Goals **
-The goal of this project is 
-1) to make the code of the Arch Linux installer more clean, DRY, modular and maintainable.
-2) providing complete, easily-reusable libraries for disk partitioning, UI, package management, etc
-3) provide some sensible default installation methods (eg interative, automatic (prescripted), ..)
-4) allowing power users to easily override certain aspects of the installation procedures
-   or creating customized procedures, leveraging the available code.
+- bug tracker:  the Arch Linux bugtracker, "Release Engineering" project, category 'AIF'.
+                http://bugs.archlinux.org/toplevel/proj6
+- mailing list: http://www.archlinux.org/mailman/listinfo/arch-releng
 
-The goal of AIF is not (yet):
-1) providing an installer who detects your stuff and tries to be smart and configures all your stuff.
-   If you're interested in this, feel free to build it and I may incorporate it someday.
+There are some known issues (see the bugtracker, TODO file and various TODO's in the source code) 
+If you encounter issues, please report them on the bugtracker, after checking if they are not reported yet of course.
+If you want to get in touch with us, to ask/discuss/.. things, please send to the mailing list.
 
 
 
-** File locations (on the install CD): **
+** Lingo **
 
+- procedure = a 'plugin' for aif that controls how the installation advances and how the interaction with the user happens
+- lib       = a library for aif with some useful functions (eg lib-pacman handles all pacman related things)
+- module    = a bundle that can contain zero or more procedures and libraries.
+- profile   = a fancier name for a config file.  some procedures support the use of profiles (eg automatic), others don't (eg interactive)
+- partial procedure = a 'mini' procedure that lets the user perform one or more smaller aspects of (or related to) an installation
+
+
+** Basic workflow **
+
+AIF comes by default with these procedures:
+- base:        basic, little-interactivity installation with some common defaults. 
+               This procedure is used by the others to inherit from, it is NOT meant to be used directly by end users
+- interactive: An interactive installation procedure, modeled after /arch/setup
+               Asks you some questions, guides you through an installation
+               and even helps you a bit by updating configuration files on the target
+               system with your usettings
+- automatic:   An automated, deploy-tool-alike procedure.  designed for low-
+               to zero interactivity.  uses profiles for configuration of the installation/target system.  
+               See /usr/share/aif/examples/ for example profile files.
+- partial-configure-network: exposes the network configuration step from the interactive procedure
+- partial-disks: Process disk subsystem or do a rollback
+- partial-keymap: change your keymap/console font settings.  The benefit of this method over a simple loadkeys is that the interactive procedure will
+                  automatically update the rc.conf on the target system with your settings.
+
+You would usually invoke aif like this:
+aif -p interactive
+aif -p automatic -c <profile file> [-l]
+aif -p <custom module name>/<your procedure>
+Type `aif -h` or just aif to see more details.
+
+
+
+** Packages and file locations: **
+
+The officially supported package is aif, in extra.  There are also
+unsupported development git packages in AUR.  See HOWTO
+
+File locations:
 * aif.sh        -> /sbin/aif
 * docs          -> /usr/share/aif/docs
 * core module   -> /usr/lib/aif/core
 * user modules  -> /usr/lib/aif/user/<module name> (put your own modules here)
-* runtime files -> /tmp/aif (package list etc go here)
+* runtime files -> /tmp/aif
 * logs          -> /var/log/aif
 
-A module can have 2 directories: libs, and procedures.
-
-
-** Procedures **
-core/base:        basic, little-interactivity installation with some common defaults.  You probably don't
-                  want to run this one, although it's useful for other procedures to inherit from.
-core/interactive: interactive, reasonably flexible/featured installer (port of /arch/setup)
-core/automatic:   automatic installer/deployment tool, can use config files
-
-** Partial Procedures **
-These procedures allow you to run a select few functions, in order to reach
-a specific goal, usually not installing a system
-
-partial-configure-network.sh Configure network on the runtime system
-partial-disks.sh             Process disk subsystem or do a rollback
 
 
 ** (Internal) Workflow **
 There is a very basic but powerful workflow defined by variables, phases and workers.
 Depending on the procedure you choose (or write yourself), these will differ
 In the code, they are very recognizable and are named like this:
- - variable -> var_<foo>
+ - variable -> var_<FOO>
  - phase    -> phase_<bar> (an array in which each element is a worker to be executed, with optionally arguments for that worker)
                There are 4 phases: preparation, basics, system, finish. (executed in that order)
  - worker   -> worker_<baz> ( a worker function, called by a phase. implements some specific logic.
                eg runtime_packages, prepare_disks, package_list etc)
 
+
 You can depend on whatever procedure you like (like core/base), to save
 yourself some work (you only need to override a few things)
 
 Notes:
- - The phases are started by the start_process function.  You can also override this function to take flow control in your own hands (eg iterative, menu-based installer)
+ - You don't need to use the concept of phases, for example the interactive procedure doesn't use them.
+ - The phases are started by the start_process function.  You can also override this function to take flow control in your own hands (like interactive does) 
  - you _can_ override _all_ variables and functions in your modules, but you should be able to achieve your goals by
    overriding only the 3 basic things and the start_process function, and only in procedures.
  - you _must_ specify a procedure, to avoid errors. take 'interactive' if unsure
  - don't edit the base procedure (or any other core item), rather make your own. It's easy!
  - you're not supposed to define new phases. just override them. logic goes in workers/libariers
 
-Modules are the building blocks in aif.  They can contain libraries (for
-user interfaces, backend logic, etc) and procedures (how an installation
-process should go).
-The core module comes by default and contains everything 99% of the users
-will need.  You can easily make your own modules with in it your own
-procedures (and your own libraries, if you need that).  If you build your
-own libraries, it's generally a good idea to keep
-their names in line with what core has (lib-ui.sh, lib-network.sh etc). 
-Do not put stuff in the core module yourself!  If it's good stuff, it might
-be merged into core someday...  Also, don't name your custom module 'core' (it will be
-ignored anyway).  Don't call it http either, because you can specify
-'http://some/path/to/a/procedure', aif will download that procedure and
-execute it (and the module will be 'http')
+
+
+** Extending AIF **
+
+*** Modules ***
+ -> Modules are the building blocks in aif
+ -> user modules are just directories with a 'libs' and 'procedures' subdirectory
+    where you can put your customized.. guess what.  See 'file locations'
+ -> The core module comes by default and contains everything 99% of the users will need. 
+    Don't name your custom module 'core' (it will be ignored).
+    Don't call it http either, because you can specify 'http://some/path/to/a/procedure',
+    aif will download that procedure and execute it (and the module will be 'http')
+
+*** Procedures ***
+ -> You can take a procedure, copy it, modify it and call it. that's fine.
+ -> You can also write a new one from scratch, inheriting some other procedure using
+    the depend_procedure call and just overriding what you need.
+
+ -> Commandline arguments are parsed by aif.sh but you can extend/override it's
+    behaviour by overriding $var_OPTS_STRING and the process_vars variable.
+    Also, you do not _have_ to use the variables they set (eg arg_ui_type).  You
+    usually will set defaults in the configure worker and override with
+    arguments passed by the user (eg to use cli mode unless user wants dia)
+
+*** Libraries **
+ -> If you have logic that may be reusable by several procedures, consider
+    putting the functions in a library so you, and others can easily use it.
+
+*** Profiles ***
+ -> You can take a profile and modify it
+ -> you can also use the depend_profile call and just override what you need.
 
 
 Note that if you load a module and a library has the same function names as
@@ -142,36 +193,19 @@ You can specify a core procedure on the command line by specifying
 '<procedure_name>', to specify a user contriubuted procedure, specify
 '<module_name>/<procedure_name>'
 
-Commandline arguments are parsed by aif.sh but you can extend/override it's
-behaviour by overriding $var_OPTS_STRING and the process_vars variable.
-Also, you do not _have_ to use the variables they set (eg arg_ui_type).  You
-usually will set defaults in the configure worker and override with
-arguments passed by the user (eg to use cli mode unless user wants dia)
 
 
 ** Contributing **
+
 Install a VM (I use virtualbox-ose, works fine), make a vm, boot the install cd and just follow the HOWTO.
 It's probably easiest if you set up your own git clone that you can easily
 acces from the VM (You can open a github account and fork my code).
-You can edit on the cd itself, but given the low resolution of the VM and the limited
-choice of editors, you'll probably edit on your pc, commit, push to github
+You can edit on the cd itself, but given the low resolution of the VM, you'll probably edit on your pc, commit, push to github
 and pull from the clone on the cd.
 If you want to do debugging, just call the debug function and export DEBUG=1
 before calling the scripts. (or pass -d)
 Keep in mind there are 3 kinds of variables.  Those that affect/belong to
 the runtime (install cd live environment), target (affects/belongs to the
 target installation) and TMP (everything in between or extra). Variablenames
-should have _TARGET or _TMP suffixes or none for runtime.  (Honestly though,
-it isn't always the case like that now, I need to do more refactoring)
-Bugs can be reported at http://bugs.archlinux.org/, project "Release Engineering"
-
-Much of the code in the core module is taken (and modified) from the 'real' arch linux install
-scripts code. (/arch/setup and /arch/quickinst). the modifications are mostly done
-to make the code more (re)useable, to separate backend code, user
-interface and flow control (into libraries and procedures)  (which was tightly coupled in the original scripts)
-and to provide additional features.
-
-I couldn't find what license the code is under, but I assume this
-is okay.. if not let me know.
-The original code is at
-http://projects.archlinux.org/?p=installer.git;a=summary
+should have _TARGET or _TMP suffixes or none for runtime.  (That's the
+theory, it isn't always the case like that now, I need to do more refactoring)
