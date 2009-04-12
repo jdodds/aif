@@ -1024,7 +1024,7 @@ interactive_get_editor() {
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \ #TODO: display the "make sure network is okay" in a better way
+		ask_option no "FTP Installation" 'Make sure the network is ok before continuing the installer' required \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu"
