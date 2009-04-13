@@ -22,8 +22,21 @@ run_mkinitcpio()
 # installpkg(). taken from setup. modified bigtime
 # performs package installation to the target system
 installpkg() {
-	ALL_PACKAGES=$var_TARGET_PACKAGES
-	[ -n "$TARGET_GROUPS" ] && ALL_PACKAGES="$ALL_PACKAGES "`list_packages group "$TARGET_GROUPS" | awk '{print $2}'`
+	ALL_PACKAGES=
+	[ -n "$var_TARGET_GROUPS" ] && ALL_PACKAGES=`list_packages group "$var_TARGET_GROUPS" | awk '{print $2}'`
+	if [ -n "$var_TARGET_PACKAGES_EXCLUDE" ]
+	then
+		for excl in $var_TARGET_PACKAGES_EXCLUDE
+		do
+			ALL_PACKAGES=${ALL_PACKAGES//$excl/}
+		done
+	fi
+
+	if [ -n "$var_TARGET_PACKAGES" ]
+	then
+		[ -n "$ALL_PACKAGES" ] && ALL_PACKAGES="$ALL_PACKAGES $var_TARGET_PACKAGES"
+		[ -z "$ALL_PACKAGES" ] && ALL_PACKAGES=$var_TARGET_PACKAGES
+	fi
 	ALL_PACKAGES=`echo $ALL_PACKAGES`
 	[ -z "$ALL_PACKAGES" ] && die_error "No packages/groups specified to install"
 
