@@ -4,8 +4,8 @@ usage ()
 {
 	msg="aif -p <procedurename>  Select a procedure # If given, this *must* be the first option
     -i <dia/cli>         Override interface type (optional)
-    -d                   Explicitly enable debugging (optional)
-    -l                   Explicitly enable logging to file (optional)
+    -d                   Explicitly enable debugging (/var/log/aif/debug.log) (optional)
+    -l                   Explicitly enable logging to file (/var/log/aif/aif.log) (optional)
     -h                   Help: show usage  (optional)\n
 If the procedurename starts with 'http://' it will be wget'ed.  Otherwise it's assumed to be a procedure in the VFS tree
 If the procedurename is prefixed with '<modulename>/' it will be loaded from user module <modulename>.\n
