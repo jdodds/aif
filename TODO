@@ -1,6 +1,12 @@
 See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
 CURRENT ISSUES:
+* implement depend_profile
+* add /var/lib/aif/profiles directory to packages and document it.
+*  check the existence of /src/core/pkg and based on that set a different default value. in interactive_select_source
+* > It displays the current time in UTC (if utc selected) not the users localtime (UTC +- TIMEZONE)
+* interactive_autoprepare: merge _getavaildisks( and finddisks calls
+* no uuid in fstab unlike previous thing
 * consider syslog as logging backend
 * add support for TARGET_PACKAGES_EXCLUDE to filter out packages from a group
 * more vars for automatic profile: hostname (check that adding to /etc/hosts can be done procedure-independently), 
