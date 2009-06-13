@@ -1,0 +1,19 @@
+for new 2.6.30 release:
+
+waitingfor:
+- process following bug
+
+-- install --
+pick ftp
+set network manually: http://bugs.archlinux.org/task/13237
+@select packages:
+notice with listing of core repo
+
+@ configure system:
+* check for notice
+* make some changes in pacman.conf
+* test canceling/done/exit codes
+
+---after reboot --
+check if mirrorlist is good
+check pacman.conf
