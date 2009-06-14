@@ -33,7 +33,7 @@ process_args ()
 echo "Welcome to $TITLE"
 
 mount -o remount,rw / &>/dev/null 
-
+cleanup_runtime
 
 ### Set configuration values ###
 # note : you're free to use or ignore these in your procedure.  probably you want to use these variables to override defaults in your configure worker

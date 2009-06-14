@@ -56,7 +56,7 @@ load_procedure()
 {
 	[ -z "$1" ] && die_error "load_procedure needs a module as \$1 and procedure as \$2"
 	[ -z "$2" ] && die_error "load_procedure needs a procedure as \$2"
-	if [ "$1" = 'http:' ]
+	if [ "$1" = 'http' ]
 	then
 		log "Loading procedure $2 ..."
 		procedure=$RUNTIME_DIR/aif-procedure-downloaded-`basename $2`
@@ -202,7 +202,6 @@ show_report () #TODO: abstract UI method (cli/dia)
 start_installer ()
 {
 	log "################## START OF INSTALLATION ##################"
-	cleanup_runtime
 }
 
 
