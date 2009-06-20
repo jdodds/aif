@@ -890,10 +890,12 @@ EOF
     cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
     sync
     # freeze xfs filesystems to enable grub installation on xfs filesystems
-    if [ -x /usr/sbin/xfs_freeze ]; then
-        /usr/sbin/xfs_freeze -f $var_TARGET_DIR/boot > /dev/null 2>&1
-        /usr/sbin/xfs_freeze -f $var_TARGET_DIR/ > /dev/null 2>&1
-    fi
+    for xfsdev in $(blkid -t TYPE=xfs -o device); do
+	mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+            /usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
+        fi
+    done
     # look for a separately-mounted /boot partition
     bootpart=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
     if [ "$bootpart" = "" ]; then
@@ -926,10 +928,12 @@ quit
 EOF
     cat /tmp/grub.log >$LOG
     # unfreeze xfs filesystems
-    if [ -x /usr/sbin/xfs_freeze ]; then
-        /usr/sbin/xfs_freeze -u $var_TARGET_DIR/boot > /dev/null 2>&1
-        /usr/sbin/xfs_freeze -u $var_TARGET_DIR/ > /dev/null 2>&1
-    fi
+    for xfsdev in $(blkid -t TYPE=xfs -o device); do
+        mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+            /usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
+        fi
+    done
 
     if grep "Error [0-9]*: " /tmp/grub.log >/dev/null; then
         notify "Error installing GRUB. (see $LOG for output)"
