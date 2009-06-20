@@ -809,7 +809,7 @@ EOF
     # freeze xfs filesystems to enable grub installation on xfs filesystems
     for xfsdev in $(blkid -t TYPE=xfs -o device); do
 	mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/"
+        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
             /usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
         fi
     done
@@ -847,7 +847,7 @@ EOF
     # unfreeze xfs filesystems
     for xfsdev in $(blkid -t TYPE=xfs -o device); do
         mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/"
+        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
             /usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
         fi
     done
