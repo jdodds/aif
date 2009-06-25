@@ -106,8 +106,8 @@ interactive_time () {
 
 	NEXTITEM=
         while true; do
-		dohwclock $HARDWARECLOCK hctosys
-		current=`date`
+		dohwclock $HARDWARECLOCK hctosys $TIMEZONE
+		current=$(TZ=$TIMEZONE date)
                 default=no
                 [ -n "$NEXTITEM" ] && default="$NEXTITEM"
                 #TODO: only propose if network ok
