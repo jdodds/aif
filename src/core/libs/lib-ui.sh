@@ -439,11 +439,12 @@ _dia_ask_string ()
 
 _dia_ask_yesno ()
 {
+	local default
 	height=$((`echo -e "$1" | wc -l` +7))
 	str=$1
-	#TODO: i think dialog doesnt support a default value for yes/no, so we need this workaround:
-	[ -n "$2" ] && str="$str (default: $2)"
-	dialog --yesno "$str" $height 55 # returns 0 for yes, 1 for no
+	# If $2 contains an explicit 'no' we set defaultno for yesno dialog
+	[ "$2" == "no" ] && default="--defaultno"
+	dialog $default --yesno "$str" $height 55 # returns 0 for yes, 1 for no
 	ret=$?
 	[ $ret -eq 0 ] && debug 'UI' "dia_ask_yesno: User picked YES"
 	[ $ret -gt 0 ] && debug 'UI' "dia_ask_yesno: User picked NO"
