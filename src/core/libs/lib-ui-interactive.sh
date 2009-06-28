@@ -413,7 +413,7 @@ interactive_filesystem ()
 		# ask mountpoint, if relevant
 		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
 		then
-			default=
+			default=no
 			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
 			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /etc 'config files' /home 'home directories' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
 			fs_mountpoint=$ANSWER_OPTION
