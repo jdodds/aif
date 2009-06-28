@@ -47,19 +47,19 @@ interactive_configure_system()
 		helptext="Note that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\nDon't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
 		ask_option $DEFAULT "Configuration" "$helptext" required \
-		"/etc/rc.conf"                "System Config" \
-		"/etc/fstab"                  "Filesystem Mountpoints" \
-		"/etc/mkinitcpio.conf"        "Initramfs Config" \
-		"/etc/modprobe/modprobe.conf" "Kernel Modules" \
-		"/etc/resolv.conf"            "DNS Servers" \
-		"/etc/hosts"                  "Network Hosts" \
-		"/etc/hosts.deny"             "Denied Network Services" \
-		"/etc/hosts.allow"            "Allowed Network Services" \
-		"/etc/locale.gen"             "Glibc Locales" \
-		"/etc/pacman.conf"            "Pacman.conf" \
-		"$var_MIRRORLIST"             "Pacman Mirror List" \
-		"Root-Password"               "Set the root password" \
-		"Done"                        "Return to Main Menu" || return 1
+		"/etc/rc.conf"                  "System Config" \
+		"/etc/fstab"                    "Filesystem Mountpoints" \
+		"/etc/mkinitcpio.conf"          "Initramfs Config" \
+		"/etc/modprobe.d/modprobe.conf" "Kernel Modules" \
+		"/etc/resolv.conf"              "DNS Servers" \
+		"/etc/hosts"                    "Network Hosts" \
+		"/etc/hosts.deny"               "Denied Network Services" \
+		"/etc/hosts.allow"              "Allowed Network Services" \
+		"/etc/locale.gen"               "Glibc Locales" \
+		"/etc/pacman.conf"              "Pacman.conf" \
+		"$var_MIRRORLIST"               "Pacman Mirror List" \
+		"Root-Password"                 "Set the root password" \
+		"Done"                          "Return to Main Menu" || return 1
 		FILE=$ANSWER_OPTION
 
 		if [ "$FILE" = "Done" ]; then       # exit
