@@ -415,7 +415,7 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
-			ask_option "$default" "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /etc 'config files' /home 'home directories' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
+			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /etc 'config files' /home 'home directories' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
 			fs_mountpoint=$ANSWER_OPTION
 			[ "$ANSWER_OPTION" == custom ] && ask_string "Enter the custom mountpoint for $part" "$default" && fs_mountpoint=$ANSWER_STRING || return 1
 		fi
