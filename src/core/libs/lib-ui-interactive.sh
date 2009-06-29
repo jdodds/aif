@@ -94,20 +94,28 @@ interactive_timezone () {
 	ask_timezone || return 1
         TIMEZONE=$ANSWER_TIMEZONE
         infofy "Setting Timezone to $TIMEZONE"
+		if [ -n "$TIMEZONE" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+		then
+			# This changes probably also the systemtime (UTC->$TIMEZONE)!
+			# localtime users will have a false time after that!
+			/bin/rm -f /etc/localtime
+			/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+		fi
 }
-
 
 
 interactive_time () {
         # utc or localtime?
         ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" " " "localtime" " " || return 1
         HARDWARECLOCK=$ANSWER_OPTION
-        [ -e /etc/localtime ] && rm -f /etc/localtime
+		# To avoid a false time for localtime users after above
+		# we must re-read the hwclock value again, but now into the
+		# correct timezone.
+		[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
 
 	NEXTITEM=
         while true; do
-		dohwclock $HARDWARECLOCK hctosys $TIMEZONE
-		current=$(TZ=$TIMEZONE date)
+		current=$(date)
                 default=no
                 [ -n "$NEXTITEM" ] && default="$NEXTITEM"
                 #TODO: only propose if network ok
@@ -138,12 +146,6 @@ interactive_time () {
 		fi
                 [ "$ANSWER_OPTION" = return ] && break
         done
-
-	if [ "$TIMEZONE" != "" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
-	then
-		/bin/rm -f /etc/localtime
-		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-	fi
 }
 
 

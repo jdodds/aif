@@ -104,7 +104,6 @@ cleanup_runtime ()
 
 # $1 UTC or localtime (hardwareclock)
 # $2 direction (systohc or hctosys)
-# $3 selected TIMEZONE (optional)
 dohwclock() {
 	# TODO: we probably only need to do this once and then actually use adjtime on next invocations
 	infofy "Resetting hardware clock adjustment file"
@@ -117,11 +116,7 @@ dohwclock() {
 	if [ "$1" = "UTC" ]; then
 		hwclock --$2 --utc
 	else
-		if [ ! "$3"x == "x" ]; then
-			local ret=$(TZ=$3 hwclock --$2 --localtime) # we need the subshell so that TZ does not set in this shell
-		else
-			hwclock --$2 --localtime
-		fi
+		hwclock --$2 --localtime
 	fi
 }
 
