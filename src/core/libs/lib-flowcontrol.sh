@@ -211,5 +211,6 @@ stop_installer ()
 {
 	log "-------------- STOPPING INSTALLATION ----------"
 	cleanup_runtime
+	[ "$var_UI_TYPE" = dia ] && clear
 	exit $1
 }
