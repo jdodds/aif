@@ -684,6 +684,7 @@ process_filesystem ()
 		then
 			debug 'FS' "swaponning $part"
 			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
+			fs_mountpoint="swap" # actually it's a hack to set the mountpoint in this (late) stage. this could be cleaner..
 		else
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
@@ -709,7 +710,7 @@ process_filesystem ()
 		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
 			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
-			if [ "$FSTYPE" = "swap" ]; then
+			if [ "$fs_type" = "swap" ]; then
 				echo "0" >>$TMP_FSTAB
 			else
 				echo "1" >>$TMP_FSTAB
