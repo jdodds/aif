@@ -128,6 +128,7 @@ done
 
 # Set pacman vars.  allow procedures to have set $var_TARGET_DIR (TODO: look up how delayed variable substitution works. then we can put this at the top again)
 # flags like --noconfirm should not be specified here.  it's up to the procedure to decide the interactivity
+# NOTE: Pacman will run with currently active locale, if you want to parse output, you should prefix with LANG=C
 PACMAN=pacman
 PACMAN_TARGET="pacman --root $var_TARGET_DIR --config /tmp/pacman.conf"
 

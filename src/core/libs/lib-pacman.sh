@@ -157,5 +157,5 @@ list_packages ()
 # TODO: check $1
 which_group ()
 {
-	PACKAGE_GROUPS=`$PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
+	PACKAGE_GROUPS=`LANG=C $PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
 }
