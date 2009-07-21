@@ -19,7 +19,10 @@ check_depend ()
 
 interactive_configure_system()
 {
-	[ "$EDITOR" ] || interactive_get_editor
+	if [ -z "$EDITOR" ]
+	then
+		interactive_get_editor || return 1
+	fi
 	FILE=""
 
 	 ## PREPROCESSING ##
@@ -169,7 +172,7 @@ interactive_prepare_disks ()
 			"2" "Partition Hard Drives" \
 			"3" "Configure block devices, filesystems and mountpoints" \
 			"4" "Rollback last filesystem changes$rollbackstr" \
-			"5" "Return to Main Menu"
+			"5" "Return to Main Menu" || return 1
 
 		case $ANSWER_OPTION in
 			"1")
@@ -199,7 +202,7 @@ interactive_prepare_disks ()
 					fi
 				fi
 				;;
-			*)
+			"5")
 				DONE=1 ;;
 		esac
 	done
@@ -815,7 +818,7 @@ interactive_runtime_network() {
 interactive_install_bootloader () {
 	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
 	                "Grub" "Use the GRUB bootloader (default)" \
-	                "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!"
+	                "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" || return 1
 
 	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
 	[ "$bl" != grub ] && return 0
@@ -882,7 +885,10 @@ EOF
 	# ...
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
-    [ -n "$EDITOR" ] || interactive_get_editor
+    if [ -z "$EDITOR" ]
+    then
+	interactive_get_editor || return 1
+    fi
     $EDITOR $grubmenu
 
     DEVS=$(finddisks 1 _)
@@ -1021,7 +1027,7 @@ interactive_get_editor() {
 	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
 	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
 	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
-	ask_option no "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}"
+	ask_option nano "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}" || return 1
 	#TODO: this code could be a little bit cleaner.
 	case $ANSWER_OPTION in
 		"nano") EDITOR="nano" ;;
