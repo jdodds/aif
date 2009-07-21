@@ -169,16 +169,15 @@ ask_timezone ()
 		REGIONS="$REGIONS $i -"
 	done
 	while true; do
-		ask_option no "Please select a region" '' required $REGIONS
+		ask_option no "Please select a region" '' required $REGIONS || return 1
 		region=$ANSWER_OPTION
-		if [ $? -eq 0 ]; then
-			ZONES=""
-			for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
-				ZONES="$ZONES $i -"
-			done
-			ask_option no "Please select a timezone" '' required $ZONES
-			zone=$ANSWER_OPTION
-			[ $? -eq 0 ] && ANSWER_TIMEZONE="$region/$zone" && return
+		ZONES=""
+		for i in $(grep '^[A-Z]' /usr/share/zoneinfo/zone.tab | grep $region/ | cut -f 3 | sed -e "s#$region/##g"| sort -u); do
+			ZONES="$ZONES $i -"
+		done
+		ask_option no "Please select a timezone" '' required $ZONES || return 1
+		zone=$ANSWER_OPTION
+		ANSWER_TIMEZONE="$region/$zone" && return
 		fi
 	done
 }

@@ -123,7 +123,7 @@ interactive_time () {
 		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
 
                 ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
-                "${EXTRA[@]}" "manual" "Set time and date manually" "return" "Looks good. back to main menu"
+                "${EXTRA[@]}" "manual" "Set time and date manually" "return" "Looks good. back to main menu" || return 1
                 if [ "$ANSWER_OPTION" = ntp ]
                 then
 			if ntpdate pool.ntp.org >/dev/null 
@@ -1038,7 +1038,7 @@ select_source_extras_menu ()
 		ask_option no "FTP Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
-		"3" "Return to Main Menu"
+		"3" "Return to Main Menu" || return 1
 		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network
 		[ "$ANSWER_OPTION" = 2 ] && execute worker select_mirror
 		[ "$ANSWER_OPTION" = 3 ] && break
