@@ -370,7 +370,6 @@ interactive_filesystem ()
 	if [ "$NEW_FILESYSTEM" != no_fs ]
 	then
 		# Possible filesystems/software layers on partitions/block devices
-1
 		# name        on top of             mountpoint?    label?        DM device?                     theoretical device?                        opts?      special params?
 
 		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
