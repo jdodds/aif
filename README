@@ -46,6 +46,7 @@ installer, it depends on what you want to do:
   * Rollback functionality if you change your mind after having formatted filesystems or if something went wrong and you want to retry.
   * Some miscellaneous features like the ability to choose between ncurses and CLI mode,
     nicer date/time setting, auto updating some config files, debug output, logging to a file etc.
+  * various fixes
 - Hackers:
   The code base that AIF runs on is very usable for hacking.  The code is
   modular, reusable and quite complete.  If you want to build your own
