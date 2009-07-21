@@ -178,7 +178,6 @@ ask_timezone ()
 		ask_option no "Please select a timezone" '' required $ZONES || return 1
 		zone=$ANSWER_OPTION
 		ANSWER_TIMEZONE="$region/$zone" && return
-		fi
 	done
 }
 
