@@ -3,7 +3,7 @@
 # make sure you install aif onto the target system so you can use its testing libraries
 
 echo "Aif-test: a 'unit-testing' tool for AIF"
-echo "          for a list of available tests: find /usr/share/aif/tests/"
+echo "          for a list of available tests: ls -l /usr/share/aif/tests/runtime"
 [ "$1" != runtime ] && echo "\$1: type of test to execute (runtime. no support for buildtime yet)" >&2 && exit 1
 [ -z "$2" ]         && echo "\$2: name of test to execute" >&2 && exit 1
 
