@@ -48,6 +48,7 @@ installpkg() {
 	run_controlled pacman_installpkg "$PACMAN_TARGET --noconfirm -S $ALL_PACKAGES" $TMP_PACMAN_LOG "Installing... Please Wait" 
 
 	local _result=''
+	# TODO: on the next line, bash gives '[: -ne: unary operator expected'. seen on 2009-07-21
 	if [ ${pacman_installpkg_exitcode} -ne 0 ]; then
 		_result="Installation Failed (see errors below)"
 		echo -e "\nPackage Installation FAILED." >>$TMP_PACMAN_LOG
