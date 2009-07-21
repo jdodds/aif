@@ -1,6 +1,3 @@
-# this config is like fancy-install-on-sda but with small filesystems. very usefull for quickly testing in VM's
-# this config is meant for testing AIF and is not very suited for end users.
-
 phase_finish=(msg_report grub_hack)
 
 
@@ -15,12 +12,6 @@ RUNTIME_PACKAGES=
 TARGET_GROUPS=base
 TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
 TARGET_PACKAGES=openssh
-
-# you can optionally also override some functions...
-worker_intro () {
-	infofy "Automatic procedure running the test-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
-	sleep 10
-}
 
 worker_configure_system () {
 	sed -i 's/filesystems/usbinput keymap encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf

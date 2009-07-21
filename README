@@ -211,3 +211,7 @@ the runtime (install cd live environment), target (affects/belongs to the
 target installation) and TMP (everything in between or extra). Variablenames
 should have _TARGET or _TMP suffixes or none for runtime.  (That's the
 theory, it isn't always the case like that now, I need to do more refactoring)
+
+** Test suite **
+
+AIF also has a (WIP) test-suited. the source is the documentation.
