@@ -14,6 +14,7 @@ run_mkinitcpio()
 	target_special_fs off
 
 	# alert the user to fatal errors
+	# TODO: on the next line, bash gives '[: -ne: unary operator expected'. seen on 2009-07-21
 	[ $mkinitcpio_exitcode -ne 0 ] && show_warning "MKINITCPIO FAILED - SYSTEM MAY NOT BOOT" "$TMP_MKINITCPIO_LOG" text
 	return $mkinitcpio_exitcode
 }
