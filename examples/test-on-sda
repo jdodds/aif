@@ -1,6 +1,10 @@
 # this config is like fancy-install-on-sda but with small filesystems. very usefull for quickly testing in VM's
 # this config is meant for testing AIF and is not very suited for end users.
 
+
+phase_finish=(msg_report grub_hack)
+
+
 SOURCE=cd
 FILE_URL=file:///src/core/pkg
 SYNC_URL=
@@ -19,16 +23,24 @@ worker_intro () {
 	sleep 10
 }
 
+worker_configure_system () {
+	sed -i 's/filesystems/encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf
+}
+
+# aif code doesn't nicely update grub config automatically for lvm/dm_crypt systems yet, so we have to do it with this hack
+worker_grub_hack () {
+	sed -i 's#root=/dev/sda.*#root=/dev/mapper/cryptpool-cryptroot cryptdevice=/dev/sda2:cryptpool ro#' $var_TARGET_DIR/boot/grub/menu.lst
+}
 
 # These variables are mandatory
 
 GRUB_DEVICE=/dev/sda
-PARTITIONS='/dev/sda 40:ext2:+ 20:swap *:ext4'
+PARTITIONS='/dev/sda 40:ext2:+ *:ext4'
 BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
-/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
-/dev/sda3 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c_aes-xts-plain_-y_-s_512
+/dev/sda2 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c_aes-xts-plain_-y_-s_512
 /dev/mapper/sda3crypt dm_crypt no_label lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
 /dev/mapper/sda3crypt+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;cryptpool;/dev/mapper/sda3crypt
-/dev/mapper/cryptpool lvm-vg cryptpool lvm-lv;yes;no_mountpoint;target;no_opts;cryptroot;800M|lvm-lv;yes;no_mountpoint;target;no_opts;crypthome;50M
+/dev/mapper/cryptpool lvm-vg cryptpool lvm-lv;yes;no_mountpoint;target;no_opts;cryptswap;20M|lvm-lv;yes;no_mountpoint;target;no_opts;cryptroot;800M|lvm-lv;yes;no_mountpoint;target;no_opts;crypthome;50M
+/dev/mapper/cryptpool-cryptswap lvm-lv no-label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
 /dev/mapper/cryptpool-cryptroot lvm-lv no_label xfs;yes;/;target;no_opts;no_label;no_params
 /dev/mapper/cryptpool-crypthome lvm-lv no_label xfs;yes;/home;target;no_opts;no_label;no_params'
