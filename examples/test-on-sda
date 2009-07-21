@@ -1,4 +1,5 @@
-# this config is like fancy-install-on-sda but with small filesystems. very usefull for quicklytesting in VM's
+# this config is like fancy-install-on-sda but with small filesystems. very usefull for quickly testing in VM's
+# this config is meant for testing AIF and is not very suited for end users.
 
 SOURCE=cd
 FILE_URL=file:///src/core/pkg
@@ -14,7 +15,7 @@ TARGET_PACKAGES=openssh
 
 # you can optionally also override some functions...
 worker_intro () {
-	infofy "Automatic procedure running the fancy-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	infofy "Automatic procedure running the test-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
 	sleep 10
 }
 
