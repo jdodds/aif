@@ -168,9 +168,9 @@ interactive_prepare_disks ()
 
 		#TODO: inform user (using dialog's --item-help or so) that autoprepare uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
 		ask_option $default "Prepare Hard Drive" '' required \
-			"1" "Auto-Prepare (erases the ENTIRE hard drive and sets up partitions and filesystems)" \
-			"2" "Partition Hard Drives" \
-			"3" "Configure block devices, filesystems and mountpoints" \
+			"1" "Auto-Prepare (erases an ENTIRE hard drive and sets up partitions, filesystems and mountpoints)" \
+			"2" "Manually Partition Hard Drives" \
+			"3" "Manually Configure block devices, filesystems and mountpoints" \
 			"4" "Rollback last filesystem changes$rollbackstr" \
 			"5" "Return to Main Menu" || return 1
 
