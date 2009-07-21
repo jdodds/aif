@@ -1,0 +1,33 @@
+# this config is like fancy-install-on-sda but with small filesystems. very usefull for quicklytesting in VM's
+
+SOURCE=cd
+FILE_URL=file:///src/core/pkg
+SYNC_URL=
+
+RUNTIME_REPOSITORIES=
+RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base
+TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
+TARGET_PACKAGES=openssh
+
+# you can optionally also override some functions...
+worker_intro () {
+	infofy "Automatic procedure running the fancy-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	sleep 10
+}
+
+
+# These variables are mandatory
+
+GRUB_DEVICE=/dev/sda
+PARTITIONS='/dev/sda 40:ext2:+ 20:swap *:ext4'
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c_aes-xts-plain_-y_-s_512
+/dev/mapper/sda3crypt dm_crypt no_label lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/mapper/sda3crypt+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;cryptpool;/dev/mapper/sda3crypt
+/dev/mapper/cryptpool lvm-vg cryptpool lvm-lv;yes;no_mountpoint;target;no_opts;cryptroot;800M|lvm-lv;yes;no_mountpoint;target;no_opts;crypthome;50M
+/dev/mapper/cryptpool-cryptroot lvm-lv no_label xfs;yes;/;target;no_opts;no_label;no_params
+/dev/mapper/cryptpool-crypthome lvm-lv no_label xfs;yes;/home;target;no_opts;no_label;no_params'
