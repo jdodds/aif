@@ -2,6 +2,7 @@ AIF is the Arch Linux Installation Framework.
 
 License:     GPL3. See COPYING.
 Authors:     Dieter Plaetinck
+             Patches from Gerhard Brauer, Matthias Dienstbier, Jud Film and 'tuxce'
              Quite some code has been taken from the installer project @ http://projects.archlinux.org/?p=installer.git;a=summary
              The main authors/contributors of that project are Judd Vinet, Tobias Powalowski, Simo Leone, Aaron Griffin and Dan McGee
 Homepage:    http://github.com/Dieterbe/aif
