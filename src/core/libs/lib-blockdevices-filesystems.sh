@@ -506,14 +506,24 @@ rollback_filesystems ()
 	#                      -> easier (implemented)
 
 
-	infofy "Phase 2: destructing specified blockdevices" disks
+	infofy "Phase 2: destructing relevant blockdevices" disks
 	for i in `seq 1 10`
 	do
 		open_items=0
-		while read part part_type part_label fs_string # $fs_string can be ignored
+		while read part part_type part_label fs_string
 		do
+
 			real_part=${part/+/}
-			if [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
+
+			# do not destroy a blockdevice if it hosts one or more filesystems that were set to not recreate
+			# fs_string = one or more "$fs_type;$fs_create;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params", separated by ':'
+			# there is probably a nice regex to check this but i'm bad at regexes.
+			if echo "$fs_string" | grep -q ';yes;/' || echo "$fs_string" | grep -q ';yes;no_mountpoint'
+			then
+				infofy "Skipping destruction of $part ($part_type) because one of the filesystems on it contains data you want to keep"
+				# TODO: it's possible that if we don't clear a blockdevice here because there is something on it with valuable data, that this blockdevice itself is hosted on some other blockdevice (eg lvm VG,PV or dm_crypt), \
+				#       that blockdevice cannot be cleared as well because it depends on this one, so after 10 iterations the user will get a warning that not everything is cleared.  so we should fix this someday.
+			elif [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
 			then
 				if [ -b $real_part ] && cryptsetup status $real_part &>/dev/null # don't use 'isLuks' it only works for the "underlying" device (eg in /dev/sda1 -> luksOpen -> /dev/mapper/foo, isLuks works only on the former. status works on the latter too)
 				then

@@ -357,8 +357,8 @@ interactive_filesystem ()
 		local old_fs_label=$fs_label
 		local old_fs_params=$fs_params
 
-		ask_option edit "Alter this $fs_type filesystem on $part ?" \
-		                "Alter $fs_type filesystem (label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
+		ask_option edit "Change $fs_type filesystem settings on $part ?" \
+		                "Change $fs_type filesystem settings (create:$fs_create, label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
 		                edit EDIT delete DELETE #TODO: nicer display if label is empty etc
 
 		# Don't alter, and return if user cancels
@@ -370,7 +370,7 @@ interactive_filesystem ()
 	if [ "$NEW_FILESYSTEM" != no_fs ]
 	then
 		# Possible filesystems/software layers on partitions/block devices
-
+1
 		# name        on top of             mountpoint?    label?        DM device?                     theoretical device?                        opts?      special params?
 
 		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
@@ -402,6 +402,9 @@ interactive_filesystem ()
 		[ $part_type = lvm-vg                                              ] && which `get_filesystem_program lvm-lv`   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
 		[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
+		fs_create=no
+		ask_yesno "Do you want to have this filesystem re(created) ?  If not, make sure there already is a filesystem!" && fs_create=yes
+
 		# determine FS
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
@@ -411,7 +414,9 @@ interactive_filesystem ()
 		else
 			default=
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
-			ask_option no "Select filesystem" "Select a filesystem for $part:" required $FSOPTS || return 1
+			extratext="Select a filesystem for $part:"
+			[ "$fs_create" == no ] && extratext="Select which filesystem $part is.  Make sure you get this right" #otherwise he'll be screwed when we try to mount it :)
+			ask_option no "Select filesystem" "$extratext" required $FSOPTS || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
@@ -430,7 +435,7 @@ interactive_filesystem ()
 		fi
 
 		# ask label, if relevant
-		if [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
+		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
@@ -439,7 +444,7 @@ interactive_filesystem ()
 		fi
 
 		# ask special params, if relevant
-		if [ "$fs_type" = lvm-vg ]
+		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg ]
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
 			pv=${part/+/}
@@ -463,7 +468,7 @@ interactive_filesystem ()
 				fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
 			fi
 		fi
-		if [ "$fs_type" = lvm-lv ]
+		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-lv ]
 		then
 			[ -z "$fs_params" ] && default='5000'
 			[ -n "$fs_params" ] && default="$fs_params"
@@ -471,7 +476,7 @@ interactive_filesystem ()
 			# Lvm tools use binary units but have their own suffixes ( K,M,G,T,P,E, but they mean KiB, MiB etc)
 			fs_params="${ANSWER_NUMBER}M"
 		fi
-		if [ "$fs_type" = dm_crypt ]
+		if [ "$fs_create" == yes ] && [ "$fs_type" = dm_crypt ]
 		then
 			[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
 			[ -n "$fs_params" ] && default="${fs_params//_/ }"
@@ -480,18 +485,21 @@ interactive_filesystem ()
 		fi
 
 		# ask opts
-		default=
-		[ -n "$fs_opts" ] && default="$fs_opts"
-		program=`get_filesystem_program $fs_type`
-		ask_string "Enter any additional opts for $program" "$default" 0
-		fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+		if [ "$fs_create" == yes ]
+		then
+			default=
+			[ -n "$fs_opts" ] && default="$fs_opts"
+			program=`get_filesystem_program $fs_type`
+			ask_string "Enter any additional opts for $program" "$default" 0
+			fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+		fi
 
 		[ -z "$fs_type"       ] && fs_type=no_type
 		[ -z "$fs_mountpoint" ] && fs_mountpoint=no_mountpoint
 		[ -z "$fs_opts"       ] && fs_opts=no_opts
 		[ -z "$fs_label"      ] && fs_label=no_label
 		[ -z "$fs_params"     ] && fs_params=no_params
-		NEW_FILESYSTEM="$fs_type;yes;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params" #TODO: make re-creation yes/no asking available in this UI.
+		NEW_FILESYSTEM="$fs_type;$fs_create;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params"
 
 		# add new theoretical blockdevice, if relevant
 		new_device=
