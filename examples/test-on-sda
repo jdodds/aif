@@ -1,7 +1,6 @@
 # this config is like fancy-install-on-sda but with small filesystems. very usefull for quickly testing in VM's
 # this config is meant for testing AIF and is not very suited for end users.
 
-
 phase_finish=(msg_report grub_hack)
 
 
@@ -24,7 +23,7 @@ worker_intro () {
 }
 
 worker_configure_system () {
-	sed -i 's/filesystems/encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf
+	sed -i 's/filesystems/usbinput keymap encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf
 }
 
 # aif code doesn't nicely update grub config automatically for lvm/dm_crypt systems yet, so we have to do it with this hack
