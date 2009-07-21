@@ -1,0 +1,5 @@
+#!/bin/bash
+for i in "$@"
+do
+	touch $i/test_file
+done

@@ -1,20 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 
+source /usr/share/aif/tests/lib/framework-runtime
 
-free -m | grep 'Swap:.*20.*' || echo 'SWAP CHECK FAILED'
-
-lvdisplay | grep -A 5 'LV Name.*/dev/mapper/cryptpool-cryptroot' | grep available            || echo 'LV ROOT CHECK FAILED'
-lvdisplay | grep -A 7 'LV Name.*/dev/mapper/cryptpool-cryptroot' | grep 'LV Size.*800.00 MB' || echo 'LV ROOT CHECK FAILED'
-
-mount | grep '/dev/mapper/cryptpool-cryptroot on / type xfs (rw)' || echo 'ROOT FS CHECK FAILED'
-mount | grep '/dev/mapper/cryptpool-crypthome on /home type xfs (rw)' || echo 'HOME FS CHECK FAILED'
-
-
+aiftest swap 19
+aiftest lvm-lv cryptpool cryptroot '800.00 MB'
+aiftest mount '/dev/mapper/cryptpool-cryptroot on / type xfs (rw)'
+aiftest mount '/dev/mapper/cryptpool-crypthome on /home type xfs (rw)'
 for i in /etc/ / /root/ /home/ /var/
 do
-	[ -f "$i/test_file" ] || echo "TEST FAILED. NO FILE $i/test_file"
+	aiftest file "$i"/test_file
 done
+aiftest file /usr/bin/ssh
+aiftest nofile /sbin/mkfs.reiserfs
+aiftest nopackage sudo
+aiftest ping 2 archlinux.org
 
-[ -x /usr/bin/ssh ] || echo 'PACKAGE INSTALLATION CHECK SSH FAILED'
-[ -f /sbin/mkfs.reiserfs ] && echo 'PACKAGE INSTALLATION CHECK REISERFS FAILED'
+aiftest-done
+
+
+
+	[ -f "$i/test_file" ] || echo "TEST FAILED. NO FILE $i/test_file"
+
 ping -c 2 archlinux.org || echo 'PING CHECK FAILED'

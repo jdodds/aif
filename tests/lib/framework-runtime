@@ -1,0 +1,35 @@
+#!/bin/bash
+lib="/usr/share/aif/tests/lib"
+STATUS=0
+
+# $1 name of test
+# $2... other args
+function aiftest () {
+	name=$1
+	shift
+	if [ ! -f $lib/test-$name ]
+	then
+		echo "NO SUCH TEST: $lib/test-$1" >&2
+		return 2
+	else
+		$lib/test-$name "$@"
+		ret=$?
+	if [ $ret -eq 0 ]
+	then
+		"$NAME : OK"
+	else
+		"$NAME [ $ret ] : NOT OK"
+	fi
+	[ $ret -gt $STATUS ] && STATUS=$ret
+}
+
+aiftest-done () {
+	if [ $STATUS -eq 0 ]
+	then
+		echo 'ALL TESTS ENDED SUCCESSFULLY'
+		exit 0
+	else
+		echo 'ONE OR MORE TESTS FAILED!' >&2
+		exit $STATUS
+	fi
+}

@@ -11,7 +11,7 @@ RUNTIME_PACKAGES=
 # packages to install
 TARGET_GROUPS=base
 TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
-TARGET_PACKAGES=openssh
+TARGET_PACKAGES='openssh aif'
 
 worker_configure_system () {
 	sed -i 's/filesystems/usbinput keymap encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf

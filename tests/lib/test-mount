@@ -1,0 +1,6 @@
+#!/bin/bash
+# $1 mount output string
+
+NAME="MOUNT CHECK, $1"
+
+mount | grep -q '/dev/mapper/cryptpool-crypthome on /home type xfs (rw)'
