@@ -781,11 +781,13 @@ interactive_runtime_network() {
             IPADDR=$ANSWER_STRING
             ask_string "Enter your netmask" "255.255.255.0" || return 1
             SUBNET=$ANSWER_STRING
-            ask_string "Enter your broadcast" "192.168.0.255" || return 1
+            ask_string "Enter your broadcast" "$(sed 's/\.[^.]*$/\.255/' <<< $IPADDR)" || return 1
             BROADCAST=$ANSWER_STRING
-            ask_string "Enter your gateway (optional)" "192.168.0.1" 0 || return 1
+            ask_string "Enter your gateway (optional)" "$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)" 0 || return 1
             GW=$ANSWER_STRING
-            ask_string "Enter your DNS server IP" "192.168.0.1" || return 1
+            [ -n "$GW" ] && default_dns="$GW"
+            [ -z "$GW" ] && default_dns="$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)"
+            ask_string "Enter your DNS server IP" "$default_dns" || return 1
             DNS=$ANSWER_STRING
             ask_string "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
             PROXY_HTTP=$ANSWER_STRING
