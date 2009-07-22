@@ -16,9 +16,3 @@ aiftest nopackage sudo
 aiftest ping 2 archlinux.org
 
 aiftest-done
-
-
-
-	[ -f "$i/test_file" ] || echo "TEST FAILED. NO FILE $i/test_file"
-
-ping -c 2 archlinux.org || echo 'PING CHECK FAILED'

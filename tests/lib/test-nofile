@@ -1,6 +1,4 @@
 #!/bin/bash
 # $1 filename
 
-NAME="NOFILE TEST, $1"
-
 [ ! -f "$1" ]

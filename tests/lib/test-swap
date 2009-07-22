@@ -1,5 +1,3 @@
 #!/bin/bash
 
-name="SWAP CHECK, SIZE $1"
-
 free -m | grep -q 'Swap:.*'$1'.*'

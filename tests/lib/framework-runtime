@@ -17,9 +17,9 @@ function aiftest () {
 	fi
 	if [ $ret -eq 0 ]
 	then
-		echo "$NAME : OK"
+		echo "$name $@ : OK"
 	else
-		echo "$NAME [ $ret ] : NOT OK"
+		echo "$name $@ : NOT OK ($ret)"
 	fi
 	[ $ret -gt $STATUS ] && STATUS=$ret
 }

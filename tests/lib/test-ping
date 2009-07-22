@@ -2,6 +2,4 @@
 # $1 iterations
 # $2 host
 
-NAME="PING CHECK ON $2"
-
 ping -c $1 $2
