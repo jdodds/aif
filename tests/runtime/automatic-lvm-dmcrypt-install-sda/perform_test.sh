@@ -8,7 +8,7 @@ aiftest mount '/dev/mapper/cryptpool-cryptroot on / type xfs (rw)'
 aiftest mount '/dev/mapper/cryptpool-crypthome on /home type xfs (rw)'
 for i in /etc/ / /root/ /home/ /var/
 do
-	aiftest file "$i"/test_file
+	aiftest file "$i"test_file
 done
 aiftest file /usr/bin/ssh
 aiftest nofile /sbin/mkfs.reiserfs
