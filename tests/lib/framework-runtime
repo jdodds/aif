@@ -14,11 +14,12 @@ function aiftest () {
 	else
 		$lib/test-$name "$@"
 		ret=$?
+	fi
 	if [ $ret -eq 0 ]
 	then
-		"$NAME : OK"
+		echo "$NAME : OK"
 	else
-		"$NAME [ $ret ] : NOT OK"
+		echo "$NAME [ $ret ] : NOT OK"
 	fi
 	[ $ret -gt $STATUS ] && STATUS=$ret
 }
