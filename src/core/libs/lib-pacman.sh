@@ -9,7 +9,7 @@ assure_pacman_static ()
 	[ -f /usr/bin/pacman.static ] && PACMAN_STATIC=/usr/bin/pacman.static
 	if [ "$PACMAN_STATIC" = "" ]; then
 		cd /tmp
-		if [ "$var_PKG_SOURCE_TYPE" = "ftp" ]; then
+		if [ "$var_PKG_SOURCE_TYPE" = "net" ]; then
 			echo "Downloading pacman..."
 			wget $PKGARG/pacman*.pkg.tar.gz
 			if [ $? -gt 0 ]; then
@@ -30,12 +30,12 @@ assure_pacman_static ()
 }
 
 
-# taken from the quickinst script. cd/ftp code merged together
+# taken from the quickinst script. cd/net code merged together
 target_write_pacman_conf ()
 {
 	PKGFILE=/tmp/packages.txt
 	echo "[core]" >/tmp/pacman.conf
-	if [ "$var_PKG_SOURCE_TYPE" = "ftp" ]
+	if [ "$var_PKG_SOURCE_TYPE" = "net" ]
 	then
 		wget $PKG_SOURCE/packages.txt -O /tmp/packages.txt || die_error " Could not fetch package list from server"
 		echo "Server = $PKGARG" >>/tmp/pacman.conf
@@ -48,7 +48,7 @@ target_write_pacman_conf ()
 	fi
 	mkdir -p $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman &>/dev/null
 	rm -f /var/cache/pacman/pkg &>/dev/null
-	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && ln -sf $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman/pkg &>/dev/null
+	[ "$var_PKG_SOURCE_TYPE" = "net" ] && ln -sf $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman/pkg &>/dev/null
 	[ "$var_PKG_SOURCE_TYPE" = "cd" ]  && ln -sf $PKGARG                       /var/cache/pacman/pkg &>/dev/null
 }
 
@@ -60,7 +60,7 @@ target_write_pacman_conf ()
 # returns: 1 on error
 target_prepare_pacman() {   
 	[ "$var_PKG_SOURCE_TYPE" = "cd" ] && local serverurl="${var_FILE_URL}"
-	[ "$var_PKG_SOURCE_TYPE" = "ftp" ] && local serverurl="${var_SYNC_URL}"
+	[ "$var_PKG_SOURCE_TYPE" = "net" ] && local serverurl="${var_SYNC_URL}"
 
 	[ -z "$1" ] && repos=core
 	[ -n "$1" ] && repos="$@"
@@ -73,7 +73,7 @@ EOF
 
 for repo in $repos
 do
-	#TODO: this is a VERY, VERY dirty hack.  we fall back to ftp for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
+	#TODO: this is a VERY, VERY dirty hack.  we fall back to net for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
 	if [ "$repo" != core ]
 	then
 		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST"

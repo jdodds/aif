@@ -30,7 +30,7 @@ interactive_configure_system()
 	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already even if worker did not exit 0
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist
-	if [ "$var_PKG_SOURCE_TYPE" = "ftp" -a "${var_SYNC_URL}" != "" ]; then
+	if [ "$var_PKG_SOURCE_TYPE" = "net" -a "${var_SYNC_URL}" != "" ]; then
 		debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
 		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
 		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
@@ -980,12 +980,12 @@ interactive_select_source()
         var_SYNC_URL=
 
 	ask_option no "Source selection" "Please select an installation source" required \
-    "1" "CD-ROM or OTHER SOURCE" \
-    "2" "FTP/HTTP" || return 1
+    "cd"  "CD-ROM or OTHER SOURCE" \
+    "net" "NET (FTP/HTTP)" || return 1
 
     case $ANSWER_OPTION in
-        "1") var_PKG_SOURCE_TYPE="cd" ;;
-        "2") var_PKG_SOURCE_TYPE="ftp" ;;
+        "cd") var_PKG_SOURCE_TYPE="cd" ;;
+        "net") var_PKG_SOURCE_TYPE="net" ;;
     esac
 
     if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
@@ -997,7 +997,7 @@ interactive_select_source()
         fi
         echo "Using CDROM for package installation" >$LOG
     else
-        TITLE="Arch Linux FTP/HTTP Installation"
+        TITLE="Arch Linux NET (FTP/HTTP) Installation"
         notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
    fi
    return 0
@@ -1050,7 +1050,7 @@ interactive_get_editor() {
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "FTP Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
+		ask_option no "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu" || return 1
