@@ -9,7 +9,6 @@ install:
 	install -d $(DESTDIR)/usr/lib/aif/user
 	install -D -m755 src/aif.sh $(DESTDIR)/sbin/aif
 	install -D -m755 src/aif-test.sh $(DESTDIR)/sbin/aif-test
-	install -D -m644 HOWTO $(DESTDIR)/usr/share/aif/docs
 	install -D -m644 README $(DESTDIR)/usr/share/aif/docs
 	cp -rp src/core $(DESTDIR)/usr/lib/aif
 	chmod -R 755 $(DESTDIR)/usr/lib/aif/core
