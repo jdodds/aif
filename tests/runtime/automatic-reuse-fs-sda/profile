@@ -1,0 +1,37 @@
+TARGET_PACKAGES='aif'
+
+GRUB_DEVICE=/dev/sda
+
+# modify worker_prepare_disks: we don't want to repartition (process_disks). also we want to do a rollback + setup again
+
+worker_prepare_disks ()
+{
+        echo "$var_BLOCKDATA" > $TMP_BLOCKDEVICES
+        if process_filesystems
+        then
+		infofy "disk processing ok"
+        else
+		show_warning "PROCESSING FAILED"
+		return 1
+        fi
+        if rollback_filesystems
+        then
+		infofy "rollback ok"
+        else
+		show_warning "ROLLBACK FAILED"
+		return 1
+        fi
+        if process_filesystems
+        then
+		infofy "disk processing ok"
+        else
+		show_warning "PROCESSING FAILED"
+		return 1
+        fi
+}
+
+
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label ext4;yes;/;target;no_opts;no_label;no_params
+/dev/sda4 raw no_label ext3:no:/home;target;no_opts;no_label;no_params'
