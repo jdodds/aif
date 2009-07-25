@@ -7,7 +7,9 @@ FILE_URL=file:///src/core/pkg
 SYNC_URL=
 
 # Do you want to have additional pacman repositories or packages available at runtime (during installation)?
+# RUNTIME_REPOSITORIES = array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
 RUNTIME_REPOSITORIES=
+# space separated list
 RUNTIME_PACKAGES=
 
 # packages to install
