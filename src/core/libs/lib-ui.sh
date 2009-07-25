@@ -321,7 +321,7 @@ _dia_ask_checklist ()
 		shift 3
 	done
 	_dia_dialog --checklist "$str" 0 0 0 $list 2>$ANSWER
-	ret=$?
+	local ret=$?
 	ANSWER_CHECKLIST=`cat $ANSWER`
 	debug 'UI' "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
 	return $ret
@@ -354,7 +354,7 @@ _dia_ask_number ()
 		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
 		[ -n "$str2" ] && str="$str ( $str2 )"
 		_dia_dialog --inputbox "$str" 0 0 $4 2>$ANSWER
-		ret=$?
+		local ret=$?
 		ANSWER_NUMBER=`cat $ANSWER`
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
 		then
@@ -393,7 +393,7 @@ _dia_ask_option ()
 	CANCEL_LABEL=Cancel
 	[ $TYPE == optional ] && CANCEL_LABEL='Skip'
 	_dia_dialog $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 0 0 0 "$@" 2>$ANSWER
-	ret=$?
+	local ret=$?
 	ANSWER_OPTION=`cat $ANSWER`
 	debug 'UI' "dia_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($DIA_MENU_TITLE)"
 	[ $TYPE == required ] && return $ret
@@ -413,7 +413,7 @@ _dia_ask_password ()
 	fi
 
 	_dia_dialog --passwordbox  "Enter your $type_l password" 8 65 "$2" 2>$ANSWER
-	ret=$?
+	local ret=$?
 	[ -n "$type_u" ] && read ${type_u}_PASSWORD < $ANSWER
 	[ -z "$type_u" ] && read           PASSWORD < $ANSWER
 	cat $ANSWER
@@ -426,7 +426,7 @@ _dia_ask_string ()
 {
 	exitcode=${3:-1}
 	_dia_dialog --inputbox "$1" 0 0 "$2" 2>$ANSWER
-	ret=$?
+	local ret=$?
 	ANSWER_STRING=`cat $ANSWER`
 	debug 'UI' "_dia_ask_string: user entered $ANSWER_STRING"
 	[ -z "$ANSWER_STRING" ] && return $exitcode
@@ -443,7 +443,7 @@ _dia_ask_yesno ()
 	# If $2 contains an explicit 'no' we set defaultno for yesno dialog
 	[ "$2" == "no" ] && default="--defaultno"
 	dialog $default --yesno "$str" $height 55 # returns 0 for yes, 1 for no
-	ret=$?
+	local ret=$?
 	[ $ret -eq 0 ] && debug 'UI' "dia_ask_yesno: User picked YES"
 	[ $ret -gt 0 ] && debug 'UI' "dia_ask_yesno: User picked NO"
 	return $ret
@@ -562,7 +562,7 @@ _cli_ask_option ()
 	[ -n "$DEFAULT" ] && echo -n " > [ $DEFAULT ] "
 	[ -z "$DEFAULT" ] && echo -n " > "
 	read ANSWER_OPTION
-	ret=0
+	local ret=0
 	[ -z "$ANSWER_OPTION" -a -n "$DEFAULT" ] && ANSWER_OPTION="$DEFAULT"
 	[ "$ANSWER_OPTION" == CANCEL ] && ret=1 && ANSWER_OPTION=
 	[ "$ANSWER_OPTION" == SKIP   ] && ret=0 && ANSWER_OPTION=

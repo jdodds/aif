@@ -155,7 +155,7 @@ interactive_time () {
 interactive_prepare_disks ()
 {
 	DONE=0
-	ret=1 # 1 means unsuccessful. 0 for ok
+	local ret=1 # 1 means unsuccessful. 0 for ok
 	NEXTITEM=
 	DISK_CONFIG_TYPE=
 	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"

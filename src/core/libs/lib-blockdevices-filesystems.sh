@@ -659,7 +659,7 @@ process_filesystem ()
 		fi
 		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
-		ret=0
+		local ret=0
 		#TODO: health checks on $fs_params etc
 		case ${fs_type} in #TODO: implement label, opts etc decently
 			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;

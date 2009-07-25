@@ -100,7 +100,7 @@ execute ()
 		then
 			shift 2
 			$object "$@"
-			ret=$?
+			local ret=$?
 			exit_var=exit_$object
 			read $exit_var <<< $ret # maintain exit status of each worker
 		else
@@ -128,7 +128,7 @@ execute ()
 			debug 'MAIN' "Loop iteration.  \$worker_str: $worker_str"
 			execute worker $worker_str || read $exit_var <<< $? # assign last failing exit code to exit_phase_<phasename>, if any.
 		done
-		ret=${!exit_var}
+		local ret=${!exit_var}
 	fi
 
 	debug 'MAIN' "Execute(): $object exit state was $ret"
@@ -183,7 +183,7 @@ show_report () #TODO: abstract UI method (cli/dia)
 	do
 		object=phase_$phase
 		exit_var=exit_$object
-		ret=${!exit_var}
+		local ret=${!exit_var}
 		echo -n "Phase $phase: "
 		[ "$ret" = "0" ] && echo "Success" || echo "Failed"
 		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)

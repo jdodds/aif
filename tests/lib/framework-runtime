@@ -13,7 +13,7 @@ function aiftest () {
 		return 2
 	else
 		$lib/test-$name "$@"
-		ret=$?
+		local ret=$?
 	fi
 	if [ $ret -eq 0 ]
 	then

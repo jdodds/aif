@@ -64,8 +64,8 @@ mainmenu()
 	"8" "Exit Install"
 	case $ANSWER_OPTION in
 	"1")
-		                                        execute worker select_source; ret=$?; [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ] && execute worker select_source_extras_menu
-		                                                                              [ $ret -eq 0 ] && execute worker runtime_packages                   && NEXTITEM=2 ;;
+		                                        execute worker select_source; local ret=$?; [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ] && execute worker select_source_extras_menu
+		                                                                                    [ $ret -eq 0 ] && execute worker runtime_packages             && NEXTITEM=2 ;;
 
         "2")
 		                                        execute worker set_clock                                                                                  && NEXTITEM=3 ;;
