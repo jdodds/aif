@@ -55,7 +55,7 @@ interactive_configure_system()
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
-		helptext="Note that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
+		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
 		ask_option $DEFAULT "Configuration" "$helptext" required \
 		"/etc/rc.conf"                  "System Config" \
