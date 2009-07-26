@@ -48,7 +48,19 @@ interactive_configure_system()
 	then
 		hooks=`echo "$ANSWER_DEVICES" | cut -d ' ' -f2 | egrep 'lvm-lv|dm_crypt' | sed -e 's/lvm-lv/lvm2/' -e 's/dm_crypt/encrypt/' | tac`
 		hooks=`echo $hooks`
-		[ -n "$hooks" ] && sed -i "s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+		[ -n "$hooks" ] && sed -i "/^HOOKS/ s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+	fi
+	# if keymap/usbinput are not in mkinitcpio.conf, but encrypt is, we should probably add it
+	if line=`grep ^HOOKS ${var_TARGET_DIR}/etc/mkinitcpio.conf  | grep encrypt`
+	then
+		if ! echo "$line" | grep -q keymap
+		then
+			sed -i '/^HOOKS/ s/encrypt/keymap encrypt/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
+		fi
+		if ! echo "$line" | grep -q usbinput
+		then
+			sed -i '/^HOOKS/ s/keymap/usbinput keymap/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
+		fi
 	fi
 
 	# main menu loop
