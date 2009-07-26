@@ -95,6 +95,7 @@ get_device_with_mount () {
 # /dev/sda2 raw
 # $1 a "recognizer": a string that will match the filesystem section uniquely (using egrep), such as ';<mountpoint>;' or other specific attributes of the hosted filesystem(s)
 get_anchestors_mount () {
+	debug 'FS' "Finding anchestor for: $1"
 	local buffer=
 	read block type leftovers <<< `egrep "$1" $TMP_BLOCKDEVICES 2>/dev/null`
 	[ -z "$type" ] && return 1
@@ -119,6 +120,7 @@ get_anchestors_mount () {
 		get_anchestors_mount "$recognizer" && buffer="$buffer
 $ANSWER_DEVICES"
 	fi
+	debug 'FS' "Found anchestors: $ANSWER_DEVICES"
 	ANSWER_DEVICES=$buffer
 	[ -n "$ANSWER_DEVICES" ]
 }
