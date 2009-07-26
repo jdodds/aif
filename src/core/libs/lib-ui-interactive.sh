@@ -43,12 +43,20 @@ interactive_configure_system()
 	-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
 	${var_TARGET_DIR}/etc/rc.conf
 
+	# prepare HOOKS in mkinitcpio.conf for lvm/dm_crypt users
+	if get_anchestors_mount ';/;'
+	then
+		hooks=`echo "$ANSWER_DEVICES" | cut -d ' ' -f2 | egrep 'lvm-lv|dm_crypt' | sed -e 's/lvm-lv/lvm2/' -e 's/dm_crypt/encrypt/' | tac`
+		hooks=`echo $hooks`
+		[ -n "$hooks" ] && sed -i "s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+	fi
+
 	# main menu loop
 	while true; do
 		DEFAULT=no
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
 		helptext="Note that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
-		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\nDon't forget to add the appropriate modules for your /dev/mapper devices to mkinitcpio.conf" #TODO: we can improve this a bit
+		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
 		ask_option $DEFAULT "Configuration" "$helptext" required \
 		"/etc/rc.conf"                  "System Config" \
 		"/etc/fstab"                    "Filesystem Mountpoints" \
@@ -911,8 +919,9 @@ EOF
         fi
     fi
 
-
-    notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
+	helptext=
+	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
+    notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
     if [ -z "$EDITOR" ]
     then
 	interactive_get_editor || return 1
