@@ -24,7 +24,7 @@ $test_dir/setup_test.sh || fail=1
 cp $test_dir/perform_test.sh /mnt/etc/rc.d/perform_test || fail=1
 
 # make sure the test will run on the target system
-sed -i 's#DAEMONS=(\(.*\))#DAEMONS=(\1 perform_test)#' /mnt/etc/rc.conf || fail=1
+sed -i 's#^DAEMONS=(\(.*\))#DAEMONS=(\1 perform_test)#' /mnt/etc/rc.conf || fail=1
 
 # and that /etc/issue won't blank the screen
 sed -i 's/^H//' /mnt/etc/issue

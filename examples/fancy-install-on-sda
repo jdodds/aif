@@ -19,7 +19,7 @@ worker_intro () {
 }
 
 worker_configure_system () {
-	sed -i 's/HOSTNAME="myhost"/HOSTNAME="arch-fancy-install"/' $var_TARGET_DIR/etc/rc.conf
+	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-fancy-install"/' $var_TARGET_DIR/etc/rc.conf
 }
 
 # These variables are mandatory
