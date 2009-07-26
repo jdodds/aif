@@ -1,0 +1,22 @@
+SOURCE=cd
+FILE_URL=file:///src/core/pkg
+SYNC_URL=
+
+RUNTIME_REPOSITORIES=
+RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base
+TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
+TARGET_PACKAGES='openssh aif'
+
+# These variables are mandatory
+
+GRUB_DEVICE=/dev/sda
+PARTITIONS='/dev/sda 40:ext2:+ *:ext4'
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda2+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;mypool;/dev/sda2
+/dev/mapper/mypool lvm-vg mypool lvm-lv;yes;no_mountpoint;target;no_opts;root;800M
+/dev/mapper/mypool-root lvm-lv no_label dm_crypt;yes;no_mountpoint;target;no_opts;mypool-rootcrypt;-c_aes-xts-plain_-y_-s_512
+/dev/mapper/mypool-rootcrypt dm_crypt no_label xfs;yes;/;target;no_opts;no_label;no_params'
