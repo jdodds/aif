@@ -487,6 +487,11 @@ rollback_filesystems ()
 					if umount $part_real >$LOG
 					then
 						done_umounts+=("$part_real")
+						if [ "$fs_mount" = target -a "$fs_mountpoint" = '/' ]
+						then
+							debug FS "clearing \$PART_ROOT (was: $PART_ROOT)"
+							PART_ROOT=
+						fi
 					else
 						warnings="$warnings\nCould not umount umount $part_real .  Probably device is still busy.  See $LOG"
 						show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
