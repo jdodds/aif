@@ -11,9 +11,6 @@ BLOCK_ROLLBACK_USELESS=1
 HARDWARECLOCK=
 TIMEZONE=
 
-# partitions
-PART_ROOT=
-
 # default filesystem specs (the + is bootable flag)
 # <mountpoint>:<partsize>:<fstype>[:+]
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"

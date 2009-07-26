@@ -4,6 +4,8 @@
 # FORMAT DEFINITIONS:
 
 # -- formats used to interface with this library --
+# these files will persist during the entire aif session (and even after stopping aif)
+# so you can use them to retrieve data from them (or use functions in this library to do that for you)
 # $TMP_PARTITIONS
 #    one line per partition, blockdevice + partioning string for sfdisk.  See docs for function partition for more info.
 # $TMP_BLOCKDEVICES
@@ -74,6 +76,13 @@ target_umountall()
 		infofy "Unmounting mountpoint $mountpoint" disks
 		umount $mountpoint >/dev/null 2>$LOG
 	done
+}
+
+# tells you which blockdevice is configured for the specific mountpoint
+# $1 mountpoint
+get_device_with_mount () {
+	ANSWER_DEVICE=`grep ";$1;" $TMP_BLOCKDEVICES 2>/dev/null | cut -d ' ' -f1`
+	[ -n "$ANSWER_DEVICE" ] # set correct exit code
 }
 
 
@@ -487,11 +496,6 @@ rollback_filesystems ()
 					if umount $part_real >$LOG
 					then
 						done_umounts+=("$part_real")
-						if [ "$fs_mount" = target -a "$fs_mountpoint" = '/' ]
-						then
-							debug FS "clearing \$PART_ROOT (was: $PART_ROOT)"
-							PART_ROOT=
-						fi
 					else
 						warnings="$warnings\nCould not umount umount $part_real .  Probably device is still busy.  See $LOG"
 						show_warning "Umount failure" "Could not umount umount $part_real .  Probably device is still busy.  See $LOG" #TODO: fix device busy things
@@ -706,11 +710,6 @@ process_filesystem ()
 			debug 'FS' "mounting $part on $dst"
 			mkdir -p $dst &>/dev/null # directories may or may not already exist
 			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
-			if [ "$fs_mount" = target -a $fs_mountpoint = '/' ]
-			then
-				debug FS "setting \$PART_ROOT to $part"
-				PART_ROOT=$part
-			fi
 		fi
 	fi
 

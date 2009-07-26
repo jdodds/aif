@@ -841,8 +841,9 @@ interactive_install_grub() {
 
     # try to auto-configure GRUB...
     debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
-    if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
-    GRUB_OK=0
+    if get_device_with_mount '/' && [ "$GRUB_OK" != '1' ] ; then
+	GRUB_OK=0
+	PART_ROOT=$ANSWER_DEVICE
         grubdev=$(mapdev $PART_ROOT)
         local _rootpart="${PART_ROOT}"
         local _uuid="$(getuuid ${PART_ROOT})"
