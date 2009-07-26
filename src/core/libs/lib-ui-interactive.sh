@@ -884,12 +884,14 @@ interactive_install_grub() {
 				raw_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
 				kernel="kernel $subdir/vmlinuz26 root=$raw_device ro"
 			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			then
 				# / on lvm on dm_crypt on raw
 				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
 				vg_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
 				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '4p' | cut -d ' ' -f1`
 				kernel="kernel $subdir/vmlinuz26 root=$lv_device cryptdevice=$crypt_device:`basename $vgdevice` ro"
 			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			then
 				# / on dm_crypt on lvm on raw
 				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
 				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
