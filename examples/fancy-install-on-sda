@@ -1,7 +1,5 @@
 # this config is like generic-install-on-sda (check out that file first), but more fancy
 
-phase_finish=(msg_report grub_hack)
-
 SOURCE=cd
 FILE_URL=file:///src/core/pkg
 SYNC_URL=
@@ -22,11 +20,6 @@ worker_intro () {
 
 worker_configure_system () {
 	sed -i 's/filesystems/usbinput keymap encrypt lvm2 filesystems/' $var_TARGET_DIR/etc/mkinitcpio.conf
-}
-
-# aif code doesn't nicely update grub config automatically for lvm/dm_crypt systems yet, so we have to do it with this hack
-worker_grub_hack () {
-	sed -i 's#root=/dev/sda.*#root=/dev/mapper/cryptpool-cryptroot cryptdevice=/dev/sda2:cryptpool ro#' $var_TARGET_DIR/boot/grub/menu.lst
 }
 
 # These variables are mandatory
