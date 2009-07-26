@@ -85,6 +85,44 @@ get_device_with_mount () {
 	[ -n "$ANSWER_DEVICE" ] # set correct exit code
 }
 
+# gives you a newline separated list of the blockdevice that hosts a certain filesystem, and below it, all underlying blockdevices supporting it, with also the blockdevice type.
+# example:
+# get_anchestors_mount ';/;' (suppose '/' is a filesystem on top of lvm on top of dm_crypt, you will get something like):
+# /dev/mapper/cryptpool-cryptroot lvm-lv
+# /dev/mapper/cryptpool lvm-vg
+# /dev/mapper/sda2crypt+ lvm-pv
+# /dev/mapper/sda2crypt dm_crypt
+# /dev/sda2 raw
+# $1 a "recognizer": a string that will match the filesystem section uniquely (using egrep), such as ';<mountpoint>;' or other specific attributes of the hosted filesystem(s)
+get_anchestors_mount () {
+	local buffer=
+	read block type leftovers <<< `egrep "$1" $TMP_BLOCKDEVICES 2>/dev/null`
+	[ -z "$type" ] && return 1
+	buffer="$block $type"
+	if [ $type != 'raw' ]
+	then
+		if [ $type == lvm-lv ]
+		then
+			lv=`echo $block | sed 's/.*-//'` # /dev/mapper/cryptpool-cryptroot -> cryptroot. TODO: this may give unexpected behavior of LV has a '-' in its name
+			recognizer="lvm-lv;(yes|no);no_mountpoint;[^;]{1,};[^;]{1,};$lv;[^;]{1,}"
+		elif [ $type == lvm-vg ]
+		then
+			recognizer="lvm-vg;(yes|no);no_mountpoint;[^;]{1,};[^;]{1,};`basename $block`;[^;]{1,}"
+		elif [ $type == lvm-pv ]
+		then
+			# here we cheat a bit: we cannot match the FS section because usually we don't give a PV recognizable attributes, but since we name a PV as blockdevice + '+' we can match the blockdevice
+			recognizer="^${block/+/} .* lvm-pv;"
+		elif [ $type == dm_crypt ]
+		then
+			recognizer="dm_crypt;(yes|no);no_mountpoint;[^;]{1,};[^;]{1,};`basename $block`;[^;]{1,}"
+		fi
+		get_anchestors_mount "$recognizer" && buffer="$buffer
+$ANSWER_DEVICES"
+	fi
+	ANSWER_DEVICES=$buffer
+	[ -n "$ANSWER_DEVICES" ]
+}
+
 
 # taken from setup script, modified for separator control
 # $1 set to 1 to echo a newline after device instead of a space (optional)

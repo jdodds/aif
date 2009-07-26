@@ -864,18 +864,42 @@ interactive_install_grub() {
             fi
             # remove default entries by truncating file at our little tag (#-*)
             sed -i -e '/#-\*/q' $grubmenu
+
+		# handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed automatically
+		# '/ on raw' and '/ on lvm on raw' (default)
+		kernel="kernel $subdir/vmlinuz26 root=${_rootpart} ro"
+		if get_anchestors_mount ';/;'
+		then
+			if echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '2p' | grep -q 'raw$'
+			then
+				# '/ on dm_crypt on raw'
+				raw_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				kernel="kernel $subdir/vmlinuz26 root=$raw_device ro"
+			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+				# / on lvm on dm_crypt on raw
+				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
+				vg_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '4p' | cut -d ' ' -f1`
+				kernel="kernel $subdir/vmlinuz26 root=$lv_device cryptdevice=$crypt_device:`basename $vgdevice` ro"
+			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+				# / on dm_crypt on lvm on raw
+				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
+				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				kernel=" kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:root ro"
+			fi
+		fi
             cat >>$grubmenu <<EOF
 
 # (0) Arch Linux
 title  Arch Linux
 root   $grubdev
-kernel $subdir/vmlinuz26 root=${_rootpart} ro
+$kernel
 initrd $subdir/kernel26.img
 
 # (1) Arch Linux
 title  Arch Linux Fallback
 root   $grubdev
-kernel $subdir/vmlinuz26 root=${_rootpart} ro
+$kernel
 initrd $subdir/kernel26-fallback.img
 
 # (2) Windows
@@ -887,12 +911,6 @@ EOF
         fi
     fi
 
-	#TODO: handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed
-	# / on dm_crypt        -> no substitution needed: specify physical device that hosts the encrypted /
-	# / on lvm             -> root=/dev/mapper/<volume-group>-<logical-volume-root> resume=/dev/mapper/<volume-group>-<logical-volume-swap> 
-	# / on lvm on dm_crypt -> root=/dev/mapper/<volume-group>-<logical-volume-root> cryptdevice=/dev/<luks-part>:<volume-group>
-	# / on dm_crypt on lvm -> specify the lvm device that hosts the encrypted /
-	# ...
 
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
     if [ -z "$EDITOR" ]
