@@ -23,6 +23,10 @@ worker_intro () {
 	sleep 10
 }
 
+worker_configure_system () {
+	sed -i 's/HOSTNAME="myhost"/HOSTNAME="arch-generic-install"/' $var_TARGET_DIR/etc/rc.conf
+}
+
 
 # These variables are mandatory
 
