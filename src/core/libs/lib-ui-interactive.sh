@@ -990,14 +990,15 @@ interactive_grub() {
         if [ "$GRUB_OK" == "1" ]; then
             notify "GRUB was successfully installed."
         else
-            notify "GRUB was NOT successfully installed."
+            show_warning "Grub installation failure" "GRUB was NOT successfully installed."
             return 1
         fi
         return 0
     fi
 }
 
-interactive_grub_menulst() {
+generate_grub_menulst() {
+	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	get_device_with_mount '/' || return 1
 	local _rootpart=$ANSWER_DEVICE
     local _uuid="$(getuuid ${_rootpart})"
@@ -1107,7 +1108,11 @@ initrd $subdir/kernel26-fallback.img
 #makeactive
 #chainloader +1
 EOF
+}
 
+interactive_grub_menulst () {
+	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
+	generate_grub_menulst
 	helptext=
 	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
     notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
