@@ -819,32 +819,207 @@ interactive_install_bootloader () {
 
 	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
 	[ "$bl" != grub ] && return 0
-	interactive_install_grub
+    GRUB_OK=0
+	interactive_grub
 }
 
-interactive_install_grub() {
+interactive_grub() {
 	get_grub_map
 	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
+    gblog="/tmp/gb.log"
+    echo "Start grub" > $gblog
     # try to auto-configure GRUB...
     debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
-    if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
-    GRUB_OK=0
-        grubdev=$(mapdev $PART_ROOT)
-        local _rootpart="${PART_ROOT}"
-        local _uuid="$(getuuid ${PART_ROOT})"
-        # attempt to use a UUID if the root device has one
-        if [ -n "${_uuid}" ]; then
-            _rootpart="/dev/disk/by-uuid/${_uuid}"
-        fi
-        # look for a separately-mounted /boot partition
+	if [ -n "$PART_ROOT" -a "$GRUB_OK" != '1' ] ; then
+		GRUB_OK=0
+		# look for a separately-mounted /boot partition
+        # This could be used better, maybe we use a better variable name cause
+        # we use this later in many things in workflow.
+        # Currently we have bootdev as a device if we have a seperate /boot or empty
+        # if no seperate /boot. Where our /boot realy lives is important later
+        # to build the grub: root (hdx,y) part.
+        # So maybe we set a flag variable like: sepboot=true|false and set bootdev to either
+        # the partition with seperate /boot or to $PART_ROOT.
+        # So that bootdev is always our real partition with /boot....
         bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
-        if [ "$grubdev" != "" -o "$bootdev" != "" ]; then
-            subdir=
-            [ -n "$bootdev" ] && grubdev=$(mapdev $bootdev) || subdir="/boot"
+		# check if bootdev or PART_ROOT is on a md raid array
+        # This dialog is only shown when we detect / or /boot on a raid device.
+		if [ -n "$(mdraid_is-raid $bootdev)" -o -n "$(mdraid_is-raid $PART_ROOT)" ]; then
+			ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
+			if [ $? -eq 0 ]; then
+				onraid=true
+                echo "onraid is selected" >> $gblog
+			fi
+		fi
+        # Create and edit the grub menu.lst
+        interactive_grub_menulst
 
-            # keep the file from being completely bogus
+        DEVS=$(finddisks 1 _)
+        DEVS="$DEVS $(findpartitions 1 _)"
+        if [ "$DEVS" = "" ]; then
+            notify "No hard drives were found"
+            return 1
+        fi
+        # copy initial grub files into installed system
+        cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
+        sync
+        # freeze xfs filesystems to enable grub installation on xfs filesystems
+        for xfsdev in $(blkid -t TYPE=xfs -o device); do
+            mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+            if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+                /usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
+            fi
+        done
+        
+        if [ ! $onraid ]; then
+            # Set boot partition to the device where our /boot lives.
+            [ -z $bootdev ] && bootpart=$PART_ROOT || bootpart=$bootdev
+            ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
+            bootdev=$ANSWER_OPTION
+            boothd=$(echo $bootdev | cut -c -8)
+            interactive_grub_install $bootpart $bootdev $boothd
+            if [ $? -eq 0 ]; then
+                GRUB_OK=1
+            fi
+        else
+            # Raid special
+            # The bootpart and bootdev should not be changed when setup grub on all raid array members.
+            # Instead the device is mapped via grub parameter device
+            # So a grub setup on MBR sda/sdb with /boot on sda1/sdb1 should always be done like:
+            # device (hd0) /dev/sd(a|b)
+            # root (hd0,0)
+            # setup (hd0)
+            
+            # get md device either if we use separate /boot or not.
+            [ -z $bootdev ] && local md=$PART_ROOT || local md=$bootdev
+            
+            local ask_str="By default grub bootloader will get installed in MBR of each harddisks from your BOOT array "$md". Otherwise selct No."
+            ask_yesno "$ask_str" yes
+            if [ $? -eq 0 ]; then
+				slaves=$(mdraid_all-slaves $md)
+                for slave in $slaves; do
+                    boothd=$(echo $slave | cut -c -8)
+                    bootpart=$(mdraid_slave0 $md)
+                    bootdev=$(echo $bootpart | cut -c -8)
+                    interactive_grub_install $bootpart $bootdev $boothd
+                    if [ $? -eq 0 ]; then
+                        GRUB_OK=1
+                    fi
+                done
+            else
+                # This part needs more attention... User could select here only
+                # a other blockdevice to install grub into... But our grub rootdevice
+                # is not selectable, cause it is determined either from PART_ROOT or
+                # bootdev.
+                # Maybe better we leave the user alone and poke him to use a grub
+                # shell if he want do something unusefull and not install grub in
+                # aech MBR of affected HD in raid array....
+                USERHAPPY=0
+                while [ "$USERHAPPY" = 0 ]
+                do
+                    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed." required $DEVS DONE _
+                    [ $? -gt 0                 ] && USERHAPPY=1 && break
+                    [ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
+                    bootdev=$ANSWER_OPTION
+                    boothd=$(echo $bootdev | cut -c -8)
+                    bootpart=$(mdraid_slave0 $md)
+                    bootdev=$(echo $bootpart | cut -c -8)
+                    interactive_grub_install $bootpart $bootdev $boothd
+                    if [ $? -eq 0 ]; then
+                        GRUB_OK=1
+                    fi
+                done
+			fi
+
+            if [ "$bootpart" = "" ]; then
+                if [ "$PART_ROOT" = "" ]; then
+                    ask_string "Enter the full path to your root device" "/dev/sda3" || return 1
+                    bootpart=$ANSWER_STRING
+                else
+                    bootpart=$PART_ROOT
+                fi
+                boothd=$(echo $bootpart | cut -c -8)
+                interactive_grub_install $bootpart $bootdev $boothd
+                if [ $? -eq 0 ]; then
+                    GRUB_OK=1
+                fi
+            fi
+        fi
+        # unfreeze xfs filesystems
+        for xfsdev in $(blkid -t TYPE=xfs -o device); do
+            mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+            if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+                /usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
+            fi
+        done
+        
+        if [ "$GRUB_OK" == "1" ]; then
+            notify "GRUB was successfully installed."
+        else
+            notify "GRUB was NOT successfully installed."
+            return 1
+        fi
+        return 0
+    fi
+}
+
+interactive_grub_menulst() {
+	
+	local _rootpart="${PART_ROOT}"
+    local _uuid="$(getuuid ${PART_ROOT})"
+    # attempt to use a UUID if the root device has one
+    if [ -n "${_uuid}" ]; then
+		_rootpart="/dev/disk/by-uuid/${_uuid}"
+    fi
+	
+	# Determine what is the device that acts as grub's root
+	# This is the blockdevice where /boot lives, normally a seperate partition.
+	#
+	# Special handling: on md raid arrays
+	# md raid could not work directly with grub. To get grub's root device we
+	# parse the slave 0 in the md array to get a real blockdevice (/dev/sdXY)
+	#
+	# We get at last in grubdev the blockdevice in grub-legacy notation (ex: (hd0,0)
+	#
+    # We do may things double here and in interactive_grub_install
+    # Better way would be to determine/ask neccassary things once and then
+    # fill (and present) menu.lst to user. If user mean there is something
+    # wrong with menu.lst settings (wrong boot device or wrong root=/device)
+    # he better should re-run the interactive grub install and select correct
+    # settings.
+    echo "Grub Part_root: "$PART_ROOT >> $gblog
+    echo "Grub bootdev: "$bootdev >> $gblog
+	# No seperate /boot partition
+	if [ -z $bootdev ]; then
+		# Special handling on md raid
+		if [ $onraid ]; then
+			grubdev=$(mapdev $(mdraid_slave0 $PART_ROOT))
+            echo "onraid no sep boot slave0: "$(mdraid_slave0 $PART_ROOT) >> $gblog
+            echo "onraid no sep boot grubdev: "$grubdev >> $gblog
+		else
+			# No raid
+			grubdev=$(mapdev $PART_ROOT)
+            echo "no sep boot grubdev: "$grubdev >> $gblog
+		fi
+		# Without seperate /boot partiton we have to specify this path
+		subdir="/boot"
+	# with seperate /boot partition
+	else
+		# Special handling on md raid
+		if [ $onraid ]; then
+			grubdev=$(mapdev $(mdraid_slave0 $bootdev))
+            echo "onraid with sep boot slave0: "$(mdraid_slave0 $bootdev) >> $gblog
+            echo "onraid with sep boot grubdev: "$grubdev >> $gblog
+		else
+			# No raid
+			grubdev=$(mapdev $bootdev)
+            echo "onraid with sep boot grubdev: "$grubdev >> $gblog
+		fi
+	fi
+	# Now that we have our grub-legacy root device (grubdev).
+    # keep the file from being completely bogus
             if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
                 notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
                 grubdev="(hd0,0)"
@@ -871,84 +1046,61 @@ initrd $subdir/kernel26-fallback.img
 #makeactive
 #chainloader +1
 EOF
-        fi
-    fi
 
-	#TODO: handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed
+	notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
+    [ -n "$EDITOR" ] || interactive_get_editor
+    $EDITOR $grubmenu
+}
+
+interactive_grub_install () {
+    #TODO: handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed
 	# / on dm_crypt        -> no substitution needed: specify physical device that hosts the encrypted /
 	# / on lvm             -> root=/dev/mapper/<volume-group>-<logical-volume-root> resume=/dev/mapper/<volume-group>-<logical-volume-swap> 
 	# / on lvm on dm_crypt -> root=/dev/mapper/<volume-group>-<logical-volume-root> cryptdevice=/dev/<luks-part>:<volume-group>
 	# / on dm_crypt on lvm -> specify the lvm device that hosts the encrypted /
 	# ...
-
-    notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB."
-    [ -n "$EDITOR" ] || interactive_get_editor
-    $EDITOR $grubmenu
-
-    DEVS=$(finddisks 1 _)
-    DEVS="$DEVS $(findpartitions 1 _)"
-    if [ "$DEVS" = "" ]; then
-        notify "No hard drives were found"
-        return 1
-    fi
-    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
-    ROOTDEV=$ANSWER_OPTION
-    infofy "Installing the GRUB bootloader..."
-    cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
-    sync
-    # freeze xfs filesystems to enable grub installation on xfs filesystems
-    for xfsdev in $(blkid -t TYPE=xfs -o device); do
-	mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-            /usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
-        fi
-    done
-    # look for a separately-mounted /boot partition
-    bootpart=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
-    if [ "$bootpart" = "" ]; then
-        if [ "$PART_ROOT" = "" ]; then
-            ask_string "Enter the full path to your root device" "/dev/sda3" || return 1
-            bootpart=$ANSWER_STRING
-        else
-            bootpart=$PART_ROOT
-        fi
-    fi
-    ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
-    if [ $? -eq 0 ]; then
-        ask_option no "Boot partition device selection" "Please select the boot partition device, this cannot be autodetected!\nPlease redo grub installation for all partitions you need it!" required $DEVS || return 1
-        bootpart=$ANSWER_OPTION
-    fi
-    bootpart=$(mapdev $bootpart)
-    bootdev=$(mapdev $ROOTDEV)
+    
+    # $1 = bootpart
+    # $2 = bootdev
+    # $3 = boothd
+    # To install grub we have to know:
+    # The bootpart - This is were /boot could be found
+    # The bootdev - This is were grub gets installed, usally the MBR
+    # The boothd - Only on md raid setups this differs from bootdev
+    # These values get parsed either from values we have already or from
+    # user input. Later they will converted to grub-legacy notation.
+    
+    # Convert to grub-legacy notation
+    local bootpart=$(mapdev $1)
     if [ "$bootpart" = "" ]; then
         notify "Error: Missing/Invalid root device: $bootpart"
         return 1
     fi
+	local bootdev=$(mapdev $2)
     if [ "$bootpart" = "DEVICE NOT FOUND" -o "$bootdev" = "DEVICE NOT FOUND" ]; then
         notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
         return 1
     fi
+    local boothd=$3
+    echo "P1: $1" >> $gblog
+    echo "P2: $2" >> $gblog
+    echo "P3: $3" >> $gblog
+    echo "bootpart: $bootpart" >> $gblog
+    echo "bootdev: $bootdev" >> $gblog
+    echo "boothd: $boothd" >> $gblog
+    #return 0
+    
     $var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
+device $bootdev $boothd
 root $bootpart
 setup $bootdev
 quit
 EOF
     cat /tmp/grub.log >$LOG
-    # unfreeze xfs filesystems
-    for xfsdev in $(blkid -t TYPE=xfs -o device); do
-        mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-        if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-            /usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
-        fi
-    done
-
     if grep "Error [0-9]*: " /tmp/grub.log >/dev/null; then
         notify "Error installing GRUB. (see $LOG for output)"
         return 1
     fi
-    notify "GRUB was successfully installed."
-    GRUB_OK=1
-	return 0
 }
 
 

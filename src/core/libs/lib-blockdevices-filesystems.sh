@@ -773,3 +773,46 @@ get_blockdevice_size ()
 	[ $unit = GiB ] && BLOCKDEVICE_SIZE=$((bytes/2**30))
 	[ $unit = GB  ] && BLOCKDEVICE_SIZE=$((bytes/10**9))
 }
+
+
+# $1 blockdevice (ex: /dev/md0 or /dev/sda1)
+# return true when blockdevice is an md raid, otherwise return a unset value
+mdraid_is-raid ()
+{
+    local israid
+    if [ -z $1 ]; then
+        # Don't call mdadm on empty blockdevice parameter!
+        israid=""
+    elif [ "$(mdadm --query $1 | cut -d':' -f2)" == " is not an md array" ]; then
+        israid=""
+    else
+        israid=true
+    fi
+    echo $israid
+}
+
+# $1 md raid blockdevice (ex: /dev/md0)
+# return the array member device which is slave 0 in the given array
+# ex: /dev/md0 is an array with /dev/sda1, /dev/sdb1,
+# so we would return /dev/sda1 as slave 0 
+#
+# This procedure is used to determine the grub value for root, ex: (hd0,0)
+mdraid_slave0 ()
+{
+    echo "/dev/"$(ls -ldgGQ /sys/class/block/$(basename $1)/md/rd0 | cut -d'"' -f4 | cut -d'-' -f2)
+}
+
+# $1 md raid blockdevice (ex: /dev/md0)
+# return a list of array members from given md array
+# ex: /dev/md0 has slaves: "/dev/sda1 /dev/sdb2 /dev/sdc2"
+mdraid_all-slaves ()
+{
+    local slave=
+    local slaves=
+    for slave in $(ls /sys/class/block/$(basename $1)/slaves/); do
+        slaves=$slaves"/dev/"$slave" "
+    done
+    echo $slaves
+}
+
+
