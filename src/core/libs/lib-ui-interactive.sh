@@ -927,7 +927,7 @@ interactive_grub() {
             # get md device either if we use separate /boot or not.
             [ -z $bootdev ] && local md=$PART_ROOT || local md=$bootdev
             
-            local ask_str="By default grub bootloader will get installed in MBR of each harddisks from your BOOT array "$md". Otherwise selct No."
+            local ask_str="Do you want to install grub to the MBR of each harddisk from your BOOT array "$md" ? (recommended)"
             ask_yesno "$ask_str" yes
             if [ $? -eq 0 ]; then
 				slaves=$(mdraid_all-slaves $md)
