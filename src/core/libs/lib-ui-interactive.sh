@@ -17,23 +17,14 @@ check_depend ()
 }
 
 
-interactive_configure_system()
-{
-	if [ -z "$EDITOR" ]
-	then
-		interactive_get_editor || return 1
-	fi
-	FILE=""
-
-	 ## PREPROCESSING ##
-
+prefill_configs () {
 	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already even if worker did not exit 0
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist
-	if [ "$var_PKG_SOURCE_TYPE" = "net" -a "${var_SYNC_URL}" != "" ]; then
+	if [ "$var_PKG_SOURCE_TYPE" = "net" -n "${var_SYNC_URL}" ]; then
 		debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
 		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
-		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" #TODO: test this, this may not work
+		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST"
 	fi
 
 	# /etc/rc.conf
@@ -62,6 +53,17 @@ interactive_configure_system()
 			sed -i '/^HOOKS/ s/keymap/usbinput keymap/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
 		fi
 	fi
+}
+
+interactive_configure_system()
+{
+	if [ -z "$EDITOR" ]
+	then
+		interactive_get_editor || return 1
+	fi
+	FILE=""
+
+	prefill_configs
 
 	# main menu loop
 	while true; do
@@ -97,6 +99,7 @@ interactive_configure_system()
 
 		# if user edited /etc/rc.conf, add the hostname to /etc/hosts if it's not already there.
 		# note that if the user edits rc.conf several times to change the hostname more then once, we will add them all to /etc/hosts.  this is not perfect, but to avoid this, too much code would be required (feel free to prove me wrong :))
+		# we could maybe do this just once after the user is really done here, but then he doesn't get to see the updated file while being in this menu...
 		if [ "$FILE" = "/etc/rc.conf" ]
 		then
 			HOSTNAME=`sed -n '/^HOSTNAME/s/HOSTNAME=//p' ${var_TARGET_DIR}${FILE} | sed 's/"//g'`

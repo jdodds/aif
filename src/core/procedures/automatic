@@ -55,6 +55,8 @@ worker_configure ()
 	var_GRUB_DEVICE=$GRUB_DEVICE
 	var_PARTITIONS=$PARTITIONS
 	var_BLOCKDATA=$BLOCKDATA
+	HARDWARECLOCK=${HARDWARECLOCK:-localtime}
+	TIMEZONE=${TIMEZONE:-Canada/Pacific}
 }
 
 worker_select_source ()
@@ -124,7 +126,12 @@ worker_auto_network () {
 }
 
 
+worker_configure_system () {
+	prefill_configs
+}
+
 worker_install_bootloader ()
 {
 	grub-install $var_GRUB_DEVICE --root-directory=/mnt
+	generate_grub_menulst
 }

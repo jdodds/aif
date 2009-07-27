@@ -5,7 +5,8 @@
 SOURCE=cd
 FILE_URL=file:///src/core/pkg
 SYNC_URL=
-
+HARDWARECLOCK=localtime
+TIMEZONE=Canada/Pacific
 # Do you want to have additional pacman repositories or packages available at runtime (during installation)?
 # RUNTIME_REPOSITORIES = array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
 RUNTIME_REPOSITORIES=
@@ -24,6 +25,7 @@ worker_intro () {
 }
 
 worker_configure_system () {
+	prefill_configs
 	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-generic-install"/' $var_TARGET_DIR/etc/rc.conf
 }
 
