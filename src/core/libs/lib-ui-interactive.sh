@@ -1068,23 +1068,23 @@ generate_grub_menulst() {
 		kernel="kernel $subdir/vmlinuz26 root=${_rootpart} ro"
 		if get_anchestors_mount ';/;'
 		then
-			if echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '2p' | grep -q 'raw$'
+			if echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'raw$'
 			then
 				debug 'FS' 'Grub kernel line? Found / on dm_crypt on raw'
-				raw_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				raw_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
 				kernel="kernel $subdir/vmlinuz26 root=$raw_device ro"
-			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
 			then
 				debug 'FS' 'Grub kernel line? Found / on lvm on dm_crypt on raw'
-				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
-				vg_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
-				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '4p' | cut -d ' ' -f1`
+				lv_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
+				vg_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '4p' | cut -d ' ' -f1`
 				kernel="kernel $subdir/vmlinuz26 root=$lv_device cryptdevice=$crypt_device:`basename $vgdevice` ro"
-			elif echo "$ANSWERS_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWERS_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWERS_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
 			then
 				debug 'FS' 'Grub kernel line? Found / on dm_crypt on lvm on raw'
-				crypt_device=`echo "$ANSWERS_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
-				lv_device=`echo "$ANSWERS_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
+				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
+				lv_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
 				kernel=" kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:root ro"
 			else
 				debug 'FS' 'Grub kernel line? Could not figure this one out'
