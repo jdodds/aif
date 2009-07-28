@@ -1088,7 +1088,7 @@ generate_grub_menulst() {
 				kernel=" kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:root ro"
 			else
 				debug 'FS' 'Grub kernel line? Could not figure this one out'
-				show_warning "Disk setup detection" "Could not figure out what kind of disk setup you are using.  Are you using some really fancy dm_crypt/lvm/softraid setup?  Please file a bug for this and supply all files from /tmp/aif/"
+				show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
 			fi
 		fi
             cat >>$grubmenu <<EOF
