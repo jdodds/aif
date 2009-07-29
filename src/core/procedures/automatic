@@ -132,6 +132,11 @@ worker_configure_system () {
 
 worker_install_bootloader ()
 {
+    get_grub_map
 	grub-install $var_GRUB_DEVICE --root-directory=/mnt
+    # check if we have a seperate bootdev (/boot)
+    # ToDo: This is double-work, find a better place!
+    # See comment in generate_grub_menulst and interactive_grub
+    bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
 	generate_grub_menulst
 }

@@ -1004,12 +1004,7 @@ generate_grub_menulst() {
 	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	get_device_with_mount '/' || return 1
 	local _rootpart=$ANSWER_DEVICE
-    local _uuid="$(getuuid ${_rootpart})"
-    # attempt to use a UUID if the root device has one
-    if [ -n "${_uuid}" ]; then
-		_rootpart="/dev/disk/by-uuid/${_uuid}"
-    fi
-	
+
 	# Determine what is the device that acts as grub's root
 	# This is the blockdevice where /boot lives, normally a seperate partition.
 	#
@@ -1062,6 +1057,12 @@ generate_grub_menulst() {
             fi
             # remove default entries by truncating file at our little tag (#-*)
             sed -i -e '/#-\*/q' $grubmenu
+
+        # attempt to use a UUID if the root device has one
+        local _uuid="$(getuuid ${_rootpart})"
+        if [ -n "${_uuid}" ]; then
+            _rootpart="/dev/disk/by-uuid/${_uuid}"
+        fi
 
 		# handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed automatically
 		debug 'FS' 'Grub kernel line? Assuming "/ on raw" or "/ on lvm on raw" as default'

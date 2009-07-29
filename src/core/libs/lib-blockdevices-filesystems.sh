@@ -721,7 +721,9 @@ process_filesystem ()
 			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
 			          fs_params=${fs_params//_/ }
+                      infofy "Please enter your passphrase to encrypt the device (with confirmation)"
 			          cryptsetup $fs_params $opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
+                      infofy "Please enter your passphrase to unlock the device"
 			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
 			lvm-pv)   pvcreate $fs_opts $part              >$LOG 2>&1; ret=$? ;;
 			lvm-vg)   # $fs_params: ':'-separated list of PV's
