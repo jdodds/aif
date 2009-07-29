@@ -358,14 +358,14 @@ _dia_ask_number ()
 		ANSWER_NUMBER=`cat $ANSWER`
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
 		then
-			show_warning "$ANSWER_NUMBER is not a number! try again."
+			show_warning 'Invalid number input' "$ANSWER_NUMBER is not a number! try again."
 		else
 			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
 			then
-				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
+				show_warning 'Invalid number input' "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
 			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
 			then
-				show_warning "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
+				show_warning 'Invalid number input' "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
 			else
 				break
 			fi
@@ -514,14 +514,14 @@ _cli_ask_number ()
 		read ANSWER_NUMBER
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]]
 		then
-			show_warning "$ANSWER_NUMBER is not a number! try again."
+			show_warning 'Invalid number input' "$ANSWER_NUMBER is not a number! try again."
 		else
 			if [ -n "$3" -a $3 != '0' -a $ANSWER_NUMBER -gt $3 ]
 			then
-				show_warning "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
+				show_warning 'Invalid number input' "$ANSWER_NUMBER is bigger then the maximum,$3! try again."
 			elif [ -n "$2" -a $ANSWER_NUMBER -lt $2 ]
 			then
-				show_warning "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
+				show_warning 'Invalid number input' "$ANSWER_NUMBER is smaller then the minimum,$2! try again."
 			else
 				break
 			fi

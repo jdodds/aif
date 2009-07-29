@@ -11,21 +11,21 @@ worker_prepare_disks ()
         then
 		infofy "disk processing ok"
         else
-		show_warning "PROCESSING FAILED"
+		show_warning 'disks processing' "PROCESSING FAILED"
 		return 1
         fi
         if rollback_filesystems
         then
 		infofy "rollback ok"
         else
-		show_warning "ROLLBACK FAILED"
+		show_warning 'disks rollback' "ROLLBACK FAILED"
 		return 1
         fi
         if process_filesystems
         then
 		infofy "disk processing ok"
         else
-		show_warning "PROCESSING FAILED"
+		show_warning 'disk processing' "PROCESSING FAILED"
 		return 1
         fi
 }

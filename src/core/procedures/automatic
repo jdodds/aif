@@ -86,7 +86,7 @@ worker_prepare_disks ()
 	process_disks       || die_error "Could not process_disks"
 	if ! process_filesystems
 	then
-		show_warning "Could not process_filesystems"
+		show_warning 'Disk processing' "Could not process_filesystems"
 		txt='also failed to execute properly'
 		rollback_filesystems && txt='ended successfully'
 		die_error "Something failed while processing the filesystem.  A rollback was executed, which $txt"
