@@ -44,7 +44,7 @@ phase_finish=(msg_report)
 ###### Workers ( can be overridden by more specific procedures) ######
 worker_intro ()
 {
-	ask_yesno "This is a low-interactivity 'common defaults' installation.  Do you really want to do this?  We may overwrite your data."
+	ask_yesno "This is a low-interactivity 'common defaults' installation, not meant for direct invocation.  Do you really want to do this?  We may overwrite your data."
 	if [ $? -gt 0 ]
 	then
 		die_error "User aborted base profile execution"

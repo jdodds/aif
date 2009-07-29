@@ -120,7 +120,7 @@ worker_intro ()
  the order they are presented. If you are unfamiliar with partitioning/making\
  filesystems, you may want to consult some documentation before continuing.\
  You can view all output from commands by viewing your VC7 console (ALT-F7).\
- ALT-F1 will bring you back here."
+ ALT-F1 will bring you back here.\n\n$DISCLAIMER"
 }
 
 

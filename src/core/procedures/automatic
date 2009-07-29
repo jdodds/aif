@@ -36,7 +36,7 @@ process_args ()
 
 worker_intro ()
 {
-	notify "Automatic procedure running profile $var_AUTOMATIC_PROFILE ..."
+	notify "Automatic procedure running profile $var_AUTOMATIC_PROFILE ...\n$DISCLAIMER"
 }
 
 
