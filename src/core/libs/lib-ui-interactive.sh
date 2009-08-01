@@ -276,15 +276,8 @@ interactive_autoprepare()
 		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
         done
 
-	CHOSEN_FS=""
-	while [ "$CHOSEN_FS" = "" ]
-	do
-		ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required $FSOPTS || return 1
-		FSTYPE=$ANSWER_OPTION
-		ask_yesno "$FSTYPE will be used for / and /home. Is this OK?" yes && CHOSEN_FS=1
-        done
-
-	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
+	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required $FSOPTS || return 1
+	FSTYPE=$ANSWER_OPTION
 
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
@@ -293,6 +286,8 @@ interactive_autoprepare()
 	echo "${DISC}2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params" >> $TMP_BLOCKDEVICES
 	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >> $TMP_BLOCKDEVICES
 	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >> $TMP_BLOCKDEVICES
+
+	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
 
 	process_disks       || die_error "Something went wrong while partitioning"
