@@ -311,6 +311,16 @@ interactive_autoprepare()
 interactive_partition() {
     target_umountall
 
+	question_text="Select the disk you want to partition"
+	if [ -f "$TMP_PARTITIONS" ]
+	then
+		if ask_yesno "I've detected you already have partition definitions in place:\n`cat $TMP_PARTITIONS`\nDo you want apply these now?  Pick 'no' when in doubt to start from scratch" no
+		then
+			process_disks || die_error "Something went wrong while partitioning"
+			question_text="If you want to do further changes, you can (re)partition disks here"
+		fi
+	fi
+
     # Select disk to partition
     DISCS=$(finddisks 1 _)
     DISCS="$DISCS OTHER - DONE +"
@@ -318,7 +328,7 @@ interactive_partition() {
     DISC=""
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no 'Disc selection' "Select the disk you want to partition (select DONE when finished)" required $DISCS || return 1
+        ask_option no 'Disc selection' "$question_text (select DONE when finished)" required $DISCS || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
@@ -573,7 +583,7 @@ interactive_filesystems() {
 	then
 		if ask_yesno "I've detected you already have blockdevice definitions in place:\n`cat $TMP_BLOCKDEVICES`\nDo you want to use these as a starting point?\nMake sure your disk(s) are partitioned correctly so your definitions can be applied on the disk. Pick 'no' when in doubt to start from scratch" no
 		then
-			new_blockdevices=0
+			renew_blockdevices=0
 		fi
 	fi
 	[ "$renew_blockdevices" = 1 ] && findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
