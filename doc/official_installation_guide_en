@@ -1,0 +1,1112 @@
+[][1]
+
+   [1]: /index.php/Main_Page (Visit the main page [z])
+
+  * [Download][2]
+
+  * [AUR][3]
+
+  * [Bugs][4]
+
+  * [Wiki][5]
+
+  * [Forums][6]
+
+  * [Home][7]
+
+   [2]: http://www.archlinux.org/download/
+
+   [3]: http://aur.archlinux.org/
+
+   [4]: http://bugs.archlinux.org/
+
+   [5]: http://wiki.archlinux.org/
+
+   [6]: http://bbs.archlinux.org/
+
+   [7]: http://www.archlinux.org/
+
+# Official Arch Linux Install Guide
+
+### From ArchWiki
+
+Jump to: [navigation][8], [search][9]
+
+   [8]: #column-one
+
+   [9]: #searchInput
+
+
+**Article summary**
+
+General installation documentation for the Arch Linux distribution.
+
+**Available Languages**
+
+** English**
+
+[ 简体中文][10]
+
+   [10]:
+/index.php/Arch_Linux_%E5%AE%98%E6%96%B9%E5%AE%89%E8%A3%85%E6%8C%87%E5%8D%97
+(Arch Linux 官方安装指南)
+
+[ 正體中文][11]
+
+   [11]:
+/index.php/Arch_Linux_%E5%AE%98%E6%96%B9%E5%AE%89%E8%A3%9D%E6%8C%87%E5%8D%97
+(Arch Linux 官方安裝指南)
+
+[ Česky][12]
+
+   [12]: /index.php/Ofici%C3%A1ln%C3%AD_instala%C4%8Dn%C3%AD_p%C5%99%C3%ADru%C
+4%8Dka_(%C4%8Cesky) (Oficiální instalační příručka (Česky))
+
+[ Русский][13]
+
+   [13]: /index.php/%D0%A0%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D1%81%D1%82%D0%
+B2%D0%BE_%D0%BF%D0%BE_%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B5
+(Руководство по установке)
+
+[ Español][14]
+
+   [14]: /index.php/Gu%C3%ADa_oficial_de_Instalaci%C3%B3n (Guía oficial de
+Instalación)
+
+[ Italiano][15]
+
+   [15]: /index.php/Official_Arch_Linux_Install_Guide_(Italiano) (Official
+Arch Linux Install Guide (Italiano))
+
+**Related articles**
+
+[Beginners Guide][16] (If you are new to Arch)
+
+   [16]: /index.php/Beginners_Guide (Beginners Guide)
+
+
+## Contents
+
+  * [1 Introduction][17]
+
+   [17]: #Introduction
+
+    * [1.1 What is Arch Linux?][18]
+
+    * [1.2 License][19]
+
+   [18]: #What_is_Arch_Linux.3F
+
+   [19]: #License
+
+  * [2 Installing Arch Linux][20]
+
+   [20]: #Installing_Arch_Linux
+
+    * [2.1 Pre-Installation][21]
+
+    * [2.2 Acquiring Arch Linux][22]
+
+    * [2.3 Preparing the Installation Media][23]
+
+    * [2.4 Using the Install Media][24]
+
+    * [2.5 Common Installation Procedure][25]
+
+   [21]: #Pre-Installation
+
+   [22]: #Acquiring_Arch_Linux
+
+   [23]: #Preparing_the_Installation_Media
+
+   [24]: #Using_the_Install_Media
+
+   [25]: #Common_Installation_Procedure
+
+      * [2.5.1 Login and Loading a non-US Keymap][26]
+
+      * [2.5.2 Running Setup][27]
+
+      * [2.5.3 Select Source][28]
+
+   [26]: #Login_and_Loading_a_non-US_Keymap
+
+   [27]: #Running_Setup
+
+   [28]: #Select_Source
+
+        * [2.5.3.1 CD-ROM or OTHER SOURCE][29]
+
+        * [2.5.3.2 FTP/HTTP][30]
+
+   [29]: #CD-ROM_or_OTHER_SOURCE
+
+   [30]: #FTP.2FHTTP
+
+          * [2.5.3.2.1 Setup Network][31]
+
+          * [2.5.3.2.2 Choose Mirror][32]
+
+   [31]: #Setup_Network
+
+   [32]: #Choose_Mirror
+
+      * [2.5.4 Set Clock][33]
+
+      * [2.5.5 Prepare Hard Drive][34]
+
+   [33]: #Set_Clock
+
+   [34]: #Prepare_Hard_Drive
+
+        * [2.5.5.1 Auto-Prepare][35]
+
+        * [2.5.5.2 Partition Hard Drives][36]
+
+        * [2.5.5.3 Set Filesystem Mountpoints][37]
+
+   [35]: #Auto-Prepare
+
+   [36]: #Partition_Hard_Drives
+
+   [37]: #Set_Filesystem_Mountpoints
+
+      * [2.5.6 Select Packages][38]
+
+      * [2.5.7 Install Packages][39]
+
+      * [2.5.8 Configure System][40]
+
+      * [2.5.9 Install Bootloader][41]
+
+      * [2.5.10 Exit Install][42]
+
+   [38]: #Select_Packages
+
+   [39]: #Install_Packages
+
+   [40]: #Configure_System
+
+   [41]: #Install_Bootloader
+
+   [42]: #Exit_Install
+
+  * [3 Package Management][43]
+
+  * [4 APPENDIX][44]
+
+   [43]: #Package_Management
+
+   [44]: #APPENDIX
+
+##  Introduction
+
+###  What is Arch Linux?
+
+Arch Linux is an independently developed i686 and x86_64 optimized Linux
+distribution that was originally based on ideas from CRUX. Development is
+focused on a balance of simplicity, elegance, code-correctness and bleeding
+edge software. It's lightweight and simple design makes it easy to extend and
+mold into whatever kind of system you're building.
+
+###  License
+
+Arch Linux and scripts are copyright
+
+2002-2007 Judd Vinet
+
+2007-2009 Aaron Griffin
+
+and are licensed under the GNU General Public License (GPL).
+
+##  Installing Arch Linux
+
+###  Pre-Installation
+
+Arch Linux is optimized for i686 and x86_64 processors and therefore will not
+run on any lower or incompatible generations of x86 CPUs (i386,i486 or i586).
+A Pentium II or AMD K6-2 processor or higher is required. Before installing
+Arch Linux, you should decide which installation method you would like to use.
+Arch Linux provides bootable ISO and USB disk images, using the GRUB
+bootloader. The ISO images will work on almost any machine with a CD-ROM
+drive, and the USB images will work on any system capable of booting from a
+USB drive. For those having problems with GRUB not loading, ISOs with the
+ISOLINUX bootloader are offered as well. There are two variants of each
+installation medium which only differ in terms of supplied packages.
+
+  * The "core" images contain a snapshot of the core packages. These images
+are best suited for people who have an internet connection which is slow or
+difficult to set up.
+
+  * The "ftp" images contain no packages at all, and will use the network to
+install packages. These images are preferred since you will end up with an up-
+to-date system and they are best suited for people with fast internet
+connections.
+
+You can instruct the installer to obtain the packages via FTP using either of
+these images, and all images can also be used as fully functioning recovery
+environments. The images run like any regular installed Arch Linux system. In
+fact, they're exactly the same, just installed to a CD or USB image instead of
+a hard disk. They include the entire "base" package set, as well as various
+networking utilities and drivers. If there's something else you happen to need
+at runtime, just get your Internet connection up and install it using pacman.
+A short pacman command reference is available at the end of this document. The
+most common (and recommended) installation procedure is to use the install
+media to initially install only the "base" package set and whatever utilities
+and drivers you need to get online. Then once you've successfully booted the
+installed system, run a full system upgrade and install any other packages you
+want.
+
+###  Acquiring Arch Linux
+
+  * You can download Arch Linux from any of the mirrors listed on the
+[download][45] page.
+
+  * You may also purchase an installation CD from Archux, OSDisc or LinuxCD
+and have it shipped anywhere in the world.
+
+   [45]: http://www.archlinux.org/download/
+(http://www.archlinux.org/download/)
+
+###  Preparing the Installation Media
+
+**CD-ROM**
+
+  * Download iso/<release>/archlinux-XXX.iso
+
+  * Download iso/<release>/sha1sums.txt
+
+  * Verify the integrity of the .iso image using sha1sum:
+
+
+     sha1sum --check sha1sums.txt
+
+     archlinux-XXX.iso: OK
+
+
+  * Burn the ISO image to a CD-R or CD-RW using any software of your choice.
+
+**USB**
+
+  * Download iso/<release>/archlinux-XXX.img
+
+  * Download iso/<release>/sha1sums.txt
+
+  * Verify the integrity of the .img image using sha1sum:
+
+
+     sha1sum --check sha1sums.txt
+
+     archlinux-XXX.img: OK
+
+
+  * Write the disk image to a USB mass storage device, such as a thumb drive,
+using dd or similar raw-write software:
+
+
+     dd if=archlinux-XXX.img of=/dev/sdX
+
+
+Make sure to use /dev/sdX and not /dev/sdX1. This command will irrevocably
+delete all files on your USB stick, so make sure you don't have any important
+files on it before doing this.
+
+###  Using the Install Media
+
+Make sure your BIOS is set in a way to allow booting from your CD-ROM or USB
+device. Reboot your computer with the Arch Linux Installation CD in the drive
+or the USB stick plugged in the port. Once the installation medium has booted
+you will see the Arch Linux logo and a grub menu waiting for your selection.
+Most likely you can just hit enter at this point. At the end of the boot
+procedure, you should be at a login prompt with some simple instructions at
+the top of the screen. You should login as root. At this point you are ready
+to commence the actual installation, or do any manual preparation you consider
+necessary.
+
+Using the available shell tools, experienced users are also able to prepare
+the hard drive or any devices needed for the installation before starting the
+installer. Note that the Arch Linux installation media also contains a
+/arch/quickinst script for experienced users. This script installs the "base"
+set of packages to a user-specified destination directory. If you are doing an
+install with things like RAID and LVM, or don't want to use the installer at
+all, you'll probably want to use the quickinst script. You will have to
+configure the system afterwards since no form of auto-configuration takes
+place.
+
+###  Common Installation Procedure
+
+**Installation Steps:**
+
+  1. Loading a non-US Keymap
+
+  2. Running Setup
+
+  3. Select Source
+
+    1. CD-ROM or OTHER SOURCE
+
+    2. FTP/HTTP
+
+      1. Setup Network
+
+      2. Choose Mirror
+
+  4. Set Clock
+
+  5. Prepare Hard Drive
+
+    1. Auto-Prepare
+
+    2. Partition Hard Drives
+
+    3. Set Filesystem Mountpoints
+
+  6. Select Packages
+
+  7. Install Packages
+
+  8. Configure System
+
+  9. Install Bootloader
+
+  10. Exit Install
+
+####  Login and Loading a non-US Keymap
+
+If you need to load a non-US keymap and/or want to set a different console
+font, use the "km" utility.
+
+
+     km
+
+
+####  Running Setup
+
+Now you can run /arch/setup to invoke the installer program.
+
+
+     /arch/setup
+
+
+After an informational welcome message you will be presented with the main
+installation menu. You can use UP and DOWN arrow to navigate menus. Use TAB to
+switch between buttons and ENTER to select. At any point during the install
+process, you can switch to your 7th virtual console (ALT-F7) to view the
+output from the commands the setup is running. Use (ALT-F1) to get back to
+your first console where the installer is running, and any F-key in between if
+you need to open another console to intervene manually for any reason.
+
+####  Select Source
+
+As a first step you must choose the method you want to install Arch Linux. If
+you have a fast Internet connection, you might prefer the FTP installation to
+ensure you get the latest packages instead of using the potentially outdated
+CD or USB image contents.
+
+#####  CD-ROM or OTHER SOURCE
+
+When choosing a CD-ROM or OTHER SOURCE install you will only be able to
+install packages contained on the CD, which may be quite old, or packages
+stored on a medium you were able to mount (DVD, USB stick or similar)
+somewhere in the filesystem tree manually. Of course it has the advantage that
+you won't need an Internet connection, and is therefore the recommended choice
+for dialup users or those unable or unwilling to download the entire package
+set.
+
+#####  FTP/HTTP
+
+######  Setup Network
+
+The first entry Setup Network will allow you to install and configure your
+network device. If you are using a wireless device you will still need to use
+the usual utilities to configure it manually, in which case this part of the
+installer isn't much use to you. A list of all currently available network
+devices is presented to you. If no ethernet device is available yet, or the
+one you wish to use is missing, either hit OK and go on to probe for it, or
+switch to another console and load the module manually. If you still can't
+configure your network card, make sure it's physically been properly
+installed, and that it is supported by the Linux kernel.
+
+When the correct module is loaded, and your desired network card is listed,
+you should select the ethernet device you want to configure and you will be
+given the option to configure your network with DHCP. If your network uses
+DHCP, hit YES and let the installer do the rest. If you select NO, you will be
+asked to enter the networking information manually. Either way, your network
+should be successfully configured, and you may check connectivity using
+standard tools like ping on another console.
+
+######  Choose Mirror
+
+Choose Mirror will allow you to choose the preferred mirror to download the
+packages that will be installed in your Arch Linux system. You should choose a
+mirror situated near where you live, in order to achieve faster download
+speed. At some later point of the installation, you will be given the option
+to use the mirror you choose at this step, as the default mirror to download
+packages from.
+
+**Note: ** ftp.archlinux.org is throttled to 50 KB/s.
+
+These menu entries are only available when choosing FTP Installation, for
+rather obvious reasons. After successful preparation, choose Return to Main
+Menu.
+
+####  Set Clock
+
+Set Clock will allow you to set up your system clock and date. Choose UTC if
+your BIOS clock is set to UTC, or localtime if your BIOS clock is set to your
+local time. If you have an OS installed which cannot handle UTC BIOS times
+correctly, like Windows, choose localtime, otherwise you should prefer UTC.
+Next the setup will want you to select the continent and country you are from,
+and then set the date and time.
+
+####  Prepare Hard Drive
+
+Prepare Hard Drive will lead you into a submenu offering two alternatives of
+preparing your target drive for installation.
+
+#####  Auto-Prepare
+
+The first choice is Auto-Prepare, which will automatically partition your hard
+drive into a /boot, swap, a root partition, and a /home using the remaining
+space and then create filesystems on all four. These partitions will also be
+automatically mounted in the proper place. To be exact, this option will
+create:
+
+  * 32 MB ext2 /boot partition
+
+  * 256 MB swap partition
+
+  * 7.5 GB root partition
+
+  * /home partition with the remaining space
+
+You will be prompted to modify the sizes to your requirements, but /home will
+always use the remaining disk space.
+
+**AUTO-PREPARE WILL ERASE ALL DATA ON THE CHOSEN HARD DRIVE!**
+
+If you prefer to do the partitioning manually, use the other two options,
+Partition Hard Drives and Set Filesystem Mountpoints to prepare the target
+media according to your specifications as outlined below. After successful
+preparation, choose Return to Main Menu.
+
+#####  Partition Hard Drives
+
+Partition Hard Drives should be skipped if you chose Auto-Prepare already!
+
+Otherwise you should select the disk(s) you want to partition, and you'll be
+dropped into the cfdisk program where you can freely modify the partitioning
+information until you [Write] and [Quit]. You will need at least a root
+partition to continue the installation, and it's helpful to note somewhere
+which partition you're going to mount where, as you'll be asked exactly that
+in the next step.
+
+#####  Set Filesystem Mountpoints
+
+Set Filesystem Mountpoints should also be skipped if you chose to Auto-Prepare
+your hard drive. You should select this choice once the partition information
+is edited to your liking with the previous menu selection, or already existent
+through whatever other means.
+
+The first question to answer is what partition to use as swap. Select the
+previously created swap partition from the list, or NONE, if you don't want to
+use a swap partition. Using a swap file is not directly supported by the
+installer. Instead choose NONE here, finish the mountpoint associations, and
+activate a swap file on your desired, formatted partition with the swapon
+command. If you chose to use a swap partition, you will be asked whether to
+create a filesystem on it, and since this partition uses a specific filesystem
+of it's own, you should always answer YES here.
+
+After setting up the swap partition, you'll be asked to specify the partition
+to be used as the root partition. This is mandatory. The association process
+is then repeated until you choose DONE from the list. The installer will
+suggest /boot for all following mountpoints after choosing swap and root. Each
+time a partition to mount is specified, you will be asked if you want to
+create a filesystem on the respective partition. Selecting YES, will prompt
+you for the filesystem type to create. The partition will then be formatted
+with the chosen filesystem type, destroying all data in the process. It should
+be no problem, however, to say NO at this point to preserve any existing files
+on the partition. Before the actual formatting is done, the installer will
+present a list of all of your choices for review. After formatting and
+mounting all partitions, you may return to the Main Menu and proceed with the
+next step.
+
+####  Select Packages
+
+Select Packages will let you select the packages you wish to install from the
+CD, USB or your FTP mirror. You have the opportunity to specify whole package
+groups from which you'd generally like to install packages, then fine-tune
+your coarse selection by (de)selecting individual packages from the groups you
+have chosen using the space bar. It is recommended that you install all the
+"base" packages, but not anything else at this point. The only exception to
+this rule is installing any packages you need for setting up Internet
+connectivity.
+
+Once you're done selecting the packages you need, leave the selection screen
+and continue to the next step.
+
+####  Install Packages
+
+Install Packages will now install the base system and any other packages you
+selected with resolved dependencies onto your harddisk.
+
+####  Configure System
+
+Configure System allows you to edit the configuration files crucial for your
+newly installed system. You will be asked for the editor you want to use for
+manually fine-tuning the generated configuration files, either VIM or nano.
+
+**Configuration Files**
+
+These are the core configuration files for Arch Linux. Only the most basic
+configuration files are listed here. If you need help configuring a specific
+service, please read the appropriate manpage or refer to any online
+documentation you need. In many cases, the Arch Linux [Wiki][46] and
+[forums][47] are a rich source for help as well.
+
+   [46]: http://wiki.archlinux.org/ (http://wiki.archlinux.org/)
+
+   [47]: http://bbs.archlinux.org/ (http://bbs.archlinux.org/)
+
+  * /etc/rc.conf
+
+  * [ /etc/fstab][48]
+
+  * /etc/mkinitcpio.conf
+
+  * /etc/modprobe.conf
+
+  * /etc/resolv.conf
+
+  * /etc/hosts
+
+  * /etc/hosts.deny
+
+  * /etc/hosts.allow
+
+  * /etc/locale.gen
+
+  * /etc/pacman.d/mirrorlist
+
+   [48]: /index.php/Fstab (Fstab)
+
+
+**/etc/rc.conf**
+
+This is the main configuration file for Arch Linux. It allows you to set your
+keyboard,timezone, hostname, network, daemons to run and modules to load at
+bootup, profiles, and more.
+
+**LOCALE:** This sets your system language, which will be used by all i18n-
+friendly applications and utilities. See locale.gen below for available
+options. This setting's default is fine for US English users.
+
+**HARDWARECLOCK:** Either UTC if your BIOS clock is set to UTC, or localtime
+if your BIOS clock is set to your local time. If you have an OS installed
+which cannot handle UTC BIOS times correctly, like Windows, choose localtime
+here, otherwise you should prefer UTC, which makes daylight savings time a
+non-issue and has a few other positive aspects.
+
+**USEDIRECTISA:** If set to "yes" it tells hwclock to use explicit I/O
+instructions to access the hardware clock. Otherwise, hwclock will try to use
+the /dev/rtc device it assumes to be driven by the rtc device driver. This
+setting's default "no" is fine for people not using an ISA machine.
+
+**TIMEZONE:** Specifies your time zone. Possible time zones are the relative
+path to a zoneinfo file starting from the directory /usr/share/zoneinfo. For
+example, a German timezone would be Europe/Berlin, which refers to the file
+/usr/share/zoneinfo/Europe/Berlin. If you don't know the exact name of your
+timezone file, worry about it later.
+
+**KEYMAP:** Defines the keymap to load with the loadkeys program on bootup.
+Possible keymaps are found in /usr/share/kbd/keymaps. Please note that this
+setting is only valid for your TTYs, not any graphical window managers or X!
+Again, the default is fine for US users.
+
+**CONSOLEFONT:** Defines the console font to load with the setfont program on
+bootup. Possible fonts are found in /usr/share/kbd/consolefonts.
+
+**CONSOLEMAP:** Defines the console map to load with the setfont program on
+bootup. Possible maps are found in /usr/share/kbd/consoletrans. You will want
+to set this to a map suitable for your locale (8859-1 for Latin1, for example)
+if you're using an UTF-8 locale above, and use programs that generate 8-bit
+output. If you're using X11 for everyday work, don't bother, as it only
+affects the output of Linux console applications.
+
+**USECOLOR:** Enable (or disable) colorized status messages during boot-up.
+
+**MOD_AUTOLOAD:** If set to "yes", udev will be allowed to load modules as
+necessary upon bootup. If set to "no", it will not.
+
+**MODULES:** In this array you can list the names of modules you want to load
+during bootup without the need to bind them to a hardware device as in the
+modprobe.conf. Simply add the name of the module here, and put any options
+into modprobe.conf if need be. Prepending a module with a bang ('!') will
+blacklist the module, and not allow it to be loaded.
+
+**USELVM:** Set to "yes" to run a vgchange during sysinit, thus activating any
+LVM groups
+
+**HOSTNAME:** Set this to the hostname of the machine, without the domain
+part. This is totally your choice, as long as you stick to letters, digits and
+a few common special characters like the dash.
+
+**INTERFACES:** Here you define the settings for your networking interfaces.
+The default lines and the included comments explain the setup well enough. If
+you use DHCP, 'eth0="dhcp"' should work for you. If you do not use DHCP just
+keep in mind that the value of the variable (whose name must be equal to the
+name of the device which is supposed to be configured) equals the line which
+would be appended to the ifconfig command if you were to configure the device
+manually in the shell.
+
+**ROUTES:** You can define your own static network routes with arbitrary names
+here. Look at the example for a default gateway to get the idea. Basically the
+quoted part is identical to what you'd pass to a manual route add command,
+therefore reading man route is recommended if you don't know what to write
+here, or simply leave this alone.
+
+**[ NET_PROFILES][49]:** Enables certain network profiles at bootup. Network
+profiles provide a convenient way of managing multiple network configurations,
+and are intended to replace the standard INTERFACES/ROUTES setup that is still
+recommended for systems with only one network configuration. If your computer
+will be participating in various networks at various times (eg, a laptop) then
+you should take a look at the /etc/network-profiles/ directory to set up some
+profiles. There is a template file included there that can be used to create
+new profiles. This now requires the netcfg package.
+
+   [49]: /index.php/Network_Profiles (Network Profiles)
+
+**DAEMONS:** This array simply lists the names of those scripts contained in
+/etc/rc.d/ which are supposed to be started during the boot process. If a
+script name is prefixed with a bang (!), it is not executed. If a script is
+prefixed with an "at" symbol (@), then it will be executed in the background,
+ie. the startup sequence will not wait for successful completion before
+continuing. Usually you do not need to change the defaults to get a running
+system, but you are going to edit this array whenever you install system
+services like sshd, and want to start these automatically during bootup.
+
+
+**[ /etc/fstab][50]**
+
+   [50]: /index.php/Fstab (Fstab)
+
+Your filesystem settings and mountpoints are configured here. The installer
+should have created the necessary entries for you, but you should look over it
+and make sure it's right. If you are using an encrypted root device, LVM or
+RAID, you will likely need to change the UUIDs the installer has inserted for
+you to device names.
+
+
+**/etc/mkinitcpio.conf**
+
+This file allows you to fine-tune the initial ramdisk for your system. The
+ramdisk is a gzipped image that is read by the kernel during bootup. Its
+purpose is to bootstrap the system to the point where it can access the root
+filesystem. This means it has to load any modules that are required to "see"
+things like IDE, SCSI, or SATA drives (or USB/FW, if you are booting off a
+USB/FW drive). Once the ramdisk loads the proper modules, either manually or
+through udev, it passes control to the Arch system and your bootup continues.
+For this reason, the ramdisk only needs to contain the modules necessary to
+access the root filesystem. It does not need to contain every module you would
+ever want to use. The majority of your everyday modules will be loaded later
+on by udev, during the init process.
+
+By default, mkinitcpio.conf is configured to autodetect all needed modules for
+IDE, SCSI, or SATA systems through so-called HOOKS. This means the default
+initrd should work for almost everybody. You can edit mkinitcpio.conf and
+remove the subsystem HOOKS (ie, IDE, SCSI, RAID, USB, etc) that you don't
+need. You can customize even further by specifying the exact modules you need
+in the MODULES array and remove even more of the hooks, but proceed with
+caution.
+
+If you're using RAID or encryption on your root filesystem, then you'll have
+to tweak the RAID/CRYPT settings near the bottom. See the wiki pages for
+RAID/LVM, filesystem encryption, and mkinitcpio for more info. If you're using
+a non-US keyboard, you should also add the 'keymap' hook, as well as the
+'usbinput' hook if you are using a USB keyboard.
+
+
+**/etc/modprobe.conf**
+
+This tells the kernel which modules it needs to load for system devices, and
+what options to set. For example, to have the kernel load your Realtek 8139
+ethernet module when it starts the network (ie. tries to setup eth0), use this
+line:
+
+
+     alias eth0 8139too
+
+
+Most people will not need to edit this file.
+
+
+**/etc/resolv.conf**
+
+Use this file to manually setup your nameserver(s) that you want to use. It
+should basically look like this:
+
+
+     search domain.tld
+
+     nameserver 192.168.0.1
+
+     nameserver 192.168.0.2
+
+
+Replace domain.tld and the ip addresses with your settings. The so-called
+search domain specifies the default domain that is appended to unqualified
+hostnames automatically. By setting this, a ping myhost will effectively
+become a ping myhost.domain.tld with the above values. These settings usually
+aren't mighty important, though, and most people should leave them alone for
+now. If you use DHCP, this file will be replaced with the correct values
+automatically when networking is started, meaning you can and should happily
+ignore this file.
+
+
+**/etc/hosts**
+
+This is where you stick hostname/ip associations of computers on your network.
+If a hostname isn't known to your DNS, you can add it here to allow proper
+resolving, or override DNS replies. You usually don't need to change anything
+here, but you might want to add the hostname and hostname + domain of the
+local machine to this file, resolving to the IP of your network interface.
+Some services, postfix for example, will bomb otherwise. If you don't know
+what you're doing, leave this file alone until you read man hosts.
+
+
+**/etc/hosts.deny**
+
+This file denies network services access. By default all network services are
+denied.
+
+
+     ALL: ALL: DENY
+
+
+
+**/etc/hosts.allow**
+
+This file allows network services access. Enter the services you want to allow
+here. eg. to allow all machines to connect via ssh:
+
+
+     sshd: ALL: ALLOW
+
+
+
+**/etc/locale.gen**
+
+This file contains a list of all supported locales and charsets available to
+you. When choosing a LOCALE in your /etc/rc.conf or when starting a program,
+it is required to uncomment the respective locale in this file, to make a
+"compiled" version available to the system, and run the locale-gen command as
+root to generate all uncommented locales and put them in their place
+afterwards. You should uncomment all locales you intend to use.
+
+During the installation process, you do not need to run locale-gen manually,
+this will be taken care of automatically after saving your changes to this
+file. By default, all locales are enabled that would make sense by rc.conf's
+LOCALE= setting. To make your system work smoothly, you should edit this file
+and uncomment at least the one locale you're using in your rc.conf.
+
+
+**/etc/pacman.d/mirrorlist**
+
+This file contains a list of mirrors from which pacman will download packages
+for the official Arch Linux repositories. The mirrors are tried in the order
+in which they are listed. The $repo macro is automatically expanded by pacman
+depending on the repository (core, extra, community or testing).
+
+If you are performing an FTP installation, the mirror you used to download the
+packages from will be added on top of the mirror list, in order to be used as
+the default mirror in your new Arch Linux system.
+
+
+**Set Root Password**
+
+At this step, you must set the root password for your system. Choose this
+password carefully, preferably as a mixture of alphanumeric and special
+characters, since this password allows you to modify critical parts of your
+system.
+
+When you are done editing the configuration files choose Return to return to
+the main menu. The setup will regenerate the initial ramdisk to enable the
+changes you made in mkinitcpio.conf.
+
+####  Install Bootloader
+
+Install Bootloader will install a bootloader on your hard drive, either GRUB
+or NONE in case you have a bootloader already installed and want to use that
+one instead. If you choose to install GRUB, the setup script will want you to
+examine the appropriate configuration file to confirm the proper settings.
+
+
+**/boot/grub/menu.lst**
+
+You should check and modify this file to accommodate your boot setup if you
+want to use GRUB, otherwise you will have to modify your existing bootloader's
+configuration file. The installer will have pre-populated this file using UUID
+entries which you may have to change in the same cases you'd need to change
+them in your fstab.
+
+After checking your bootloader configuration for correctness, you'll be
+prompted for a partition to install the loader to. Unless you're using yet
+another boot loader, you should install GRUB to the MBR of the installation
+disk, which is usually represented by the appropriate device name without a
+number suffix.
+
+####  Exit Install
+
+Exit the Installer, remove the media you used for the installation, type
+reboot at the command line and cross your fingers. If your system boots up,
+you can log in as root with the password you set during installation.
+
+Congratulations! Welcome to your new Arch Linux system!
+
+##  Package Management
+
+Pacman is the package manager which tracks all the software installed on your
+system. It has simple dependency support and uses the standard gzipped tar
+archive format for all packages. Some common tasks you might need to use
+during installation, are explained below with their respective commands. For
+an extensive explanation of pacman's options, read man pacman or consult the
+Arch Linux [Wiki][51].
+
+   [51]: http://wiki.archlinux.org/index.php/Pacman
+(http://wiki.archlinux.org/index.php/Pacman)
+
+
+**Typical tasks:**
+
+  * Refreshing the package list
+
+
+     # pacman --sync --refresh
+
+     # pacman -Sy
+
+
+This will retrieve a fresh master package list from the repositories defined
+in the /etc/pacman.conf file and decompress it into the database area.
+
+  * Search the repositories for a package
+
+
+     # pacman --sync --search <regexp>
+
+     # pacman -Ss <regexp>
+
+
+Search each package in the sync databases for names or descriptions that match
+regexp.
+
+  * Display specific not installed package info
+
+
+     # pacman --sync --info foo
+
+     # pacman -Si foo
+
+
+Displays information on the not yet installed package foo (size, install date,
+build date, dependencies, conflicts, etc.)
+
+  * Adding a package from the repositories
+
+
+     # pacman --sync foo
+
+     # pacman -S foo
+
+
+Retrieve and install package foo, complete with all dependencies it requires.
+Before using any sync option, make sure you refreshed the package list.
+
+  * List installed packages
+
+
+     # pacman --query
+
+     # pacman -Q
+
+
+Displays a list of all installed packages in the system.
+
+  * Check if a specific package is installed
+
+
+     # pacman --query foo
+
+     # pacman -Q foo
+
+
+This command will display the name and version of the foo package if it is
+installed, nothing otherwise.
+
+  * Display specific package info
+
+
+     # pacman --query --info foo
+
+     # pacman -Qi foo
+
+
+Displays information on the installed package foo (size, install date, build
+date, dependencies, conflicts, etc.)
+
+  * Display list of files contained in package
+
+
+     # pacman --query --list foo
+
+     # pacman -Ql foo
+
+
+Lists all files belonging to package foo.
+
+  * Find out which package a specific file belongs to
+
+
+     # pacman --query --owns /path/to/file
+
+     # pacman -Qo /path/to/file
+
+
+This query displays the name and version of the package which contains the
+file referenced by it's full path as a parameter.
+
+##  APPENDIX
+
+See [Official Arch Linux Install Guide Appendix][52] for some related
+unofficial documentation, new users may find useful.
+
+   [52]: /index.php/Official_Arch_Linux_Install_Guide_Appendix (Official Arch
+Linux Install Guide Appendix)
+
+Retrieved from
+"[http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide][53]"
+
+   [53]: http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide
+
+[Categories][54]: [Getting and installing Arch (English)][55] | [HOWTOs
+(English)][56]
+
+   [54]: /index.php/Special:Categories (Special:Categories)
+
+   [55]: /index.php/Category:Getting_and_installing_Arch_(English)
+(Category:Getting and installing Arch (English))
+
+   [56]: /index.php/Category:HOWTOs_(English) (Category:HOWTOs (English))
+
+##### Views
+
+  * [Page][57]
+
+  * [Discussion][58]
+
+  * [View source][59]
+
+  * [History][60]
+
+   [57]: /index.php/Official_Arch_Linux_Install_Guide (View the content page
+[c])
+
+   [58]: /index.php/Talk:Official_Arch_Linux_Install_Guide (Discussion about
+the content page [t])
+
+   [59]: /index.php?title=Official_Arch_Linux_Install_Guide&action=edit (This
+page is protected.
+
+You can view its source [e])
+
+   [60]: /index.php?title=Official_Arch_Linux_Install_Guide&action=history
+(Past revisions of this page [h])
+
+##### Personal tools
+
+  * [Log in / create account][61]
+
+   [61]:
+/index.php?title=Special:UserLogin&returnto=Official_Arch_Linux_Install_Guide
+(You are encouraged to log in; however, it is not mandatory [o])
+
+##### Navigation
+
+  * [Main Page][62]
+
+  * [Community portal][63]
+
+  * [Wiki News][64]
+
+  * [Recent changes][65]
+
+  * [Random page][66]
+
+  * [WikiHelp][67]
+
+   [62]: /index.php/Main_Page
+
+   [63]: /index.php/ArchWiki:Community_Portal (About the project, what you can
+do, where to find things)
+
+   [64]: /index.php/Wiki_News (Find background information on current events)
+
+   [65]: /index.php/Special:RecentChanges (The list of recent changes in the
+wiki [r])
+
+   [66]: /index.php/Special:Random (Load a random page [x])
+
+   [67]: /index.php/Category:Help (The place to find out)
+
+##### Search
+
+
+##### Toolbox
+
+  * [What links here][68]
+
+  * [Related changes][69]
+
+  * [Special pages][70]
+
+  * [Printable version][71]
+
+  * [Permanent link][72]
+
+   [68]: /index.php/Special:WhatLinksHere/Official_Arch_Linux_Install_Guide
+(List of all wiki pages that link here [j])
+
+   [69]:
+/index.php/Special:RecentChangesLinked/Official_Arch_Linux_Install_Guide
+(Recent changes in pages linked from this page [k])
+
+   [70]: /index.php/Special:SpecialPages (List of all special pages [q])
+
+   [71]: /index.php?title=Official_Arch_Linux_Install_Guide&printable=yes
+(Printable version of this page [p])
+
+   [72]: /index.php?title=Official_Arch_Linux_Install_Guide&oldid=68789
+(Permanent link to this revision of the page)
+
+  * This page was last modified on 15 May 2009, at 15:52.
+
+  * This page has been accessed 454,983 times.
+
+  * Content is available under [GNU Free Documentation License 1.2][73].
+
+  * [Privacy policy][74]
+
+  * [About ArchWiki][75]
+
+  * [Disclaimers][76]
+
+   [73]: http://www.gnu.org/copyleft/fdl.html
+(http://www.gnu.org/copyleft/fdl.html)
+
+   [74]: /index.php/ArchWiki:Privacy_policy (ArchWiki:Privacy policy)
+
+   [75]: /index.php/AboutWiki (AboutWiki)
+
+   [76]: /index.php/ArchWiki:General_disclaimer (ArchWiki:General disclaimer)
+
+
