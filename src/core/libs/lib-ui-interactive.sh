@@ -1076,7 +1076,6 @@ generate_grub_menulst() {
         fi
 
 		# handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed automatically
-		debug 'FS' 'Grub kernel line? Assuming "/ on raw" or "/ on lvm on raw" as default'
 		kernel="kernel $subdir/vmlinuz26 root=${_rootpart} ro"
 		if get_anchestors_mount ';/;'
 		then
@@ -1098,10 +1097,18 @@ generate_grub_menulst() {
 				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
 				lv_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
 				kernel=" kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:root ro"
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
+			then
+				debug 'FS' 'Grub kernel line? Found / on raw'
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'raw$'
+			then
+				debug 'FS' 'Grub kernel line? Found / on lvm on raw'
 			else
 				debug 'FS' 'Grub kernel line? Could not figure this one out'
 				show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
 			fi
+		else
+			show_warning "Disk setup detection" "Could not find out where your / is.  Did you setup filesystems/blockdevices? manual/autoprepare?  If yes, please file a bug and tell us about this"
 		fi
             cat >>$grubmenu <<EOF
 
