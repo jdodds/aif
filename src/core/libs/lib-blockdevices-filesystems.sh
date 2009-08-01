@@ -543,7 +543,7 @@ rollback_filesystems ()
 				fi
 			fi
 		fi
-	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS | tac)
+	done < <(sort -t \  -k 6 -r $TMP_FILESYSTEMS)
 
 
 	# phase 2: destruct blockdevices listed in $BLOCK_DATA if they would exist already, in the correct order (first lvm LV, then VG, then PV etc)
