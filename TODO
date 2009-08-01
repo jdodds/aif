@@ -18,7 +18,6 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
 * check everywhere that if users cancels something, we return 1, empty string behavior etc
 * dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
-* lib-software line19: [ $mkinitcpio_exitcode -ne 0 ] unary operator expected when running automatic procedure (prolly otherwise too)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * automatically configure grub for dm_crypt and lvm

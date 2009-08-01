@@ -199,14 +199,14 @@ interactive_prepare_disks ()
 
 		case $ANSWER_OPTION in
 			"1")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
 				interactive_autoprepare && NEXTITEM=5 && ret=0 && DISK_CONFIG_TYPE=auto;; #TODO: for some reason. if this completes $?=0, next item will be 1 :/
 			"2")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
 				interactive_partition && ret=1 && NEXTITEM=3 && DISK_CONFIG_TYPE=manual
 				;;
 			"3")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && break;
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
 				PARTFINISH=""
 				interactive_filesystems && ret=0 && NEXTITEM=5 && DISK_CONFIG_TYPE=manual
 				;;
