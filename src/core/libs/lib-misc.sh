@@ -20,11 +20,11 @@ run_controlled ()
 		run_background $1 "$2" $3
 		follow_progress " $4 " $3 $BACKGROUND_PID # dia mode ignores the pid. cli uses it to know how long it must do tail -f
 		wait_for $1 $FOLLOW_PID
+		CONTROLLED_EXIT=$BACKGROUND_EXIT
 	else
 		notify "$4"
-		var_exit=${1}_exitcode
 		eval "$2" >>$3 2>&1
-		read $var_exit <<< $?
+		CONTROLLED_EXIT=$?
 	fi
 }
 
@@ -47,9 +47,8 @@ run_background ()
 		debug 'MISC' "run_background starting $1: $2 >>$3 2>&1"
 		[ -f $3 ] && echo -e "\n\n\n" >>$3
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
-		var_exit=${1}_exitcode
 		eval "$2" >>$3 2>&1
-		read $var_exit <<< $?
+		$BACKGROUND_EXIT=$?
 		debug 'MISC' "run_background done with $1: exitcode (\$$1_exitcode): ${!var_exit} .Logfile $3"
 		echo >> $3   
 		rm -f $RUNTIME_DIR/aif-$1-running
