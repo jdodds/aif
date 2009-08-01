@@ -120,8 +120,8 @@ get_anchestors_mount () {
 		get_anchestors_mount "$recognizer" && buffer="$buffer
 $ANSWER_DEVICES"
 	fi
-	debug 'FS' "Found anchestors: $ANSWER_DEVICES"
 	ANSWER_DEVICES=$buffer
+	debug 'FS' "Found anchestors: $ANSWER_DEVICES"
 	[ -n "$ANSWER_DEVICES" ]
 }
 
