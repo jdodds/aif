@@ -573,9 +573,15 @@ remove_blockdevice ()
 
 interactive_filesystems() {
 
-	#notify "Available Disks:\n\n$(_getavaildisks)\n" quite useless here I think
-
-	findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
+	renew_blockdevices=1
+	if [ -f $TMP_BLOCKDEVICES ]
+	then
+		if ask_yesno "I've detected you already have blockdevice definitions in place:\n`cat $TMP_BLOCKDEVICES`\nDo you want to use these as a starting point?\nMake sure your disk(s) are partitioned correctly so your definitions can be applied on the disk. Pick 'no' when in doubt to start from scratch" no
+		then
+			new_blockdevices=0
+		fi
+	fi
+	[ "$renew_blockdevices" = 1 ] && findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
 
 	ALLOK=0
 	while [ "$ALLOK" = 0 ]
