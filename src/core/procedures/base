@@ -164,8 +164,10 @@ worker_auto_fstab ()
 
 worker_auto_network ()
 {
-	[ "$S_DHCP" = 1 ] && target_configure_network dhcp "$PROXY_HTTP" "$PROXY_FTP"
-	[ "$S_DHCP" != 1 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP"
+	[ "$S_DHCP" = 1 ] && target_configure_network dhcp "$PROXY_HTTP" "$PROXY_FTP"  && return 0
+	[ "$S_DHCP" = 0 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP" && return 0
+	[ "$S_DHCP" != 1 -a "$S_DHCP" != 0 ] && return 0
+	return 1
 }
 
 

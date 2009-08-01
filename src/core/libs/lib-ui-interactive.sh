@@ -784,14 +784,10 @@ interactive_runtime_network() {
     local ifaces
     ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
-    if [ "$ifaces" = "" ]; then
-        notify "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again."
-        return 1
-    fi
+    [ -z "$ifaces" ] && show_warning "No network interfaces?" "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." && return 1
 
-    ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1 #TODO: code used originaly --nocancel here. what's the use? + make ok button 'select'
+    ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1
     INTERFACE=$ANSWER_OPTION
-
 
     if ask_yesno "Do you want to use DHCP?"
     then
@@ -809,6 +805,7 @@ interactive_runtime_network() {
         fi
         S_DHCP=1
     else
+    	S_DHCP=0
         NETPARAMETERS=""
         while [ "$NETPARAMETERS" = "" ]; do
             ask_string "Enter your IP address" "192.168.0.2" || return 1
@@ -854,6 +851,15 @@ interactive_runtime_network() {
         fi
         echo "nameserver $DNS" >/etc/resolv.conf
     fi
+    echo "INTERFACE=$INTERFACE
+          S_DHCP=$S_DHCP
+          IPADDR=$IPADDR
+          SUBNET=$SUBNET
+          BROADCAST=$BROADCAST
+          GW=$GW
+          DNS=$DNS
+          PROXY_HTTP=$PROXY_HTTP
+          PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings
     notify "The network is configured."
     return 0
 }

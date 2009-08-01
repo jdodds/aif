@@ -74,12 +74,12 @@ mainmenu()
         "5")
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_fstab   ; \
-		                                                                               ended_ok worker runtime_network && execute worker auto_network ; \
 		                                                                                                                  execute worker auto_locale  ; \
 		                                                                                                                  execute worker auto_keymap_font;
 		                                                                                                                  true                        ; } && NEXTITEM=6 ;;
         "6")
-		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
+		check_depend worker install_packages && execute worker auto_network && \
+		                                        execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;
 		                                                                                                                  execute worker initialtime  ;
 		                                                                                                                  true                        ; } && NEXTITEM=7 ;;
@@ -167,8 +167,23 @@ worker_install_bootloader ()
 
 worker_auto_network ()
 {
-	ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 0
-
-        [ "$S_DHCP"  = 1 ] && target_configure_network dhcp  "$PROXY_HTTP" "$PROXY_FTP"
-        [ "$S_DHCP" != 1 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP"
+	ask=0
+	# if the user has been through networking setup and if any of these variables is set, it may be useful to export the users' choices to the target system
+	if [ "$S_DHCP" = 1 -o "$S_DHCP" = 0 ] && [ -n "$PROXY_HTTP$PROXY_FTP$DNS$INTERFACE$SUBNET$GW$BROADCAST" ]
+	then
+		ask=1
+	# if the variables are not set but the network settings file exists, the user has probably run the runtime_network in a separate process (eg partial-configure-network)
+	# in that case, lets source the file and check again
+	elif [ -f $RUNTIME_DIR/aif-network-settings ] && source $RUNTIME_DIR/aif-network-settings && [ "$S_DHCP" = 1 -o "$S_DHCP" = 0 ] && [ -n "$PROXY_HTTP$PROXY_FTP$DNS$INTERFACE$SUBNET$GW$BROADCAST" ]
+	then
+		ask=1
+	fi
+	if [ "$ask" = 1 ]
+	then
+		ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 0
+		[ "$S_DHCP" = 1 ] && target_configure_network dhcp  "$PROXY_HTTP" "$PROXY_FTP" && return 0
+		[ "$S_DHCP" = 0 ] && target_configure_network fixed "$PROXY_HTTP" "$PROXY_FTP" && return 0
+		show_warning "Automatic network settings propagation failed" "Failed to import current network settings into target system"
+		return 1
+	fi
 }
