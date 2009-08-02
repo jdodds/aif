@@ -17,17 +17,14 @@ General installation documentation for the Arch Linux distribution.
   * [2 Pre-Installation](#Pre-Installation)
       * [2.1 Architectures](#Architectures)
       * [2.2 Available images](#Available_images)
-      * [2.3 AIF, the installation tool](#Aif_the_installation_tool) # explain aif, normal and partial procedures (but not really useful for most people)
+      * [2.3 AIF, the installation tool](#Aif_the_installation_tool)
       * [2.4 Acquiring Arch Linux](#Acquiring_Arch_Linux)
       * [2.5 Preparing the Installation Media](#Preparing_the_Installation_Media)
  
   * [3 Installing Arch Linux](#Installing_Arch_Linux)
     * [3.1 Using the Install Media](#Using_the_Install_Media)
       * [3.1.1 Pre-boot](#Pre_boot)
-      * [3.1.2 Post-boot](#Post_boot) #login, keymap/font, network settings. prefer aif
-      * partial procedures over raw commands so settings will be reused
-      * later the installation.  "for your convenience, aif offers
-      * somepartial procedures which wrap around some basic functionality"everything is in /arch
+      * [3.1.2 Post-boot](#Post_boot)
     * [3.2 Performing the installation](#Perform_install) #shortly desc 2 procedures
       * [3.2.1 Interactive Installation Procedure](#Interactive_Installation_Procedure) #explain running setup here
       * [3.2.1.1 Select Source](#Select_Source)
@@ -118,7 +115,38 @@ networking utilities and drivers. If there's something else you happen to need
 at runtime, just get your Internet connection up and install it using pacman.
 A short pacman command reference is available at the end of this document.
 
-#### Installation tool
+### AIF, the installation tool
+
+Arch Linux uses AIF aka 'Arch Linux Installation Framework' to perform installations.
+This tool - written in bash - consists of some libraries to perform various functions (installing packages, setting up disks etc)
+and some so called procedures which use these libraries to provide an easy means
+to do an installation or to smaller related tasks ('partial procedures').
+These procedures are shipped by default:
+
+* interactive: An interactive installation procedure, which asks you some questions, guides you through an installation
+               and helps you configuring the target system by automatically changing some settings for you depending on what you did earlier (eg network settings)
+               (aliased as `/arch/setup`)
+* automatic:   An automated, deploy-tool-alike procedure.  designed for low-to zero interactivity.
+               uses profiles for configuration of the installation/target system.
+               See /usr/share/aif/examples/ for example profile files.
+* base:        basic, little-interactivity installation with some common defaults.
+               This procedure is used by the others to inherit from, it is NOT meant to be used directly by end users
+* partial-configure-network: exposes the network configuration step from the interactive procedure, to help you setup the network in the live environment
+* partial-disks: Process disk subsystem or do a rollback
+* partial-keymap: change your keymap/console font settings. (aliased as `km`)
+
+The benefit of procedures such as partial-keymap and
+partial-configure-network over direct usage of tools such as loadkeys or
+ifconfig is that when running the interactive procedure, you will get asked
+if you want to apply your settings to the config files of the target system.
+
+If you want to go further, you can also:
+
+* write your own procedures from scratch or by overriding certain parts of other procedures
+* write your own libraries, to provide reusable logic that does not come by default
+* for certain procedures that use config files (eg automatic), create your own configs
+
+For more information, consult the readme of AIF.
 
 ###  Acquiring Arch Linux
 
@@ -174,27 +202,35 @@ Make sure to use /dev/sdX and not /dev/sdX1. This command will irrevocably
 delete all files on your USB stick, so make sure you don't have any important
 files on it before doing this.
 
+
+## Installing Arch Linux
+
 ###  Using the Install Media
+
+#### Pre-boot
 
 Make sure your BIOS is set in a way to allow booting from your CD-ROM or USB
 device. Reboot your computer with the Arch Linux Installation CD in the drive
-or the USB stick plugged in the port. Once the installation medium has booted
-you will see the Arch Linux logo and a grub menu waiting for your selection.
-Most likely you can just hit enter at this point. At the end of the boot
-procedure, you should be at a login prompt with some simple instructions at
-the top of the screen. You should login as root. At this point you are ready
-to commence the actual installation, or do any manual preparation you consider
-necessary.
+or the USB stick plugged in the port. Once the installation medium has
+started booting you will see the Arch Linux logo and a grub menu waiting for your selection.
+Most likely you can just hit enter at this point.
+If Grub hangs, you're one of the unlucky few whose CD-rom drive doesn't work with grub and you should try the isolinux image.
 
-Using the available shell tools, experienced users are also able to prepare
-the hard drive or any devices needed for the installation before starting the
-installer. Note that the Arch Linux installation media also contains a
-/arch/quickinst script for experienced users. This script installs the "base"
-set of packages to a user-specified destination directory. If you are doing an
-install with things like RAID and LVM, or don't want to use the installer at
-all, you'll probably want to use the quickinst script. You will have to
-configure the system afterwards since no form of auto-configuration takes
-place.
+#### Post-boot
+At the end of the boot procedure, you should be at a login prompt with some simple instructions at
+the top of the screen. You should login as root. At this point you can
+optionally perform manual preparations and commence the actual installation
+
+* If you prefer a non-US keymap or specific consolefont, type `km` to change any of these.
+* If for some reason you need network access before starting the installer (the interactive procedure will let you configure the network if you want to do a NET installation)
+  you can type `aif -p partial-configure-network`
+
+For both items, changed settings will be remembered to be optionally applied to the target system when using the interactive procedure.
+
+There is also an `arch` login which can be usefull if you want to do things as non-privileged user.  Most people don't need this.
+
+You will find that everything you need to perform this installation (a copy of this guide, aif README, shortcuts to common aif procedures) can be found in /arch
+
 
 ### Interactive Installation Procedure
  The
