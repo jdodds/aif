@@ -17,11 +17,11 @@ This guide is only valid for release 2009.08 or newer
     * [1.2 License](#License)
 
   * [2 Pre-Installation](#Pre-Installation)
-      * [2.1 Architectures](#Architectures)
-      * [2.2 Available images](#Available_images)
-      * [2.3 AIF, the installation tool](#Aif_the_installation_tool)
-      * [2.4 Acquiring Arch Linux](#Acquiring_Arch_Linux)
-      * [2.5 Preparing the Installation Media](#Preparing_the_Installation_Media)
+    * [2.1 Architectures](#Architectures)
+    * [2.2 Available images](#Available_images)
+    * [2.3 AIF, the installation tool](#Aif_the_installation_tool)
+    * [2.4 Acquiring Arch Linux](#Acquiring_Arch_Linux)
+    * [2.5 Preparing the Installation Media](#Preparing_the_Installation_Media)
  
   * [3 Installing Arch Linux](#Installing_Arch_Linux)
     * [3.1 Using the Install Media](#Using_the_Install_Media)
@@ -29,30 +29,28 @@ This guide is only valid for release 2009.08 or newer
       * [3.1.2 Post-boot](#Post_boot)
     * [3.2 Performing the installation](#Perform_install)
       * [3.2.1 Interactive Installation Procedure](#Interactive_Installation_Procedure)
-      * [3.2.1.1 Select Source](#Select_Source)
-        * [3.2.1.1.1 CD-ROM or OTHER SOURCE](#CD-ROM_or_OTHER_SOURCE)
-        * [3.2.1.1.2 NET (FTP/HTTP)](#NET)
-          * [3.2.1.1.2.1 Setup Network](#Setup_Network)
-          * [3.2.1.1.2.2 Choose Mirror](#Choose_Mirror)
-      * [3.2.1.2 Set Clock](#Set_Clock)
-      * [3.2.1.3 Prepare Hard Disks](#Prepare_Hard_Drive)
-        * [3.2.1.3.1 Auto-Prepare](#Auto-Prepare)
-        * [3.2.1.3.2 Manually partition](#Manual_partition)
-        * [3.2.1.3.3 Manually configure block devices, filesystems and mountpoints](#Manual_configure)
-        * [3.2.1.3.4 Rollbacks (optional)](#Rollback)
-      * [3.2.1.4 Select Packages](#Select_Packages)
-      * [3.2.1.5 Install Packages](#Install_Packages)
-      * [3.2.1.6 Configure System](#Configure_System)
-      * [3.2.1.7 Install Bootloader](#Install_Bootloader)
-      * [3.2.1.8 Exit Install](#Exit_Install)
+        * [3.2.1.1 Select Source](#Select_Source)
+          * [3.2.1.1.1 CD-ROM or OTHER SOURCE](#CD-ROM_or_OTHER_SOURCE)
+          * [3.2.1.1.2 NET (FTP/HTTP)](#NET)
+            * [3.2.1.1.2.1 Setup Network](#Setup_Network)
+            * [3.2.1.1.2.2 Choose Mirror](#Choose_Mirror)
+        * [3.2.1.2 Set Clock](#Set_Clock)
+        * [3.2.1.3 Prepare Hard Disks](#Prepare_Hard_Drive)
+          * [3.2.1.3.1 Auto-Prepare](#Auto-Prepare)
+          * [3.2.1.3.2 Manually partition](#Manual_partition)
+          * [3.2.1.3.3 Manually configure block devices, filesystems and mountpoints](#Manual_configure)
+          * [3.2.1.3.4 Rollbacks (optional)](#Rollback)
+        * [3.2.1.4 Select Packages](#Select_Packages)
+        * [3.2.1.5 Install Packages](#Install_Packages)
+        * [3.2.1.6 Configure System](#Configure_System)
+        * [3.2.1.7 Install Bootloader](#Install_Bootloader)
+        * [3.2.1.8 Exit Install](#Exit_Install)
 
-    * [3.2.2 Automatic Installation Procedure](#Automatic_Installation_Procedure)
-    * #explain what it is + examples
+      * [3.2.2 Automatic Installation Procedure](#Automatic_Installation_Procedure)
        
-    * [3.2.3 Customizing Installations](#Customizing) #custom procedures, base yourself on automatic/interactive etc. see aif README
+      * [3.2.3 Customizing Installations](#Customizing)
 
 * [4 Your new system](#Your_new_system)
-  #explain root pass, initramfs hooks, decryption
 
 * [5 More information](#More_information)
   * [5.1 Package Management](#Package_Management)
@@ -414,22 +412,25 @@ connectivity.
 Once you're done selecting the packages you need, leave the selection screen
 and continue to the next step.
 
-####  Install Packages
+#####  Install Packages
 
 Install Packages will now install the base system and any other packages you
 selected with resolved dependencies onto your harddisk.
 
-####  Configure System
+#####  Configure System
 
-Configure System allows you to edit the configuration files crucial for your
-newly installed system. You will be asked for the editor you want to use for
-manually fine-tuning the generated configuration files, either VIM or nano.
+Configure System does multiple things:
+
+* automatically preseed some configuration files (eg grub's menu.lst, mkinitcpio.conf's HOOKS, keymap settings in rc.conf, pacman mirror etc)
+* preseed some configuration files after your confirmation (eg network settings)
+* allow you to manually change important configuration files for your target system.
+  You will be asked which editor you want to use.  You have the choice between nano, joe and vi
+* allow you to set the root password for the target.
 
 **Configuration Files**
 
-These are the core configuration files for Arch Linux. Only the most basic
-configuration files are listed here. If you need help configuring a specific
-service, please read the appropriate manpage or refer to any online
+These are the core configuration files for Arch Linux.
+If you need help configuring a specific service, please read the appropriate manpage or refer to any online
 documentation you need. In many cases, the Arch Linux [Wiki][46] and
 [forums][47] are a rich source for help as well.
 
@@ -438,32 +439,25 @@ documentation you need. In many cases, the Arch Linux [Wiki][46] and
    [47]: http://bbs.archlinux.org/ (http://bbs.archlinux.org/)
 
   * /etc/rc.conf
-
   * [ /etc/fstab][48]
-
   * /etc/mkinitcpio.conf
-
-  * /etc/modprobe.conf
-
+  * /etc/modprobe.d/modprobe.conf
   * /etc/resolv.conf
-
   * /etc/hosts
-
   * /etc/hosts.deny
-
   * /etc/hosts.allow
-
   * /etc/locale.gen
-
   * /etc/pacman.d/mirrorlist
+  * /etc/pacman.conf
 
-   [48]: /index.php/Fstab (Fstab)
+   [48]: http://wiki.archlinux.org/index.php/Fstab (Fstab)
+
 
 
 **/etc/rc.conf**
 
 This is the main configuration file for Arch Linux. It allows you to set your
-keyboard,timezone, hostname, network, daemons to run and modules to load at
+keyboard, timezone, hostname, network, daemons to run and modules to load at
 bootup, profiles, and more.
 
 **LOCALE:** This sets your system language, which will be used by all i18n-
@@ -557,13 +551,12 @@ services like sshd, and want to start these automatically during bootup.
 
 **[ /etc/fstab][50]**
 
-   [50]: /index.php/Fstab (Fstab)
+   [50]: http://wiki.archlinux.org/index.php/Fstab (Fstab)
 
 Your filesystem settings and mountpoints are configured here. The installer
 should have created the necessary entries for you, but you should look over it
-and make sure it's right. If you are using an encrypted root device, LVM or
-RAID, you will likely need to change the UUIDs the installer has inserted for
-you to device names.
+and make sure it's right especially if you're using something like lvm,
+dm_crypt or raid.
 
 
 **/etc/mkinitcpio.conf**
@@ -581,21 +574,22 @@ ever want to use. The majority of your everyday modules will be loaded later
 on by udev, during the init process.
 
 By default, mkinitcpio.conf is configured to autodetect all needed modules for
-IDE, SCSI, or SATA systems through so-called HOOKS. This means the default
+IDE, SCSI, or SATA systems through so-called HOOKS. The installed should
+also have inserted hooks like crypt, lvm, keymap and usbinput if relevant. This means the default
 initrd should work for almost everybody. You can edit mkinitcpio.conf and
 remove the subsystem HOOKS (ie, IDE, SCSI, RAID, USB, etc) that you don't
 need. You can customize even further by specifying the exact modules you need
 in the MODULES array and remove even more of the hooks, but proceed with
 caution.
 
-If you're using RAID or encryption on your root filesystem, then you'll have
-to tweak the RAID/CRYPT settings near the bottom. See the wiki pages for
-RAID/LVM, filesystem encryption, and mkinitcpio for more info. If you're using
+If you're using RAID on your root filesystem, then you'll have
+to tweak the RAID settings near the bottom. See the wiki pages for
+RAID and mkinitcpio for more info. If you're using
 a non-US keyboard, you should also add the 'keymap' hook, as well as the
 'usbinput' hook if you are using a USB keyboard.
 
 
-**/etc/modprobe.conf**
+**/etc/modprobe.d/modprobe.conf**
 
 This tells the kernel which modules it needs to load for system devices, and
 what options to set. For example, to have the kernel load your Realtek 8139
@@ -691,6 +685,11 @@ packages from will be added on top of the mirror list, in order to be used as
 the default mirror in your new Arch Linux system.
 
 
+**/etc/pacman.conf**
+
+Here you can customize pacman settings such as which repositories to use.
+
+
 **Set Root Password**
 
 At this step, you must set the root password for your system. Choose this
@@ -702,7 +701,7 @@ When you are done editing the configuration files choose Return to return to
 the main menu. The setup will regenerate the initial ramdisk to enable the
 changes you made in mkinitcpio.conf.
 
-####  Install Bootloader
+#####  Install Bootloader
 
 Install Bootloader will install a bootloader on your hard drive, either GRUB
 or NONE in case you have a bootloader already installed and want to use that
@@ -724,15 +723,55 @@ another boot loader, you should install GRUB to the MBR of the installation
 disk, which is usually represented by the appropriate device name without a
 number suffix.
 
-####  Exit Install
+#####  Exit Install
 
 Exit the Installer, remove the media you used for the installation, type
-reboot at the command line and cross your fingers. If your system boots up,
-you can log in as root with the password you set during installation.
+reboot at the command line and cross your fingers!
 
-Congratulations! Welcome to your new Arch Linux system!
 
-##  Package Management
+#### Automatic Installation Procedure
+
+With the automatic installation procedure, you can do scripted/automatic
+installations.  See [2.3 AIF, the installation tool](#Aif_the_installation_tool)
+In /usr/share/aif/examples you will find example profiles which will need
+no or minimal editing in order to install a system:
+
+* generic-install-on-sda
+  this file demonstrates some things you can do (adding custom packages, setting timezone, update config files etc)
+  it sets up a simple installation (with a structure like what you get with Auto-prepare) on /dev/sda
+* fancy-install-on-sda
+  very similar to generic-install-on-sda, but sets up a "filesystems on lvm on dm_crypt" system on /dev/sda
+
+
+Invoke as `aif -p automatic -c /path/to/configfile`
+Obviously, don't forget to change the hard disk names unless you want to use /dev/sda.
+
+
+#### Customizing Installations
+
+You can also customize your installation experience by writing new
+procedures (possibly inheriting from current procedures) or config files for
+procedures that support it (eg automatic).
+You have all the aif libraries at your disposal and you can create new
+libraries. (see /usr/lib/aif)
+This is a moving target, so consult the AIF readme for more information.
+
+
+## Your new system
+If all went well, you can reboot your system (make sure you don't boot again from the same USB disk or CD-ROM drive)
+and your new system will boot.
+
+You'll notice that in the early userspace (the part that comes after the
+bootloader) the hooks (as defined in mkinitcpio.conf) needed to get your root filesystem are run.
+If you have lvm, it will run the lvm hook.  If you use encryption, it will
+the keymap and encrypt hooks so you can enter your password to decrypt the
+volume.
+
+Once the system is booted, login as root.  By default the password is empty
+but in the interactive procedure you can change it.
+
+## More information
+###  Package Management
 
 Pacman is the package manager which tracks all the software installed on your
 system. It has simple dependency support and uses the standard gzipped tar
@@ -844,138 +883,10 @@ Lists all files belonging to package foo.
 This query displays the name and version of the package which contains the
 file referenced by it's full path as a parameter.
 
-##  APPENDIX
+###  APPENDIX
 
 See [Official Arch Linux Install Guide Appendix][52] for some related
 unofficial documentation, new users may find useful.
 
    [52]: /index.php/Official_Arch_Linux_Install_Guide_Appendix (Official Arch
 Linux Install Guide Appendix)
-
-Retrieved from
-"[http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide][53]"
-
-   [53]: http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide
-
-[Categories][54]: [Getting and installing Arch (English)][55] | [HOWTOs
-(English)][56]
-
-   [54]: /index.php/Special:Categories (Special:Categories)
-
-   [55]: /index.php/Category:Getting_and_installing_Arch_(English)
-(Category:Getting and installing Arch (English))
-
-   [56]: /index.php/Category:HOWTOs_(English) (Category:HOWTOs (English))
-
-##### Views
-
-  * [Page][57]
-
-  * [Discussion][58]
-
-  * [View source][59]
-
-  * [History][60]
-
-   [57]: /index.php/Official_Arch_Linux_Install_Guide (View the content page
-[c])
-
-   [58]: /index.php/Talk:Official_Arch_Linux_Install_Guide (Discussion about
-the content page [t])
-
-   [59]: /index.php?title=Official_Arch_Linux_Install_Guide&action=edit (This
-page is protected.
-
-You can view its source [e])
-
-   [60]: /index.php?title=Official_Arch_Linux_Install_Guide&action=history
-(Past revisions of this page [h])
-
-##### Personal tools
-
-  * [Log in / create account][61]
-
-   [61]:
-/index.php?title=Special:UserLogin&returnto=Official_Arch_Linux_Install_Guide
-(You are encouraged to log in; however, it is not mandatory [o])
-
-##### Navigation
-
-  * [Main Page][62]
-
-  * [Community portal][63]
-
-  * [Wiki News][64]
-
-  * [Recent changes][65]
-
-  * [Random page][66]
-
-  * [WikiHelp][67]
-
-   [62]: /index.php/Main_Page
-
-   [63]: /index.php/ArchWiki:Community_Portal (About the project, what you can
-do, where to find things)
-
-   [64]: /index.php/Wiki_News (Find background information on current events)
-
-   [65]: /index.php/Special:RecentChanges (The list of recent changes in the
-wiki [r])
-
-   [66]: /index.php/Special:Random (Load a random page [x])
-
-   [67]: /index.php/Category:Help (The place to find out)
-
-##### Search
-
-
-##### Toolbox
-
-  * [What links here][68]
-
-  * [Related changes][69]
-
-  * [Special pages][70]
-
-  * [Printable version][71]
-
-  * [Permanent link][72]
-
-   [68]: /index.php/Special:WhatLinksHere/Official_Arch_Linux_Install_Guide
-(List of all wiki pages that link here [j])
-
-   [69]:
-/index.php/Special:RecentChangesLinked/Official_Arch_Linux_Install_Guide
-(Recent changes in pages linked from this page [k])
-
-   [70]: /index.php/Special:SpecialPages (List of all special pages [q])
-
-   [71]: /index.php?title=Official_Arch_Linux_Install_Guide&printable=yes
-(Printable version of this page [p])
-
-   [72]: /index.php?title=Official_Arch_Linux_Install_Guide&oldid=68789
-(Permanent link to this revision of the page)
-
-  * This page was last modified on 15 May 2009, at 15:52.
-
-  * This page has been accessed 454,983 times.
-
-  * Content is available under [GNU Free Documentation License 1.2][73].
-
-  * [Privacy policy][74]
-
-  * [About ArchWiki][75]
-
-  * [Disclaimers][76]
-
-   [73]: http://www.gnu.org/copyleft/fdl.html
-(http://www.gnu.org/copyleft/fdl.html)
-
-   [74]: /index.php/ArchWiki:Privacy_policy (ArchWiki:Privacy policy)
-
-   [75]: /index.php/AboutWiki (AboutWiki)
-
-   [76]: /index.php/ArchWiki:General_disclaimer (ArchWiki:General disclaimer)
-
-
