@@ -113,7 +113,8 @@ any network) using either of these images, and all images can also be used as fu
 environments. The images run like any regular installed Arch Linux system. In
 fact, they're exactly the same, just installed to a CD or USB image instead of
 a hard disk. They include the entire "base" package set, as well as various
-networking utilities and drivers. If there's something else you happen to need
+networking utilities and drivers and have the aif package installed.
+If there's something else you happen to need
 at runtime, just get your Internet connection up and install it using pacman.
 A short pacman command reference is available at the end of this document.
 
