@@ -684,6 +684,8 @@ process_filesystem ()
 	[ "$2" != lvm-lv ] && [ -z "$1" -o ! -b "$1" ] && die_error "process_filesystem needs a partition as \$1" # Don't do this for lv's.  It's a hack to workaround non-existence of VG device files.
 	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
 	debug 'FS' "process_filesystem $@"
+	local ret=0
+
         part=$1
         fs_type=$2
 	fs_create=${3:-yes}
@@ -708,7 +710,6 @@ process_filesystem ()
 		fi
 		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
-		local ret=0
 		#TODO: health checks on $fs_params etc
 		case ${fs_type} in #TODO: implement label, opts etc decently
 			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
@@ -744,14 +745,14 @@ process_filesystem ()
 		if [ "$fs_type" = swap ]
 		then
 			debug 'FS' "swaponning $part"
-			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ;  return 1 )
+			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ; ret=1 )
 			fs_mountpoint="swap" # actually it's a hack to set the mountpoint in this (late) stage. this could be cleaner..
 		else
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
 			debug 'FS' "mounting $part on $dst"
 			mkdir -p $dst &>/dev/null # directories may or may not already exist
-			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst"  ;  return 1 )
+			mount -t $fs_type $part $dst >$LOG 2>&1 || ( show_warning 'Mount' "Error mounting $part on $dst" ; ret=1 )
 		fi
 	fi
 
@@ -774,7 +775,7 @@ process_filesystem ()
 		fi
 	fi
 
-	return 0
+	return $ret
 
 #TODO: if target has LVM volumes, copy /etc/lvm/backup to /etc on target (or maybe it can be regenerated with a command, i should look that up)
 
