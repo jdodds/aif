@@ -4,6 +4,8 @@
 
 General installation documentation for the Arch Linux distribution.
 
+This guide is only valid for release 2009.08 or newer
+
 **Related articles**
 
 [Beginners Guide](http://wiki.archlinux.org/index.php/Beginners_Guide "Beginners Guide") (If you are new to Arch)
@@ -34,11 +36,10 @@ General installation documentation for the Arch Linux distribution.
           * [3.2.1.1.2.2 Choose Mirror](#Choose_Mirror)
       * [3.2.1.2 Set Clock](#Set_Clock)
       * [3.2.1.3 Prepare Hard Disks](#Prepare_Hard_Drive)
-        * [2.5.5.1 Auto-Prepare](#Auto-Prepare)
-        * [2.5.5.2 Manual](#Manual)
-          * [2.5.5.2.1 Manually partition](#Manual_partition)
-          * [2.5.5.2.2 Manually partition](#Manual_configure)
-        * [2.5.5.3 Rollbacks (optional)](#Rollback)
+        * [3.2.1.3.1 Auto-Prepare](#Auto-Prepare)
+        * [3.2.1.3.2 Manually partition](#Manual_partition)
+        * [3.2.1.3.3 Manually configure block devices, filesystems and mountpoints](#Manual_configure)
+        * [3.2.1.3.4 Rollbacks (optional)](#Rollback)
       * [3.2.1.4 Select Packages](#Select_Packages)
       * [3.2.1.5 Install Packages](#Install_Packages)
       * [3.2.1.6 Configure System](#Configure_System)
@@ -318,82 +319,91 @@ Next the setup will want you to select your continent/country (timezone),
 and allow you to set the date and time (for which you can also use
 [NTP](http://www.ntp.org/) if your network is up)
 
-####  Prepare Hard Drive
+#####  Prepare Hard Drive
 
 Prepare Hard Drive will lead you into a submenu offering two alternatives of
-preparing your target drive for installation.
+preparing your target drive(s) for installation, and a means to undo changes if
+you want to retry.
 
-#####  Auto-Prepare
+* Auto-prepare will automatically partition (and fully overwrite) one disk of your choice.
+  It creates a simple layout with a /boot, swap, / and /home partition where
+  you have some control over the used filesystems and sizes thereof where relevant.
+* If you wish/need more control you can manually partition one or more hard
+  disks and then manually specify a complete setup using the partitions on your
+  disks.  You can also use things such as lvm and dm_crypt here.
+* The Rollback feature will check which filesystems were created by either
+  of these methods, unmount the relevant filesystems and destroy lvm and
+  dm_crypt volumes if they were created by you.  You need this option if you
+  want to undo or redo a certain scheme.  You will be prompted for this if
+  you forget.
 
-The first choice is Auto-Prepare, which will automatically partition your hard
-drive into a /boot, swap, a root partition, and a /home using the remaining
-space and then create filesystems on all four. These partitions will also be
+######  Auto-Prepare
+
+Auto-Prepare will automatically partition a hard drive of your choice
+into a /boot, swap, a root partition, and a /home and then create filesystems on all four. These partitions will also be
 automatically mounted in the proper place. To be exact, this option will
 create:
 
   * 32 MB ext2 /boot partition
-
   * 256 MB swap partition
-
   * 7.5 GB root partition
-
   * /home partition with the remaining space
 
 You will be prompted to modify the sizes to your requirements, but /home will
-always use the remaining disk space.
+always use the remaining disk space.  You can customize the used filesystem
+for /boot and for both of root and /home at once.
 
 **AUTO-PREPARE WILL ERASE ALL DATA ON THE CHOSEN HARD DRIVE!**
 
-If you prefer to do the partitioning manually, use the other two options,
-Partition Hard Drives and Set Filesystem Mountpoints to prepare the target
-media according to your specifications as outlined below. After successful
-preparation, choose Return to Main Menu.
+###### Manually partition Hard Drives
 
-#####  Partition Hard Drives
-
-Partition Hard Drives should be skipped if you chose Auto-Prepare already!
-
-Otherwise you should select the disk(s) you want to partition, and you'll be
+Here you can select the disk(s) you want to partition, and you'll be
 dropped into the cfdisk program where you can freely modify the partitioning
 information until you [Write] and [Quit]. You will need at least a root
-partition to continue the installation, and it's helpful to note somewhere
-which partition you're going to mount where, as you'll be asked exactly that
-in the next step.
+partition to continue the installation.
 
-#####  Set Filesystem Mountpoints
+###### Manually configure block devices, filesystems and mountpoints
 
-Set Filesystem Mountpoints should also be skipped if you chose to Auto-Prepare
-your hard drive. You should select this choice once the partition information
-is edited to your liking with the previous menu selection, or already existent
-through whatever other means.
+In this menu all recognized partitions are listed.  On top of these you can
+create new filesystems.
+You should be aware of three things:
 
-The first question to answer is what partition to use as swap. Select the
-previously created swap partition from the list, or NONE, if you don't want to
-use a swap partition. Using a swap file is not directly supported by the
-installer. Instead choose NONE here, finish the mountpoint associations, and
-activate a swap file on your desired, formatted partition with the swapon
-command. If you chose to use a swap partition, you will be asked whether to
-create a filesystem on it, and since this partition uses a specific filesystem
-of it's own, you should always answer YES here.
+* All of this is just a model, and everything will only be set up after you confirmed it.
+* Not all blockdevices support all filesystems (Eg you cannot put an LVM volumegroup on something other then a LVM physical volume).
+  The installer will automatically filter the list of possible filesystems and even select the one automatically for you if there's only one option.
+* Some filesystems will cause new blockdevices to be created.  This is the case for dm_crypt and lvm volumes.
+  You will see them appear in the model and you can use them to put another filesystem on top of it.
 
-After setting up the swap partition, you'll be asked to specify the partition
-to be used as the root partition. This is mandatory. The association process
-is then repeated until you choose DONE from the list. The installer will
-suggest /boot for all following mountpoints after choosing swap and root. Each
-time a partition to mount is specified, you will be asked if you want to
-create a filesystem on the respective partition. Selecting YES, will prompt
-you for the filesystem type to create. The partition will then be formatted
-with the chosen filesystem type, destroying all data in the process. It should
-be no problem, however, to say NO at this point to preserve any existing files
-on the partition. Before the actual formatting is done, the installer will
-present a list of all of your choices for review. After formatting and
-mounting all partitions, you may return to the Main Menu and proceed with the
-next step.
+Once you've setup some filesystems, you can select 'Done'.  At this point a
+check will be run which will tell you any critical errors (such as no root
+filesystem) and/or give you some warnings which you may ignore (like no
+swap).
+If anything is found, you can go back to fix these issues, or continue at
+which point everything will be setup the way you asked.
 
-####  Select Packages
+###### Rollbacks
+
+The rollback function will do everything necessary to "undo" changes you
+made in the 'Manually configure block devices, filesystems and mountpoints'
+or 'Autoprepare' step, to allow you completely redo your setup.
+
+It will:
+
+* unmount filesystems from the target system
+* destroy/undo lvm and dm_crypt volumes.
+
+It will not:
+
+* undo any partitioning
+* remove 'simple' filesystems such as ext3, xfs, swap etc.
+
+The reason for this is simple: only things that might disturb subsequent
+hard disk preparations need to be undone.
+
+#####  Select Packages
 
 Select Packages will let you select the packages you wish to install from the
-CD, USB or your FTP mirror. You have the opportunity to specify whole package
+CD, USB or your NET mirror. You have the opportunity to specify whole package
 groups from which you'd generally like to install packages, then fine-tune
 your coarse selection by (de)selecting individual packages from the groups you
 have chosen using the space bar. It is recommended that you install all the
