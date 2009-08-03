@@ -11,19 +11,23 @@ Patches/comments are welcome on the arch
 [releng mailing list](http://www.archlinux.org/mailman/listinfo/arch-releng)
 or mail to dieter@archlinux.org
 
+This guide is available in the /arch directory of release media and on
+[The arch wiki](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide)
+
 **Related articles**
 
 [Beginners Guide](http://wiki.archlinux.org/index.php/Beginners_Guide) (If you are new to Arch)
 
 ##  Introduction
 
-###  What is Arch Linux? ###
+###  What is Arch Linux?
 
 Arch Linux is an independently developed i686 and x86_64 optimized Linux
-distribution that was originally based on ideas from CRUX. Development is
-focused on a balance of simplicity, elegance, code-correctness and bleeding
-edge software. It's lightweight and simple design makes it easy to extend and
-mold into whatever kind of system you're building.
+distribution that was originally based on ideas from CRUX.   
+Development is focused on a balance of simplicity, elegance, code-correctness
+and bleeding edge software.  
+It's lightweight and simple design makes it easy to extend and mold into
+whatever kind of system you're building.
 
 ###  License
 
@@ -40,7 +44,7 @@ and are licensed under the GNU General Public License (GPL).
 ### Architectures
 
 Arch Linux is optimized for i686 and x86_64 processors and therefore will not
-run on any lower or incompatible generations of x86 CPUs (i386,i486 or i586).
+run on any lower or incompatible generations of x86 CPUs (i386,i486 or i586).  
 A Pentium II or AMD K6-2 processor or higher is required. Before installing
 Arch Linux, you should decide which installation method you would like to use.
 
@@ -58,30 +62,32 @@ bootloader are offered as well.
 There are two variants of each installation medium which only differ
 in terms of supplied packages.
 
-  * The "core" images contain a snapshot of the core packages. These images
-are best suited for people who have an internet connection which is slow or
-difficult to set up.
+  * The "core" images contain a snapshot of the core packages.  
+    These images are best suited for people who have an internet connection
+    which is slow or difficult to set up.
 
   * The "net" images contain no packages at all, and will use the network to
-install packages. These images are preferred since you will end up with an up-
-to-date system and they are best suited for people with fast internet
-connections.
+    install packages.   
+    These images are preferred since you will end up with an up-
+    to-date system and they are best suited for people with fast internet
+    connections.
 
 You can instruct the installer to obtain the packages via the internet (or
 any network) using either of these images, and all images can also be used as
 fully functioning recovery environments.  
 The images run like any regular installed Arch Linux system.  
 In fact, they're exactly the same, just installed to a CD or USB image instead
-of a hard disk. They include the entire "base" package set, as well as various
-networking utilities and drivers and have the aif package installed.
+of a hard disk.   
+They include the entire "base" package set, as well as various
+networking utilities and drivers and have the aif package installed.  
 If there's something else you happen to need
-at runtime, just get your Internet connection up and install it using pacman.
+at runtime, just get your Internet connection up and install it using pacman.  
 A short pacman command reference is available at the end of this document.
 
 ### AIF, the installation tool
 
 Arch Linux uses AIF aka 'Arch Linux Installation Framework' to perform
-installations.
+installations.  
 This tool - written in bash - consists of some libraries to perform various
 functions (installing packages, setting up disks etc) and some so called
 procedures which use these libraries to provide an easy means to do
@@ -92,22 +98,23 @@ These procedures are shipped by default:
                questions, guides you through an installation and helps you
                configuring the target system by automatically changing some
                settings for you depending on what you did earlier
-               (eg network settings)
+               (eg network settings)  
                The installed system will initially have only a customisable
                set of "base" packages installed with whatever utilities
-               and drivers you need to get online.  Then once you've
+               and drivers you need to get online.  
+               Then once you've
                successfully booted the installed system, you'll run a full
                system upgrade and install any other packages you want.
                (aliased as `/arch/setup`)
-* automatic:   An automated, deploy-tool-alike procedure  designed for
-               low-to zero interactivity.
-               uses profiles for configuration of the target system.
+* automatic:   An automated, deploy-tool-alike procedure designed for
+               low-to zero interactivity.  
+               uses profiles for configuration of the target system.  
                See /usr/share/aif/examples/ for example profile files.
                The examples implement quite generic scenarios but you're
                free to change them how you like to install extra packages,
                do configuration tweaks, etc.
 * base:        basic, little-interactivity installation with some
-               common defaults.
+               common defaults.  
                This procedure is used by the others to inherit from,
                it is NOT meant to be used directly by end users
 * partial-configure-network: exposes the network configuration step from
@@ -180,9 +187,9 @@ using dd or similar raw-write software:
      dd if=archlinux-XXX.img of=/dev/sdX
 
 
-Make sure to use /dev/sdX and not /dev/sdX1. This command will irrevocably
-delete all files on your USB stick, so make sure you don't have any important
-files on it before doing this.
+Make sure to use /dev/sdX and not /dev/sdX1.  
+This command will irrevocably delete all files on your USB stick,
+so make sure you don't have any important files on it before doing this.
 
 
 ## Installing Arch Linux
@@ -192,17 +199,18 @@ files on it before doing this.
 #### Pre-boot
 
 Make sure your BIOS is set in a way to allow booting from your CD-ROM or USB
-device. Reboot your computer with the Arch Linux Installation CD in the drive
+device.  
+Reboot your computer with the Arch Linux Installation CD in the drive
 or the USB stick plugged in the port. Once the installation medium has started
 booting you will see the Arch Linux logo and a grub menu waiting for your
-selection.  
-Most likely you can just hit enter at this point.
+selection.    
+Most likely you can just hit enter at this point.  
 If Grub hangs, you're one of the unlucky few whose CD-rom drive doesn't work
 with grub and you should try the isolinux image.
 
 #### Post-boot
 At the end of the boot procedure, you should be at a login prompt with some
-simple instructions at the top of the screen.
+simple instructions at the top of the screen.  
 You should login as root. At this point you can
 optionally perform manual preparations and commence the actual installation
 
@@ -210,23 +218,24 @@ optionally perform manual preparations and commence the actual installation
   any of these.
 * If for some reason you need network access before starting the installer
   (the interactive procedure lets you configure the network for NET
-  installations)
+  installations)  
   you can type `aif -p partial-configure-network`
 
 For both items, changed settings will be remembered to be optionally applied
 to the target system when using the interactive procedure.
 
 There is also an `arch` login which can be usefull if you want to do things
-as non-privileged user.  Most people don't need this.
+as non-privileged user.  
+Most people don't need this.
 
 You will find that everything you need to perform this installation
 (a copy of this guide, aif README, shortcuts to common aif procedures)
 can be found in /arch
 
 ### Performing the installation
-You can either use the interactive procedure or the automatic one.  See
-section [2.3 AIF, the installation tool](#Aif_the_installation_tool) or
-the AIF readme for more info.
+You can either use the interactive procedure or the automatic one.  
+See section [2.3 AIF, the installation tool](#Aif_the_installation_tool)
+or the AIF readme for more info.
 
 #### Interactive Installation Procedure
 
