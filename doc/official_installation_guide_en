@@ -896,8 +896,5 @@ file referenced by it's full path as a parameter.
 
 ##  APPENDIX
 
-See [Official Arch Linux Install Guide Appendix][52] for some related
-unofficial documentation, new users may find useful.
-
-   [52]: /index.php/Official_Arch_Linux_Install_Guide_Appendix (Official Arch
-Linux Install Guide Appendix)
+See [Official Arch Linux Install Guide Appendix](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide_Appendix)
+for some related unofficial documentation, new users may find useful.
