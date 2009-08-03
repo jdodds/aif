@@ -1,5 +1,3 @@
-# Official Arch Linux Install Guide
-
 **Article summary**
 
 General installation documentation for the Arch Linux distribution.
@@ -18,9 +16,9 @@ This guide is available in the /arch directory of release media and on
 
 [Beginners Guide](http://wiki.archlinux.org/index.php/Beginners_Guide) (If you are new to Arch)
 
-##  Introduction
+#  Introduction
 
-###  What is Arch Linux?
+##  What is Arch Linux?
 
 Arch Linux is an independently developed i686 and x86_64 optimized Linux
 distribution that was originally based on ideas from CRUX.   
@@ -29,7 +27,7 @@ and bleeding edge software.
 It's lightweight and simple design makes it easy to extend and mold into
 whatever kind of system you're building.
 
-###  License
+##  License
 
 Arch Linux and scripts are copyright
 
@@ -39,16 +37,16 @@ Arch Linux and scripts are copyright
 
 and are licensed under the GNU General Public License (GPL).
 
-##  Pre-Installation
+#  Pre-Installation
 
-### Architectures
+## Architectures
 
 Arch Linux is optimized for i686 and x86_64 processors and therefore will not
 run on any lower or incompatible generations of x86 CPUs (i386,i486 or i586).  
 A Pentium II or AMD K6-2 processor or higher is required. Before installing
 Arch Linux, you should decide which installation method you would like to use.
 
-### Available images
+## Available images
 
 Arch Linux provides bootable images for:
 
@@ -84,7 +82,7 @@ If there's something else you happen to need
 at runtime, just get your Internet connection up and install it using pacman.  
 A short pacman command reference is available at the end of this document.
 
-### AIF, the installation tool
+## AIF, the installation tool
 
 Arch Linux uses AIF aka 'Arch Linux Installation Framework' to perform
 installations.  
@@ -137,7 +135,7 @@ If you want to go further, you can also:
 
 For more information, consult the readme of AIF.
 
-###  Acquiring Arch Linux
+##  Acquiring Arch Linux
 
   * You can download Arch Linux from any of the mirrors listed on the
 [download][45] page.
@@ -148,7 +146,7 @@ and have it shipped anywhere in the world.
    [45]: http://www.archlinux.org/download/
 (http://www.archlinux.org/download/)
 
-###  Preparing the Installation Media
+##  Preparing the Installation Media
 
 **CD-ROM**
 
@@ -192,11 +190,11 @@ This command will irrevocably delete all files on your USB stick,
 so make sure you don't have any important files on it before doing this.
 
 
-## Installing Arch Linux
+# Installing Arch Linux
 
-###  Using the Install Media
+##  Using the Install Media
 
-#### Pre-boot
+### Pre-boot
 
 Make sure your BIOS is set in a way to allow booting from your CD-ROM or USB
 device.  
@@ -208,7 +206,7 @@ Most likely you can just hit enter at this point.
 If Grub hangs, you're one of the unlucky few whose CD-rom drive doesn't work
 with grub and you should try the isolinux image.
 
-#### Post-boot
+### Post-boot
 At the end of the boot procedure, you should be at a login prompt with some
 simple instructions at the top of the screen.  
 You should login as root. At this point you can
@@ -232,12 +230,12 @@ You will find that everything you need to perform this installation
 (a copy of this guide, aif README, shortcuts to common aif procedures)
 can be found in /arch
 
-### Performing the installation
+## Performing the installation
 You can either use the interactive procedure or the automatic one.  
 See section [2.3 AIF, the installation tool](#Aif_the_installation_tool)
 or the AIF readme for more info.
 
-#### Interactive Installation Procedure
+### Interactive Installation Procedure
 
 Type `/arch/setup` (or `aif -p interactive`, which is the same) to start.
 
@@ -249,7 +247,7 @@ output from the commands the setup is running. Use (ALT-F1) to get back to
 your first console where the installer is running, and any F-key in between if
 you need to open another console to intervene manually for any reason.
 
-#####  Select Source
+####  Select Source
 
 As a first step you must choose the method you want to install Arch Linux. If
 you have a fast Internet connection, you might prefer the NET installation to
@@ -257,7 +255,7 @@ ensure you get the latest packages instead of using the potentially outdated
 CD or USB image contents.  If you're using a NET image you don't have much
 choice ;-).
 
-######  CD-ROM or OTHER SOURCE
+#####  CD-ROM or OTHER SOURCE
 
 When choosing a CD-ROM or OTHER SOURCE install you will only be able to
 install packages contained on the CD, which may be quite old, or packages
@@ -267,9 +265,9 @@ you won't need an Internet connection, and is therefore the recommended choice
 for dialup users or those unable or unwilling to download the entire package
 set.
 
-###### NET (FTP/HTTP)
+##### NET (FTP/HTTP)
 
-#######  Setup Network
+######  Setup Network
 
 The first entry Setup Network will allow you to install and configure your
 network device. If you are using a wireless device you will still need to use
@@ -289,7 +287,7 @@ asked to enter the networking information manually. Either way, your network
 should be successfully configured, and you may check connectivity using
 standard tools like ping on another console.
 
-####### Choose Mirror
+###### Choose Mirror
 
 Choose Mirror will allow you to choose the preferred mirror to download the
 packages that will be installed in your Arch Linux system. You should choose a
@@ -304,7 +302,7 @@ These menu entries are only available when choosing FTP Installation, for
 rather obvious reasons. After successful preparation, choose Return to Main
 Menu.
 
-#####  Set Clock
+####  Set Clock
 
 Set Clock will allow you to set up your system clock and date. 
 First you have to say if your hardwareclock is (or should be) in UTC or
@@ -315,7 +313,7 @@ Next the setup will want you to select your continent/country (timezone),
 and allow you to set the date and time (for which you can also use
 [NTP](http://www.ntp.org/) if your network is up)
 
-#####  Prepare Hard Drive
+####  Prepare Hard Drive
 
 Prepare Hard Drive will lead you into a submenu offering two alternatives of
 preparing your target drive(s) for installation, and a means to undo changes if
@@ -334,7 +332,7 @@ you want to retry.
   want to undo or redo a certain scheme.  You will be prompted for this if
   you forget.
 
-######  Auto-Prepare
+#####  Auto-Prepare
 
 Auto-Prepare will automatically partition a hard drive of your choice
 into a /boot, swap, a root partition, and a /home and then create filesystems
@@ -352,14 +350,14 @@ for /boot and for both of root and /home at once.
 
 **AUTO-PREPARE WILL ERASE ALL DATA ON THE CHOSEN HARD DRIVE!**
 
-###### Manually partition Hard Drives
+##### Manually partition Hard Drives
 
 Here you can select the disk(s) you want to partition, and you'll be
 dropped into the cfdisk program where you can freely modify the partitioning
 information until you [Write] and [Quit]. You will need at least a root
 partition to continue the installation.
 
-###### Manually configure block devices, filesystems and mountpoints
+##### Manually configure block devices, filesystems and mountpoints
 
 In this menu all recognized partitions are listed.  On top of these you can
 create new filesystems.
@@ -382,7 +380,7 @@ swap).
 If anything is found, you can go back to fix these issues, or continue at
 which point everything will be setup the way you asked.
 
-###### Rollbacks
+##### Rollbacks
 
 The rollback function will do everything necessary to "undo" changes you
 made in the 'Manually configure block devices, filesystems and mountpoints'
@@ -401,7 +399,7 @@ It will not:
 The reason for this is simple: only things that might disturb subsequent
 hard disk preparations need to be undone.
 
-#####  Select Packages
+####  Select Packages
 
 Select Packages will let you select the packages you wish to install from the
 CD, USB or your NET mirror. You have the opportunity to specify whole package
@@ -415,12 +413,12 @@ connectivity.
 Once you're done selecting the packages you need, leave the selection screen
 and continue to the next step.
 
-#####  Install Packages
+####  Install Packages
 
 Install Packages will now install the base system and any other packages you
 selected with resolved dependencies onto your harddisk.
 
-#####  Configure System
+####  Configure System
 
 Configure System does multiple things:
 
@@ -708,7 +706,7 @@ When you are done editing the configuration files choose Return to return to
 the main menu. The setup will regenerate the initial ramdisk to enable the
 changes you made in mkinitcpio.conf.
 
-#####  Install Bootloader
+####  Install Bootloader
 
 Install Bootloader will install a bootloader on your hard drive, either GRUB
 or NONE in case you have a bootloader already installed and want to use that
@@ -730,13 +728,13 @@ another boot loader, you should install GRUB to the MBR of the installation
 disk, which is usually represented by the appropriate device name without a
 number suffix.
 
-#####  Exit Install
+####  Exit Install
 
 Exit the Installer, remove the media you used for the installation, type
 reboot at the command line and cross your fingers!
 
 
-#### Automatic Installation Procedure
+### Automatic Installation Procedure
 
 With the automatic installation procedure, you can do scripted/automatic
 installations.
@@ -759,7 +757,7 @@ Obviously, don't forget to change the hard disk names unless you want
 to use /dev/sda.
 
 
-#### Customizing Installations
+### Customizing Installations
 
 You can also customize your installation experience by writing new
 procedures (possibly inheriting from current procedures) or config files for
@@ -769,7 +767,7 @@ libraries. (see /usr/lib/aif)
 This is a moving target, so consult the AIF readme for more information.
 
 
-## Your new system
+# Your new system
 If all went well, you can reboot your system (make sure you don't boot again
 from the same USB disk or CD-ROM drive) and your new system will boot.
 
@@ -783,8 +781,8 @@ volume.
 Once the system is booted, login as root.  By default the password is empty
 but in the interactive procedure you can change it.
 
-## More information
-###  Package Management
+# More information
+##  Package Management
 
 Pacman is the package manager which tracks all the software installed on your
 system. It has simple dependency support and uses the standard gzipped tar
@@ -896,7 +894,7 @@ Lists all files belonging to package foo.
 This query displays the name and version of the package which contains the
 file referenced by it's full path as a parameter.
 
-###  APPENDIX
+##  APPENDIX
 
 See [Official Arch Linux Install Guide Appendix][52] for some related
 unofficial documentation, new users may find useful.
