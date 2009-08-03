@@ -15,52 +15,6 @@ or mail to dieter@archlinux.org
 
 [Beginners Guide](http://wiki.archlinux.org/index.php/Beginners_Guide) (If you are new to Arch)
 
-## Contents
-
-  * [1 Introduction](#Introduction)
-    * [1.1 What is Arch Linux?](#What_is_Arch_Linux)
-    * [1.2 License](#License)
-
-  * [2 Pre-Installation](#Pre-Installation)
-    * [2.1 Architectures](#Architectures)
-    * [2.2 Available images](#Available_images)
-    * [2.3 AIF, the installation tool](#Aif_the_installation_tool)
-    * [2.4 Acquiring Arch Linux](#Acquiring_Arch_Linux)
-    * [2.5 Preparing the Installation Media](#Preparing_the_Installation_Media)
- 
-  * [3 Installing Arch Linux](#Installing_Arch_Linux)
-    * [3.1 Using the Install Media](#Using_the_Install_Media)
-      * [3.1.1 Pre-boot](#Pre_boot)
-      * [3.1.2 Post-boot](#Post_boot)
-    * [3.2 Performing the installation](#Perform_install)
-      * [3.2.1 Interactive Installation Procedure](#Interactive_Installation_Procedure)
-        * [3.2.1.1 Select Source](#Select_Source)
-          * [3.2.1.1.1 CD-ROM or OTHER SOURCE](#CD-ROM_or_OTHER_SOURCE)
-          * [3.2.1.1.2 NET (FTP/HTTP)](#NET)
-            * [3.2.1.1.2.1 Setup Network](#Setup_Network)
-            * [3.2.1.1.2.2 Choose Mirror](#Choose_Mirror)
-        * [3.2.1.2 Set Clock](#Set_Clock)
-        * [3.2.1.3 Prepare Hard Disks](#Prepare_Hard_Drive)
-          * [3.2.1.3.1 Auto-Prepare](#Auto-Prepare)
-          * [3.2.1.3.2 Manually partition](#Manual_partition)
-          * [3.2.1.3.3 Manually configure block devices, filesystems and mountpoints](#Manual_configure)
-          * [3.2.1.3.4 Rollbacks (optional)](#Rollback)
-        * [3.2.1.4 Select Packages](#Select_Packages)
-        * [3.2.1.5 Install Packages](#Install_Packages)
-        * [3.2.1.6 Configure System](#Configure_System)
-        * [3.2.1.7 Install Bootloader](#Install_Bootloader)
-        * [3.2.1.8 Exit Install](#Exit_Install)
-
-      * [3.2.2 Automatic Installation Procedure](#Automatic_Installation_Procedure)
-       
-      * [3.2.3 Customizing Installations](#Customizing)
-
-* [4 Your new system](#Your_new_system)
-
-* [5 More information](#More_information)
-  * [5.1 Package Management](#Package_Management)
-  * [5.2 Appendix](#Appendix)
-
 ##  Introduction
 
 ###  What is Arch Linux? ### {#What_is_Arch_Linux}
