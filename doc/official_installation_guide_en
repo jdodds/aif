@@ -332,6 +332,15 @@ you want to retry.
   want to undo or redo a certain scheme.  You will be prompted for this if
   you forget.
 
+Notes:
+
+* AIF can help you set up new dm_crypt and lvm volumes, but not (yet) softraid.
+* AIF currently doesn't help you creating volumegroups that span multiple
+  physical volumes.  (if you need this -unlikely- : use vgcreate)
+* AIF supports reusing filesystems, but only if it can find the blockdevice.
+  If you want to reuse a filesystem that is on top of lvm/dm_crypt/softraid,
+  you'll need to bring up the volumes yourself.
+
 #####  Auto-Prepare
 
 Auto-Prepare will automatically partition a hard drive of your choice
@@ -379,6 +388,36 @@ filesystem) and/or give you some warnings which you may ignore (like no
 swap).
 If anything is found, you can go back to fix these issues, or continue at
 which point everything will be setup the way you asked.
+
+For example, if you want a setup that uses LVM on top of dm_crypt, you would:
+
+* make sure that you have a 2 partitions: a small one for the unencrypted
+  boot (about 100M) and one for the rest of the (encrypted) system.
+  (do this in "Manually partition hard drives")
+* on your /dev/sdX1, make an ext2 filesystem with mountpoint /boot
+* on your /dev/sdX2, make a dm_crypt volume, with label sdX2crypt
+  (or whatever you want)
+* /dev/mapper/sdX2crypt will appear.  Put a LVM physical volume on this
+* /dev/mapper/sdX2crypt+ appears.  This is the representation of the
+  physical volume.  Put a volumegroup on this, with label cryptpool
+  (or whatever you want)
+* /dev/mapper/cryptpool appears.  On this volumegroup you are able to put
+  multiple logical volumes.  Make 2:
+  * one with size 5G: label this cryptroot
+  * one with size 10G: label this crypthome
+* 2 new volumes appear:
+  * /dev/mapper/cryptpool-cryptroot: on this blockdevice, you can put your
+    root filesystem, with mountpoint /.
+  * /dev/mapper/cryptpool-crypthome is the blockdevice on which you can put
+    the filesystem with mountpoint /home.
+* If you want swapspace, make a logical volume for swap and put
+  a swap volume on it.
+* That's it! If you select 'done' it should process the model and create
+  your disk setup the way you specified.
+  The cool part is that you can pick relatively small
+  values for your volumes to start with, and if you need more space later
+  you can grow the logical volume and the filesystem on top of it.
+
 
 ##### Rollbacks
 
