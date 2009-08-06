@@ -149,7 +149,7 @@ interactive_time () {
 		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
 
                 ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
-                "${EXTRA[@]}" "manual" "Set time and date manually" "return" "Looks good. back to main menu" || return 1
+                "return" "Looks good. back to main menu" "${EXTRA[@]}" "manual" "Set time and date manually" || return 1
                 if [ "$ANSWER_OPTION" = ntp ]
                 then
 			if ntpdate pool.ntp.org >/dev/null 
