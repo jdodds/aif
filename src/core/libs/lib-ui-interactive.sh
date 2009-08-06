@@ -1277,12 +1277,14 @@ interactive_get_editor() {
 select_source_extras_menu ()
 {
 	while true; do
-		ask_option no "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
+		default=no
+		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
+		ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
 		"1" "$worker_runtime_network_title" \
 		"2" "$worker_select_mirror_title" \
 		"3" "Return to Main Menu" || return 1
-		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network
-		[ "$ANSWER_OPTION" = 2 ] && execute worker select_mirror
+		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && NEXTITEM=2
+		[ "$ANSWER_OPTION" = 2 ] && execute worker select_mirror && NEXTITEM=3
 		[ "$ANSWER_OPTION" = 3 ] && break
 	done
 }
