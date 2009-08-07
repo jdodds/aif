@@ -1,6 +1,5 @@
 #!/bin/sh
 which markdown &>/dev/null || echo "Need markdown utility!" >&2
-# do we need to add section 'avail languages'? like http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide
 
 echo "generating html..."
 for i in doc/official_installation_guide_??
@@ -14,7 +13,6 @@ echo "adding special wiki thingies..."
 
 i=doc/official_installation_guide_en
 echo $i
-
 
 
 summary_begin='<p><strong>Article summary<\/strong><\/p>'
@@ -32,6 +30,7 @@ related=`echo "$related"| sed -e 's#<p>\[\(.*\)\] \(.*\)<\/p>#{{Article summary 
 
 # preare $summary for wiiking: replace email address by nice mailto links
 summary=`echo "$summary" | sed 's/\([^"|, ]*@[-A-Za-z0-9_.]*\)/[mailto:\1 \1]/'`
+
 
 echo -e "[[Category:Getting and installing Arch (English)]]\n[[Category:HOWTOs (English)]]\n
 {{Article summary start}}\n{{Article summary text| 1=$summary}}\n{{Article summary heading|Available Languages}}\n
