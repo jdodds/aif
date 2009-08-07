@@ -9,19 +9,15 @@ CURRENT ISSUES:
 * interactive_autoprepare: merge _getavaildisks( and finddisks calls
 * no uuid in fstab unlike previous thing
 * consider syslog as logging backend
-* add support for TARGET_PACKAGES_EXCLUDE to filter out packages from a group
 * more vars for automatic profile: hostname (check that adding to /etc/hosts can be done procedure-independently), 
 LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or take the config from runtime)
 * what to do with /etc/groups, passwd, modprobe.conf, mkinitcpio.conf, rc.local etc with automatic procedure? configure through automatic profile or let user check out files from svn or so? 
 * depend statements for automatic profiles (+ example)
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
 * differentiate between framework and installer in src/aif.sh, some things should be in base
-* check everywhere that if users cancels something, we return 1, empty string behavior etc
-* dm_crypt unlock at boot is in qwerty.
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
 * find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
-* automatically configure grub for dm_crypt and lvm
 * fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
 * a nice way to be able to "inject" functions/logic without:
@@ -35,7 +31,6 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
        -> maybe we should in the callback do an execute call for another worker, then we also can check it's exitcode in a good way
        -> too. although that's only good for separate functions, not the 'copypaste 90% and add 10% to the same worker scenario'
   -> phases are arrays.. adding elements at the back is easy.  for in the middle, we could maybe write some functions to add a worker before/after another in a phase
-* mirrorlist config doesn't change after selecting mirror
 * show_report does not show workers.
 * 'keep in mind trottled' not on separate screen
 * look if you can hook into bash so that on any syntax/.. error you can bind the debug/log function
@@ -51,10 +46,7 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
 * find a way to not have to preload libs and stuff, only load them when needed. -> faster start of install program
 * core/interactive: do not check hard for the dependencies. a user could really know what he's doing or need to reboot after partitioning a disk and
 skip that check or something.  Alternatively, maybe just show which steps are done successfully in the main menu
-* support maybe ntp to set clock
-* auto-configure mkinitcpio.conf for dm_crypt and lvm
 * support setting mount options for fs'es (to go into fstab) in at least automatic procedures. interactive > you can edit fstab right..
-* right at the end of package installation something happens :/ also at configure system, before generation of locales
 
 
 SOMEDAY/MAYBE/RANDOM THOUGHTS:
@@ -62,9 +54,6 @@ SOMEDAY/MAYBE/RANDOM THOUGHTS:
 * write bash completion thing for aif modules/procedures
 * add dmraid/mdadm support -> patches welcome.  i don't care about this. 
 * check if it would be useful to support kickstart config files.  we can look at quickstart for that http://dev.gentoo.org/~agaffney/quickstart.php
-* the quickinst assumes the user did some stuff by himself and does some
-after-processing.  Would it be useful to have a procedure that always tells
-the user what to do (manually) ? -> ASKDEV
 * profiles like 'desktop','server' (~-> package list, configs, disk setup,..) are crossconcerns
 compared to procedures (which are about "how" the installation goes:
 prescripted, autodetection, interactive,...).
