@@ -1,10 +1,7 @@
 #!/bin/sh
 which markdown &>/dev/null || echo "Need markdown utility!" >&2
-# do we need to sed links?
 # do we need to add section 'avail languages'? like http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide
-# what about summary and related articles?
 # obfuscate email? wiki supports mailto dingske
-# TODO: strip article section, related articles from real content
 
 echo "generating html..."
 for i in doc/official_installation_guide_??
@@ -26,7 +23,7 @@ summary_end_plus_one='<p><strong>Related articles<\/strong><\/p>'
 related_begin='<p><strong>Related articles<\/strong><\/p>'
 related_end_plus_one='<h1>Introduction<\/h1>'
 
-summary=`sed -n "/$summary_begin/, /$summary_end_plus_one/p;" $i.html | sed "/$summary_begin/d; /$summary_end_plus_one/d"` #TODO strip html tags from summary? (maybe parse from markdown instead). this does not render on the wiki!
+summary=`sed -n "/$summary_begin/, /$summary_end_plus_one/p;" $i.html | sed "/$summary_begin/d; /$summary_end_plus_one/d"`
 related=`sed -n "/$related_begin/, /$related_end_plus_one/p;" $i.html | sed "/$related_begin/d; /$related_end_plus_one/d"`
 
 # prepare for wikiing.
