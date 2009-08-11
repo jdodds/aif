@@ -381,6 +381,11 @@ You should be aware of three things:
   This is the case for dm_crypt and lvm volumes.
   You will see them appear in the model and you can use them to put another
   filesystem on top of it.
+* When asked for (optional) options to mkfs tools, you're supposed to pass
+  arguments which will literally be added when calling mkfs.
+  For example, to disable the journal on ext filesystems:
+  * don't do: `^has_journal`
+  * but rather: `-O ^has_journal`
 
 Once you've setup some filesystems, you can select 'Done'.  At this point a
 check will be run which will tell you any critical errors (such as no root
