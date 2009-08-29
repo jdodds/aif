@@ -1107,7 +1107,7 @@ generate_grub_menulst() {
 				debug 'FS' 'Grub kernel line? Found / on dm_crypt on lvm on raw'
 				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
 				lv_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
-				kernel=" kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
+				kernel="kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
 			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
 			then
 				debug 'FS' 'Grub kernel line? Found / on raw'
