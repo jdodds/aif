@@ -33,6 +33,8 @@ process_args ()
 ###### perform actual logic ######
 echo "Welcome to $TITLE"
 
+[[ $EUID -ne 0 ]] && die_error "You must have root privileges to run AIF"
+
 mount -o remount,rw / &>/dev/null 
 cleanup_runtime
 
