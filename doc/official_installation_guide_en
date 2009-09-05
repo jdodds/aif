@@ -800,6 +800,22 @@ Invoke as `aif -p automatic -c /path/to/configfile`
 Obviously, don't forget to change the hard disk names unless you want
 to use /dev/sda.
 
+#### Config file syntax
+
+Config files will be sourced by the bash shell, so they need to be valid
+bash code.
+
+**PARTITIONS:** Allows you to define partitions for your hard disk,
+separated by spaces.
+
+* first comes the device file for the hard disk
+* then for each partition you want: size in MiB (or '*' for all remaining
+  space),filesystem type and optionally a '+' to toggle the bootable flag.
+  separated by colons (':')
+
+**BLOCKDATA:** In this multi-line variable you can describe for each
+partition you'll have how it should be used.  Study the examples to see how
+it works.
 
 ### Customizing Installations
 
