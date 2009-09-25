@@ -430,7 +430,7 @@ interactive_filesystem ()
 		[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
 
 		fs_create=no
-		ask_yesno "Do you want to have this filesystem re(created) ?  If not, make sure there already is a filesystem!" && fs_create=yes
+		ask_yesno "Do you want to have this filesystem (re)created ?  If not, make sure there already is a filesystem!" && fs_create=yes
 
 		# determine FS
 		fsopts=($FSOPTS);
