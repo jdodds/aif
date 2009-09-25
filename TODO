@@ -1,6 +1,15 @@
 See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
+fix </boot>/vmlinuz depending on separate /boot -> $subdir wrong
+fix (hd0,0) niet showing up automatic procedure
+moeten we automatic procedure grub stuff aanpassen?
+
 CURRENT ISSUES:
+* ask someone: why is there no /dev/mapper/<VG NAME> ? 
+* lvm on top of dm_crypt -> cryptdevice=/dev/sda2:<name of decrypted blockdevice which hosts the lvm>, 
+  it's not needed to name this the volume group 
+* do we use a squashfs on usb images?  is this needed?  how to make changes persistent?  
+* time choosing: put 'ok' at bottom again but make it default
 * at some point we will/should support pxe based or same-system based arch installations. document that.
 * implement depend_profile
 * add /var/lib/aif/profiles directory to packages and document it.
