@@ -43,8 +43,9 @@ and are licensed under the GNU General Public License (GPL).
 
 Arch Linux is optimized for i686 and x86_64 processors and therefore will not
 run on any lower or incompatible generations of x86 CPUs (i386,i486 or i586).  
-A Pentium II or AMD K6-2 processor or higher is required. Before installing
-Arch Linux, you should decide which installation method you would like to use.
+A Pentium Pro, Pentium II or AMD Athlon (K7) processor or higher is required.
+Before installing Arch Linux, 
+you should decide which installation method you would like to use.
 
 ## Available images
 
