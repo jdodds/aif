@@ -880,7 +880,7 @@ in the /etc/pacman.conf file and decompress it into the database area.
 Search each package in the sync databases for names or descriptions that match
 regexp.
 
-  * Display specific not installed package info
+  * Display specific package info from the repository database
 
 
      # pacman --sync --info foo
@@ -888,7 +888,7 @@ regexp.
      # pacman -Si foo
 
 
-Displays information on the not yet installed package foo (size, install date,
+Displays information from the repository database on package foo (size,
 build date, dependencies, conflicts, etc.)
 
   * Adding a package from the repositories
