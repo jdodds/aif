@@ -30,7 +30,7 @@ run_controlled ()
 
 
 # run a process in the background, and log it's stdout and stderr to a specific logfile
-# returncode is stored in $<identifier>_exitcode
+# returncode is stored in BACKGROUND_EXIT
 # pid of the backgrounded wrapper process is stored in BACKGROUND_PID (this is _not_ the pid of $2)
 # $1 identifier -> WARNING: do never ever use -'s or other fancy characters here. only numbers, letters and _ please. (because $<identifier>_exitcode must be a valid bash variable!)
 # $2 command (will be eval'ed)
@@ -48,7 +48,7 @@ run_background ()
 		[ -f $3 ] && echo -e "\n\n\n" >>$3
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
 		eval "$2" >>$3 2>&1
-		$BACKGROUND_EXIT=$?
+		BACKGROUND_EXIT=$?
 		debug 'MISC' "run_background done with $1: exitcode (\$$1_exitcode): ${!var_exit} .Logfile $3"
 		echo >> $3   
 		rm -f $RUNTIME_DIR/aif-$1-running
