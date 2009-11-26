@@ -796,6 +796,8 @@ no or minimal editing in order to install a system:
   very similar to generic-install-on-sda,
   but sets up a "filesystems on lvm on dm_crypt" system on /dev/sda
 
+Note that these files are plain bash files, so if you want to define for
+example `SYNC_URL` it must be singlequoted to prevent bash expanding `$repo`
 
 Invoke as `aif -p automatic -c /path/to/configfile`
 Obviously, don't forget to change the hard disk names unless you want
