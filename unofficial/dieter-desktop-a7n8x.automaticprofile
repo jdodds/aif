@@ -9,6 +9,7 @@
 # TODO:* dieter/automatic: put config files from svn in place first, so that if a package has an update, it can do it's thing.
 
 
+# when checking out /etc, configs may be outdated (meant for older packages), and we have no pacnew/pacsave files. but this should not cause too much problems..
 var_RUNTIME_REPOSITORIES=(archlinuxfr "Server = http://repo.archlinux.fr/$var_ARCH")
 var_RUNTIME_PACKAGES="svn yaourt"
 
