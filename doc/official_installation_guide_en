@@ -24,7 +24,7 @@ Arch Linux is an independently developed i686 and x86_64 optimized Linux
 distribution that was originally based on ideas from CRUX.   
 Development is focused on a balance of simplicity, elegance, code-correctness
 and bleeding edge software.  
-It's lightweight and simple design makes it easy to extend and mold into
+Its lightweight and simple design makes it easy to extend and mold into
 whatever kind of system you're building.
 
 ##  License
@@ -382,13 +382,13 @@ You should be aware of three things:
   This is the case for dm_crypt and lvm volumes.
   You will see them appear in the model and you can use them to put another
   filesystem on top of it.
-* When asked for (optional) options to mkfs tools, you're supposed to pass
+* When asked for (optional) options to mkfs tools, pass
   arguments which will literally be added when calling mkfs.
   For example, to disable the journal on ext filesystems:
   * don't do: `^has_journal`
   * but rather: `-O ^has_journal`
 
-Once you've setup some filesystems, you can select 'Done'.  At this point a
+When filesystems setup is complete, you can select 'Done'.  At this point a
 check will be run which will tell you any critical errors (such as no root
 filesystem) and/or give you some warnings which you may ignore (like no
 swap).
@@ -539,8 +539,8 @@ Again, the default is fine for US users.
 bootup. Possible fonts are found in /usr/share/kbd/consolefonts.
 
 **CONSOLEMAP:** Defines the console map to load with the setfont program on
-bootup. Possible maps are found in /usr/share/kbd/consoletrans. You will want
-to set this to a map suitable for your locale (8859-1 for Latin1, for example)
+bootup. Possible maps are found in /usr/share/kbd/consoletrans. Set this
+to a map suitable for the appropriate locale (8859-1 for Latin1, for example)
 if you're using an UTF-8 locale above, and use programs that generate 8-bit
 output. If you're using X11 for everyday work, don't bother, as it only
 affects the output of Linux console applications.
@@ -574,8 +574,7 @@ manually in the shell.
 **ROUTES:** You can define your own static network routes with arbitrary names
 here. Look at the example for a default gateway to get the idea. Basically the
 quoted part is identical to what you'd pass to a manual route add command,
-therefore reading man route is recommended if you don't know what to write
-here, or simply leave this alone.
+therefore reading man route is recommended or simply leave this alone.
 
 **[ NET_PROFILES][49]:** Enables certain network profiles at bootup. Network
 profiles provide a convenient way of managing multiple network configurations,
@@ -602,11 +601,9 @@ services like sshd, and want to start these automatically during bootup.
 
    [50]: http://wiki.archlinux.org/index.php/Fstab (Fstab)
 
-Your filesystem settings and mountpoints are configured here. The installer
-should have created the necessary entries for you, but you should look over it
-and make sure it's right especially if you're using something like lvm,
-dm_crypt or raid.
-
+Filesystem settings and mountpoints are configured here. The installer
+should have created the necessary entries. Ensure they are accurate and
+correct.
 
 **/etc/mkinitcpio.conf**
 
@@ -632,8 +629,8 @@ You can customize even further by specifying the exact modules you need
 in the MODULES array and remove even more of the hooks, but proceed with
 caution.
 
-If you're using RAID on your root filesystem, then you'll have
-to tweak the RAID settings near the bottom. See the wiki pages for
+If you're using RAID on your root filesystem, the RAID settings near the
+bottom must be configured.  See the wiki pages for
 RAID and mkinitcpio for more info. If you're using
 a non-US keyboard, you should also add the 'keymap' hook, as well as the
 'usbinput' hook if you are using a USB keyboard.
@@ -641,8 +638,8 @@ a non-US keyboard, you should also add the 'keymap' hook, as well as the
 
 **/etc/modprobe.d/modprobe.conf**
 
-This tells the kernel which modules it needs to load for system devices, and
-what options to set. For example, to have the kernel load your Realtek 8139
+This tells the kernel which modules to load for system devices, and
+what options to set. For example, to have the kernel load the Realtek 8139
 ethernet module when it starts the network (ie. tries to setup eth0), use this
 line:
 
@@ -655,7 +652,7 @@ Most people will not need to edit this file.
 
 **/etc/resolv.conf**
 
-Use this file to manually setup your nameserver(s) that you want to use. It
+Use this file to manually setup your preferred nameserver(s). It
 should basically look like this:
 
 
@@ -955,7 +952,7 @@ Lists all files belonging to package foo.
 
 
 This query displays the name and version of the package which contains the
-file referenced by it's full path as a parameter.
+file referenced by its full path as a parameter.
 
 ##  APPENDIX
 
