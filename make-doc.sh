@@ -32,7 +32,8 @@ related=`echo "$related"| sed -e 's#<p>\[\(.*\)\] \(.*\)<\/p>#{{Article summary 
 summary=`echo "$summary" | sed 's/\([^"|, ]*@[-A-Za-z0-9_.]*\)/[mailto:\1 \1]/'`
 
 
-echo -e "[[Category:Getting and installing Arch (English)]]\n[[Category:HOWTOs (English)]]\n
+echo -e "[[Category:Getting and installing Arch (English)]]\n[[Category:HOWTOs (English)]]
+[[Category:Website Resources]]
 {{Article summary start}}\n{{Article summary text| 1=$summary}}\n{{Article summary heading|Available Languages}}\n
 {{i18n_entry|English|Official Arch Linux Install Guide}}\n
 {{Article summary heading|Related articles}}
