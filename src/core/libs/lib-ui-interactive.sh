@@ -242,10 +242,13 @@ interactive_autoprepare()
 		notify "Available Disks:\n\n$(_getavaildisks)\n"
 		ask_option no 'Harddrive selection' "Select the hard drive to use" required $(finddisks 1 _) || return 1
 		DISC=$ANSWER_OPTION
+	elif [ -z "$DISCS" ]; then
+            ask_string "Could not find disk. Please enter path of devicefile manually" "" || return 1
+            DISC=$ANSWER_STRING
 	else
 		DISC=$DISCS
 	fi
-
+	# TODO : some checks if $DISC is really a blockdevice is probably a good idea
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
 	get_blockdevice_size $DISC MiB
@@ -910,7 +913,7 @@ interactive_grub() {
 
         DEVS=$(finddisks 1 _)
         DEVS="$DEVS $(findpartitions 1 _)"
-        if [ "$DEVS" = "" ]; then
+        if [ "$DEVS" = " " ]; then
             notify "No hard drives were found"
             return 1
         fi
