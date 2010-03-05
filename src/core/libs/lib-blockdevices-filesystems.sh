@@ -368,7 +368,7 @@ partition()
 	# invoke sfdisk
 	debug 'FS' "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
 	printk off
-	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
+	sfdisk -D $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
     if [ $? -gt 0 ]; then
@@ -763,10 +763,12 @@ process_filesystem ()
 		local _uuid="$(getuuid $part)"
 		if [ -n "${_uuid}" ]; then
 			_device="UUID=${_uuid}"
+		else
+			_device=$part
 		fi
-		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
+		if ! grep -q "$_device $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
-			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
+			echo -n "$_device $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
 			if [ "$fs_type" = "swap" ]; then
 				echo "0" >>$TMP_FSTAB
 			else

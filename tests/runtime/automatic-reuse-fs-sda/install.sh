@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # sda1 boot, sda2 will be swap, sda3 /, sda4 which will contain the "existing filesystem of the user" with "important data" on it.
-sfdisk -uM /dev/sda << EOF
+sfdisk -D /dev/sda -uM << EOF
 ,50,,*
 ,20,S
 ,800,

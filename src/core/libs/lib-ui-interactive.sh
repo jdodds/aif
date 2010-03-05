@@ -242,10 +242,13 @@ interactive_autoprepare()
 		notify "Available Disks:\n\n$(_getavaildisks)\n"
 		ask_option no 'Harddrive selection' "Select the hard drive to use" required $(finddisks 1 _) || return 1
 		DISC=$ANSWER_OPTION
+	elif [ -z "$DISCS" ]; then
+            ask_string "Could not find disk. Please enter path of devicefile manually" "" || return 1
+            DISC=$ANSWER_STRING
 	else
 		DISC=$DISCS
 	fi
-
+	# TODO : some checks if $DISC is really a blockdevice is probably a good idea
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
 	get_blockdevice_size $DISC MiB
@@ -452,7 +455,7 @@ interactive_filesystem ()
 		then
 			default=no
 			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
-			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /etc 'config files' /home 'home directories' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
+			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /home 'home directories' /var 'variable files' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
 			fs_mountpoint=$ANSWER_OPTION
 			[ "$default" == 'no' ] && default=
 			if [ "$ANSWER_OPTION" == custom ]
@@ -767,6 +770,7 @@ Note that right now the packages (and groups) selection is limited to the repos 
 
     # sort by group
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
+    [ -z "$_pkglist" ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
 	var_TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
@@ -910,7 +914,7 @@ interactive_grub() {
 
         DEVS=$(finddisks 1 _)
         DEVS="$DEVS $(findpartitions 1 _)"
-        if [ "$DEVS" = "" ]; then
+        if [ "$DEVS" = " " ]; then
             notify "No hard drives were found"
             return 1
         fi
