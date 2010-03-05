@@ -368,7 +368,7 @@ partition()
 	# invoke sfdisk
 	debug 'FS' "Partition calls: sfdisk $DEVICE -uM >$LOG 2>&1 <<< $sfdisk_input"
 	printk off
-	sfdisk $DEVICE -uM >$LOG 2>&1 <<EOF
+	sfdisk -D $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
     if [ $? -gt 0 ]; then
