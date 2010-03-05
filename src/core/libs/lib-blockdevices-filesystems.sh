@@ -141,8 +141,8 @@ finddisks() {
             [ "$2" ] && echo $2
         fi
     done  
-    #scsi/sata devices
-    for dev in $(ls | egrep '^sd'); do
+    #scsi/sata devices, and virtio blockdevices (/dev/vd*)
+    for dev in $(ls | egrep '^[sv]d'); do
         # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
             echo -n "/dev/$dev$3"
