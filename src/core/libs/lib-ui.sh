@@ -249,7 +249,7 @@ ask_password ()
 # $1 question
 # $2 default (optional)
 # $3 exitcode to use when string is empty and there was no default, or default was ignored (1 default)
-# echo's the string the user gave.
+# Sets $ANSWER_STRING to response.
 # returns 1 if the user cancelled, 0 otherwise
 ask_string ()
 {
