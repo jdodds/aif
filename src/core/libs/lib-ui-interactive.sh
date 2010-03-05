@@ -770,6 +770,7 @@ Note that right now the packages (and groups) selection is limited to the repos 
 
     # sort by group
     _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
+    [ -z "$_pkglist" ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
 	var_TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
