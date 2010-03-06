@@ -53,6 +53,7 @@ prefill_configs () {
 			sed -i '/^HOOKS/ s/keymap/usbinput keymap/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
 		fi
 	fi
+	# TODO: we should probably update /etc/crypttab if the user has non-/ encrypted disks.
 }
 
 interactive_configure_system()
@@ -71,7 +72,8 @@ interactive_configure_system()
 		[ -n "$FILE" ] &&  DEFAULT="$FILE"
 		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
-		ask_option $DEFAULT "Configuration" "$helptext" required \
+		grep -q dm_crypt $TMP_BLOCKDEVICES && crypt="/etc/crypttab Encryption_settings_for_non-root_encrypted_disks" # this simple grep will give some false positives. but oh well.
+		ask_option $DEFAULT "Configuration" "$helptext" required $crypt \
 		"/etc/rc.conf"                  "System Config" \
 		"/etc/fstab"                    "Filesystem Mountpoints" \
 		"/etc/mkinitcpio.conf"          "Initramfs Config" \
