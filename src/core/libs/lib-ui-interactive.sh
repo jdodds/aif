@@ -469,7 +469,13 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label/name for this $fs_type on $part" "$default" 0 #TODO: check that you can't give LV's labels that have been given already or the installer will break
+			ask_string "Enter the label/name for this $fs_type on $part (Mandatory for this type of FS!)" "$default" || return 1 #TODO: check that you can't give LV's labels that have been given already or the installer will break.
+			fs_label=$ANSWER_STRING
+		elif [ "$fs_create" == yes ] && [ "$fs_type" = ext2 -o "$fs_type" = ext3 -o "$fs_type" = ext4 -o "$fs_type" = reiserfs -o "$fs_type" = xfs -o "$fs_type" = jfs -o "$fs_type" = vfat ]
+		then
+			default=
+			[ -n "$fs_label" ] && default="$fs_label"
+			ask_string "Enter the label for this $fs_type on $part (optional)" "$default" 0
 			fs_label=$ANSWER_STRING
 		fi
 
