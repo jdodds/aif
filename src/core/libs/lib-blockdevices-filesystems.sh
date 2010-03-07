@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # FORMAT DEFINITIONS:
 
 # -- formats used to interface with this library --
@@ -28,8 +27,6 @@
 
 modprobe -q dm-crypt || show_warning modprobe 'Could not modprobe dm-crypt. no support for disk encryption'
 modprobe -q aes-i586 || modprobe -q aes-x86-64 || show_warning modprobe 'Could not modprobe aes-i586 or aes-x86-64. no support for disk encryption'
-
-
 
 TMP_DEV_MAP=$RUNTIME_DIR/aif-dev.map
 TMP_FSTAB=$RUNTIME_DIR/aif-fstab
@@ -873,5 +870,3 @@ mdraid_all-slaves ()
     done
     echo $slaves
 }
-
-
