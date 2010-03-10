@@ -17,6 +17,7 @@ export LC_COLLATE=C # for consistent sorting behavior
 
 # load the lib-ui, it is one we need everywhere so we must load it early.
 source $LIB_CORE/libs/lib-ui.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-ui.sh" >&2 && exit 2)
+ui_init
 # load the lib-flowcontrol. we also need some of it's functions early (like usage()).
 source $LIB_CORE/libs/lib-flowcontrol.sh || ( echo "Something went wrong while sourcing library $LIB_CORE/libs/lib-flowcontrol.sh" >&2 && exit 2)
 # lib-misc. we need it early, at least for check_is_in whis is used by the debug function.
@@ -106,6 +107,7 @@ do
 		[ -z "$OPTARG" ] && usage && exit 1 #TODO: check if it's necessary to do this. the ':' in $var_OPTS_STRING might be enough
 		[ "$OPTARG" != cli -a "$OPTARG" = !dia ] && die_error "-i must be dia or cli"
 		arg_ui_type=$OPTARG
+		ui_init
 		;;
 	d)
 		export DEBUG=1

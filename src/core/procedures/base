@@ -61,6 +61,7 @@ worker_sysprep ()
 worker_configure ()
 {
 	var_UI_TYPE=${arg_ui_type:-cli}
+	ui_init
 }
 
 

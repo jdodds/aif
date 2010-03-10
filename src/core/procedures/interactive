@@ -127,6 +127,7 @@ worker_intro ()
 worker_configure ()
 {
 	var_UI_TYPE=${arg_ui_type:-dia}
+	ui_init
 }
 
 

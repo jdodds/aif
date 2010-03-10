@@ -3,5 +3,6 @@
 start_process ()
 {
 	var_UI_TYPE=dia
+	ui_init
 	set_keymap	
 }

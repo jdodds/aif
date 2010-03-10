@@ -43,6 +43,7 @@ worker_intro ()
 worker_configure ()
 {
 	var_UI_TYPE=${arg_ui_type:-cli}
+	ui_init
 	[ -z "$var_AUTOMATIC_PROFILE" ] && die_error "You must specify a config file to use this procedure"
 	source $var_AUTOMATIC_PROFILE   || die_error "Could not source config $var_AUTOMATIC_PROFILE"
 	# Check mandatory options
