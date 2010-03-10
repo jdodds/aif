@@ -49,7 +49,6 @@ show_warning ()
 	debug 'UI' "show_warning '$1': $2 ($type)"
 	[ `type -t _${var_UI_TYPE}_show_warning` == function ] || die_error "_${var_UI_TYPE}_show_warning is not a function"
 	_${var_UI_TYPE}_show_warning "$1" "$2" $type
-	return 0
 }
 
 
