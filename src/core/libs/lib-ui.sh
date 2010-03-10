@@ -278,7 +278,7 @@ follow_progress ()
 # returns: whatever dialog did
 _dia_dialog()
 {
-	dialog --backtitle "$TITLE" --aspect 15 "$@"
+	dialog --backtitle "$TITLE" --aspect 15 "$@" 3>&1 1>&2 2>&3 3>&-
 }
 
 
@@ -320,7 +320,7 @@ _dia_ask_checklist ()
 		list="$list $1 $2 $3"
 		shift 3
 	done
-	ANSWER_CHECKLIST=$(_dia_dialog --checklist "$str" 0 0 0 $list 3>&1 1>&2 2>&3 3>&-)
+	ANSWER_CHECKLIST=$(_dia_dialog --checklist "$str" 0 0 0 $list)
 	local ret=$?
 	debug 'UI' "_dia_ask_checklist: user checked ON: $ANSWER_CHECKLIST"
 	return $ret
@@ -330,8 +330,8 @@ _dia_ask_checklist ()
 _dia_ask_datetime ()
 {
 	# display and ask to set date/time
-	local _date=$(dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 3>&1 1>&2 2>&3 3>&- || return 1) # form like: 07/12/2008
-	local _time=$(dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 3>&1 1>&2 2>&3 3>&- || return 1) # form like: 15:26:46
+	local _date=$(dialog --calendar "Set the date.\nUse <TAB> to navigate and arrow keys to change values." 0 0 0 0 0 || return 1) # form like: 07/12/2008
+	local _time=$(dialog --timebox "Set the time.\nUse <TAB> to navigate and up/down to change values." 0 0 || return 1) # form like: 15:26:46
 	debug 'UI' "Date as specified by user $_date time: $_time"
 
 	# DD/MM/YYYY hh:mm:ss -> MMDDhhmmYYYY.ss (date default format, set like date $ANSWER_DATETIME)  Not enabled because there is no use for it i think.
@@ -350,7 +350,7 @@ _dia_ask_number ()
 		[ -n $2 ] && str2="min $2"
 		[ -n $3 -a $3 != '0' ] && str2="$str2 max $3"
 		[ -n "$str2" ] && str="$str ( $str2 )"
-		ANSWER_NUMBER=$(_dia_dialog --inputbox "$str" 0 0 $4 3>&1 1>&2 2>&3 3>&-)
+		ANSWER_NUMBER=$(_dia_dialog --inputbox "$str" 0 0 $4)
 		local ret=$?
 		if [[ $ANSWER_NUMBER = *[^0-9]* ]] #TODO: handle exit state
 		then
@@ -388,7 +388,7 @@ _dia_ask_option ()
 	shift 4
 	CANCEL_LABEL=Cancel
 	[ $TYPE == optional ] && CANCEL_LABEL='Skip'
-	ANSWER_OPTION=$(_dia_dialog $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 0 0 0 "$@" 3>&1 1>&2 2>&3 3>&-)
+	ANSWER_OPTION=$(_dia_dialog $DEFAULT --cancel-label $CANCEL_LABEL --colors --title " $DIA_MENU_TITLE " --menu "$DIA_MENU_TEXT $EXTRA_INFO" 0 0 0 "$@")
 	local ret=$?
 	debug 'UI' "dia_ask_option: ANSWER_OPTION: $ANSWER_OPTION, returncode (skip/cancel): $ret ($DIA_MENU_TITLE)"
 	[ $TYPE == required ] && return $ret
@@ -407,7 +407,7 @@ _dia_ask_password ()
 		type_u=
 	fi
 
-	local ANSWER=$(_dia_dialog --passwordbox  "Enter your $type_l password" 8 65 "$2" 3>&1 1>&2 2>&3 3>&-)
+	local ANSWER=$(_dia_dialog --passwordbox  "Enter your $type_l password" 8 65 "$2")
 	local ret=$?
 	[ -n "$type_u" ] && read ${type_u}_PASSWORD <<< $ANSWER
 	[ -z "$type_u" ] && PASSWORD=$ANSWER
@@ -420,7 +420,7 @@ _dia_ask_password ()
 _dia_ask_string ()
 {
 	exitcode=${3:-1}
-	ANSWER_STRING=$(_dia_dialog --inputbox "$1" 0 0 "$2" 3>&1 1>&2 2>&3 3>&-)
+	ANSWER_STRING=$(_dia_dialog --inputbox "$1" 0 0 "$2")
 	local ret=$?
 	debug 'UI' "_dia_ask_string: user entered $ANSWER_STRING"
 	[ -z "$ANSWER_STRING" ] && return $exitcode
@@ -448,7 +448,7 @@ _dia_follow_progress ()
 	title=$1
 	logfile=$2
 
-	FOLLOW_PID=$(_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 3>&1 1>&2 2>&3 3>&-)
+	FOLLOW_PID=$(_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0)
 
 	# I wish something like this would work.  anyone who can explain me why it doesn't get's to be aif contributor of the month.
 	# FOLLOW_PID=`_dia_dialog --title "$1" --no-kill --tailboxbg "$2" 0 0 2>&1 >/dev/null | head -n 1`
