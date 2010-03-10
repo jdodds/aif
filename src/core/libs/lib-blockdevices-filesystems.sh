@@ -183,6 +183,17 @@ getuuid()
 }
 
 
+# parameters: device file
+# outputs:    LABEL on success
+#             nothing on failure
+# returns:    nothing
+getlabel()
+{
+	[ -z "$1" ] && die_error "getlabel needs an argument"
+	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s LABEL -o value ${1})"
+}
+
+
 # taken from setup script, slightly optimized and modified for separator control
 # $1 set to 1 to echo a newline after partition instead of a space (optional)
 # $2 extra things to echo for each partition (optional)
@@ -757,15 +768,23 @@ process_filesystem ()
 	# Add to temp fstab, if not already there.
 	if [ -n "$fs_mountpoint" -a "$fs_mount" = target ]
 	then
-		local _uuid="$(getuuid $part)"
-		if [ -n "${_uuid}" ]; then
-			_device="UUID=${_uuid}"
-		else
-			_device=$part
-		fi
-		if ! grep -q "$_device $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
+		case "$PART_ACCESS" in
+			label)
+				local _label="$(getlabel $part)"
+				if [ -n "${_label}" ]; then
+					part="LABEL=${_label}"
+				fi
+				;;
+			uuid)
+				local _uuid="$(getuuid $part)"
+				if [ -n "${_uuid}" ]; then
+					part="UUID=${_uuid}"
+				fi
+				;;
+		esac
+		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
-			echo -n "$_device $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
+			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
 			if [ "$fs_type" = "swap" ]; then
 				echo "0" >>$TMP_FSTAB
 			else

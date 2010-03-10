@@ -184,6 +184,12 @@ interactive_prepare_disks ()
 	NEXTITEM=
 	DISK_CONFIG_TYPE=
 	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
+	[ -z "$PART_ACCESS" ] && PART_ACCESS=dev
+	ask_option $PART_ACCESS 'Disk Access Method' 'How do you want your partitions to be accessed?' '' \
+		"dev"	"directly by /dev/sd??" \
+		"label"	"by Disk-Label" \
+		"uuid"	"by Universally Unique Identifier" || return 1
+	PART_ACCESS=$ANSWER_OPTION
 	while [ "$DONE" = "0" ]
 	do
 		rollbackstr=" (you don't need to do this)"
@@ -1087,11 +1093,21 @@ generate_grub_menulst() {
             # remove default entries by truncating file at our little tag (#-*)
             sed -i -e '/#-\*/q' $grubmenu
 
-        # attempt to use a UUID if the root device has one
-        local _uuid="$(getuuid ${_rootpart})"
-        if [ -n "${_uuid}" ]; then
-            _rootpart="/dev/disk/by-uuid/${_uuid}"
-        fi
+	# find label or uuid of the root partition
+	case $PART_ACCESS in
+		label)
+			local _label="$(getlabel $_rootpart)"
+			if [ -n "${_label}" ]; then
+			    _rootpart="/dev/disk/by-label/${_label}"
+			fi
+			;;
+		uuid)
+			local _uuid="$(getuuid $_rootpart)"
+			if [ -n "${_uuid}" ]; then
+			    _rootpart="/dev/disk/by-uuid/${_uuid}"
+			fi
+			;;
+	esac
 
 		# handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed automatically
 		kernel="kernel $subdir/vmlinuz26 root=${_rootpart} ro"
