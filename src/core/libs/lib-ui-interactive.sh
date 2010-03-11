@@ -154,7 +154,8 @@ interactive_time () {
                 "return" "Looks good. back to main menu" "${EXTRA[@]}" "manual" "Set time and date manually" || return 1
                 if [ "$ANSWER_OPTION" = ntp ]
                 then
-			if ntpdate pool.ntp.org >/dev/null 
+			infofy "Syncing clock with internet pool ..."
+			if ntpdate pool.ntp.org >/dev/null
 			then
 				notify "Synced clock with internet pool successfully."
 				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
