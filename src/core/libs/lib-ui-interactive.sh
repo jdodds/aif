@@ -164,7 +164,7 @@ interactive_time () {
 		fi
 		if [ "$ANSWER_OPTION" = manual ]
 		then
-			ask_datetime 
+			ask_datetime || continue
 			if date -s "$ANSWER_DATETIME"
 			then
 				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
