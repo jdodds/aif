@@ -12,6 +12,8 @@ target_configure_network()
 	PROXY_HTTP="$2"
 	PROXY_FTP="$3"
 	if [ "$1" = fixed ]; then
+		sed -i "s/#eth0=\"eth0/eth0=\"eth0/g"                                                 ${var_TARGET_DIR}/etc/rc.conf || return 1
+		sed -i "s/^eth0=\"dhcp/#eth0=\"dhcp/g"                                                ${var_TARGET_DIR}/etc/rc.conf || return 1
 		sed -i "s#eth0=\"eth0#${INTERFACE:-eth0}=\"${INTERFACE:-eth0}#g"                      ${var_TARGET_DIR}/etc/rc.conf || return 1
 		sed -i "s#${INTERFACE:-eth0} 192.168.0.2#${INTERFACE:-eth0} ${IPADDR:-192.168.0.2}#g" ${var_TARGET_DIR}/etc/rc.conf || return 1
 		sed -i "s#netmask 255.255.255.0#netmask ${SUBNET:-255.255.255.0}#g"                   ${var_TARGET_DIR}/etc/rc.conf || return 1
@@ -25,7 +27,9 @@ target_configure_network()
 			echo "nameserver $DNS" >> ${var_TARGET_DIR}/etc/resolv.conf || return 1
 		fi
 	else
-		sed -i "s#eth0=\"eth0.*#${INTERFACE:-eth0}=\"dhcp\"#g"                                ${var_TARGET_DIR}/etc/rc.conf || return 1
+		sed -i "s/^eth0=\"eth0/#eth0=\"eth0/g"                                                ${var_TARGET_DIR}/etc/rc.conf || return 1
+		sed -i "s/#eth0=\"dhcp/eth0=\"dhcp/g"                                                 ${var_TARGET_DIR}/etc/rc.conf || return 1
+		sed -i "s#eth0=\"dhcp#${INTERFACE:-eth0}=\"dhcp#g"                                    ${var_TARGET_DIR}/etc/rc.conf || return 1
 	fi
 	sed -i "s#INTERFACES=(eth0)#INTERFACES=(${INTERFACE:-eth0})#g"                                ${var_TARGET_DIR}/etc/rc.conf || return 1
 
