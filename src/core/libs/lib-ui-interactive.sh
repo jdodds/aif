@@ -485,8 +485,8 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
-			ask_string "Enter the label for this $fs_type on $part (optional)" "$default" 0
-			fs_label=$ANSWER_STRING
+			ask_string "Enter the label for this $fs_type on $part (optional) [keep it short and don't use spaces]" "$default" 0
+			fs_label=${ANSWER_STRING// } # strip spaces to prevent problems in our bash code and to keep things simple.
 		fi
 
 		# ask special params, if relevant
