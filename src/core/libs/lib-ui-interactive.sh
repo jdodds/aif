@@ -186,10 +186,10 @@ interactive_prepare_disks ()
 	DISK_CONFIG_TYPE=
 	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
 	[ -z "$PART_ACCESS" ] && PART_ACCESS=dev
-	ask_option $PART_ACCESS 'Disk Access Method' 'How do you want your partitions to be accessed?' '' \
-		"dev"	"directly by /dev/sd??" \
-		"label"	"by Disk-Label" \
-		"uuid"	"by Universally Unique Identifier" || return 1
+	ask_option $PART_ACCESS 'Partition Access Method' 'How do you want your partitions to be accessed in grubs menu.lst and /etc/fstab?' '' \
+		"dev"	"directly by /dev/* (most intuitive but devicefile names can change on kernel updates)" \
+		"label"	"by Disk-Label (Will use the filesystem labels where you give them, and fall back on 'dev' otherwise)" \
+		"uuid"	"by Universally Unique Identifier (You don't need to do anything, but doesn't look pretty)" || return 1
 	PART_ACCESS=$ANSWER_OPTION
 	while [ "$DONE" = "0" ]
 	do
