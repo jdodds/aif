@@ -753,7 +753,7 @@ interactive_filesystems() {
 interactive_select_packages() {
 
 	# set up our install location if necessary and sync up so we can get package lists
-	target_prepare_pacman || ( show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors." && return 1 )
+	target_prepare_pacman || { show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors."; return 1; }
 
 	repos=`list_pacman_repos target`
 	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n

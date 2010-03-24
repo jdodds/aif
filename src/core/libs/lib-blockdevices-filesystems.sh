@@ -742,7 +742,7 @@ process_filesystem ()
 			# don't handle anything else here, we will error later
 		esac
 		BLOCK_ROLLBACK_USELESS=0
-		[ "$ret" -gt 0 ] && ( show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part." ; return 1 )
+		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part."; return 1; }
 		sleep 2
 	fi
 
