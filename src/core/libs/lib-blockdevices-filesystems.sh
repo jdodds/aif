@@ -179,7 +179,7 @@ finddisks() {
 getuuid()
 {
 	[ -z "$1" ] && die_error "getuuid needs an argument"
-	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s UUID -o value ${1})"  
+	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s UUID -o value ${1})"
 }
 
 
@@ -719,7 +719,7 @@ process_filesystem ()
 		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
 		#TODO: health checks on $fs_params etc
-		case ${fs_type} in #TODO: implement label, opts etc decently
+		case ${fs_type} in #TODO implement options (opts, fs_opts, whatever)
 			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
 			jfs)      yes | mkfs.jfs $part        $opts >$LOG 2>&1; ret=$? ;;
 			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
@@ -727,7 +727,12 @@ process_filesystem ()
 			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
 			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
 			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
-			swap)     mkswap $part                $opts >$LOG 2>&1; ret=$? ;;
+			swap)     if [ -z "$fs_label" ]; then
+				  	mkswap $part          $opts >$LOG 2>&1; ret=$?
+				  else
+				  	mkswap -L $fs_label $part $opts >$LOG 2>&1; ret=$?
+				  fi
+				  ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
 			          fs_params=${fs_params//_/ }
                       infofy "Please enter your passphrase to encrypt the device (with confirmation)"
@@ -744,6 +749,27 @@ process_filesystem ()
 		BLOCK_ROLLBACK_USELESS=0
 		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part."; return 1; }
 		sleep 2
+	fi
+
+	if [ -n "$fs_label" ]
+	then
+		if [ "$fs_type" = xfs ]
+		then
+			xfs_admin -L $fs_label $part		>$LOG 2>&1; ret=$?
+		elif [ "$fs_type" = jfs ]
+		then
+			jfs_tune -L $fs_label $part		>$LOG 2>&1; ret=$?
+		elif [ "$fs_type" = reiserfs ]
+		then
+			reiserfstune -l $fs_label $part		>$LOG 2>&1; ret=$?
+		elif [ "$fs_type" = ext2 -o "$fs_type" = ext3 -o "$fs_type" = ext4 ]
+		then
+			tune2fs -L $fs_label $part		>$LOG 2>&1; ret=$?
+		elif [ "$fs_type" = vfat ]
+		then
+			dosfslabel $part $fs_label		>$LOG 2>&1; ret=$?
+		fi
+		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error setting label $fs_label on $part." ; return 1; }
 	fi
 
 	# Mount it, if requested.  Note that it's your responsability to figure out if you want this or not before calling me.  This will only work for 'raw' filesystems (ext,reiser,xfs, swap etc. not lvm stuff,dm_crypt etc)
