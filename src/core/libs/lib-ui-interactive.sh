@@ -301,6 +301,7 @@ interactive_autoprepare()
 
 	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
 
+	PART_ACCESS=uuid
 
 	process_disks       || die_error "Something went wrong while partitioning"
 	if ! process_filesystems
