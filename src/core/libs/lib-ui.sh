@@ -1,12 +1,18 @@
 #!/bin/bash
 # Note that $var_UI_TYPE may not be set here. especially if being loaded in the "early bootstrap" phase
 
-source /usr/lib/lib-ui.sh
+source /usr/lib/libui.sh
 
 # mandatory to call me when you want to use me. call me again after setting $var_UI_TYPE
 ui_init ()
 {
-	lib-ui-sh-init $RUNTIME_DIR $var_UI_TYPE
+	cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
+	if [ "$LOG_TO_FILE" ]; then
+		logs=($LOG $LOGFILE)
+	else
+		logs=$LOG
+	fi
+	libui-sh-init $var_UI_TYPE $RUNTIME_DIR "${logs[*]}" "${cats[*]}"
 
 	# get keymap/font (maybe configured by aif allready in another process or even in another shell)
 	# otherwise, take default keymap and consolefont as configured in /etc/rc.conf. can be overridden
