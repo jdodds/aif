@@ -80,14 +80,12 @@ wait_for ()
 check_is_in ()
 {
 	[ -z "$1" ] && die_error "check_is_in needs a non-empty needle as \$1 and a haystack as \$2!(got: check_is_in '$1' '$2'" # haystack can be empty though
-	NEEDLE=$1
-	HAYSTACK=$2
 
-	local pattern="$NEEDLE" element
+	local needle="$1" element
 	shift
 	for element
 	do
-		[[ $element = $pattern ]] && return 0
+		[[ $element = $needle ]] && return 0
 	done
 	return 1
 }
