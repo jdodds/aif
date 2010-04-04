@@ -8,11 +8,11 @@ ui_init ()
 {
 	cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
 	if [ "$LOG_TO_FILE" ]; then
-		logs=($LOG $LOGFILE)
+		logs="$LOG $LOGFILE"
 	else
 		logs=$LOG
 	fi
-	libui-sh-init $var_UI_TYPE $RUNTIME_DIR "${logs[*]}" "${cats[*]}"
+	libui-sh-init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs" "${cats[@]}"
 
 	# get keymap/font (maybe configured by aif allready in another process or even in another shell)
 	# otherwise, take default keymap and consolefont as configured in /etc/rc.conf. can be overridden
