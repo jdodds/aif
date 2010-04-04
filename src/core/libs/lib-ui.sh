@@ -7,7 +7,7 @@ source /usr/lib/libui.sh
 ui_init ()
 {
 	cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
-	if [ "$LOG_TO_FILE" ]; then
+	if [ $LOG_TO_FILE -eq 1 ]; then
 		logs="$LOG $LOGFILE"
 	else
 		logs=$LOG
