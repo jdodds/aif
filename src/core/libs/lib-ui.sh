@@ -12,7 +12,11 @@ ui_init ()
 	else
 		logs=$LOG
 	fi
-	libui-sh-init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs" "${cats[@]}"
+	if [ "$DEBUG" = '1' ]; then
+		libui-sh-init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs" "${cats[@]}"
+	else
+		libui-sh-init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs"
+	fi
 
 	# get keymap/font (maybe configured by aif allready in another process or even in another shell)
 	# otherwise, take default keymap and consolefont as configured in /etc/rc.conf. can be overridden
