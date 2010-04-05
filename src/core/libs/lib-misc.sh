@@ -15,6 +15,10 @@ run_controlled ()
 	[ -z "$3" ] && die_error "run_controlled needs a logfile to redirect output to!"
 	[ -z "$4" ] && die_error "run_controlled needs a title to show while your process is running!"
 	
+	log_parent=$(dirname $3)
+	if [ ! -d $log_parent ]; then
+		mkdir -p $log_parent || die_error "Could not create $log_parent, we were asked to log $1 to $3"
+	fi
 	if [ "$var_UI_TYPE" = dia ]
 	then
 		run_background $1 "$2" $3
@@ -40,6 +44,11 @@ run_background ()
 	[ -z "$1" ] && die_error "run_background: please specify an identifier to keep track of the command!"
 	[ -z "$2" ] && die_error "run_background needs a command to execute!"
 	[ -z "$3" ] && die_error "run_background needs a logfile to redirect output to!"
+
+	log_parent=$(dirname $3)
+	if [ ! -d $log_parent ]; then
+		mkdir -p $log_parent || die_error "Could not create $log_parent, we were asked to log $1 to $3"
+	fi
 
 	debug 'MISC' "run_background called. identifier: $1, command: $2, logfile: $3"
 	( \
