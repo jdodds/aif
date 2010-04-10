@@ -599,7 +599,7 @@ interactive_filesystems() {
 			renew_blockdevices=0
 		fi
 	fi
-	[ "$renew_blockdevices" = 1 ] && findpartitions 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
+	[ "$renew_blockdevices" = 1 ] && findblockdevices 0 'no_fs' ' raw no_label' > $TMP_BLOCKDEVICES
 
 	[ -z "$PART_ACCESS" ] && PART_ACCESS=dev
 	ask_option $PART_ACCESS 'Partition Access Method' 'How do you want your partitions to be accessed in grubs menu.lst and /etc/fstab?' '' \
@@ -929,7 +929,7 @@ interactive_grub() {
         interactive_grub_menulst
 
         DEVS=$(finddisks 1 _)
-        DEVS="$DEVS $(findpartitions 1 _)"
+        DEVS="$DEVS $(findblockdevices 1 _)"
         if [ "$DEVS" = " " ]; then
             notify "No hard drives were found"
             return 1
