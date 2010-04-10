@@ -203,6 +203,9 @@ findpartitions() {
 	for devpath in $(finddisks)
 	do
 		disk=$(echo $devpath | sed 's|.*/||')
+		echo -n "/dev/$disk$3"
+		[ "$1" = 1 ] && echo || echo -n ' '
+		[ "$2" ] && echo $2
 		cd /sys/block/$disk   
 		for part in $disk*
 		do
