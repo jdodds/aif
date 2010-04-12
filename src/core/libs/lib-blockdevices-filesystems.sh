@@ -749,6 +749,10 @@ process_filesystem ()
 			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
 		esac
+		# The udevadm settle is a workaround for a bug/racecondition in cryptsetup. See:
+		# http://mailman.archlinux.org/pipermail/arch-releng/2010-April/000974.html
+		# It may not be needed (anymore), or not after every type of FS, but we're rather safe then sorry. and it seems to always return in less then a second
+		udevadm settle
 		BLOCK_ROLLBACK_USELESS=0
 		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error creating filesystem $fs_type on $part."; return 1; }
 		sleep 2
