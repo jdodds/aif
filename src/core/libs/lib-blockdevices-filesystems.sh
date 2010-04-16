@@ -65,12 +65,12 @@ target_special_fs ()
 # Disable swap and umount all mounted filesystems for the target system in the correct order. (eg first $var_TARGET_DIR/a/b/c, then $var_TARGET_DIR/a/b, then $var_TARGET_DIR/a until lastly $var_TARGET_DIR
 target_umountall()
 {
-	infofy "Disabling all swapspace..." disks
+	inform "Disabling all swapspace..." disks
 	swapoff -a >/dev/null 2>&1
 	declare target=${var_TARGET_DIR//\//\\/} # escape all slashes otherwise awk complains
 	for mountpoint in $(mount | awk "/\/$target/ {print \$3}" | sort | tac )
 	do
-		infofy "Unmounting mountpoint $mountpoint" disks
+		inform "Unmounting mountpoint $mountpoint" disks
 		umount $mountpoint >/dev/null 2>$LOG
 	done
 }
@@ -268,7 +268,7 @@ findblockdevices() {
 # taken from setup
 get_grub_map() {
 	rm $TMP_DEV_MAP &>/dev/null #TODO: this doesn't exist? is this a problem? ASKDEV
-	infofy "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
+	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
 	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
@@ -405,7 +405,7 @@ process_disks ()
 
 process_disk ()
 {
-	infofy "Partitioning $1" disks
+	inform "Partitioning $1" disks
 	partition $1 "$2"
 }
 
@@ -452,7 +452,7 @@ process_filesystems ()
 	# phase 1: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 	# don't let them mount yet. we take care of all that ourselves in the next phase
 
-	infofy "Phase 1: Creating filesystems & blockdevices" disks
+	inform "Phase 1: Creating filesystems & blockdevices" disks
 	done_filesystems=
 	for i in `seq 1 10`
 	do
@@ -470,17 +470,17 @@ process_filesystems ()
 					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
-						infofy "Making $fs_type filesystem on $part" disks
+						inform "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
-						infofy "Making $fs_type filesystem on $part" disks
+						inform "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
-						infofy "Making $fs_type filesystem on $part" disks
+						inform "Making $fs_type filesystem on $part" disks
 						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
 					else
 						debug 'FS' "$fs_id ->Cannot do right now..."
@@ -497,22 +497,22 @@ process_filesystems ()
 
 	# phase 2: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 
-	infofy "Phase 2: Mounting filesystems" disks
+	inform "Phase 2: Mounting filesystems" disks
 	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
-			infofy "Mounting $part ($fs_type) on $fs_mountpoint" disks
+			inform "Mounting $part ($fs_type) on $fs_mountpoint" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		elif [ "$fs_type" = swap ]
 		then
-			infofy "Swaponning $part" disks
+			inform "Swaponning $part" disks
 			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
 		fi
 	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
 	BLOCK_ROLLBACK_USELESS=0
-	[ $returncode -eq 0 ] && infofy "Done processing filesystems/blockdevices" disks 1 && return 0
+	[ $returncode -eq 0 ] && inform "Done processing filesystems/blockdevices" disks 1 && return 0
 	return $returncode
 }
 
@@ -520,7 +520,7 @@ process_filesystems ()
 # Roll back all "filesystems" (normal ones and dm-mapper based stuff) specified in $BLOCK_DATA.  Not partitions.  Doesn't restore data after you erased it, of course.
 rollback_filesystems ()
 {
-	infofy "Rolling back filesystems..." disks
+	inform "Rolling back filesystems..." disks
 	generate_filesystem_list
 	local warnings=
 	rm -f $TMP_FSTAB
@@ -528,20 +528,20 @@ rollback_filesystems ()
 	# phase 1: destruct all mounts in the vfs and swapoff swap volumes who are listed in $BLOCK_DATA
 	# re-order list so that we umount in the correct order. eg first umount /a/b/c, then /a/b. we sort alphabetically, which has the side-effect of sorting by stringlength, hence by vfs dependencies.
 
-	infofy "Phase 1: Umounting all specified mountpoints" disks
+	inform "Phase 1: Umounting all specified mountpoints" disks
 	done_umounts= # We translate some devices back to their original (eg /dev/sda3+ -> /dev/sda3 for lvm PV's). No need to bother user twice for such devices.
 	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
 		if [ "$fs_type" = swap ]
 		then
-			infofy "(Maybe) Swapoffing $part" disks
+			inform "(Maybe) Swapoffing $part" disks
 			swapoff $part &>/dev/null # could be that it was not swappedon yet.  that's not a problem at all.
 		elif [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			part_real=${part/+/}
 			if ! check_is_in "$part_real" "${done_umounts[@]}"
 			then
-				infofy "(Maybe) Umounting $part_real" disks
+				inform "(Maybe) Umounting $part_real" disks
 				if mount | grep -q "^$part_real " # could be that this was not mounted yet. no problem, we can just skip it then.
 				then
 					if umount $part_real >$LOG
@@ -566,7 +566,7 @@ rollback_filesystems ()
 	#                      -> easier (implemented)
 
 
-	infofy "Phase 2: destructing relevant blockdevices" disks
+	inform "Phase 2: destructing relevant blockdevices" disks
 	for i in `seq 1 10`
 	do
 		open_items=0
@@ -580,7 +580,7 @@ rollback_filesystems ()
 			# there is probably a nice regex to check this but i'm bad at regexes.
 			if echo "$fs_string" | grep -q ';yes;/' || echo "$fs_string" | grep -q ';yes;no_mountpoint'
 			then
-				infofy "Skipping destruction of $part ($part_type) because one of the filesystems on it contains data you want to keep"
+				inform "Skipping destruction of $part ($part_type) because one of the filesystems on it contains data you want to keep"
 				# TODO: it's possible that if we don't clear a blockdevice here because there is something on it with valuable data, that this blockdevice itself is hosted on some other blockdevice (eg lvm VG,PV or dm_crypt), \
 				#       that blockdevice cannot be cleared as well because it depends on this one, so after 10 iterations the user will get a warning that not everything is cleared.  so we should fix this someday.
 			elif [ "$part_type" = dm_crypt ] # Can be in use for: lvm-pv or raw. we don't need to care about raw (it will be unmounted so it can be destroyed)
@@ -592,7 +592,7 @@ rollback_filesystems ()
 						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
+						inform "Attempting destruction of device $part (type $part_type)" disks
 						if ! cryptsetup luksClose $real_part &>$LOG
 						then
 							warnings="$warnings\nCould not cryptsetup luksClose $real_part"
@@ -611,7 +611,7 @@ rollback_filesystems ()
 						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
+						inform "Attempting destruction of device $part (type $part_type)" disks
 						if ! pvremove $real_part &>$LOG
 						then
 							warnings="$warnings\nCould not pvremove $part"
@@ -631,7 +631,7 @@ rollback_filesystems ()
 						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
+						inform "Attempting destruction of device $part (type $part_type)" disks
 						if ! vgremove $part &>$LOG # we shouldn't need -f because we clean up the lv's first.
 						then
 							warnings="$warnings\nCould not vgremove $part"
@@ -650,7 +650,7 @@ rollback_filesystems ()
 						debug 'FS' "$part ->Cannot do right now..."
 						open_items=1
 					else
-						infofy "Attempting destruction of device $part (type $part_type)" disks
+						inform "Attempting destruction of device $part (type $part_type)" disks
 						if ! lvremove -f $part &>$LOG
 						then
 							warnings="$warnings\nCould not lvremove -f $part"
@@ -672,8 +672,8 @@ rollback_filesystems ()
 		warnings="$warnings\nCould not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
 		show_warning "Filesystem/blockdevice processor problem" "Warning: Could not destruct all filesystems/blockdevices.  It appears some depending filesystems/blockdevices could not be cleared in 10 iterations"
 	fi
-	[ -n "$warnings" ] && infofy "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
-	infofy "Rollback succeeded" disks 1
+	[ -n "$warnings" ] && inform "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
+	inform "Rollback succeeded" disks 1
 	done_filesystems=
 	BLOCK_ROLLBACK_USELESS=1
 	return 0
@@ -738,9 +738,9 @@ process_filesystem ()
 				  ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
 			          fs_params=${fs_params//_/ }
-                      infofy "Please enter your passphrase to encrypt the device (with confirmation)"
+                      inform "Please enter your passphrase to encrypt the device (with confirmation)"
 			          cryptsetup $fs_params $opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
-                      infofy "Please enter your passphrase to unlock the device"
+                      inform "Please enter your passphrase to unlock the device"
 			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
 			lvm-pv)   pvcreate $fs_opts $part              >$LOG 2>&1; ret=$? ;;
 			lvm-vg)   # $fs_params: ':'-separated list of PV's

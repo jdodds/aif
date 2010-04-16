@@ -78,6 +78,6 @@ target_configure_initial_locale()
 
 target_locale-gen ()
 {
-	infofy "Generating glibc base locales..."
+	inform "Generating glibc base locales..."
 	chroot ${var_TARGET_DIR} locale-gen >/dev/null
 }

@@ -121,7 +121,7 @@ interactive_configure_system()
 interactive_timezone () {
 	ask_timezone || return 1
         TIMEZONE=$ANSWER_TIMEZONE
-        infofy "Setting Timezone to $TIMEZONE"
+        inform "Setting Timezone to $TIMEZONE"
 		if [ -n "$TIMEZONE" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
 		then
 			# This changes probably also the systemtime (UTC->$TIMEZONE)!
@@ -154,7 +154,7 @@ interactive_time () {
                 "return" "Looks good. back to main menu" "${EXTRA[@]}" "manual" "Set time and date manually" || return 1
                 if [ "$ANSWER_OPTION" = ntp ]
                 then
-			infofy "Syncing clock with internet pool ..."
+			inform "Syncing clock with internet pool ..."
 			if ntpdate pool.ntp.org >/dev/null
 			then
 				notify "Synced clock with internet pool successfully."
@@ -222,7 +222,7 @@ interactive_prepare_disks ()
 				then
 					if rollback_filesystems #TODO: this part doesn't belong here. move it to ui-interactive. (interactive_rollback)
 					then
-						infofy "Rollback succeeded"
+						inform "Rollback succeeded"
 					else
 						show_warning "Rollback failed" "Rollback failed"
 					fi
@@ -811,7 +811,7 @@ interactive_runtime_network() {
 
     if ask_yesno "Do you want to use DHCP?"
     then
-        infofy "Please wait.  Polling for DHCP server on $INTERFACE..."
+        inform "Please wait.  Polling for DHCP server on $INTERFACE..."
         dhcpcd -k $INTERFACE >$LOG 2>&1
         if ! dhcpcd $INTERFACE >$LOG 2>&1
         then

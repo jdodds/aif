@@ -112,13 +112,13 @@ cleanup_runtime ()
 # $2 direction (systohc or hctosys)
 dohwclock() {
 	# TODO: we probably only need to do this once and then actually use adjtime on next invocations
-	infofy "Resetting hardware clock adjustment file"
+	inform "Resetting hardware clock adjustment file"
 	[ ! -d /var/lib/hwclock ] && mkdir -p /var/lib/hwclock
 	if [ ! -f /var/lib/hwclock/adjtime ]; then
 		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime
 	fi
 
-	infofy "Syncing clocks ($2), hc being $1 ..."
+	inform "Syncing clocks ($2), hc being $1 ..."
 	if [ "$1" = "UTC" ]; then
 		hwclock --$2 --utc
 	else

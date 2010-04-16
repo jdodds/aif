@@ -20,7 +20,7 @@ TARGET_PACKAGES=openssh  # you can also specify separate packages to install (th
 
 # you can optionally also override some functions...
 worker_intro () {
-	infofy "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	inform "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
 	sleep 10
 }
 

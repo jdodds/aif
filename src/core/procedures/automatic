@@ -75,7 +75,7 @@ worker_runtime_network ()
 	#then
 	#	interactive_runtime_network
 	#else
-	#	infofy "Ok. skipping network config"
+	#	inform "Ok. skipping network config"
 	#fi
 }
 
@@ -92,7 +92,7 @@ worker_prepare_disks ()
 		rollback_filesystems && txt='ended successfully'
 		die_error "Something failed while processing the filesystem.  A rollback was executed, which $txt"
 	fi
-	infofy "Partitions and filesystems made successfully"
+	inform "Partitions and filesystems made successfully"
 
 	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
 	true	

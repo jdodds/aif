@@ -14,7 +14,7 @@ TARGET_PACKAGES=openssh
 
 # you can optionally also override some functions...
 worker_intro () {
-	infofy "Automatic procedure running the fancy-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	inform "Automatic procedure running the fancy-install-on-sda example config. this will install a system with lvm on top of dm_crypt.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
 	sleep 10
 }
 
