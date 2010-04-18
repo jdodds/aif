@@ -22,7 +22,7 @@ SVN_BASE=https://192.168.1.2/svn/repos
 var_PARTITIONS='/dev/sda 100:ext2:+ 2048:swap *:xfs'
 var_BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
 /dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
-/dev/sda3 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c_aes-xts-plain_-y_-s_512
+/dev/sda3 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda3crypt;-c__aes-xts-plain__-y__-s__512
 /dev/mapper/sda3crypt dm_crypt no_label lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
 /dev/mapper/sda3crypt+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;cryptpool;/dev/mapper/sda3crypt
 /dev/mapper/cryptpool lvm-vg cryptpool lvm-lv;yes;no_mountpoint;target;no_opts;cryptroot;5G|lvm-lv;yes;no_mountpoint;target;no_opts;crypthome;5G

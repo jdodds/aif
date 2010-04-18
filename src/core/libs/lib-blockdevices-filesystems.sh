@@ -17,10 +17,11 @@
 #    NOTE: filesystems that span multiple underlying filesystems/devices (eg lvm VG) should specify those in params, separated by colons.  \
 #          the <blockdevice> in the beginning doesn't matter much, it can be pretty much any device, or not existent, i think.  But it's probably best to make it one of the devices listed in params
 #          no '+' characters allowed for devices in $fs_params (eg use the real names)
-
+#    NOTE: if you want spaces in params or opts, you must "encode" them by replacing them with 2 underscores.
 
 # -- ADDITIONAL INTERNAL FORMATS --
 # $TMP_FILESYSTEMS: each filesystem on a separate line, so block devices can appear multiple times be on multiple lines (eg LVM volumegroups with more lvm LV's)
+# uses spaces for separation (so you can easily do 'while.. read' loops. so fs_params and fs_opts are encoded here also
 # part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 
 
@@ -410,6 +411,7 @@ process_disk ()
 }
 
 # $1 fs_string
+# $2 decode yes/no
 parse_filesystem_string ()
 {
 	fs="$1"
@@ -420,6 +422,16 @@ parse_filesystem_string ()
 	fs_opts=`       cut -d ';' -f 5 <<< $fs`
 	fs_label=`      cut -d ';' -f 6 <<< $fs`
 	fs_params=`     cut -d ';' -f 7 <<< $fs`
+	if [ "$2" == 'yes' ]; then
+		fs_opts="${fs_opts//__/ }"
+		fs_params="${fs_params//__/ }"
+		[ "$fs_type"       = no_type       ] && fs_type=
+		[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=
+		[ "$fs_mount"      = no_mount      ] && fs_mount=
+		[ "$fs_opts"       = no_opts       ] && fs_opts=
+		[ "$fs_label"      = no_label      ] && fs_label=
+		[ "$fs_params"     = no_params     ] && fs_params=
+	fi
 }
 
 
@@ -477,7 +489,7 @@ process_filesystems ()
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						inform "Making $fs_type filesystem on $part" disks
 						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
-					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//:/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
+					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//__/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						inform "Making $fs_type filesystem on $part" disks
@@ -681,6 +693,7 @@ rollback_filesystems ()
 
 
 # make a filesystem on a blockdevice and mount if needed.
+# parameters: (all encoded)
 # $1 partition
 # $2 fs_type
 # $3 fs_create     (optional. defaults to yes)
@@ -696,20 +709,8 @@ process_filesystem ()
 	[ -z "$2" ]              && die_error "process_filesystem needs a filesystem type as \$2"
 	debug 'FS' "process_filesystem $@"
 	local ret=0
-
-        part=$1
-        fs_type=$2
-	fs_create=${3:-yes}
-	fs_mountpoint=${4:-no_mountpoint}
-	fs_mount=${5:-no_mount}
-	fs_opts=${6:-no_opts}
-	fs_label=${7:-no_label}
-	fs_params=${8:-no_params}
-	[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=
-	[ "$fs_mount"      = no_mount      ] && fs_mount=
-	[ "$fs_opts"       = no_opts       ] && fs_opts=
-	[ "$fs_label"      = no_label      ] && fs_label=
-	[ "$fs_params"     = no_params     ] && fs_params=
+	part=$1
+	parse_filesystem_string "$2;$3;$4;$5;$6;$7;$8" yes
 
 	# Create the FS
 	if [ "$fs_create" = yes ]
@@ -722,31 +723,30 @@ process_filesystem ()
 		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
 		#TODO: health checks on $fs_params etc
-		case ${fs_type} in #TODO implement options (opts, fs_opts, whatever)
-			xfs)      mkfs.xfs -f $part           $opts >$LOG 2>&1; ret=$? ;;
-			jfs)      yes | mkfs.jfs $part        $opts >$LOG 2>&1; ret=$? ;;
-			reiserfs) yes | mkreiserfs $part      $opts >$LOG 2>&1; ret=$? ;;
-			ext2)     mke2fs "$part"              $opts >$LOG 2>&1; ret=$? ;;
-			ext3)     mke2fs -j $part             $opts >$LOG 2>&1; ret=$? ;;
-			ext4)     mkfs.ext4 $part             $opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
-			vfat)     mkfs.vfat $part             $opts >$LOG 2>&1; ret=$? ;;
+		case ${fs_type} in 
+			xfs)      mkfs.xfs -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
+			jfs)      yes | mkfs.jfs $part        $fs_opts >$LOG 2>&1; ret=$? ;;
+			reiserfs) yes | mkreiserfs $part      $fs_opts >$LOG 2>&1; ret=$? ;;
+			ext2)     mke2fs "$part"              $fs_opts >$LOG 2>&1; ret=$? ;;
+			ext3)     mke2fs -j $part             $fs_opts >$LOG 2>&1; ret=$? ;;
+			ext4)     mkfs.ext4 $part             $fs_opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
+			vfat)     mkfs.vfat $part             $fs_opts >$LOG 2>&1; ret=$? ;;
 			swap)     if [ -z "$fs_label" ]; then
-				  	mkswap $part          $opts >$LOG 2>&1; ret=$?
+				  	mkswap $part          $fs_opts >$LOG 2>&1; ret=$?
 				  else
-				  	mkswap -L $fs_label $part $opts >$LOG 2>&1; ret=$?
+				  	mkswap -L $fs_label $part $fs_opts >$LOG 2>&1; ret=$?
 				  fi
 				  ;;
 			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
-			          fs_params=${fs_params//_/ }
                       inform "Please enter your passphrase to encrypt the device (with confirmation)"
-			          cryptsetup $fs_params $opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
+			          cryptsetup $fs_params $fs_opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
                       inform "Please enter your passphrase to unlock the device"
 			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
 			lvm-pv)   pvcreate $fs_opts $part              >$LOG 2>&1; ret=$? ;;
-			lvm-vg)   # $fs_params: ':'-separated list of PV's
-			          vgcreate $fs_opts $fs_label ${fs_params//:/ }      >$LOG 2>&1; ret=$? ;;
+			lvm-vg)   # $fs_params: list of PV's
+			          vgcreate $fs_opts $fs_label $fs_params      >$LOG 2>&1; ret=$? ;;
 			lvm-lv)   # $fs_params = size string (eg '5G')
-			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
+			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
 		esac
 		# The udevadm settle is a workaround for a bug/racecondition in cryptsetup. See:

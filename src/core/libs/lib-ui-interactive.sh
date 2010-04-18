@@ -357,6 +357,7 @@ interactive_partition() {
 # but I think it's better to go through them all and by default always show the previous choice.
 interactive_filesystem ()
 {
+	# note: fs_mount: we dont need to ask this to the user. this is always 'target' for 99.99% of the users
 	local part=$1       # must be given and (scheduled to become) a valid device -> don't do [ -b "$1" ] because the device might not exist *yet*
 	local part_type=$2  # a part should always have a type
 	local part_label=$3 # can be empty
@@ -371,26 +372,14 @@ interactive_filesystem ()
 	NEW_FILESYSTEM=
 	if [ -n "$fs_string" ]
 	then
-		fs_type=`       cut -d ';' -f 1 <<< $fs_string`
-		fs_create=`     cut -d ';' -f 2 <<< $fs_string` #not asked for to the user. this is always 'yes' for now
-		fs_mountpoint=` cut -d ';' -f 3 <<< $fs_string`
-		fs_mount=`      cut -d ';' -f 4 <<< $fs_string` #we dont need to ask this to the user. this is always 'target' for 99.99% of the users
-		fs_opts=`       cut -d ';' -f 5 <<< $fs_string`
-		fs_label=`      cut -d ';' -f 6 <<< $fs_string`
-		fs_params=`     cut -d ';' -f 7 <<< $fs_string`
-		[ "$fs_type"   = no_type             ] && fs_type=
-		[ "$fs_mountpoint"  = no_mountpoint  ] && fs_mountpoint=
-		[ "$fs_mount"  = no_mount            ] && fs_mount=
-		[ "$fs_opts"   = no_opts             ] && fs_opts=
-		[ "$fs_label"  = no_label            ] && fs_label=
-		[ "$fs_params" = no_params           ] && fs_params=
+		parse_filesystem_string "$fs_string" yes
 		local old_fs_type=$fs_type
 		local old_fs_create=$fs_create
 		local old_fs_mountpoint=$fs_mountpoint
 		local old_fs_mount=$fs_mount
-		local old_fs_opts=$fs_opts
+		local old_fs_opts="$fs_opts"
 		local old_fs_label=$fs_label
-		local old_fs_params=$fs_params
+		local old_fs_params="$fs_params"
 
 		ask_option edit "Change $fs_type filesystem settings on $part ?" \
 		                "Change $fs_type filesystem settings (create:$fs_create, label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
@@ -488,9 +477,13 @@ interactive_filesystem ()
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
 			pv=${part/+/}
-			grep -q ":$pv:" <<< $fs_params || grep -q ":$pv\$" <<< $fs_params || fs_params="$fs_params:$pv"
+			if ! egrep -q "$pv(\$| )" <<< "$fs_params"; then
+			   [ -n "$fs_params" ] && fs_params="$fs_params "
+			   fs_params="$fs_params$pv"
+		   fi   
+
 			list=
-			for pv in `sed 's/:/ /' <<< $fs_params`
+			for pv in $fs_params
 			do
 				list="$list $pv ^ ON"
 			done
@@ -505,7 +498,7 @@ interactive_filesystem ()
 				fs_params=${list2[0]}
 			else
 				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
-				fs_params="$(sed 's/ /:/' <<< "$ANSWER_CHECKLIST")" #replace spaces by colon's, we cannot have spaces anywhere in any string
+				fs_params="$ANSWER_CHECKLIST"
 			fi
 		fi
 		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-lv ]
@@ -519,9 +512,9 @@ interactive_filesystem ()
 		if [ "$fs_create" == yes ] && [ "$fs_type" = dm_crypt ]
 		then
 			[ -z "$fs_params" ] && default='-c aes-xts-plain -y -s 512'
-			[ -n "$fs_params" ] && default="${fs_params//_/ }"
+			[ -n "$fs_params" ] && default="$fs_params"
 			ask_string "Enter the options for this $fs_type on $part" "$default" || return 1
-			fs_params="${ANSWER_STRING// /_}"
+			fs_params="$ANSWER_STRING"
 		fi
 
 		# ask opts
@@ -531,7 +524,7 @@ interactive_filesystem ()
 			[ -n "$fs_opts" ] && default="$fs_opts"
 			program=`get_filesystem_program $fs_type`
 			ask_string "Enter any additional opts for $program" "$default" 0
-			fs_opts=$(sed 's/ /_/g' <<< "$ANSWER_STRING") #TODO: clean up all whitespace (tabs and shit)
+			fs_opts="$ANSWER_STRING"
 		fi
 
 		[ -z "$fs_type"       ] && fs_type=no_type
@@ -539,7 +532,7 @@ interactive_filesystem ()
 		[ -z "$fs_opts"       ] && fs_opts=no_opts
 		[ -z "$fs_label"      ] && fs_label=no_label
 		[ -z "$fs_params"     ] && fs_params=no_params
-		NEW_FILESYSTEM="$fs_type;$fs_create;$fs_mountpoint;target;$fs_opts;$fs_label;$fs_params"
+		NEW_FILESYSTEM="$fs_type;$fs_create;$fs_mountpoint;target;${fs_opts// /__};$fs_label;${fs_params// /__}"
 
 		# add new theoretical blockdevice, if relevant
 		new_device=
