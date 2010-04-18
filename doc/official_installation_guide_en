@@ -2,8 +2,6 @@
 
 General installation documentation for the Arch Linux distribution.
 
-This guide is only valid for release 2009.08 or newer.
-
 This guide is maintained in [aif git](http://projects.archlinux.org/?p=aif.git)  
 Patches/comments are welcome on the arch
 [releng mailing list](http://www.archlinux.org/mailman/listinfo/arch-releng)
@@ -232,6 +230,26 @@ Most people don't need this.
 You will find that everything you need to perform this installation
 (a copy of this guide, aif README, shortcuts to common aif procedures)
 can be found in /arch
+
+## Using PXE (Network booting)
+
+### Server
+
+On another machine running (Arch) Linux (live or normal),  
+you need to install and configure a dhcp and tftpd daemon.
+Dnsmasq is a fine choice which can do both.  
+You also need a nbd (network block device) daemon so the client can load 
+the needed files.
+
+You can find more info on the wiki (TODO: update this)
+[Community contributed documentation](http://wiki.archlinux.org/index.php/Archiso-as-pxe-server)
+
+### Client
+
+Configure your system to try network booting (pxe) first.
+On most systems this happen by default.
+You will get an IP from the server and load all needed files over the network
+automatically.  Once booted, you can proceed as normal.
 
 ## Performing the installation
 You can either use the interactive procedure or the automatic one.  
