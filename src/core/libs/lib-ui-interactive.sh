@@ -1081,7 +1081,8 @@ generate_grub_menulst() {
 	fi
 	# Now that we have our grub-legacy root device (grubdev).
     # keep the file from being completely bogus
-            if [ "$grubdev" = "DEVICE NOT FOUND" ]; then
+	[ "$grubdev" = "DEVICE NOT FOUND" ] && grubdev=
+	if [ -z "$grubdev" ]; then
                 notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
                 grubdev="(hd0,0)"
             fi
