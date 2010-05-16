@@ -31,7 +31,7 @@ Arch Linux and scripts are copyright
 
 2002-2007 Judd Vinet
 
-2007-2009 Aaron Griffin
+2007-2010 Aaron Griffin
 
 and are licensed under the GNU General Public License (GPL).
 
@@ -49,15 +49,9 @@ you should decide which installation method you would like to use.
 
 ## Available images
 
-Arch Linux provides bootable images for:
+Arch Linux provides isofiles which can be written to CD-roms or to disks and usb sticks
 
-* CD-rom drives ( ISO format): works on almost any machine with a CD-ROM drive
-* USB disk images (raw format): works on any system capable of booting
-  from a usb drive.
-
-The GRUB bootloader is used, but for those having problems with GRUB
-not loading with certain CD-rom drives, ISO images with the ISOLINUX
-bootloader are offered as well.  
+The Isolinux bootloader is used.
 There are two variants of each installation medium which only differ
 in terms of supplied packages.
 
@@ -82,6 +76,9 @@ networking utilities and drivers and have the aif package installed.
 If there's something else you happen to need
 at runtime, just get your Internet connection up and install it using pacman.  
 A short pacman command reference is available at the end of this document.
+
+All images are available in a i686, x86_64 or dual variant. The latter contains both and lets you choose
+an architecture at boot.
 
 ## AIF, the installation tool
 
@@ -149,9 +146,7 @@ and have it shipped anywhere in the world.
 
 ##  Preparing the Installation Media
 
-**CD-ROM**
-
-  * Download iso/<release>/archlinux-XXX.iso
+  * Download your chosen medium through torrent (preferred) or from your favorite mirror.
 
   * Download iso/<release>/sha1sums.txt
 
@@ -163,23 +158,7 @@ and have it shipped anywhere in the world.
      archlinux-XXX.iso: OK
 
 
-  * Burn the ISO image to a CD-R or CD-RW using any software of your choice.
-
-**USB**
-
-  * Download iso/<release>/archlinux-XXX.img
-
-  * Download iso/<release>/sha1sums.txt
-
-  * Verify the integrity of the .img image using sha1sum:
-
-
-     sha1sum --check sha1sums.txt
-
-     archlinux-XXX.img: OK
-
-
-  * Write the disk image to a USB mass storage device, such as a thumb drive,
+  * Burn the ISO image to a CD-R or CD-RW using any software of your choice, or if using a USB mass storage device, such as a thumb drive,
 using dd or similar raw-write software:
 
 
