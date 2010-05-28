@@ -220,9 +220,10 @@ Dnsmasq is a fine choice which can do both.
 You also need a nbd (network block device) daemon so the client can load 
 the needed files.
 
-You can find more info on the wiki (TODO: update this)
+You can find more info on the wiki
 [Community contributed documentation](http://wiki.archlinux.org/index.php/Archiso-as-pxe-server)
 
+(this section could be a bit more elaborate)
 ### Client
 
 Configure your system to try network booting (pxe) first.
