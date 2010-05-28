@@ -7,7 +7,7 @@ This guide is maintained in [aif git](http://projects.archlinux.org/?p=aif.git)
 Git pull requests, patches, comments are welcome on the arch
 [releng mailing list](http://www.archlinux.org/mailman/listinfo/arch-releng)
 
-This guide is available in the /arch directory of release media and on
+This guide is available in the /usr/share/aif/docs directory of release media and on
 [The arch wiki](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide)
 
 **Related articles**
@@ -620,7 +620,7 @@ ever want to use. The majority of your everyday modules will be loaded later
 on by udev, during the init process.
 
 By default, mkinitcpio.conf is configured to autodetect all needed modules for
-IDE, SCSI, or SATA systems through so-called HOOKS. The installed should
+IDE, SCSI, or SATA systems through so-called HOOKS. The installer should
 also have inserted hooks like crypt, lvm, keymap and usbinput if relevant.
 This means the default initrd should work for almost everybody.
 You can edit mkinitcpio.conf and remove the subsystem HOOKS
@@ -835,7 +835,7 @@ You'll notice that in the early userspace (the part that comes after the
 bootloader) the hooks (as defined in mkinitcpio.conf) needed to get your root
 filesystem are run.  
 If you have lvm, it will run the lvm hook.  If you use encryption, it will
-the keymap and encrypt hooks so you can enter your password to decrypt the
+run the keymap and encrypt hooks so you can enter your password to decrypt the
 volume.
 
 Once the system is booted, login as root.  By default the password is empty
