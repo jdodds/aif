@@ -3,9 +3,8 @@
 General installation documentation for the Arch Linux distribution.
 
 This guide is maintained in [aif git](http://projects.archlinux.org/?p=aif.git)  
-Patches/comments are welcome on the arch
+Git pull requests, patches, comments are welcome on the arch
 [releng mailing list](http://www.archlinux.org/mailman/listinfo/arch-releng)
-or mail to dieter@archlinux.org
 
 This guide is available in the /arch directory of release media and on
 [The arch wiki](http://wiki.archlinux.org/index.php/Official_Arch_Linux_Install_Guide)
