@@ -162,7 +162,7 @@ and have it shipped anywhere in the world.
 using dd or similar raw-write software:
 
 
-     dd if=archlinux-XXX.img of=/dev/sdX
+     dd if=archlinux-XXX.iso of=/dev/sdX
 
 
 Make sure to use /dev/sdX and not /dev/sdX1.  
