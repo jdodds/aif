@@ -2,6 +2,7 @@
 
 General installation documentation for the Arch Linux distribution.
 
+This guide is only valid for release 2010.05 or newer.
 This guide is maintained in [aif git](http://projects.archlinux.org/?p=aif.git)  
 Git pull requests, patches, comments are welcome on the arch
 [releng mailing list](http://www.archlinux.org/mailman/listinfo/arch-releng)
