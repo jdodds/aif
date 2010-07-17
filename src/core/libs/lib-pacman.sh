@@ -69,6 +69,7 @@ target_prepare_pacman() {
 [options]
 CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg
 CacheDir = /src/core/pkg
+Architecture = auto
 EOF
 
 for repo in $repos
