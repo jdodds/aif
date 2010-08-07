@@ -7,6 +7,10 @@ do
 	echo $i
 	# convert markdown to html, convert html links to wiki ones.
 	cat $i | markdown | sed 's|<a href="\([^"]*\)"[^>]*>\([^<]*\)</a>|[\1 \2]|g' > $i.html
+	# turn code markup into a syntax that mediawiki understands
+	sed -i 's#<pre><code>#<pre>#g' $i.html
+	sed -i 's#</code></pre>#</pre>#g' $i.html
+
 done
 
 echo "adding special wiki thingies..."
