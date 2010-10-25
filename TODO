@@ -1,10 +1,10 @@
 See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
 fix </boot>/vmlinuz depending on separate /boot -> $subdir wrong
-fix (hd0,0) niet showing up automatic procedure
-moeten we automatic procedure grub stuff aanpassen?
 
 CURRENT ISSUES:
+* fix (hd0,0) not showing up in automatic procedure
+* all grub related code could use a refactor
 * do we use a squashfs on usb images?  is this needed?  how to make changes persistent?  
 * time choosing: put 'ok' at bottom again but make it default
 * implement depend_profile
