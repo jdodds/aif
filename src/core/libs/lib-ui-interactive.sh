@@ -750,7 +750,7 @@ interactive_select_packages() {
 
 	repos=`list_pacman_repos target`
 	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
-Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  One you have your Arch system up and running, you have access to more repositories and packages."
+Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages."
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _grouplist="base ^ ON"
