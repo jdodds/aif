@@ -27,35 +27,14 @@ The goal of AIF is not (yet) to:
 
 ** A bit of history **
 
-AIF is based on the old archlinux-installer (/arch/setup), but the code has been madly refactored, reorganized, cleaned
+AIF is based on the old archlinux-installer, but the code has been madly refactored, reorganized, cleaned
 up, improved and in some places replaced.
 The initial goal was to build an automated installer with a reusable
 backend, but the porting of the userfriendly, interactive installer from /arch/setup quickly became a proof of concept
 and even main focus point.  See http://www.nabble.com/Fifa:-Flexible-Installer-Framework-for-Arch-linux-td20256427.html
 
-
-
-** /arch/setup vs AIF **
-
-AIF may or may not bring much additional value for you when compared with the previous
-installer, it depends on what you want to do:
-- End users:
-  On the frontend, the interactive profile is very similar to /arch/setup. 
-  The features are more or less the same, with a few exceptions:
-  * Different partition/filesystem editor offering more flexibility and options, such as support for LVM and dm_crypt
-  * Rollback functionality if you change your mind after having formatted filesystems or if something went wrong and you want to retry.
-  * Some miscellaneous features like the ability to choose between ncurses and CLI mode,
-    nicer date/time setting, auto updating some config files, debug output, logging to a file etc.
-  * various fixes
-- Hackers:
-  The code base that AIF runs on is very usable for hacking.  The code is
-  modular, reusable and quite complete.  If you want to build your own
-  installation procedures, or want to modify specific aspects of the
-  out-of-the-box installation procedures, definitely check out how AIF
-  works.  It is built for hacking, reusing code, changing the behaviour in
-  specific places and making writing custom installers as easy as possible.
-
-
+arch-installer used to be installed as /arch/setup and /arch/quickinst; wheres AIF adheres to the FHS spec,
+but archiso images come with an /arch/setup 1-line script which now just calls aif with the interactive procedure and dialog (ncurses) frontend.
 
 ** Bug/feature request tracking.  Getting in touch ** 
 
@@ -85,7 +64,7 @@ If you want to get in touch with us, to ask/discuss/.. things, please send to th
 AIF comes by default with these procedures:
 - base:        basic, little-interactivity installation with some common defaults. 
                This procedure is used by the others to inherit from, it is NOT meant to be used directly by end users
-- interactive: An interactive installation procedure, modeled after /arch/setup
+- interactive: An interactive installation procedure.
                Asks you some questions, guides you through an installation
                and even helps you a bit by updating configuration files on the target
                system with your usettings
