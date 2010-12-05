@@ -10,7 +10,7 @@ RUNTIME_PACKAGES=
 # packages to install
 TARGET_GROUPS=base
 TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
-TARGET_PACKAGES=openssh
+TARGET_PACKAGES='openssh e2fsprogs cryptsetup lvm2 xfsprogs'
 
 # you can optionally also override some functions...
 worker_intro () {

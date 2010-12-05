@@ -39,6 +39,7 @@ echo "Welcome to $TITLE"
 
 mount -o remount,rw / &>/dev/null 
 cleanup_runtime
+needed_pkgs_fs= # will hold extra needed packages for blockdevices/filesystems, populated when the Fs'es are created
 
 ### Set configuration values ###
 # note : you're free to use or ignore these in your procedure.  probably you want to use these variables to override defaults in your configure worker

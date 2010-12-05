@@ -750,7 +750,8 @@ interactive_select_packages() {
 
 	repos=`list_pacman_repos target`
 	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
-Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages."
+Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages.\n\n
+If any previous configuration you've done until now (like fancy filesystems) require extra packages, we've already preselected them for your convenience"
 
     # show group listing for group selection, base is ON by default, all others are OFF
     local _grouplist="base ^ ON"
@@ -763,14 +764,17 @@ Note that right now the packages (and groups) selection is limited to the repos 
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
-    local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository
+    local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository. TODO: we should use $repos here
     local _pkglist=''
 
     which_group "$_pkgtmp"
+    # assemble some packages which we'll definitely select by default because we figured out we'll need them:
+    needed_pkgs=("${needed_pkgs_fs[@]}")
     while read pkgname pkggroup; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
-        if [ "${_grouplist/"\"$pkggroup\""/XXXX}" != "${_grouplist}" ]; then
+        if [ "${_grouplist/"\"$pkggroup\""/XXXX}" != "${_grouplist}" ] || check_is_in $pkgname "${needed_pkgs[@]}"
+	then
             _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} ON")"
         else
             _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} OFF")"

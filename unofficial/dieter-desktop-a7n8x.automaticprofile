@@ -30,6 +30,7 @@ var_BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_
 /dev/mapper/cryptpool-crypthome lvm-lv no_label xfs;yes;/home;target;no_opts;no_label;no_params'
 
 
+TARGET_PACKAGES='openssh e2fsprogs cryptsetup lvm2 xfsprogs'
 
 phase_preparation=(accept_ssl_cert "${phase_preparation[@]}") # make accept_ssl_cert the very first thing. it needs to go before fetch_configs and it's not easy to put it somewhere in the middle, so...
 phase_system+=(configure_home)

@@ -478,6 +478,17 @@ process_filesystems ()
 				then
 					debug 'FS' "$fs_id ->Already done"
 				else
+					needs_pkg=
+					[ $fs_type = 'lvm-pv'   ] && needs_pkg=lvm2
+					[ $fs_type = 'xfs'      ] && needs_pkg=xfsprogs
+					[ $fs_type = 'jfs'      ] && needs_pkg=jfsutils
+					[ $fs_type = 'reiserfs' ] && needs_pkg=reiserfsprogs
+					[[ $fs_type =~ ext.*   ]] && needs_pkg=e2fsprogs
+					[ $fs_type = 'vfat'     ] && needs_pkg=dosfstools
+					[ $fs_type = 'dm_crypt' ] && needs_pkg=cryptsetup
+
+					[ -n "$needs_pkg" ] && check_is_in $needs_pkg "${needed_pkgs_fs[@]}" || needed_pkgs_fs+=($needs_pkg)
+
 					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
 					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
 					then
@@ -687,6 +698,7 @@ rollback_filesystems ()
 	[ -n "$warnings" ] && inform "Rollback failed" disks 1 && show_warning "Rollback problems" "Some problems occurred while rolling back: $warnings.\n Thisk needs to be fixed before retrying disk/filesystem creation or restarting the installer" && return 1
 	inform "Rollback succeeded" disks 1
 	done_filesystems=
+	needed_pkgs_fs=
 	BLOCK_ROLLBACK_USELESS=1
 	return 0
 }

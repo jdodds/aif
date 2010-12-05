@@ -16,7 +16,7 @@ RUNTIME_PACKAGES=
 # packages to install
 TARGET_GROUPS=base       # all packages in this group will be installed (defaults to base if no group and no packages are specified)
 TARGET_PACKAGES_EXCLUDE= # Exclude these packages if they are member of one of the groups in TARGET_GROUPS.  example: 'nano reiserfsprogs' (they are in base)
-TARGET_PACKAGES=openssh  # you can also specify separate packages to install (this is empty by default)
+TARGET_PACKAGES='openssh e2fsprogs' # you can also specify separate packages to install (this is empty by default)
 
 # you can optionally also override some functions...
 worker_intro () {

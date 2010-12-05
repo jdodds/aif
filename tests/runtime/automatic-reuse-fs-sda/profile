@@ -1,4 +1,4 @@
-TARGET_PACKAGES='aif'
+TARGET_PACKAGES='aif e2fsprogs'
 RUNTIME_REPOSITORIES=(testing "Server = ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH")
 GRUB_DEVICE=/dev/sda
 

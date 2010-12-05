@@ -8,7 +8,7 @@ RUNTIME_PACKAGES=
 # packages to install
 TARGET_GROUPS=base
 TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
-TARGET_PACKAGES='openssh aif'
+TARGET_PACKAGES='openssh aif e2fsprogs cryptsetup lvm2 xfsprogs'
 
 # These variables are mandatory
 
