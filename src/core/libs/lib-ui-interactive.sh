@@ -263,6 +263,7 @@ interactive_autoprepare()
 	which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
+	which `get_filesystem_program nilfs2`   &>/dev/null && FSOPTS="$FSOPTS nilfs2 Nilfs2_EXPERIMENTAL"
 
 	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
 	BOOT_PART_SIZE=$ANSWER_NUMBER
@@ -401,6 +402,7 @@ interactive_filesystem ()
 		# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# ext 4       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
+		# Nilfs2      raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
 		# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                                         optional   no
@@ -417,6 +419,7 @@ interactive_filesystem ()
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext4`     &>/dev/null && FSOPTS="$FSOPTS ext4 Ext4"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
+		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program nilfs2`   &>/dev/null && FSOPTS="$FSOPTS nilfs2 Nilfs2_EXPERIMENTAL"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
 		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
@@ -458,13 +461,15 @@ interactive_filesystem ()
 		fi
 
 		# ask label, if relevant
-		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-lv -o "$fs_type" = dm_crypt ]
+		fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
+		fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
+		if [ "$fs_create" == yes ] && check_is_in "$fs_type" "${fs_label_mandatory[@]}"
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"
 			ask_string "Enter the label/name for this $fs_type on $part (Mandatory for this type of FS!)" "$default" || return 1 #TODO: check that you can't give LV's labels that have been given already or the installer will break.
 			fs_label=$ANSWER_STRING
-		elif [ "$fs_create" == yes ] && [ "$fs_type" = ext2 -o "$fs_type" = ext3 -o "$fs_type" = ext4 -o "$fs_type" = reiserfs -o "$fs_type" = xfs -o "$fs_type" = jfs -o "$fs_type" = vfat ]
+		elif [ "$fs_create" == yes ] && check_is_in "$fs_type" "${fs_label_optional[@]}"
 		then
 			default=
 			[ -n "$fs_label" ] && default="$fs_label"

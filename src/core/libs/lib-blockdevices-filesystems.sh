@@ -483,6 +483,7 @@ process_filesystems ()
 					[ $fs_type = 'xfs'      ] && needs_pkg=xfsprogs
 					[ $fs_type = 'jfs'      ] && needs_pkg=jfsutils
 					[ $fs_type = 'reiserfs' ] && needs_pkg=reiserfsprogs
+					[ $fs_type = 'nilfs2'   ] && needs_pkg=nilfs-utils
 					[[ $fs_type =~ ext.*   ]] && needs_pkg=e2fsprogs
 					[ $fs_type = 'vfat'     ] && needs_pkg=dosfstools
 					[ $fs_type = 'dm_crypt' ] && needs_pkg=cryptsetup
@@ -742,6 +743,7 @@ process_filesystem ()
 			ext2)     mke2fs "$part"              $fs_opts >$LOG 2>&1; ret=$? ;;
 			ext3)     mke2fs -j $part             $fs_opts >$LOG 2>&1; ret=$? ;;
 			ext4)     mkfs.ext4 $part             $fs_opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
+			nilfs2)   mkfs.nilfs2 "$part"         $fs_opts >$LOG 2>&1; ret=$? ;;
 			vfat)     mkfs.vfat $part             $fs_opts >$LOG 2>&1; ret=$? ;;
 			swap)     if [ -z "$fs_label" ]; then
 				  	mkswap $part          $fs_opts >$LOG 2>&1; ret=$?
@@ -781,6 +783,9 @@ process_filesystem ()
 		elif [ "$fs_type" = reiserfs ]
 		then
 			reiserfstune -l $fs_label $part		>$LOG 2>&1; ret=$?
+		elif [ "$fs_type" = nilfs2 ]
+		then
+			nilfs-tune -L $fs_label $part           >$LOG 2>&1; ret=$?
 		elif [ "$fs_type" = ext2 -o "$fs_type" = ext3 -o "$fs_type" = ext4 ]
 		then
 			tune2fs -L $fs_label $part		>$LOG 2>&1; ret=$?
@@ -849,18 +854,19 @@ process_filesystem ()
 get_filesystem_program ()
 {
 	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
-	[ $1 = swap     ] && echo mkswap     && return 0
-	[ $1 = ext2     ] && echo mkfs.ext2  && return 0
-	[ $1 = ext3     ] && echo mkfs.ext3  && return 0
-	[ $1 = ext4     ] && echo mkfs.ext4  && return 0
-	[ $1 = reiserfs ] && echo mkreiserfs && return 0
-	[ $1 = xfs      ] && echo mkfs.xfs   && return 0
-	[ $1 = jfs      ] && echo mkfs.jfs   && return 0
-	[ $1 = vfat     ] && echo mkfs.vfat  && return 0
-	[ $1 = lvm-pv   ] && echo pvcreate   && return 0
-	[ $1 = lvm-vg   ] && echo vgcreate   && return 0
-	[ $1 = lvm-lv   ] && echo lvcreate   && return 0
-	[ $1 = dm_crypt ] && echo cryptsetup && return 0
+	[ $1 = swap     ] && echo mkswap      && return 0
+	[ $1 = ext2     ] && echo mkfs.ext2   && return 0
+	[ $1 = ext3     ] && echo mkfs.ext3   && return 0
+	[ $1 = ext4     ] && echo mkfs.ext4   && return 0
+	[ $1 = reiserfs ] && echo mkreiserfs  && return 0
+	[ $1 = nilfs2   ] && echo mkfs.nilfs2 && return 0
+	[ $1 = xfs      ] && echo mkfs.xfs    && return 0
+	[ $1 = jfs      ] && echo mkfs.jfs    && return 0
+	[ $1 = vfat     ] && echo mkfs.vfat   && return 0
+	[ $1 = lvm-pv   ] && echo pvcreate    && return 0
+	[ $1 = lvm-vg   ] && echo vgcreate    && return 0
+	[ $1 = lvm-lv   ] && echo lvcreate    && return 0
+	[ $1 = dm_crypt ] && echo cryptsetup  && return 0
 	return 1
 }
 
