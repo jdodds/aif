@@ -36,6 +36,56 @@ TMP_FILESYSTEMS=$RUNTIME_DIR/aif-filesystems # Only used internally by this libr
 TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
 
 
+declare -A filesystem_programs=(["swap"]="mkswap" ["reiserfs"]="mkreiserfs" ["lvm-pv"]="pvcreate" ["lvm-vg"]="vgcreate" ["lvm-lv"]="lvcreate" ["dm_crypt"]="cryptsetup")
+for simple in ext2 ext3 ext4 nilfs2 xfs jfs vfat
+do
+	filesystem_programs+=([$simple]=mkfs.$simple)
+done
+
+declare -A label_programs=(["xfs"]="xfs_admin" ["jfs"]="jfs_tune" ["reiserfs"]="reiserfstune" ["nilfs2"]="nilfs-tune" ["vfat"]="dosfslabel")
+for ext in ext2 ext3 ext4
+do
+	label_programs+=([$ext]=tune2fs)
+done
+
+# names for filesystems (which are shown to users in dialogs etc, don't use spaces!)
+declare -A filesystem_names=(["nilfs2"]="Nilfs2_EXPERIMENTAL" ["vfat"]="vFat")
+for i in ext2 ext3 ext4 reiserfs xfs jfs
+do
+	name=$(echo $i | capitalize)
+	filesystem_names+=([$i]=$name)
+done
+
+# specify which filesystems can be stored on which blockdevices
+fs_on_raw=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt lvm-pv)
+fs_on_lvm_lv=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt)
+fs_on_dm_crypt=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat lvm-pv)
+fs_on_lvm_pv=(lvm-vg)
+fs_on_lvm_vg=(lvm-lv)
+
+# the following is useful to do checks like check_is_in $fs_type ${fs_on[$part_type]} (or iterate it)
+# bash does not allow lists (array) in associative arrays, but this seems to work.
+# maybe it stores them as strings, which in this case is ok (no spaces in elements)
+declare -A fs_on
+fs_on[raw]=${fs_on_raw[@]}
+fs_on[lvm-lv]=${fs_on_lvm_lv[@]}
+fs_on[lvm-pv]=${fs_on_lvm_pv[@]}
+fs_on[lvm-vg]=${fs_on_lvm_vg[@]}
+fs_on[dm_crypt]=${fs_on_dm_crypt[@]}
+
+fs_mountable=(ext2 ext3 ext4 nilfs2 xfs jfs vfat reiserfs)
+fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
+fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
+
+# returns which filesystems you can create based on the locally available utilities
+get_possible_fs () {
+	possible_fs=
+	for fs in "${!filesystem_programs[@]}"
+	do
+		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" fs)
+	done
+}
+
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -728,7 +778,7 @@ process_filesystem ()
 	# Create the FS
 	if [ "$fs_create" = yes ]
 	then
-		if ! program=`get_filesystem_program $fs_type`
+		if ! check_is_in $fs_type "${!filesystem_programs[@]}"
 		then
 			show_warning "process_filesystem error" "Cannot determine filesystem program for $fs_type on $part.  Not creating this FS"
 			return 1
@@ -736,31 +786,35 @@ process_filesystem ()
 		[ -z "$fs_label" ] && [ "$fs_type" = lvm-vg -o "$fs_type" = lvm-pv ] && fs_label=default #TODO. implement the incrementing numbers label for lvm vg's and lv's
 
 		#TODO: health checks on $fs_params etc
+		program="${filesystem_programs[$fs_type]}"
 		case ${fs_type} in 
-			xfs)      mkfs.xfs -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
-			jfs)      yes | mkfs.jfs $part        $fs_opts >$LOG 2>&1; ret=$? ;;
-			reiserfs) yes | mkreiserfs $part      $fs_opts >$LOG 2>&1; ret=$? ;;
-			ext2)     mke2fs "$part"              $fs_opts >$LOG 2>&1; ret=$? ;;
-			ext3)     mke2fs -j $part             $fs_opts >$LOG 2>&1; ret=$? ;;
-			ext4)     mkfs.ext4 $part             $fs_opts >$LOG 2>&1; ret=$? ;; #TODO: installer.git uses mke2fs -t ext4 -O dir_index,extent,uninit_bg , which is best?
-			nilfs2)   mkfs.nilfs2 "$part"         $fs_opts >$LOG 2>&1; ret=$? ;;
-			vfat)     mkfs.vfat $part             $fs_opts >$LOG 2>&1; ret=$? ;;
-			swap)     if [ -z "$fs_label" ]; then
-				  	mkswap $part          $fs_opts >$LOG 2>&1; ret=$?
-				  else
-				  	mkswap -L $fs_label $part $fs_opts >$LOG 2>&1; ret=$?
-				  fi
-				  ;;
-			dm_crypt) [ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
-                      inform "Please enter your passphrase to encrypt the device (with confirmation)"
-			          cryptsetup $fs_params $fs_opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
-                      inform "Please enter your passphrase to unlock the device"
-			          cryptsetup       luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
-			lvm-pv)   pvcreate $fs_opts $part              >$LOG 2>&1; ret=$? ;;
-			lvm-vg)   # $fs_params: list of PV's
-			          vgcreate $fs_opts $fs_label $fs_params      >$LOG 2>&1; ret=$? ;;
-			lvm-lv)   # $fs_params = size string (eg '5G')
-			          lvcreate -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
+			xfs)
+				$program -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
+			jfs|reiserfs)
+				yes | $program $part        $fs_opts >$LOG 2>&1; ret=$? ;;
+			ext2|ext3|ext4|nilfs2|vfat)
+				$program $part              $fs_opts >$LOG 2>&1; ret=$? ;;
+			swap)
+				if [ -z "$fs_label" ]; then
+					$program $part      $fs_opts >$LOG 2>&1; ret=$?
+				else
+					$program -L $fs_label $part $fs_opts >$LOG 2>&1; ret=$?
+				fi
+				;;
+			dm_crypt)
+				[ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
+				inform "Please enter your passphrase to encrypt the device (with confirmation)"
+				$program $fs_params $fs_opts luksFormat -q $part >$LOG 2>&1 < /dev/tty ; ret=$? #hack to give cryptsetup the approriate stdin. keep in mind we're in a loop (see process_filesystems where something else is on stdin)
+				inform "Please enter your passphrase to unlock the device"
+				$program luksOpen $part $fs_label >$LOG 2>&1 < /dev/tty; ret=$? || ( show_warning 'cryptsetup' "Error luksOpening $part on /dev/mapper/$fs_label" ) ;;
+			lvm-pv)
+				$program $fs_opts $part              >$LOG 2>&1; ret=$? ;;
+			lvm-vg)
+				# $fs_params: list of PV's
+				$program $fs_opts $fs_label $fs_params      >$LOG 2>&1; ret=$? ;;
+			lvm-lv)
+				# $fs_params = size string (eg '5G')
+				$program -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			# don't handle anything else here, we will error later
 		esac
 		# The udevadm settle is a workaround for a bug/racecondition in cryptsetup. See:
@@ -772,27 +826,17 @@ process_filesystem ()
 		sleep 2
 	fi
 
-	if [ -n "$fs_label" ]
+	if [ -n "$fs_label" ] && check_is_in $fs_type "${!label_programs[@]}"
 	then
-		if [ "$fs_type" = xfs ]
-		then
-			xfs_admin -L $fs_label $part		>$LOG 2>&1; ret=$?
-		elif [ "$fs_type" = jfs ]
-		then
-			jfs_tune -L $fs_label $part		>$LOG 2>&1; ret=$?
-		elif [ "$fs_type" = reiserfs ]
-		then
-			reiserfstune -l $fs_label $part		>$LOG 2>&1; ret=$?
-		elif [ "$fs_type" = nilfs2 ]
-		then
-			nilfs-tune -L $fs_label $part           >$LOG 2>&1; ret=$?
-		elif [ "$fs_type" = ext2 -o "$fs_type" = ext3 -o "$fs_type" = ext4 ]
-		then
-			tune2fs -L $fs_label $part		>$LOG 2>&1; ret=$?
-		elif [ "$fs_type" = vfat ]
-		then
-			dosfslabel $part $fs_label		>$LOG 2>&1; ret=$?
-		fi
+		program="${label_programs[$fs_type]}"
+		case ${fs_type} in
+			xfs|jfs|nilfs2|ext2|ext3|ext4)
+				$program -L $fs_label $part		>$LOG 2>&1; ret=$?;;
+			reiserfs)
+				$program -l $fs_label $part		>$LOG 2>&1; ret=$?;;
+			vfat)
+				$program $part $fs_label		>$LOG 2>&1; ret=$?;;
+		esac
 		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error setting label $fs_label on $part." ; return 1; }
 	fi
 
@@ -847,27 +891,6 @@ process_filesystem ()
 
 #TODO: if target has LVM volumes, copy /etc/lvm/backup to /etc on target (or maybe it can be regenerated with a command, i should look that up)
 
-}
-
-
-# $1 filesystem type
-get_filesystem_program ()
-{
-	[ -z "$1" ] && die_error "get_filesystem_program needs a filesystem id as \$1"
-	[ $1 = swap     ] && echo mkswap      && return 0
-	[ $1 = ext2     ] && echo mkfs.ext2   && return 0
-	[ $1 = ext3     ] && echo mkfs.ext3   && return 0
-	[ $1 = ext4     ] && echo mkfs.ext4   && return 0
-	[ $1 = reiserfs ] && echo mkreiserfs  && return 0
-	[ $1 = nilfs2   ] && echo mkfs.nilfs2 && return 0
-	[ $1 = xfs      ] && echo mkfs.xfs    && return 0
-	[ $1 = jfs      ] && echo mkfs.jfs    && return 0
-	[ $1 = vfat     ] && echo mkfs.vfat   && return 0
-	[ $1 = lvm-pv   ] && echo pvcreate    && return 0
-	[ $1 = lvm-vg   ] && echo vgcreate    && return 0
-	[ $1 = lvm-lv   ] && echo lvcreate    && return 0
-	[ $1 = dm_crypt ] && echo cryptsetup  && return 0
-	return 1
 }
 
 

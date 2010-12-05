@@ -51,6 +51,10 @@ _getavaildisks()
 	done
 }
 
+# captitalize first character
+function capitalize () {
+	sed 's/\([a-z]\)\([a-zA-Z0-9]*\)/\u\1\2/g';
+}
 
 set_keymap ()
 {

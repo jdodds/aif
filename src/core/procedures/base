@@ -139,6 +139,7 @@ worker_interactive_time ()
 worker_prepare_disks ()
 {
 	partition # use lib-archboot function by default
+	get_possible_fs
 	# in official installer: autoprepare or diy first partitions, then mountpoints
 }
 

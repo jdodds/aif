@@ -101,6 +101,7 @@ worker_configure_system()
 
 worker_prepare_disks()
 {
+	get_possible_fs
 	interactive_prepare_disks
 }
 

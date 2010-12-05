@@ -256,14 +256,10 @@ interactive_autoprepare()
 
 	get_blockdevice_size $DISC MiB
 	FSOPTS=
-	which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
-	which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
-	which `get_filesystem_program ext4`     &>/dev/null && FSOPTS="$FSOPTS ext4 Ext4"
-	which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-	which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-	which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-	which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-	which `get_filesystem_program nilfs2`   &>/dev/null && FSOPTS="$FSOPTS nilfs2 Nilfs2_EXPERIMENTAL"
+	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
+	do
+		check_is_in $fs $possible_fs && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+	done
 
 	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
 	BOOT_PART_SIZE=$ANSWER_NUMBER
@@ -394,44 +390,17 @@ interactive_filesystem ()
 
 	if [ "$NEW_FILESYSTEM" != no_fs ]
 	then
-		# Possible filesystems/software layers on partitions/block devices
-		# name        on top of             mountpoint?    label?        DM device?                     theoretical device?                        opts?      special params?
-
-		# swap        raw/lvm-lv/dm_crypt   no             no            no                             no                                         no         no
-		# ext 2       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# ext 3       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# ext 4       raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# reiserFS    raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# Nilfs2      raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# xfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# jfs         raw/lvm-lv/dm_crypt   optional       optional      no                             no                                         optional   no
-		# vfat        raw/lvm-lv/dm_crypt   optional       opt i guess   no                             no                                         optional   no
-		# lvm-pv      raw/dm_crypt          no             no            no.  $pv = $part               $part+ (+ is to differentiate from $part)  optional   no
-		# lvm-vg      lvm-pv                no             yes           /dev/mapper/$label             =dm device                                 optional   PV's to use
-		# lvm-lv      lvm-vg                no             yes           /dev/mapper/$part_label-$label =dm device                                 optional   LV size
-		# dm_crypt    raw/rvm-lv            no             yes           /dev/mapper/$label             =dm device                                 optional   no
-
-
 		# Determine which filesystems/blockdevices are possible for this blockdevice
 		FSOPTS=
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program swap`     &>/dev/null && FSOPTS="$FSOPTS swap Swap"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext2`     &>/dev/null && FSOPTS="$FSOPTS ext2 Ext2"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext3`     &>/dev/null && FSOPTS="$FSOPTS ext3 Ext3"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program ext4`     &>/dev/null && FSOPTS="$FSOPTS ext4 Ext4"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program reiserfs` &>/dev/null && FSOPTS="$FSOPTS reiserfs Reiser3"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program nilfs2`   &>/dev/null && FSOPTS="$FSOPTS nilfs2 Nilfs2_EXPERIMENTAL"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program xfs`      &>/dev/null && FSOPTS="$FSOPTS xfs XFS"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program jfs`      &>/dev/null && FSOPTS="$FSOPTS jfs JFS"
-		[ $part_type = raw -o $part_type = lvm-lv -o $part_type = dm_crypt ] && which `get_filesystem_program vfat`     &>/dev/null && FSOPTS="$FSOPTS vfat VFAT"
-		[ $part_type = raw                        -o $part_type = dm_crypt ] && which `get_filesystem_program lvm-pv`   &>/dev/null && FSOPTS="$FSOPTS lvm-pv LVM_Physical_Volume"
-		[ $part_type = lvm-pv                                              ] && which `get_filesystem_program lvm-vg`   &>/dev/null && FSOPTS="$FSOPTS lvm-vg LVM_Volumegroup"
-		[ $part_type = lvm-vg                                              ] && which `get_filesystem_program lvm-lv`   &>/dev/null && FSOPTS="$FSOPTS lvm-lv LVM_Logical_Volume"
-		[ $part_type = raw -o $part_type = lvm-lv                          ] && which `get_filesystem_program dm_crypt` &>/dev/null && FSOPTS="$FSOPTS dm_crypt DM_crypt_Volume"
+		for fs in ${fs_on[$part_type]}
+		do
+			check_is_in $fs $possible_fs && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+		done
 
 		fs_create=no
 		ask_yesno "Do you want to have this filesystem (re)created ?  If not, make sure there already is a filesystem!" && fs_create=yes
 
-		# determine FS
+		# determine FS choice
 		fsopts=($FSOPTS);
 		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
 		then
@@ -447,7 +416,7 @@ interactive_filesystem ()
 		fi
 
 		# ask mountpoint, if relevant
-		if [[ $fs_type != lvm-* && "$fs_type" != dm_crypt && $fs_type != swap ]]
+		if check_is_in $fs_type "${fs_mountable[@]}"
 		then
 			default=no
 			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
@@ -461,8 +430,6 @@ interactive_filesystem ()
 		fi
 
 		# ask label, if relevant
-		fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
-		fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
 		if [ "$fs_create" == yes ] && check_is_in "$fs_type" "${fs_label_mandatory[@]}"
 		then
 			default=
@@ -478,6 +445,8 @@ interactive_filesystem ()
 		fi
 
 		# ask special params, if relevant
+                # lvm-vg: PV's to use
+                # lvm-lv: LV size
 		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg ]
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
@@ -485,7 +454,7 @@ interactive_filesystem ()
 			if ! egrep -q "$pv(\$| )" <<< "$fs_params"; then
 			   [ -n "$fs_params" ] && fs_params="$fs_params "
 			   fs_params="$fs_params$pv"
-		   fi   
+			fi
 
 			list=
 			for pv in $fs_params
@@ -527,7 +496,7 @@ interactive_filesystem ()
 		then
 			default=
 			[ -n "$fs_opts" ] && default="$fs_opts"
-			program=`get_filesystem_program $fs_type`
+			program="${filesystem_programs[$fs_type]}"
 			ask_string "Enter any additional opts for $program" "$default" 0
 			fs_opts="$ANSWER_STRING"
 		fi
@@ -540,6 +509,8 @@ interactive_filesystem ()
 		NEW_FILESYSTEM="$fs_type;$fs_create;$fs_mountpoint;target;${fs_opts// /__};$fs_label;${fs_params// /__}"
 
 		# add new theoretical blockdevice, if relevant
+		# these are just the resulting DM devices,
+		# exception for lvm-pv: we create $part+ to represent the PV (+ is to differentiate from $part itself)
 		new_device=
 		[ "$fs_type" = lvm-vg   ] && new_device="/dev/mapper/$fs_label $fs_type $fs_label"
 		[ "$fs_type" = lvm-pv   ] && new_device="$part+ $fs_type no_label"

@@ -82,6 +82,7 @@ worker_runtime_network ()
 
 worker_prepare_disks ()
 {
+	get_possible_fs
 	echo "$var_PARTITIONS" > $TMP_PARTITIONS
 	echo "$var_BLOCKDATA" > $TMP_BLOCKDEVICES
 	process_disks       || die_error "Could not process_disks"
