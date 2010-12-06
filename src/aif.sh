@@ -98,6 +98,9 @@ fi
 
 load_module core
 [ "$module" != core -a "$module" != http ] && load_module "$module"
+# this is a workaround for bash <4.2, where associative arrays are inherently local,
+# so we must source these variables in the main scope
+source $LIB_CORE/libs/lib-blockdevices-filesystems.sh
 
 load_procedure "$module" "$procedure"
 
