@@ -82,7 +82,7 @@ get_possible_fs () {
 	possible_fs=
 	for fs in "${!filesystem_programs[@]}"
 	do
-		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" fs)
+		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" $fs)
 	done
 }
 
