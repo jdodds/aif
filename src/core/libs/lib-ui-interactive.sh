@@ -258,7 +258,7 @@ interactive_autoprepare()
 	FSOPTS=
 	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
 	do
-		check_is_in $fs $possible_fs && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+		check_is_in $fs "${possible_fs[@]}" && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
 	done
 
 	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
@@ -394,7 +394,7 @@ interactive_filesystem ()
 		FSOPTS=
 		for fs in ${fs_on[$part_type]}
 		do
-			check_is_in $fs $possible_fs && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+			check_is_in $fs "${possible_fs[@]}" && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
 		done
 
 		fs_create=no
