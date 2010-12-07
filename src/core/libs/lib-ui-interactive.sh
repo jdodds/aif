@@ -255,10 +255,10 @@ interactive_autoprepare()
 	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
 	get_blockdevice_size $DISC MiB
-	FSOPTS=
+	FSOPTS=()
 	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
 	do
-		check_is_in $fs "${possible_fs[@]}" && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs ${filesystem_names[$fs]})
 	done
 
 	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
@@ -279,7 +279,7 @@ interactive_autoprepare()
 		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
         done
 
-	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required $FSOPTS || return 1
+	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required ${FSOPTS[@]} || return 1
 	FSTYPE=$ANSWER_OPTION
 
 
@@ -391,27 +391,26 @@ interactive_filesystem ()
 	if [ "$NEW_FILESYSTEM" != no_fs ]
 	then
 		# Determine which filesystems/blockdevices are possible for this blockdevice
-		FSOPTS=
+		FSOPTS=()
 		for fs in ${fs_on[$part_type]}
 		do
-			check_is_in $fs "${possible_fs[@]}" && FSOPTS="$FSOPTS $fs ${filesystem_names[$fs]}"
+			check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs ${filesystem_names[$fs]})
 		done
 
 		fs_create=no
 		ask_yesno "Do you want to have this filesystem (re)created ?  If not, make sure there already is a filesystem!" && fs_create=yes
 
 		# determine FS choice
-		fsopts=($FSOPTS);
-		if [ ${#fsopts[*]} -lt 4 ] # less then 4 words in the $FSOPTS string. eg only one option
+		if [ ${#FSOPTS[*]} -lt 4 ] # less then 4 words in $FSOPTS. eg only one option
 		then
-			notify "Automatically picked the ${fsopts[1]} filesystem.  It's the only option for $part_type blockdevices"
-			fs_type=${fsopts[0]}
+			notify "Automatically picked the ${FSOPTS[1]} filesystem.  It's the only option for $part_type blockdevices"
+			fs_type=${FSOPTS[0]}
 		else
 			default=
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
 			extratext="Select a filesystem for $part:"
 			[ "$fs_create" == no ] && extratext="Select which filesystem $part is.  Make sure you get this right" #otherwise he'll be screwed when we try to mount it :)
-			ask_option no "Select filesystem" "$extratext" required $FSOPTS || return 1
+			ask_option no "Select filesystem" "$extratext" required ${FSOPTS[@]} || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
