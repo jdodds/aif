@@ -26,7 +26,7 @@ load_module ()
 {
 	[ -z "$1" ] && die_error "load_module needs a module argument"
 	log "Loading module $1 ..."
-	path=$LIB_USER/"$1"
+	local path=$LIB_USER/"$1"
 	[ "$1" = core ] && path=$LIB_CORE
 	
 	for submodule in lib #procedure don't load procedures automatically!
@@ -37,12 +37,13 @@ load_module ()
 			[ "$1" = core ] && die_error "$path/${submodule}s does not exist. something is horribly wrong with this installation"
 		else
 			shopt -s nullglob
-			for i in "$path/${submodule}s"/*
+			local module
+			for module in "$path/${submodule}s"/*
 			do
 				# I have the habit of editing files while testing, don't source my backup files!
-				[[ "$i" == *~ ]] && continue
-
-				load_${submodule} "$1" "`basename "$i"`"
+				[[ "$module" == *~ ]] && continue
+				module=$(basename "$module")
+				load_${submodule} "$1" "$module"
 			done
 		fi
 	done
@@ -59,11 +60,11 @@ load_procedure()
 	if [ "$1" = 'http' ]
 	then
 		log "Loading procedure $2 ..."
-		procedure=$RUNTIME_DIR/aif-procedure-downloaded-`basename $2`
+		local procedure=$RUNTIME_DIR/aif-procedure-downloaded-`basename $2`
 		wget "$2" -q -O $procedure >/dev/null || die_error "Could not download procedure $2" 
 	else
 		log "Loading procedure $1/procedures/$2 ..."
-		procedure=$LIB_USER/"$1"/procedures/"$2"
+		local procedure=$LIB_USER/"$1"/procedures/"$2"
 		[ "$1" = core ] && procedure=$LIB_CORE/procedures/"$2"
 	fi
 	[ -f "$procedure" ] && source "$procedure" || die_error "Something went wrong while sourcing procedure $procedure"
@@ -77,7 +78,7 @@ load_lib ()
 	[ -z "$1" ] && die_error "load_library needs a module als \$1 and library as \$2"
 	[ -z "$2" ] && die_error "load_library needs a library as \$2"
 	log "Loading library $1/libs/$2 ..."
-	lib=$LIB_USER/"$1"/libs/"$2"
+	local lib=$LIB_USER/"$1"/libs/"$2"
 	[ "$1" = core ] && lib=$LIB_CORE/libs/"$2"
 	source $lib || die_error "Something went wrong while sourcing library $lib"
 }
