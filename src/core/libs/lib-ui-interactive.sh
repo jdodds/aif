@@ -609,8 +609,9 @@ interactive_filesystems() {
 				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
 			done < $TMP_BLOCKDEVICES
 
-			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required $menu_list DONE _
-			[ $? -gt 0                 ] && USERHAPPY=1 && break
+			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). \
+				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required $menu_list DONE _
+			[ $? -gt 0                 ] && return 1
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
 			part=$ANSWER_OPTION
