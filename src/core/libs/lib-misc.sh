@@ -23,7 +23,7 @@ run_controlled ()
 	then
 		run_background $1 "$2" $3
 		follow_progress " $4 " $3 $BACKGROUND_PID # dia mode ignores the pid. cli uses it to know how long it must do tail -f
-		wait_for $1 $FOLLOW_PID
+		wait_for $1 $FOLLOW_PID || die_error "Internal AIF error, the following call failed: wait_for $1 $FOLLOW_PID.  This should never happen"
 		CONTROLLED_EXIT=$BACKGROUND_EXIT
 	else
 		notify "$4"
@@ -71,7 +71,7 @@ run_background ()
 }
 
 
-# wait until a process is done
+# wait until a process - spawned by run_background - is done
 # $1 identifier. WARNING! see above
 # $2 pid of a process to kill when done (optional). useful for dialog --no-kill --tailboxbg's pid.
 # returns 0 unless anything failed in the wait_for logic (not tied to the exitcode of the program we actually wait for)
@@ -89,7 +89,7 @@ wait_for ()
 	then
 		kill $2 || ret=1
 	fi
-	ret $ret
+	return $ret
 }
 
 
