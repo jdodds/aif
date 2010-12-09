@@ -2,10 +2,10 @@
 # the variables are optional and we define their defaults here (so you could omit the
 # definitions), unless otherwise specified.
 
-SOURCE=cd
+SOURCE=cd #change to 'net' to do a network install
 FILE_URL=file:///src/core/pkg
-SYNC_URL=
-HARDWARECLOCK=localtime
+SYNC_URL= # optional, if you do netinstall use a repository string like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/$arch (the same format as what you find in /etc/pacman.conf)
+HARDWARECLOCK=localtime # UTC is the better option, but some OS'es don't support it (i.e. Windows)
 TIMEZONE=Canada/Pacific
 # Do you want to have additional pacman repositories or packages available at runtime (during installation)?
 # RUNTIME_REPOSITORIES = array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
