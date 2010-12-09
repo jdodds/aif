@@ -498,6 +498,7 @@ In many cases, the Arch Linux [Wiki][46] and
   * /etc/locale.gen
   * /etc/pacman.d/mirrorlist
   * /etc/pacman.conf
+  * /etc/crypttab
 
    [48]: http://wiki.archlinux.org/index.php/Fstab (Fstab)
 
@@ -735,6 +736,13 @@ the default mirror in your new Arch Linux system.
 **/etc/pacman.conf**
 
 Here you can customize pacman settings such as which repositories to use.
+
+
+**/etc/crypttab**
+
+If you use encryption on a device which is not used to bring up your root,
+(and hence is not enabled by the encrypt hook in mkinitcpio.conf), you should
+configure the volume in this file.
 
 
 **Set Root Password**
