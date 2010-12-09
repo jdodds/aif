@@ -31,6 +31,7 @@ run_controlled ()
 		CONTROLLED_EXIT=$?
 	fi
 	debug 'MISC' "run_controlled done with $1: exitcode (\$CONTROLLED_EXIT): $CONTROLLED_EXIT .Logfile $3"
+	return $CONTROLLED_EXIT
 }
 
 
