@@ -60,7 +60,8 @@ run_background ()
 		eval "$2" >>$3 2>&1
 		BACKGROUND_EXIT=$?
 		debug 'MISC' "run_background done with $1: exitcode (\$BACKGROUND_EXIT): $BACKGROUND_EXIT .Logfile $3"
-		echo >> $3   
+		echo >> $3
+		echo $BACKGROUND_EXIT > $RUNTIME_DIR/aif-$1-exit
 		rm -f $RUNTIME_DIR/aif-$1-running
 	) &
 	BACKGROUND_PID=$!
@@ -72,16 +73,22 @@ run_background ()
 # wait until a process is done
 # $1 identifier. WARNING! see above
 # $2 pid of a process to kill when done (optional). useful for dialog --no-kill --tailboxbg's pid.
+# returns 0 unless anything failed in the wait_for logic (not tied to the exitcode of the program we actually wait for)
 wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
-
+	ret=0
 	while [ -f $RUNTIME_DIR/aif-$1-running ]
 	do
 		sleep 1
 	done
-
-	[ -n "$2" ] && kill $2
+	BACKGROUND_EXIT=$(cat $RUNTIME_DIR/aif-$1-exit) || ret=1
+	rm $RUNTIME_DIR/aif-$1-exit || ret=1
+	if [ -n "$2" ]
+	then
+		kill $2 || ret=1
+	fi
+	ret $ret
 }
 
 
