@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# runs a process and makes sure the output is shown to the user. sets the exit state of the executed program ($<identifier>_exitcode) so the caller can show a concluding message.
+# runs a process and makes sure the output is shown to the user. sets the exit state of the executed program ($CONTROLLED_EXIT) so the caller can show a concluding message.
 # when in dia mode, we will run the program and a dialog instance in the background (cause that's just how it works with dia)
 # when in cli mode, the program will just run in the foreground. technically it can be run backgrounded but then we need tail -f (cli_follow_progress), and we miss the beginning of the output if it goes too fast, not to mention because of the sleep in run_background
 # $1 identifier
@@ -30,6 +30,7 @@ run_controlled ()
 		eval "$2" >>$3 2>&1
 		CONTROLLED_EXIT=$?
 	fi
+	debug 'MISC' "run_controlled done with $1: exitcode (\$CONTROLLED_EXIT): $CONTROLLED_EXIT .Logfile $3"
 }
 
 
@@ -58,7 +59,7 @@ run_background ()
 		echo "STARTING $1 . Executing $2 >>$3 2>&1\n" >> $3;
 		eval "$2" >>$3 2>&1
 		BACKGROUND_EXIT=$?
-		debug 'MISC' "run_background done with $1: exitcode (\$$1_exitcode): ${!var_exit} .Logfile $3"
+		debug 'MISC' "run_background done with $1: exitcode (\$BACKGROUND_EXIT): $BACKGROUND_EXIT .Logfile $3"
 		echo >> $3   
 		rm -f $RUNTIME_DIR/aif-$1-running
 	) &
