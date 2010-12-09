@@ -4,7 +4,7 @@
 # runs a process and makes sure the output is shown to the user. sets the exit state of the executed program ($CONTROLLED_EXIT) so the caller can show a concluding message.
 # when in dia mode, we will run the program and a dialog instance in the background (cause that's just how it works with dia)
 # when in cli mode, the program will just run in the foreground. technically it can be run backgrounded but then we need tail -f (cli_follow_progress), and we miss the beginning of the output if it goes too fast, not to mention because of the sleep in run_background
-# $1 identifier
+# $1 identifier (no spaces allowed, hyphen and underscore are ok)
 # $2 command (will be eval'ed)
 # $3 logfile
 # $4 title to show while process is running
@@ -37,7 +37,7 @@ run_controlled ()
 # run a process in the background, and log it's stdout and stderr to a specific logfile
 # returncode is stored in BACKGROUND_EXIT
 # pid of the backgrounded wrapper process is stored in BACKGROUND_PID (this is _not_ the pid of $2)
-# $1 identifier -> WARNING: do never ever use -'s or other fancy characters here. only numbers, letters and _ please. (because $<identifier>_exitcode must be a valid bash variable!)
+# $1 identifier
 # $2 command (will be eval'ed)
 # $3 logfile
 run_background ()
