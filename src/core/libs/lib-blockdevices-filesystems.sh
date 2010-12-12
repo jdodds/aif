@@ -415,7 +415,7 @@ partition()
 	# format: each line=1 part.  <start> <size> <id> <bootable>[ <c,h,s> <c,h,s>]
 
 	read -r -a fsspecs <<< "$STRING"  # split up like this otherwise '*' will be globbed. which usually means an entry containing * is lost
-
+	sfdisk_input=
 	for fsspec in "${fsspecs[@]}"; do
 		fssize=$(echo $fsspec | tr -d ' ' | cut -f1 -d:)
 		fssize_spec=",$fssize"
