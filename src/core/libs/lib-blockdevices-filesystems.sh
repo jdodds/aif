@@ -181,46 +181,36 @@ $ANSWER_DEVICES"
 }
 
 
-# taken from setup script, modified for separator control
-# $1 set to 1 to echo a newline after device instead of a space (optional)
-# $2 extra things to echo for each device (optional)
-# $3 something to append directly after the device (optional)
+# find partitionable blockdevices
+# $1 extra things to echo for each device (optional)
 finddisks() {
     workdir="$PWD"
     cd /sys/block 
     # ide devices 
     for dev in $(ls | egrep '^hd'); do
         if [ "$(cat $dev/device/media)" = "disk" ]; then
-            echo -n "/dev/$dev$3"
-            [ "$1" = 1 ] && echo || echo -n ' '
-            [ "$2" ] && echo $2
+            echo -n "/dev/$dev $1"
         fi
     done  
     #scsi/sata devices, and virtio blockdevices (/dev/vd*)
     for dev in $(ls | egrep '^[sv]d'); do
         # TODO: what is the significance of 5? ASKDEV
         if ! [ "$(cat $dev/device/type)" = "5" ]; then
-            echo -n "/dev/$dev$3"
-            [ "$1" = 1 ] && echo || echo -n ' '
-            [ "$2" ] && echo $2
+            echo -n "/dev/$dev $1"
         fi
     done  
     # cciss controllers
     if [ -d /dev/cciss ] ; then
         cd /dev/cciss
         for dev in $(ls | egrep -v 'p'); do
-            echo -n "/dev/cciss/$dev$3"
-            [ "$1" = 1 ] && echo || echo -n ' '
-            [ "$2" ] && echo $2
+            echo -n "/dev/cciss/$dev $1"
         done
     fi
     # Smart 2 controllers
     if [ -d /dev/ida ] ; then
         cd /dev/ida
         for dev in $(ls | egrep -v 'p'); do
-            echo -n"/dev/ida/$dev$3"
-            [ "$1" = 1 ] && echo || echo -n ' '
-            [ "$2" ] && echo $2
+            echo -n "/dev/ida/$dev $1"
         done
     fi
     cd "$workdir"
@@ -252,18 +242,14 @@ getlabel()
 }
 
 
-# taken from setup script, slightly optimized and modified for separator control
-# $1 set to 1 to echo a newline after partition instead of a space (optional)
-# $2 extra things to echo for each partition (optional)
-# $3 something to append directly after the partition (optional) TODO: refactor code so there's a space in between, merge $2 and $3. use echo -e to print whatever user wants
+# find block devices, both partionable or not (i.e. partitions themselves)
+# $1 extra things to echo for each partition (optional)
 findblockdevices() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
 	do
 		disk=$(echo $devpath | sed 's|.*/||')
-		echo -n "/dev/$disk$3"
-		[ "$1" = 1 ] && echo || echo -n ' '
-		[ "$2" ] && echo $2
+		echo -n "/dev/$disk $1"
 		cd /sys/block/$disk   
 		for part in $disk*
 		do
@@ -272,9 +258,7 @@ findblockdevices() {
 			then
 				if [ -d $part ]
 				then  
-					echo -n "/dev/$part$3"
-					[ "$1" = 1 ] && echo || echo -n ' '
-					[ "$2" ] && echo $2
+					echo -n "/dev/$part $1"
 				fi
 			fi
 		done
@@ -282,18 +266,14 @@ findblockdevices() {
 	# include any mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
-		echo -n "/dev/mapper/$devpath$3"
-		[ "$1" = 1 ] && echo || echo -n ' '
-		[ "$2" ] && echo $2
+		echo -n "/dev/mapper/$devpath $1"
 	done
 	# include any raid md devices
 	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
 		then
-			echo -n "$devpath$3"
-			[ "$1" = 1 ] && echo || echo -n ' '
-			[ "$2" ] && echo $2
+			echo -n "$devpath $1"
 		fi
 	done
 	# inlcude cciss controllers
@@ -302,9 +282,7 @@ findblockdevices() {
 		cd /dev/cciss
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/cciss/$dev$3"
-			[ "$1" = 1 ] && echo || echo -n ' '
-			[ "$2" ] && echo $2
+			echo -n "/dev/cciss/$dev $1"
 		done
 	fi
 	# inlcude Smart 2 controllers
@@ -313,9 +291,7 @@ findblockdevices() {
 		cd /dev/ida
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/ida/$dev$3"
-			[ "$1" = 1 ] && echo || echo -n ' '
-			[ "$2" ] && echo $2
+			echo -n "/dev/ida/$dev $1"
 		done
 	fi
 
