@@ -371,7 +371,7 @@ interactive_filesystem ()
 	NEW_FILESYSTEM=
 	if [ -n "$fs_string" ]
 	then
-		parse_filesystem_string "$fs_string" yes
+		parse_filesystem_string "$fs_string" ''
 		local old_fs_type=$fs_type
 		local old_fs_create=$fs_create
 		local old_fs_mountpoint=$fs_mountpoint
@@ -589,22 +589,28 @@ interactive_filesystems() {
 			menu_list=()
 			while read part type label fs
 			do
-				# leave out unneeded info from fs string
-				fs_display=${fs//;yes/}
-				fs_display=${fs//;target/}
-				[ "$label" != no_label ] && label_display="($label)"
-				[ "$label"  = no_label ] && label_display=
+				parse_filesystem_string "$fs" '-'
+				fs_create_display=N
+				[ "fs_create" = yes ] && fs_create_display=Y
+				fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label fs_params"
+
+				part_label_display=-
+				part_size_display=-
+				[ "$label" != no_label ] && part_label_display="$label"
+				# add size in MiB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MiB # test -b <-- exit's 0, test -b '' exits >0.
 				then
-					infostring="${type},${BLOCKDEVICE_SIZE}MiB${label_display}->$fs_display" # add size in MiB for existing blockdevices (eg not for mapper devices that are not yet created yet)
-				else
-					infostring="${type}${label_display}->$fs_display"
+					part_size_display="${BLOCKDEVICE_SIZE}MiB"
 				fi
-				menu_list+=("$part" "$infostring")
+				part_display="$part $type $part_label_display $part_size_display"
+				menu_list+=("$part_display" "$fs_display")
 			done < $TMP_BLOCKDEVICES
 
 			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). \
-				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required "${menu_list[@]}" DONE _
+				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc.\
+				The display format is as follows:\n\
+Partition                  Filesystem\n\
+devicefile type label size type recreate(Y/N) mountpoint options label params [|...]" required "${menu_list[@]}" DONE _
 			[ $? -gt 0                 ] && return 1
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 

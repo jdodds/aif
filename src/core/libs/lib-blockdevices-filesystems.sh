@@ -447,7 +447,8 @@ process_disk ()
 }
 
 # $1 fs_string
-# $2 decode yes/no
+# $2 value to replace "no_foo" values with (optional) (can be '')
+#    when given, __ will be translated to ' ' as well
 parse_filesystem_string ()
 {
 	fs="$1"
@@ -458,15 +459,15 @@ parse_filesystem_string ()
 	fs_opts=`       cut -d ';' -f 5 <<< $fs`
 	fs_label=`      cut -d ';' -f 6 <<< $fs`
 	fs_params=`     cut -d ';' -f 7 <<< $fs`
-	if [ "$2" == 'yes' ]; then
+	if [ -n "${2+2}" ]; then # checking if a var is defined, in bash.
 		fs_opts="${fs_opts//__/ }"
 		fs_params="${fs_params//__/ }"
-		[ "$fs_type"       = no_type       ] && fs_type=
-		[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=
-		[ "$fs_mount"      = no_mount      ] && fs_mount=
-		[ "$fs_opts"       = no_opts       ] && fs_opts=
-		[ "$fs_label"      = no_label      ] && fs_label=
-		[ "$fs_params"     = no_params     ] && fs_params=
+		[ "$fs_type"       = no_type       ] && fs_type=$2
+		[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=$2
+		[ "$fs_mount"      = no_mount      ] && fs_mount=$2
+		[ "$fs_opts"       = no_opts       ] && fs_opts=$2
+		[ "$fs_label"      = no_label      ] && fs_label=$2
+		[ "$fs_params"     = no_params     ] && fs_params=$2
 	fi
 }
 
@@ -750,7 +751,7 @@ process_filesystem ()
 	debug 'FS' "process_filesystem $@"
 	local ret=0
 	part=$1
-	parse_filesystem_string "$2;$3;$4;$5;$6;$7;$8" yes
+	parse_filesystem_string "$2;$3;$4;$5;$6;$7;$8" ''
 
 	# Create the FS
 	if [ "$fs_create" = yes ]
