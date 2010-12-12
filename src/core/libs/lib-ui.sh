@@ -47,7 +47,7 @@ listblockfriendly()
 	do
 		get_blockdevice_size $i MiB
 		size_GiB=$(($BLOCKDEVICE_SIZE/2**10))
-		BLOCKFRIENDLY+=($i "$i ${BLOCKDEVICE_SIZE} MiB ($size_GiB GiB)"
+		BLOCKFRIENDLY+=($i "$i ${BLOCKDEVICE_SIZE} MiB ($size_GiB GiB)")
 	done
 }
 
