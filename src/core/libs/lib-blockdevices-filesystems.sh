@@ -49,7 +49,7 @@ do
 done
 
 # names for filesystems (which are shown to users in dialogs etc, don't use spaces!)
-declare -A filesystem_names=(["nilfs2"]="Nilfs2_EXPERIMENTAL" ["vfat"]="vFat" ["dm_crypt"]="dm_crypt(LUKS)" ["lvm-pv"]="lvm-PV" ["lvm-vg"]="lvm-VG" ["lvm-lv"]="lvm-LV")
+declare -A filesystem_names=(["nilfs2"]="Nilfs2 (EXPERIMENTAL)" ["vfat"]="vFat" ["dm_crypt"]="dm_crypt (LUKS)" ["lvm-pv"]="lvm Physical Volume" ["lvm-vg"]="lvm Volume Group" ["lvm-lv"]="lvm Logical Volume")
 for i in ext2 ext3 ext4 reiserfs xfs jfs swap
 do
 	name=$(echo $i | capitalize)

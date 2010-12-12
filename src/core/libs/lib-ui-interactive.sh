@@ -141,7 +141,7 @@ interactive_timezone () {
 
 interactive_time () {
         # utc or localtime?
-        ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" " " "localtime" " " || return 1
+        ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" - "localtime" - || return 1
         HARDWARECLOCK=$ANSWER_OPTION
 		# To avoid a false time for localtime users after above
 		# we must re-read the hwclock value again, but now into the
@@ -261,7 +261,7 @@ interactive_autoprepare()
 	FSOPTS=()
 	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
 	do
-		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs ${filesystem_names[$fs]})
+		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
 	done
 
 	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
@@ -282,7 +282,7 @@ interactive_autoprepare()
 		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
         done
 
-	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required ${FSOPTS[@]} || return 1
+	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required "${FSOPTS[@]}" || return 1
 	FSTYPE=$ANSWER_OPTION
 
 
@@ -396,7 +396,7 @@ interactive_filesystem ()
 		FSOPTS=()
 		for fs in ${fs_on[$part_type]}
 		do
-			check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs ${filesystem_names[$fs]})
+			check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
 		done
 
 		fs_create=no
@@ -412,7 +412,7 @@ interactive_filesystem ()
 			[ -n "$fs_type" ] && default="--default-item $fs_type"
 			extratext="Select a filesystem for $part:"
 			[ "$fs_create" == no ] && extratext="Select which filesystem $part is.  Make sure you get this right" #otherwise he'll be screwed when we try to mount it :)
-			ask_option no "Select filesystem" "$extratext" required ${FSOPTS[@]} || return 1
+			ask_option no "Select filesystem" "$extratext" required "${FSOPTS[@]}" || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
@@ -586,7 +586,7 @@ interactive_filesystems() {
 		while [ "$USERHAPPY" = 0 ]
 		do
 			# generate a menu based on the information in the datafile
-			menu_list=
+			menu_list=()
 			while read part type label fs
 			do
 				# leave out unneeded info from fs string
@@ -600,11 +600,11 @@ interactive_filesystems() {
 				else
 					infostring="${type}${label_display}->$fs_display"
 				fi
-				menu_list="$menu_list $part $infostring" #don't add extra spaces, dialog doesn't like that.
+				menu_list+=("$part" "$infostring")
 			done < $TMP_BLOCKDEVICES
 
 			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). \
-				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required $menu_list DONE _
+				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc." required "${menu_list[@]}" DONE _
 			[ $? -gt 0                 ] && return 1
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
@@ -620,18 +620,18 @@ interactive_filesystems() {
 
 			if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 			then
-				list=
+				list=()
 				if [ -n "$fs" ]
 				then
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 6 <<< $lv)
 						size=$( cut -d ';' -f 7 <<< $lv)
-						list="$list $label $size"
+						list+=("$label" "$size")
 					done
 				fi
-				list="$list empty NEW"
-				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required $list && {
+				list+=(empty NEW)
+				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required "${list[@]}" && {
 					EDIT_VG=$ANSWER_OPTION
 					if [ "$ANSWER_OPTION" = empty  ]
 					then
