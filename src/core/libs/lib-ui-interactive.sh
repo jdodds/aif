@@ -561,15 +561,12 @@ remove_blockdevice ()
 
 interactive_filesystems() {
 
-	renew_blockdevices=1
-	if [ -f $TMP_BLOCKDEVICES ]
-	then
-		if ask_yesno "I've detected you already have blockdevice definitions in place:\n`cat $TMP_BLOCKDEVICES`\nDo you want to use these as a starting point?\nMake sure your disk(s) are partitioned correctly so your definitions can be applied on the disk. Pick 'no' when in doubt to start from scratch" no
+	if [ -f $TMP_BLOCKDEVICES ] && ! ask_yesno "Previous blockdevice definitions found:\n`cat $TMP_BLOCKDEVICES`\n\
+		Use these as a starting point?  Make sure your disk(s) are partitioned correctly so your definitions can be applied. Pick 'no' when in doubt to start from scratch" no
 		then
-			renew_blockdevices=0
+			echo $(findblockdevices ' raw no_label no_fs' > $TMP_BLOCKDEVICES
 		fi
 	fi
-	[ "$renew_blockdevices" = 1 ] && echo $(findblockdevices 'no_fs') raw no_label > $TMP_BLOCKDEVICES
 
 	[ -z "$PART_ACCESS" ] && PART_ACCESS=dev
 	ask_option $PART_ACCESS 'Partition Access Method' 'How do you want your partitions to be accessed in grubs menu.lst and /etc/fstab?' '' \
