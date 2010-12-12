@@ -1266,17 +1266,14 @@ interactive_select_mirror() {
 #
 interactive_get_editor() {
 	unset EDITOR_OPTS
-	which nano &>/dev/null && EDITOR_OPTS+=("nano" "nano (easier)")
-	which joe  &>/dev/null && EDITOR_OPTS+=("joe"  "joe's editor")
-	which vi   &>/dev/null && EDITOR_OPTS+=("vi"   "vi (advanced)")
+	declare -A editors=(["nano"]="nano (easier)" ["joe"]="joe (bit more powerful)" ["vi"]="vi (advanced)")
+	for editor in ${!editors[@]}
+	do
+		which $editor &>/dev/null && EDITOR_OPTS+=($editor "${editors[$editor]}")
+	done
 	ask_option nano "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}" || return 1
-	#TODO: this code could be a little bit cleaner.
-	case $ANSWER_OPTION in
-		"nano") EDITOR="nano" ;;
-		"joe")  EDITOR="joe"  ;;
-		"vi")   EDITOR="vi"   ;;
-		*)      EDITOR="nano" ;;
-	esac
+	EDITOR=nano
+	check_is_in "$ANSWER_OPTION" "${!editors[@]}" && EDITOR=$ANSWER_OPTION
 }
 
 
