@@ -206,7 +206,7 @@ getlabel()
 }
 
 # find partitionable blockdevices
-# $1 extra things to echo for each device (optional)
+# $1 extra things to echo for each device (optional) (backslash escapes will get interpreted)
 finddisks() {
 	workdir="$PWD"
 	if cd /sys/block 2>/dev/null
@@ -216,7 +216,7 @@ finddisks() {
 		do
 			if [ "$(cat $dev/device/media)" = "disk" ]
 			then
-				echo -n "/dev/$dev $1"
+				echo -ne "/dev/$dev $1"
 			fi
 		done
 		#scsi/sata devices, and virtio blockdevices (/dev/vd*)
@@ -225,7 +225,7 @@ finddisks() {
 			# TODO: what is the significance of 5? ASKDEV
 			if [ "$(cat $dev/device/type)" != "5" ]
 			then
-				echo -n "/dev/$dev $1"
+				echo -ne "/dev/$dev $1"
 			fi
 		done
 	fi
@@ -234,7 +234,7 @@ finddisks() {
 	then
 		for dev in $(ls | egrep -v 'p')
 		do
-			echo -n "/dev/cciss/$dev $1"
+			echo -ne "/dev/cciss/$dev $1"
 		done
 	fi
 	# Smart 2 controllers
@@ -242,20 +242,20 @@ finddisks() {
 	then
 		for dev in $(ls | egrep -v 'p')
 		do
-			echo -n "/dev/ida/$dev $1"
+			echo -ne "/dev/ida/$dev $1"
 		done
 	fi
 	cd "$workdir"
 }
 
 # find block devices, both partionable or not (i.e. partitions themselves)
-# $1 extra things to echo for each partition (optional)
+# $1 extra things to echo for each partition (optional) (backslash escapes will get interpreted)
 findblockdevices() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
 	do
 		disk=$(basename $devpath)
-		echo -n "/dev/$disk $1"
+		echo -ne "/dev/$disk $1"
 		cd /sys/block/$disk
 		for part in $disk*
 		do
@@ -264,7 +264,7 @@ findblockdevices() {
 			then
 				if [ -d $part ]
 				then
-					echo -n "/dev/$part $1"
+					echo -ne "/dev/$part $1"
 				fi
 			fi
 		done
@@ -272,14 +272,14 @@ findblockdevices() {
 	# mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
-		echo -n "/dev/mapper/$devpath $1"
+		echo -ne "/dev/mapper/$devpath $1"
 	done
 	# raid md devices
 	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
 		then
-			echo -n "$devpath $1"
+			echo -ne "$devpath $1"
 		fi
 	done
 	# cciss controllers
@@ -287,7 +287,7 @@ findblockdevices() {
 	then
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/cciss/$dev $1"
+			echo -ne "/dev/cciss/$dev $1"
 		done
 	fi
 	# Smart 2 controllers
@@ -295,7 +295,7 @@ findblockdevices() {
 	then
 		for dev in $(ls | egrep 'p')
 		do
-			echo -n "/dev/ida/$dev $1"
+			echo -ne "/dev/ida/$dev $1"
 		done
 	fi
 	cd "$workdir"
