@@ -73,8 +73,7 @@ set_keymap ()
 	fi
 
 	FONTS=
-	# skip .cp.gz and partialfonts files for now see bug #6112, #6111
-	for i in $(find $KBDDIR/consolefonts -maxdepth 1 ! -name '*.cp.gz' -name "*.gz"  | sed 's|^.*/||g' | sort); do
+	for i in $(find $KBDDIR/consolefonts -maxdepth 1 -name "*.gz"  | sed 's|^.*/||g' | sort); do
 		FONTS="$FONTS $i -"
 	done
 	ask_option "${var_CONSOLEFONT:-no}" "Select A Console Font" '' optional $FONTS
