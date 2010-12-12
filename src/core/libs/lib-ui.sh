@@ -38,16 +38,16 @@ printk()
 
 
 # Get a list of available partionable blockdevices for use in ask_option
-# populates $BLOCKFRIENDLY with entries like:
-#   /dev/sda /dev/sda_640133_MiB_(640_GiB)
+# populates array $BLOCKFRIENDLY with elements like:
+#   '/dev/sda' '/dev/sda 640133 MiB (640 GiB)'
 listblockfriendly()
 {
-	BLOCKFRIENDLY=
+	BLOCKFRIENDLY=()
 	for i in $(finddisks)
 	do
 		get_blockdevice_size $i MiB
-		[ -n "$BLOCKFRIENDLY" ] && BLOCKFRIENDLY="$BLOCKFRIENDLY "
-		BLOCKFRIENDLY="$BLOCKFRIENDLY$i ${i}_${BLOCKDEVICE_SIZE}_MiB_($(($BLOCKDEVICE_SIZE/2**10))_GiB)"
+		size_GiB=$(($BLOCKDEVICE_SIZE/2**10))
+		BLOCKFRIENDLY+=($i "$i ${BLOCKDEVICE_SIZE} MiB ($size_GiB GiB)"
 	done
 }
 

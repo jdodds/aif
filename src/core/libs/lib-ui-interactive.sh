@@ -246,15 +246,15 @@ interactive_prepare_disks ()
 interactive_autoprepare()
 {
 	listblockfriendly
-	if [ $(echo $BLOCKFRIENDLY | wc -w) -gt 1 ]
+	if [ ${#BLOCKFRIENDLY[@]} -gt 2 ]
 	then
-		ask_option no 'Harddrive selection' "Select the hard drive to use" required $BLOCKFRIENDLY || return 1
+		ask_option no 'Harddrive selection' "Select the hard drive to use" required "${BLOCKFRIENDLY[@]}" || return 1
 		DISC=$ANSWER_OPTION
-	elif [ -z "$BLOCKFRIENDLY" ]; then
+	elif [ ${#BLOCKFRIENDLY[@]} -eq 0 ]; then
 		ask_string "Could not find disk. Please enter path of devicefile manually" "" || return 1
 		DISC=${ANSWER_STRING// /} # TODO : some checks if $DISC is really a blockdevice is probably a good idea
 	else
-		DISC=$(echo $BLOCKFRIENDLY | cut -d ' ' -f 1)
+		DISC=${BLOCKFRIENDLY[0]}
 	fi
 
 	get_blockdevice_size $DISC MiB
@@ -330,11 +330,11 @@ interactive_partition() {
 
     # Select disk to partition
     listblockfriendly
-    DISCS="$BLOCKFRIENDLY OTHER OTHER DONE DONE"
+    DISCS=("${BLOCKFRIENDLY[@]}" OTHER OTHER DONE DONE)
     DISC=
     while true; do
         # Prompt the user with a list of known disks
-        ask_option no 'Disc selection' "$question_text (select DONE when finished)" required $DISCS || return 1
+        ask_option no 'Disc selection' "$question_text (select DONE when finished)" required "${DISCS[@]}" || return 1
         DISC=$ANSWER_OPTION
         if [ "$DISC" = "OTHER" ]; then
             ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
