@@ -606,11 +606,10 @@ interactive_filesystems() {
 				menu_list+=("$part_display" "$fs_display")
 			done < $TMP_BLOCKDEVICES
 
-			ask_option no "Manage filesystems" "Here you can manage your filesystems, block devices and virtual devices (device mapper). \
-				Note that you don't *need* to specify opts, labels or extra params if you're not using lvm, dm_crypt, etc.\
+			ask_option no "Manage filesystems" "Here you can manage your filesystems and block devices. \
 				The display format is as follows:\n\
-Partition                  Filesystem\n\
-devicefile type label size type recreate(Y/N) mountpoint options label params [|...]" required "${menu_list[@]}" DONE _
+Partition              Filesystem(s)\n\
+device type label size type create? mountpoint options label params" required "${menu_list[@]}" DONE _
 			[ $? -gt 0                 ] && return 1
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
