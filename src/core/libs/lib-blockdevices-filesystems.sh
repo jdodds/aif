@@ -181,42 +181,6 @@ $ANSWER_DEVICES"
 }
 
 
-# find partitionable blockdevices
-# $1 extra things to echo for each device (optional)
-finddisks() {
-    workdir="$PWD"
-    cd /sys/block 
-    # ide devices 
-    for dev in $(ls | egrep '^hd'); do
-        if [ "$(cat $dev/device/media)" = "disk" ]; then
-            echo -n "/dev/$dev $1"
-        fi
-    done  
-    #scsi/sata devices, and virtio blockdevices (/dev/vd*)
-    for dev in $(ls | egrep '^[sv]d'); do
-        # TODO: what is the significance of 5? ASKDEV
-        if ! [ "$(cat $dev/device/type)" = "5" ]; then
-            echo -n "/dev/$dev $1"
-        fi
-    done  
-    # cciss controllers
-    if [ -d /dev/cciss ] ; then
-        cd /dev/cciss
-        for dev in $(ls | egrep -v 'p'); do
-            echo -n "/dev/cciss/$dev $1"
-        done
-    fi
-    # Smart 2 controllers
-    if [ -d /dev/ida ] ; then
-        cd /dev/ida
-        for dev in $(ls | egrep -v 'p'); do
-            echo -n "/dev/ida/$dev $1"
-        done
-    fi
-    cd "$workdir"
-}
-
-
 # getuuid(). taken and modified from setup. this can probably be more improved. return an exit code, rely on blkid's exit codes etc.
 # converts /dev/[hs]d?[0-9] devices to UUIDs
 #
@@ -241,6 +205,48 @@ getlabel()
 	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s LABEL -o value ${1})"
 }
 
+# find partitionable blockdevices
+# $1 extra things to echo for each device (optional)
+finddisks() {
+	workdir="$PWD"
+	if cd /sys/block 2>/dev/null
+	then
+		# ide devices
+		for dev in $(ls | egrep '^hd')
+		do
+			if [ "$(cat $dev/device/media)" = "disk" ]
+			then
+				echo -n "/dev/$dev $1"
+			fi
+		done
+		#scsi/sata devices, and virtio blockdevices (/dev/vd*)
+		for dev in $(ls | egrep '^[sv]d')
+		do
+			# TODO: what is the significance of 5? ASKDEV
+			if [ "$(cat $dev/device/type)" != "5" ]
+			then
+				echo -n "/dev/$dev $1"
+			fi
+		done
+	fi
+	# cciss controllers
+	if cd /dev/cciss 2>/dev/null
+	then
+		for dev in $(ls | egrep -v 'p')
+		do
+			echo -n "/dev/cciss/$dev $1"
+		done
+	fi
+	# Smart 2 controllers
+	if cd /dev/ida 2>/dev/null
+	then
+		for dev in $(ls | egrep -v 'p')
+		do
+			echo -n "/dev/ida/$dev $1"
+		done
+	fi
+	cd "$workdir"
+}
 
 # find block devices, both partionable or not (i.e. partitions themselves)
 # $1 extra things to echo for each partition (optional)
@@ -248,27 +254,27 @@ findblockdevices() {
 	workdir="$PWD"
 	for devpath in $(finddisks)
 	do
-		disk=$(echo $devpath | sed 's|.*/||')
+		disk=$(basename $devpath)
 		echo -n "/dev/$disk $1"
-		cd /sys/block/$disk   
+		cd /sys/block/$disk
 		for part in $disk*
 		do
 			# check if not already assembled to a raid device.  TODO: what is the significance of the 5? ASKDEV
-			if ! [ "$(grep $part /proc/mdstat 2>/dev/null)" -o "$(fstype 2>/dev/null </dev/$part | grep lvm2)" -o "$(sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep "5")" ]
+			if ! grep -q $part /proc/mdstat 2>/dev/null && ! fstype 2>/dev/null </dev/$part | grep -q lvm2 && ! sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep -q '5'
 			then
 				if [ -d $part ]
-				then  
+				then
 					echo -n "/dev/$part $1"
 				fi
 			fi
 		done
 	done
-	# include any mapped devices
+	# mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)
 	do
 		echo -n "/dev/mapper/$devpath $1"
 	done
-	# include any raid md devices
+	# raid md devices
 	for devpath in $(ls -d /dev/md* | grep '[0-9]' 2>/dev/null)
 	do
 		if grep -qw $(echo $devpath /proc/mdstat | sed -e 's|/dev/||g')
@@ -276,25 +282,22 @@ findblockdevices() {
 			echo -n "$devpath $1"
 		fi
 	done
-	# inlcude cciss controllers
-	if [ -d /dev/cciss ]
+	# cciss controllers
+	if cd /dev/cciss 2>/dev/null
 	then
-		cd /dev/cciss
 		for dev in $(ls | egrep 'p')
 		do
 			echo -n "/dev/cciss/$dev $1"
 		done
 	fi
-	# inlcude Smart 2 controllers
-	if [ -d /dev/ida ]
+	# Smart 2 controllers
+	if cd /dev/ida 2>/dev/null
 	then
-		cd /dev/ida
 		for dev in $(ls | egrep 'p')
 		do
 			echo -n "/dev/ida/$dev $1"
 		done
 	fi
-
 	cd "$workdir"
 }
 
@@ -608,7 +611,7 @@ rollback_filesystems ()
 	# phase 2: destruct blockdevices listed in $BLOCK_DATA if they would exist already, in the correct order (first lvm LV, then VG, then PV etc)
 	# targets are device-mapper devices such as any lvm things, dm_crypt devices, etc and lvm PV's.
 
-	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it 
+	# Possible approach 1 (not implemented): for each target in $TMP_BLOCKDEVICES, check that it has no_fs or has a non-lvm/dm_crypt fs. (egrep -v ' lvm-pv;| lvm-vg;| lvm-lv;| dm_crypt;' ) and clean it
 	#                      -> requires updating of underlying block device string when you clean something, on a copy of .block_data etc. too complicated
 	# Approach 2 : iterate over all targets in $TMP_BLOCKDEVICES as much as needed, until a certain limit, and in each loop check what can be cleared by looking at the real, live usage of / dependencies on the partition.
 	#                      -> easier (implemented)
@@ -761,7 +764,7 @@ process_filesystem ()
 
 		#TODO: health checks on $fs_params etc
 		program="${filesystem_programs[$fs_type]}"
-		case ${fs_type} in 
+		case ${fs_type} in
 			xfs)
 				$program -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
 			jfs|reiserfs)
