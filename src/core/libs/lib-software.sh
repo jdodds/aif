@@ -44,7 +44,6 @@ installpkg() {
 
 	notify "Package installation will begin now.  You can watch the output in the progress window. Please be patient."
 
-	#TODO: There may be something wrong here. See http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=f504e9ecfb9ecf1952bd8dcce7efe941e74db946 ASKDEV (Simo)
 	run_controlled pacman_installpkg "$PACMAN_TARGET --noconfirm -S $ALL_PACKAGES" $TMP_PACMAN_LOG "Installing... Please Wait" 
 
 	local _result=''

@@ -1,18 +1,17 @@
 #!/bin/bash
-# This is a procedure for automatic deployment/installation/configuration of systems. # TODO: document! (readme, notes about deployment profiles, examples, ...)
+# This is a procedure for automatic deployment/installation/configuration of systems.
 # check /usr/share/aif/examples for some example config files.
 # This procedure can easily replace the old quickinst script if you look at the "generic install" config file
 # Look at the base procedure to see the phases and which workers they'll execute.
 # It should be:
 # phase_preparation=(configure intro sysprep select_source runtime_network runtime_repositories runtime_packages)
 # phase_basics=(set_clock prepare_disks)
-# phase_system=(package_list install_packages auto_fstab auto_networkTODO auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
+# phase_system=(package_list install_packages auto_fstab auto_network auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
 # phase_finish=(msg_report)
 
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
-# TODO: I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
-# TODO: for worker_configure_system, we probably want the user to specify hostname, root pass etc.
-# TODO: implement setting hostname, keymap, consolefont, network settings
+# I don't know if you can do non-interactive dm_crypt stuff.. maybe by pulling luks keyfiles from svn/git/..?
+# TODO: implement setting hostname, keymap, consolefont, network settings, root pass, etc
 # for a list of recognized variables, see examples/generic-install-on-sda
 
 depend_procedure core base
@@ -110,7 +109,7 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-        target_prepare_pacman core extra community #TODO: it would be better if this was a separate worker, i think
+        target_prepare_pacman core extra community
         installpkg
 }
 
@@ -123,7 +122,7 @@ worker_set_clock ()
 
 
 worker_auto_network () {
-	# temporary override because i need to implement this
+	#TODO implement this
 	true
 }
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#TODO: make this profile work on itself, eg some stuff from inheriting profiles should be moved in, stuff implemented etc
+# this procedure is meant to be inherited from
 var_DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 var_TARGET_DIR="/mnt" # When overriding this, do _not_ add a trailing /.  It's not needed and maybe you could even break something
 var_RUNTIME_REPOSITORIES= # array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
@@ -153,7 +153,7 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	target_prepare_pacman core #TODO: it would be better if this was a separate worker, i think
+	target_prepare_pacman core
 	installpkg
 }
 
@@ -186,7 +186,6 @@ worker_auto_keymap_font ()
 
 worker_configure_system ()
 {
-	#TODO: what to do here?
 	true
 }
 
@@ -211,7 +210,6 @@ worker_initialtime ()
 
 worker_install_bootlader ()
 {
-	#TODO: ask which disk, install grub on it
 	true
 }
 

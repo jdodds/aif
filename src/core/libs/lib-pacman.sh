@@ -87,7 +87,7 @@ done
 	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
 
 	inform "Refreshing package database..."
-	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1 #TODO: make sure this also goes into the logfile. actually we should do this for many commands.
+	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1
 	return 0
 }
 
@@ -118,21 +118,6 @@ ${3}
 EOF
 }
 
-
-# taken from quickinst. TODO: figure this one out ASKDEV
-pacman_what_is_this_for ()
-{
-	PKGLIST=
-	# fix pacman list!
-	sed -i -e 's/-i686//g' -e 's/-x86_64//g' $PKGFILE
-	for i in $(cat $PKGFILE | grep 'base/' | cut -d/ -f2); do
-		nm=${i%-*-*}
-		PKGLIST="$PKGLIST $nm"
-	done
-	! [ -d $var_TARGET_DIR/var/lib/pacman ] && mkdir -p $var_TARGET_DIR/var/lib/pacman
-	! [ -d /var/lib/pacman ] && mkdir -p /var/lib/pacman
-}
-
 list_package_groups ()
 {
 	$PACMAN_TARGET -Sg
@@ -143,7 +128,6 @@ list_package_groups ()
 # <repo/group name> packagename [version, if $1=repo]
 # $1 repo or group
 # $2 one or more repo or group names
-# TODO: check the validity of the specified names in $2
 list_packages ()
 {
 	[ "$1" = repo -o "$1" = group ] || die_error "list_packages \$1 must be repo or group. not $1!"
@@ -155,7 +139,6 @@ list_packages ()
 # $1 packages separated by spaces
 # output format: multiple lines, each line like:
 # <pkgname> <group>
-# TODO: check $1
 which_group ()
 {
 	PACKAGE_GROUPS=`LANG=C $PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`

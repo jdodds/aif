@@ -1,6 +1,5 @@
 #!/bin/bash
-#TODO: get backend code out of here!!
-
+# A library which allows you to do backend stuff by using user interfaces
 
 # check if a worker has completed successfully. if not -> tell user he must do it + return 1
 # if ok -> don't warn anything and return 0
@@ -200,7 +199,6 @@ interactive_prepare_disks ()
 		default=no
 		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
-		#TODO: inform user (using dialog's --item-help or so) that autoprepare uses 1 disk and uses it in a "fairly regular" (though somewhat customizable) manner.
 		ask_option $default "Prepare Hard Drive" '' required \
 			"1" "Auto-Prepare (erases an ENTIRE hard drive and sets up partitions, filesystems and mountpoints)" \
 			"2" "Manually Partition Hard Drives" \
@@ -211,7 +209,7 @@ interactive_prepare_disks ()
 		case $ANSWER_OPTION in
 			"1")
 				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
-				interactive_autoprepare && NEXTITEM=5 && ret=0 && DISK_CONFIG_TYPE=auto;; #TODO: for some reason. if this completes $?=0, next item will be 1 :/
+				interactive_autoprepare && NEXTITEM=5 && ret=0 && DISK_CONFIG_TYPE=auto;;
 			"2")
 				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
 				interactive_partition && ret=1 && NEXTITEM=3 && DISK_CONFIG_TYPE=manual
@@ -228,7 +226,7 @@ interactive_prepare_disks ()
 				fi
 				if [ $? -eq 0 -o "$BLOCK_ROLLBACK_USELESS" = "0" ]
 				then
-					if rollback_filesystems #TODO: this part doesn't belong here. move it to ui-interactive. (interactive_rollback)
+					if rollback_filesystems
 					then
 						inform "Rollback succeeded"
 					else
@@ -281,7 +279,7 @@ interactive_autoprepare()
 	do
 		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 7500 || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1 #TODO: when doing yes, cli mode prints option JFS all the time, dia mode goes back to disks menu
+		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
         done
 
 	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required ${FSOPTS[@]} || return 1
@@ -384,7 +382,7 @@ interactive_filesystem ()
 
 		ask_option edit "Change $fs_type filesystem settings on $part ?" \
 		                "Change $fs_type filesystem settings (create:$fs_create, label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
-		                edit EDIT delete DELETE #TODO: nicer display if label is empty etc
+		                edit EDIT delete DELETE
 
 		# Don't alter, and return if user cancels
 		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs_string && return 0
