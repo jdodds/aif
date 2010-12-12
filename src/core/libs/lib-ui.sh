@@ -60,11 +60,11 @@ set_keymap ()
 {
 	KBDDIR="/usr/share/kbd"
 
-	KEYMAPS=
+	KEYMAPS=()
 	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
-		KEYMAPS="$KEYMAPS ${i##$KBDDIR/keymaps/} -"
+		KEYMAPS+=("${i##$KBDDIR/keymaps/}" -)
 	done
-	ask_option "${var_KEYMAP:-no}" "Select A Keymap" '' optional $KEYMAPS
+	ask_option "${var_KEYMAP:-no}" "Select a keymap" '' optional "${KEYMAPS[@]}"
 	if [ -n "$ANSWER_OPTION" ]
 	then
 		loadkeys -q $KBDDIR/keymaps/$ANSWER_OPTION
@@ -72,11 +72,11 @@ set_keymap ()
 		echo "$var_KEYMAP" > $RUNTIME_DIR/aif-keymap
 	fi
 
-	FONTS=
+	FONTS=()
 	for i in $(find $KBDDIR/consolefonts -maxdepth 1 -name "*.gz"  | sed 's|^.*/||g' | sort); do
-		FONTS="$FONTS $i -"
+		FONTS+=("$i" -)
 	done
-	ask_option "${var_CONSOLEFONT:-no}" "Select A Console Font" '' optional $FONTS
+	ask_option "${var_CONSOLEFONT:-no}" "Select a console font" '' optional "${FONTS[@]}"
 	if [ -n "$ANSWER_OPTION" ]
 	then
 		var_CONSOLEFONT=$ANSWER_OPTION
