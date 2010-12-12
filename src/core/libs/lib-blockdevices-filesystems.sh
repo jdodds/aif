@@ -77,6 +77,13 @@ fs_mountable=(ext2 ext3 ext4 nilfs2 xfs jfs vfat reiserfs)
 fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
 fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
 
+# list needed packages per filesystem
+declare -A filesystem_pkg=(["lvm-pv"]="lvm2" ["xfs"]="xfsprogs" ["jfs"]="jfsutils" ["reiserfs"]="reiserfsprogs" ["nilfs2"]="nilfs-utils" ["vfat"]="dosfstools" ["dm_crypt"]="cryptsetup")
+for i in ext2 ext3 ext4
+do
+	filesystem_pkg+=([$i]=e2fsprogs)
+done
+
 # returns which filesystems you can create based on the locally available utilities
 get_possible_fs () {
 	possible_fs=
@@ -528,16 +535,7 @@ process_filesystems ()
 				then
 					debug 'FS' "$fs_id ->Already done"
 				else
-					needs_pkg=
-					[ $fs_type = 'lvm-pv'   ] && needs_pkg=lvm2
-					[ $fs_type = 'xfs'      ] && needs_pkg=xfsprogs
-					[ $fs_type = 'jfs'      ] && needs_pkg=jfsutils
-					[ $fs_type = 'reiserfs' ] && needs_pkg=reiserfsprogs
-					[ $fs_type = 'nilfs2'   ] && needs_pkg=nilfs-utils
-					[[ $fs_type =~ ext.*   ]] && needs_pkg=e2fsprogs
-					[ $fs_type = 'vfat'     ] && needs_pkg=dosfstools
-					[ $fs_type = 'dm_crypt' ] && needs_pkg=cryptsetup
-
+					needs_pkg=${filesystem_pkg[$fs_type]}
 					[ -n "$needs_pkg" ] && check_is_in $needs_pkg "${needed_pkgs_fs[@]}" || needed_pkgs_fs+=($needs_pkg)
 
 					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
