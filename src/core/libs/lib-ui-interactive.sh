@@ -247,20 +247,17 @@ interactive_prepare_disks ()
 
 interactive_autoprepare()
 {
-	DISCS=$(finddisks)
-	if [ $(echo $DISCS | wc -w) -gt 1 ]
+	listblockfriendly
+	if [ $(echo $BLOCKFRIENDLY | wc -w) -gt 1 ]
 	then
-		notify "Available Disks:\n\n$(_getavaildisks)\n"
-		ask_option no 'Harddrive selection' "Select the hard drive to use" required $(finddisks 1 _) || return 1
+		ask_option no 'Harddrive selection' "Select the hard drive to use" required $BLOCKFRIENDLY || return 1
 		DISC=$ANSWER_OPTION
-	elif [ -z "$DISCS" ]; then
-            ask_string "Could not find disk. Please enter path of devicefile manually" "" || return 1
-            DISC=$ANSWER_STRING
+	elif [ -z "$BLOCKFRIENDLY" ]; then
+		ask_string "Could not find disk. Please enter path of devicefile manually" "" || return 1
+		DISC=${ANSWER_STRING// /} # TODO : some checks if $DISC is really a blockdevice is probably a good idea
 	else
-		DISC=$DISCS
+		DISC=$(echo $BLOCKFRIENDLY | cut -d ' ' -f 1)
 	fi
-	# TODO : some checks if $DISC is really a blockdevice is probably a good idea
-	DISC=${DISC// /} # strip all whitespace.  we need this for some reason.TODO: find out why
 
 	get_blockdevice_size $DISC MiB
 	FSOPTS=()
@@ -334,10 +331,9 @@ interactive_partition() {
 	fi
 
     # Select disk to partition
-    DISCS=$(finddisks 1 _)
-    DISCS="$DISCS OTHER - DONE +"
-    notify "Available Disks:\n\n$(_getavaildisks)\n"
-    DISC=""
+    listblockfriendly
+    DISCS="$BLOCKFRIENDLY OTHER OTHER DONE DONE"
+    DISC=
     while true; do
         # Prompt the user with a list of known disks
         ask_option no 'Disc selection' "$question_text (select DONE when finished)" required $DISCS || return 1

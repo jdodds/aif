@@ -37,17 +37,17 @@ printk()
 }
 
 
-# TODO: pass disks as argument to decouple backend logic
-# Get a list of available disks for use in the "Available disks" dialogs.
-# Something like:
-#   /dev/sda: 640133 MiB (640 GiB)
-#   /dev/sdb: 640135 MiB (640 GiB)
-_getavaildisks()
+# Get a list of available partionable blockdevices for use in ask_option
+# populates $BLOCKFRIENDLY with entries like:
+#   /dev/sda /dev/sda_640133_MiB_(640_GiB)
+listblockfriendly()
 {
+	BLOCKFRIENDLY=
 	for i in $(finddisks)
 	do
 		get_blockdevice_size $i MiB
-		echo "$i: $BLOCKDEVICE_SIZE MiB ($(($BLOCKDEVICE_SIZE/2**10)) GiB)\n"
+		[ -n "$BLOCKFRIENDLY" ] && BLOCKFRIENDLY="$BLOCKFRIENDLY "
+		BLOCKFRIENDLY="$BLOCKFRIENDLY$i ${i}_${BLOCKDEVICE_SIZE}_MiB_($(($BLOCKDEVICE_SIZE/2**10))_GiB)"
 	done
 }
 

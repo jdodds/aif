@@ -11,7 +11,6 @@ CURRENT ISSUES:
 * add /var/lib/aif/profiles directory to packages and document it.
 *  check the existence of /src/core/pkg and based on that set a different default value. in interactive_select_source
 * > It displays the current time in UTC (if utc selected) not the users localtime (UTC +- TIMEZONE)
-* interactive_autoprepare: merge _getavaildisks( and finddisks calls
 * more vars for automatic profile: hostname (check that adding to /etc/hosts can be done procedure-independently), 
 LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or take the config from runtime)
 * what to do with /etc/groups, passwd, modprobe.conf, mkinitcpio.conf, rc.local etc with automatic procedure? configure through automatic profile or let user check out files from svn or so? 
