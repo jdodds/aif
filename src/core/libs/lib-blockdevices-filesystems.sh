@@ -892,6 +892,7 @@ get_blockdevice_size ()
 	# BLOCKDEVICE_SIZE=$(($blocks/1024))
 
 	bytes=$((`fdisk -l $1 2>/dev/null | sed -n '2p' | cut -d' ' -f5`))
+	[[ $bytes = *[^0-9]* ]] && die_error "Could not parse fdisk -l output for $1"
 	[ $unit = B   ] && BLOCKDEVICE_SIZE=$bytes
 	[ $unit = KiB ] && BLOCKDEVICE_SIZE=$((bytes/2**10)) # /1024
 	[ $unit = kB  ] && BLOCKDEVICE_SIZE=$((bytes/10**3)) # /1000
@@ -899,6 +900,7 @@ get_blockdevice_size ()
 	[ $unit = MB  ] && BLOCKDEVICE_SIZE=$((bytes/10**6))
 	[ $unit = GiB ] && BLOCKDEVICE_SIZE=$((bytes/2**30))
 	[ $unit = GB  ] && BLOCKDEVICE_SIZE=$((bytes/10**9))
+	true
 }
 
 
