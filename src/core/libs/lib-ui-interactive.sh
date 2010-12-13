@@ -371,7 +371,7 @@ interactive_filesystem ()
 	NEW_FILESYSTEM=
 	if [ -n "$fs_string" ]
 	then
-		parse_filesystem_string "$fs_string" ''
+		parse_filesystem_string "$fs_string" '' ''
 		local old_fs_type=$fs_type
 		local old_fs_create=$fs_create
 		local old_fs_mountpoint=$fs_mountpoint
@@ -585,10 +585,10 @@ interactive_filesystems() {
 			menu_list=()
 			while read part type label fs
 			do
-				parse_filesystem_string "$fs" '-'
+				parse_filesystem_string "$fs" '' '-'
 				fs_create_display=N
 				[ "fs_create" = yes ] && fs_create_display=Y
-				fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label fs_params"
+				fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label $fs_params"
 
 				part_label_display=-
 				part_size_display=-

@@ -462,28 +462,38 @@ getpartinfo () {
 	fi
 }
 
-# $1 fs_string
-# $2 value to replace "no_foo" values with (optional) (can be '')
+# $1 fs_string (either a ; delimited string, or 'no_fs')
+# $2 value to replace empty values with (optional or '' for no effect)
+# $3 value to replace "no_foo" values with (optional) (can be '')
 #    when given, __ will be translated to ' ' as well
 parse_filesystem_string ()
 {
 	fs="$1"
-	fs_type=`       cut -d ';' -f 1 <<< $fs`
-	fs_create=`     cut -d ';' -f 2 <<< $fs`
-	fs_mountpoint=` cut -d ';' -f 3 <<< $fs`
-	fs_mount=`      cut -d ';' -f 4 <<< $fs`
-	fs_opts=`       cut -d ';' -f 5 <<< $fs`
-	fs_label=`      cut -d ';' -f 6 <<< $fs`
-	fs_params=`     cut -d ';' -f 7 <<< $fs`
-	if [ -n "${2+2}" ]; then # checking if a var is defined, in bash.
+	fs_type=`       cut -s -d ';' -f 1 <<< $fs`
+	fs_create=`     cut -s -d ';' -f 2 <<< $fs`
+	fs_mountpoint=` cut -s -d ';' -f 3 <<< $fs`
+	fs_mount=`      cut -s -d ';' -f 4 <<< $fs`
+	fs_opts=`       cut -s -d ';' -f 5 <<< $fs`
+	fs_label=`      cut -s -d ';' -f 6 <<< $fs`
+	fs_params=`     cut -s -d ';' -f 7 <<< $fs`
+	if [ -n "$2" ]; then
+		[ -z "$fs_type"       ] && fs_type=$2
+		[ -z "$fs_create"     ] && fs_create=$2
+		[ -z "$fs_mountpoint" ] && fs_mountpoint=$2
+		[ -z "$fs_mount"      ] && fs_mount=$2
+		[ -z "$fs_opts"       ] && fs_opts=$2
+		[ -z "$fs_label"      ] && fs_label=$2
+		[ -z "$fs_params"     ] && fs_params=$2
+	fi
+	if [ -n "${3+3}" ]; then # checking if a var is defined, in bash.
 		fs_opts="${fs_opts//__/ }"
 		fs_params="${fs_params//__/ }"
-		[ "$fs_type"       = no_type       ] && fs_type=$2
-		[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=$2
-		[ "$fs_mount"      = no_mount      ] && fs_mount=$2
-		[ "$fs_opts"       = no_opts       ] && fs_opts=$2
-		[ "$fs_label"      = no_label      ] && fs_label=$2
-		[ "$fs_params"     = no_params     ] && fs_params=$2
+		[ "$fs_type"       = no_type       ] && fs_type=$3
+		[ "$fs_mountpoint" = no_mountpoint ] && fs_mountpoint=$3
+		[ "$fs_mount"      = no_mount      ] && fs_mount=$3
+		[ "$fs_opts"       = no_opts       ] && fs_opts=$3
+		[ "$fs_label"      = no_label      ] && fs_label=$3
+		[ "$fs_params"     = no_params     ] && fs_params=$3
 	fi
 }
 
@@ -767,7 +777,7 @@ process_filesystem ()
 	debug 'FS' "process_filesystem $@"
 	local ret=0
 	part=$1
-	parse_filesystem_string "$2;$3;$4;$5;$6;$7;$8" ''
+	parse_filesystem_string "$2;$3;$4;$5;$6;$7;$8" '' ''
 
 	# Create the FS
 	if [ "$fs_create" = yes ]
