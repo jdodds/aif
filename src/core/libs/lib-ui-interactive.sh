@@ -609,15 +609,8 @@ device type label size type create? mountpoint options label params" required "$
 			[ $? -gt 0                 ] && return 1
 			[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
 
-			part=$ANSWER_OPTION
-
-			declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
-			declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
-			part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
-			part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
-			fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
-			[ "$part_label" == no_label ] && part_label=
-			[ "$fs"         == no_fs    ] && fs=
+			part=$(echo $ANSWER_OPTION | cut -d ' ' -f1)
+			getpartinfo $part ''
 
 			if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 			then

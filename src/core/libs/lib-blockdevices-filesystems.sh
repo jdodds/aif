@@ -446,6 +446,22 @@ process_disk ()
 	partition $1 "$2"
 }
 
+# fills variables with info found in $TMP_BLOCKDEVICES
+# $1 partition to look for
+# $2 value to replace "no_foo" values with (optional) (can be '')
+getpartinfo () {
+	part=$1
+	declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
+	declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
+	part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
+	part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
+	fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
+	if [ -n "${2+2}" ]; then # checking if a var is defined, in bash.
+		[ "$part_label" = no_label ] && part_label=$2
+		[ "$fs"         = no_fs    ] && fs=$2
+	fi
+}
+
 # $1 fs_string
 # $2 value to replace "no_foo" values with (optional) (can be '')
 #    when given, __ will be translated to ' ' as well
