@@ -587,7 +587,7 @@ interactive_filesystems() {
 			do
 				parse_filesystem_string "$fs" '' '-'
 				fs_create_display=N
-				[ "fs_create" = yes ] && fs_create_display=Y
+				[ "$fs_create" = yes ] && fs_create_display=Y
 				fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label $fs_params"
 
 				part_label_display=-
