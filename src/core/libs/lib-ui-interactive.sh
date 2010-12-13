@@ -408,11 +408,11 @@ interactive_filesystem ()
 			notify "Automatically picked the ${FSOPTS[1]} filesystem.  It's the only option for $part_type blockdevices"
 			fs_type=${FSOPTS[0]}
 		else
-			default=
-			[ -n "$fs_type" ] && default="--default-item $fs_type"
+			default=no
+			[ -n "$fs_type" ] && default="$fs_type"
 			extratext="Select a filesystem for $part:"
 			[ "$fs_create" == no ] && extratext="Select which filesystem $part is.  Make sure you get this right" #otherwise he'll be screwed when we try to mount it :)
-			ask_option no "Select filesystem" "$extratext" required "${FSOPTS[@]}" || return 1
+			ask_option $default "Select filesystem" "$extratext" required "${FSOPTS[@]}" || return 1
 			fs_type=$ANSWER_OPTION
 		fi
 
