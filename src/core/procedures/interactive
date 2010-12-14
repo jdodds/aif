@@ -49,7 +49,6 @@ mainmenu()
 	default=no
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 
-	#TODO: why does a '2' appear instead of '' ??
 	ask_option $default "MAIN MENU" '' required \
 	"1" "$worker_select_source_title" \
 	"2" "$worker_set_clock_title" \
