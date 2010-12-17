@@ -37,7 +37,7 @@ TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
 
 
 declare -A filesystem_programs=(["swap"]="mkswap" ["reiserfs"]="mkreiserfs" ["lvm-pv"]="pvcreate" ["lvm-vg"]="vgcreate" ["lvm-lv"]="lvcreate" ["dm_crypt"]="cryptsetup")
-for simple in ext2 ext3 ext4 nilfs2 xfs jfs vfat
+for simple in ext2 ext3 ext4 nilfs2 xfs jfs vfat btrfs
 do
 	filesystem_programs+=([$simple]=mkfs.$simple)
 done
@@ -49,7 +49,7 @@ do
 done
 
 # names for filesystems (which are shown to users in dialogs etc, don't use spaces!)
-declare -A filesystem_names=(["nilfs2"]="Nilfs2 (EXPERIMENTAL)" ["vfat"]="vFat" ["dm_crypt"]="dm_crypt (LUKS)" ["lvm-pv"]="lvm Physical Volume" ["lvm-vg"]="lvm Volume Group" ["lvm-lv"]="lvm Logical Volume")
+declare -A filesystem_names=(["nilfs2"]="Nilfs2 (EXPERIMENTAL)" ["btrfs"]="Btrfs (EXPERIMENTAL)" ["vfat"]="vFat" ["dm_crypt"]="dm_crypt (LUKS)" ["lvm-pv"]="lvm Physical Volume" ["lvm-vg"]="lvm Volume Group" ["lvm-lv"]="lvm Logical Volume")
 for i in ext2 ext3 ext4 reiserfs xfs jfs swap
 do
 	name=$(echo $i | capitalize)
@@ -57,9 +57,9 @@ do
 done
 
 # specify which filesystems can be stored on which blockdevices
-fs_on_raw=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt lvm-pv)
-fs_on_lvm_lv=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt)
-fs_on_dm_crypt=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat lvm-pv)
+fs_on_raw=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt lvm-pv btrfs)
+fs_on_lvm_lv=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat dm_crypt btrfs)
+fs_on_dm_crypt=(swap ext2 ext3 ext4 reiserfs nilfs2 xfs jfs vfat lvm-pv btrfs)
 fs_on_lvm_pv=(lvm-vg)
 fs_on_lvm_vg=(lvm-lv)
 
@@ -78,7 +78,7 @@ fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
 fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
 
 # list needed packages per filesystem
-declare -A filesystem_pkg=(["lvm-pv"]="lvm2" ["xfs"]="xfsprogs" ["jfs"]="jfsutils" ["reiserfs"]="reiserfsprogs" ["nilfs2"]="nilfs-utils" ["vfat"]="dosfstools" ["dm_crypt"]="cryptsetup")
+declare -A filesystem_pkg=(["lvm-pv"]="lvm2" ["xfs"]="xfsprogs" ["jfs"]="jfsutils" ["reiserfs"]="reiserfsprogs" ["nilfs2"]="nilfs-utils" ["vfat"]="dosfstools" ["dm_crypt"]="cryptsetup" ["btrfs"]=btrfs-progs-unstable)
 for i in ext2 ext3 ext4
 do
 	filesystem_pkg+=([$i]=e2fsprogs)
