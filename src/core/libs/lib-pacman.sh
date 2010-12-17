@@ -118,6 +118,7 @@ ${3}
 EOF
 }
 
+# not sorted
 list_package_groups ()
 {
 	$PACMAN_TARGET -Sg
@@ -126,6 +127,7 @@ list_package_groups ()
 
 # List the packages in one or more repos or groups. output is one or more lines, each line being like this:
 # <repo/group name> packagename [version, if $1=repo]
+# lines are sorted by packagename
 # $1 repo or group
 # $2 one or more repo or group names
 list_packages ()
@@ -139,6 +141,7 @@ list_packages ()
 # $1 packages separated by spaces
 # output format: multiple lines, each line like:
 # <pkgname> <group>
+# order is the same as the input
 which_group ()
 {
 	PACKAGE_GROUPS=`LANG=C $PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
