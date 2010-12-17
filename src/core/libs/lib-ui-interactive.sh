@@ -473,7 +473,7 @@ interactive_filesystem ()
 				fs_params=${list2[0]}
 			else
 				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
-				fs_params="$ANSWER_CHECKLIST"
+				fs_params="${ANSWER_CHECKLIST[@]}"
 			fi
 		fi
 		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-lv ]
@@ -732,7 +732,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
     done
 
     ask_checklist "Select Package groups\nDO NOT deselect BASE unless you know what you're doing!" $_grouplist || return 1
-    _grouplist=$ANSWER_CHECKLIST # _grouplist now contains all groups (the tags from the dialog checklist)
+    _grouplist=("${ANSWER_CHECKLIST[@]}") # _grouplist is now an array containing all selected groups
 
     # assemble a list of packages with groups, marking pre-selected ones
     # <package> <group> <selected>
@@ -745,7 +745,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
     while read pkgname pkggroup; do
         # check if this package is in a selected group
         # slightly ugly but sorting later requires newlines in the variable
-        if [ "${_grouplist/"\"$pkggroup\""/XXXX}" != "${_grouplist}" ] || check_is_in $pkgname "${needed_pkgs[@]}"
+        if check_is_in "$pkggroup" "${_grouplist[@]}" || check_is_in $pkgname "${needed_pkgs[@]}"
 	then
             _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} ON")"
         else
@@ -758,7 +758,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
     [ -z "$_pkglist" ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
 
     ask_checklist "Select Packages To Install." $_pkglist || return 1
-	var_TARGET_PACKAGES=$ANSWER_CHECKLIST # contains now all package names
+	var_TARGET_PACKAGES="${ANSWER_CHECKLIST[@]}"
     return 0
 }
 
