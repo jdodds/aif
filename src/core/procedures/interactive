@@ -87,7 +87,7 @@ mainmenu()
         "8")
 		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
         *)
-		ask_yesno "Abort Installation?" && stop_installer ;;
+		execute worker abort_installer;;
     esac
 }
 
@@ -187,4 +187,13 @@ worker_auto_network ()
 		show_warning "Automatic network settings propagation failed" "Failed to import current network settings into target system"
 		return 1
 	fi
+}
+
+worker_abort_installer ()
+{
+	ret=0
+	ask_yesno "Abort Installation?" || return
+	maybe_interactive_rollback_filesystems || ret=$?
+	stop_installer || ret=$?
+	return $ret
 }

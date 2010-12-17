@@ -220,20 +220,7 @@ interactive_prepare_disks ()
 				interactive_filesystems && ret=0 && NEXTITEM=5 && DISK_CONFIG_TYPE=manual
 				;;
 			"4")
-				if [ "$BLOCK_ROLLBACK_USELESS" = "1" ]
-				then
-					ask_yesno "It seems like you haven't partitioned/formatted/mounted anything yet (or rolled back already).  This operation is useless (unless the installer is buggy), but it doesn't harm.  Do you want to continue?" || NEXTITEM=5
-				fi
-				if [ $? -eq 0 -o "$BLOCK_ROLLBACK_USELESS" = "0" ]
-				then
-					if rollback_filesystems
-					then
-						inform "Rollback succeeded"
-					else
-						show_warning "Rollback failed" "Rollback failed"
-					fi
-				fi
-				;;
+				interactive_rollback_filesystems;;
 			"5")
 				DONE=1 ;;
 		esac
@@ -241,7 +228,31 @@ interactive_prepare_disks ()
 	return $ret
 }
 
+maybe_interactive_rollback_filesystems ()
+{
+	[ "$BLOCK_ROLLBACK_USELESS" = "1" ] && return 0
+	if ask_yesno "Do you want to rollback your filesystem changes?"
+	then
+		interactive_rollback_filesystems || return $?
+	fi
+	return 0
+}
 
+# it's up to the caller to decide if it's needed to call this function, so we warn user when he wants to do a useless rollback
+interactive_rollback_filesystems ()
+{
+	if [ "$BLOCK_ROLLBACK_USELESS" = "1" ]
+	then
+		ask_yesno "It seems like there is nothing rollback right now.  This operation is useless, but it shouldn't harm.  Do you want to continue?" || return
+	fi
+	if rollback_filesystems
+	then
+		inform "Rollback succeeded"
+	else
+		show_warning "Rollback failed" "Rollback failed"
+		return 1
+	fi
+}
 
 interactive_autoprepare()
 {
