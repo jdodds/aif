@@ -725,41 +725,35 @@ interactive_select_packages() {
 Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages.\n\n
 If any previous configuration you've done until now (like fancy filesystems) require extra packages, we've already preselected them for your convenience"
 
-    # show group listing for group selection, base is ON by default, all others are OFF
-    local _grouplist="base ^ ON"
-    for i in $(list_package_groups | sed "s/^base$/ /g"); do
-        _grouplist="${_grouplist} ${i} - OFF"
-    done
+	# show group listing for group selection, base is ON by default, all others are OFF
+	local grouplist=(base ^ ON)
+	for i in $(list_package_groups | grep -v '^base$'); do
+		grouplist+=(${i} - OFF)
+	done
 
-    ask_checklist "Select Package groups\nDO NOT deselect BASE unless you know what you're doing!" $_grouplist || return 1
-    _grouplist=("${ANSWER_CHECKLIST[@]}") # _grouplist is now an array containing all selected groups
+	ask_checklist "Select Package groups\nDo not deselect base unless you know what you're doing!" "${grouplist[@]}" || return 1
+	grouplist=("${ANSWER_CHECKLIST[@]}")
 
-    # assemble a list of packages with groups, marking pre-selected ones
-    # <package> <group> <selected>
-    local _pkgtmp="$(list_packages repo core | awk '{print $2}')" # all packages in core repository. TODO: we should use $repos here
-    local _pkglist=''
+	# get sorted array of available packages, with their groups. TODO: we should use $repos here
+	local pkgall=($(list_packages repo core | cut -d ' ' -f2))
+	which_group "${pkgall[@]}"
 
-    which_group "$_pkgtmp"
-    # assemble some packages which we'll definitely select by default because we figured out we'll need them:
-    needed_pkgs=("${needed_pkgs_fs[@]}")
-    while read pkgname pkggroup; do
-        # check if this package is in a selected group
-        # slightly ugly but sorting later requires newlines in the variable
-        if check_is_in "$pkggroup" "${_grouplist[@]}" || check_is_in $pkgname "${needed_pkgs[@]}"
-	then
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} ON")"
-        else
-            _pkglist="$(echo -e "${_pkglist}\n${pkgname} ${pkggroup} OFF")"
-        fi
-    done <<< "$PACKAGE_GROUPS"
+	# build the list of options, sorted primarily by group, then by packagename (this is already). marking where appropriate
+	local pkglist=()
+	needed_pkgs=("${needed_pkgs_fs[@]}")
+	while read pkgname pkggroup; do
+		mark=OFF
+		if check_is_in "$pkggroup" "${grouplist[@]}" || check_is_in $pkgname "${needed_pkgs[@]}"; then
+			mark=ON
+		fi
+		pkglist+=("$pkgname" "$pkggroup" $mark)
+	done < <(echo "$PACKAGE_GROUPS" | sort -f -k 2)
 
-    # sort by group
-    _pkglist="$(echo "$_pkglist" | sort -f -k 2)"
-    [ -z "$_pkglist" ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
+	[ ${#pkglist[@]} -eq 0 ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
 
-    ask_checklist "Select Packages To Install." $_pkglist || return 1
+	ask_checklist "Select Packages To Install." "${pkglist[@]}" || return 1
 	var_TARGET_PACKAGES="${ANSWER_CHECKLIST[@]}"
-    return 0
+	return 0
 }
 
 
