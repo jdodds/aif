@@ -18,7 +18,8 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
 * differentiate between framework and installer in src/aif.sh, some things should be in base
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
-* find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long
+* find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long. or use $EDITOR to edit a text file
+* interactive FS display could use aligned columns. maybe with dialog --column-separator?
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
 * move "/tmp/pacman.conf" to runtime directory and variablize everywhere
@@ -38,9 +39,6 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
 * look if you can hook into bash so that on any syntax/.. error you can bind the debug/log function
 * when you have 2 LV's and you delete one, both are erased from the VG, but there is still the entry for the other one as blockdevice
 * in usage, procedure specific opts points to parent profile when using inheritance
-* we may have an issue with net based installation where package installation works fine, however it tries to die instead of 'package installation complete' but it can't die because the --textbox fails in show_warning
-* the old installer asked a lot of questions before actually configuring the system, eg like 'do you need support for booting from nfs/softraid/lvm2/encrypted, custom dst file?' etc.\
-  do we still need this? why (not)?, and a select tag thingie would be nicer imho
 * refactor all pacman stuff (modularize/functionize etc)
 * port from /arch/setup: grub install chroot thing (http://projects.archlinux.org/?p=installer.git;a=commitdiff;h=4565577dbd2182dd49612f1e0b68288f5573bf7b) (waiting for ticket http://bugs.archlinux.org/task/13277)
 * ext4 default options? -O dir_index,extent,uninit_bg ?
@@ -69,11 +67,6 @@ configuring the system (mkinitcpio.conf). can we optimize this?
 
 
 WORRIES FOR MAYBE NO GOOD REASON
-* base procedure is mostly to serve other procedures.  If we need to do much
-work to implement something in the base procedure that we will probably
-never use in other procedures, we're doing something wrong.  If that ever
-happens (not likely I think), let's rethink what the base procedure should really be.
-
 * instead of every procedure using and overriding the 'base' procedure,
 we should maybe have even more flexibilty to take parts from different, specific procedures.
 eg: dieter procedure maybe wants to use something interactive. or base procedure wants to do something
