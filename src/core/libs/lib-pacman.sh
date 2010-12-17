@@ -144,5 +144,16 @@ list_packages ()
 # order is the same as the input
 which_group ()
 {
-	PACKAGE_GROUPS=`LANG=C $PACMAN_TARGET -Si $1| awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
+	PACKAGE_GROUPS=`LANG=C $PACMAN_TARGET -Si $1 | awk '/^Name/{ printf("%s ",$3) } /^Group/{ print $3 }'`
+}
+
+# get group and packagedesc for packages
+# $1 packages separated by spaces
+# output format: multiple lines, each line like:
+# <pkgname> <group> <desc>
+# order is the same as the input
+# note that space is used as separator, but desc is the only thing that will contain spaces.
+pkginfo ()
+{
+	PACKAGE_INFO=`LANG=C $PACMAN_TARGET -Si $1 | awk '/^Name/{ printf("%s ",$3) } /^Group/{ printf("%s", $3) } /^Description/{ for(i=3;i<=NF;++i) printf(" %s",$i); printf ("\n")}'`
 }
