@@ -483,7 +483,7 @@ interactive_filesystem ()
 				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
 				fs_params=${list2[0]}
 			else
-				ask_checklist "Which lvm PV's must this volume group span?" $list || return 1
+				ask_checklist "Which lvm PV's must this volume group span?" 0 $list || return 1
 				fs_params="${ANSWER_CHECKLIST[@]}"
 			fi
 		fi
@@ -742,7 +742,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 		grouplist+=(${i} - OFF)
 	done
 
-	ask_checklist "Select Package groups\nDo not deselect base unless you know what you're doing!" "${grouplist[@]}" || return 1
+	ask_checklist "Select Package groups\nDo not deselect base unless you know what you're doing!" 0 "${grouplist[@]}" || return 1
 	grouplist=("${ANSWER_CHECKLIST[@]}")
 
 	# get sorted array of available packages, with their groups. TODO: we should use $repos here
