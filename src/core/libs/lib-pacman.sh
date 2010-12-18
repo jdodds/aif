@@ -150,10 +150,10 @@ which_group ()
 # get group and packagedesc for packages
 # arguments: packages
 # output format: multiple lines, each line like:
-# <pkgname> <group> <desc>
+# <pkgname> <version> <group> <desc>
 # order is the same as the input
 # note that space is used as separator, but desc is the only thing that will contain spaces.
 pkginfo ()
 {
-	PACKAGE_INFO=`LANG=C $PACMAN_TARGET -Si "$@" | awk '/^Name/{ printf("%s ",$3) } /^Group/{ printf("%s", $3) } /^Description/{ for(i=3;i<=NF;++i) printf(" %s",$i); printf ("\n")}'`
+	PACKAGE_INFO=`LANG=C $PACMAN_TARGET -Si "$@" | awk '/^Name/{ printf("%s ",$3) } /^Version/{ printf("%s ",$3) } /^Group/{ printf("%s", $3) } /^Description/{ for(i=3;i<=NF;++i) printf(" %s",$i); printf ("\n")}'`
 }

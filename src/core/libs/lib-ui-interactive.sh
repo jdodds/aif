@@ -751,12 +751,12 @@ If any previous configuration you've done until now (like fancy filesystems) req
 	# build the list of options, sorted primarily by group, then by packagename (this is already). marking where appropriate
 	local pkglist=()
 	needed_pkgs=("${needed_pkgs_fs[@]}")
-	while read pkgname pkggroup pkgdesc; do
+	while read pkgname pkgver pkggroup pkgdesc; do
 		mark=OFF
 		if check_is_in "$pkggroup" "${grouplist[@]}" || check_is_in $pkgname "${needed_pkgs[@]}"; then
 			mark=ON
 		fi
-		pkglist+=("$pkgname" "$pkggroup" $mark "$pkgdesc")
+		pkglist+=("$pkgname" "$pkggroup" $mark "$pkgname $pkgver: $pkgdesc")
 	done < <(echo "$PACKAGE_INFO" | sort -f -k 2)
 
 	[ ${#pkglist[@]} -eq 0 ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
