@@ -757,7 +757,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 			mark=ON
 		fi
 		pkglist+=("$pkgname" "$pkggroup" $mark "$pkgname $pkgver: $pkgdesc")
-	done < <(echo "$PACKAGE_INFO" | sort -f -k 2)
+	done < <(echo "$PACKAGE_INFO" | sort -f -k 3)
 
 	[ ${#pkglist[@]} -eq 0 ] && show_warning "No packages found" "Sorry. I could not find any packages. maybe your network is not setup correctly, you lost connection, no mirror setup, bad group, ..." && return 1
 
