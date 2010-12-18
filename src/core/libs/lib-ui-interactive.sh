@@ -468,22 +468,21 @@ interactive_filesystem ()
 			   fs_params="$fs_params$pv"
 			fi
 
-			list=
+			list=()
 			for pv in $fs_params
 			do
-				list="$list $pv ^ ON"
+				list+=("$pv" ^ ON)
 			done
 			for pv in `grep '+ lvm-pv' $TMP_BLOCKDEVICES | awk '{print $1}' | sed 's/\+$//'` # find PV's to be added: their blockdevice ends on + and has lvm-pv as type #TODO: i'm not sure we check which pv's are taken already
 			do
-				grep -q "$pv ^ ON" <<< "$list" || list="$list $pv - OFF"
+				grep -q "$pv ^ ON" <<< "${list[@]}" || list+=("$pv" - OFF)
 			done
-			list2=($list)
-			if [ ${#list2[*]} -lt 6 ] # less then 6 words in the list. eg only one option
+			if [ ${#list[*]} -lt 6 ] # less then 6 words in the list. eg only one option
 			then
-				notify "Automatically picked PV ${list2[0]} to use for this VG.  It's the only available lvm PV"
-				fs_params=${list2[0]}
+				notify "Automatically picked PV ${list[0]} to use for this VG.  It's the only available lvm PV"
+				fs_params=${list[0]}
 			else
-				ask_checklist "Which lvm PV's must this volume group span?" 0 $list || return 1
+				ask_checklist "Which lvm PV's must this volume group span?" 0 "${list[@]}" || return 1
 				fs_params="${ANSWER_CHECKLIST[@]}"
 			fi
 		fi
