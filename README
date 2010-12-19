@@ -31,6 +31,7 @@ Optionally:
  - xfsprogs: XFS support
  - ntp: setting date with NTP
  - dialog: for ncurses support
+ - curl: for the aif-report-issues.sh script
 
 ** Goals **
 
@@ -217,3 +218,8 @@ theory, it isn't always the case like that now, I need to do more refactoring)
 ** Test suite **
 
 AIF also has a (WIP) test-suited. the source is the documentation.
+
+** Reporting issues / getting help **
+
+Run the aif-report-issues.sh script, which will submit valuable (for debugging)
+info to a public pastebin, you can then give the url to the people who need to help you
