@@ -901,7 +901,7 @@ interactive_grub() {
         # Create and edit the grub menu.lst
         interactive_grub_menulst
 
-	DEVS="$(finddisks _) $(findblockdevices _)"
+	DEVS="$(findblockdevices '_ ')"
         if [ "$DEVS" = " " ]; then
             notify "No hard drives were found"
             return 1
