@@ -268,29 +268,32 @@ interactive_autoprepare()
 		DISC=${BLOCKFRIENDLY[0]}
 	fi
 
-	get_blockdevice_size $DISC MiB
 	FSOPTS=()
 	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
 	do
 		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
 	done
+	get_blockdevice_size $DISC MiB
+	local size_left=$BLOCKDEVICE_SIZE
 
-	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 16 $BLOCKDEVICE_SIZE 100 || return 1
+	ask_number "Enter the size (MiB) of your /boot partition.  Recommended size: 100MiB\n\nDisk space left: $size_left MiB" 16 $size_left 100 || return 1
 	BOOT_PART_SIZE=$ANSWER_NUMBER
+	size_left=$(($size_left-$BOOT_PART_SIZE))
 
-	BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$BOOT_PART_SIZE))
-
-	ask_number "Enter the size (MiB) of your swap partition.  Recommended size: 256MiB\n\nDisk space left: $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 256 || return 1
+	ask_number "Enter the size (MiB) of your swap partition.  Recommended size: 256MiB\n\nDisk space left: $size_left MiB" 1 $size_left 256 || return 1
 	SWAP_PART_SIZE=$ANSWER_NUMBER
-
-        BLOCKDEVICE_SIZE=$(($BLOCKDEVICE_SIZE-$SWAP_PART_SIZE))
+        size_left=$(($size_left-$SWAP_PART_SIZE))
 
 	ROOT_PART_SET=""
 	while [ "$ROOT_PART_SET" = "" ]
 	do
-		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $BLOCKDEVICE_SIZE MiB" 1 $BLOCKDEVICE_SIZE 7500 || return 1
+		local suggest_root=7500
+		# if the disk is too small to hold a 7.5GB root and 5GB home (these are arbitrary numbers), just give root 3/4 of the size, if that's too small leave it up to the user
+		[ $(($suggest_root+5000)) -gt $size_left ] && suggest_root=$(($size_left*3/4))
+		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $size_left MiB" 1 $size_left $suggest_root || return 1
 		ROOT_PART_SIZE=$ANSWER_NUMBER
-		ask_yesno "$(($BLOCKDEVICE_SIZE-$ROOT_PART_SIZE)) MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
+		size_left=$(($size_left-$ROOT_PART_SIZE))
+		ask_yesno "$size_left MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
         done
 
 	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required "${FSOPTS[@]}" || return 1
