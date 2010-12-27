@@ -42,7 +42,7 @@ do
 	filesystem_programs+=([$simple]=mkfs.$simple)
 done
 
-declare -A label_programs=(["xfs"]="xfs_admin" ["jfs"]="jfs_tune" ["reiserfs"]="reiserfstune" ["nilfs2"]="nilfs-tune" ["vfat"]="dosfslabel")
+declare -A label_programs=(["swap"]="swaplabel" ["xfs"]="xfs_admin" ["jfs"]="jfs_tune" ["reiserfs"]="reiserfstune" ["nilfs2"]="nilfs-tune" ["vfat"]="dosfslabel")
 for ext in ext2 ext3 ext4
 do
 	label_programs+=([$ext]=tune2fs)
@@ -75,7 +75,7 @@ fs_on[dm_crypt]=${fs_on_dm_crypt[@]}
 
 fs_mountable=(ext2 ext3 ext4 nilfs2 xfs jfs vfat reiserfs)
 fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
-fs_label_optional=('ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
+fs_label_optional=('swap' 'ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
 
 # list needed packages per filesystem
 declare -A filesystem_pkg=(["lvm-pv"]="lvm2" ["xfs"]="xfsprogs" ["jfs"]="jfsutils" ["reiserfs"]="reiserfsprogs" ["nilfs2"]="nilfs-utils" ["vfat"]="dosfstools" ["dm_crypt"]="cryptsetup" ["btrfs"]=btrfs-progs-unstable)
@@ -791,15 +791,8 @@ process_filesystem ()
 				$program -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
 			jfs|reiserfs)
 				yes | $program $part        $fs_opts >$LOG 2>&1; ret=$? ;;
-			ext2|ext3|ext4|nilfs2|vfat)
+			swap|ext2|ext3|ext4|nilfs2|vfat)
 				$program $part              $fs_opts >$LOG 2>&1; ret=$? ;;
-			swap)
-				if [ -z "$fs_label" ]; then
-					$program $part      $fs_opts >$LOG 2>&1; ret=$?
-				else
-					$program -L $fs_label $part $fs_opts >$LOG 2>&1; ret=$?
-				fi
-				;;
 			dm_crypt)
 				[ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
 				inform "Please enter your passphrase to encrypt the device (with confirmation)"
@@ -829,7 +822,7 @@ process_filesystem ()
 	then
 		program="${label_programs[$fs_type]}"
 		case ${fs_type} in
-			xfs|jfs|nilfs2|ext2|ext3|ext4)
+			swap|xfs|jfs|nilfs2|ext2|ext3|ext4)
 				$program -L $fs_label $part		>$LOG 2>&1; ret=$?;;
 			reiserfs)
 				$program -l $fs_label $part		>$LOG 2>&1; ret=$?;;
