@@ -18,7 +18,6 @@ LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or t
 * use traps and initiate rollback when user wants to abort. see also http://www.davidpashley.com/articles/writing-robust-shell-scripts.html
 * differentiate between framework and installer in src/aif.sh, some things should be in base
 * after unlocking dm_crypt, FS check fails (reiserfs, must try other)
-* find a way to make _cli_ask_checklist still userfriendly for long lists.. maybe we should just propose/ask to use dia if the list is too long. or use $EDITOR to edit a text file
 * interactive FS display could use aligned columns. maybe with dialog --column-separator?
 * sometimes we call die_error but we go back to the menu.. eg when we run as non-root and can't log
 * fs_params in partition editor: do we really need to show them? isn't this where we store our "own" stuff?
