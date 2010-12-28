@@ -601,7 +601,7 @@ interactive_filesystems() {
 	while [ "$ALLOK" = 0 ]
 	do
 		# Let the user make filesystems and mountpoints. USERHAPPY becomes 1 when the user hits DONE.
-		USERHAPPY=0
+		local USERHAPPY=0
 
 		while [ "$USERHAPPY" = 0 ]
 		do
@@ -814,8 +814,8 @@ interactive_runtime_network() {
         DHCP=1
     else
 	DHCP=0
-        NETPARAMETERS=""
-        while [ "$NETPARAMETERS" = "" ]; do
+        local USERHAPPY=0
+        while [ "$USERHAPPY" = 0 ]; do
             ask_string "Enter your IP address" "192.168.0.2" || return 1
             IPADDR=$ANSWER_STRING
             ask_string "Enter your netmask" "255.255.255.0" || return 1
@@ -832,12 +832,11 @@ interactive_runtime_network() {
             PROXY_HTTP=$ANSWER_STRING
             ask_string "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
             PROXY_FTP=$ANSWER_STRING
-            ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nBroadcast:          $BROADCAST\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
-            case $? in
-                1) ;;
-                0) NETPARAMETERS="1" ;;
-            esac
-        done
+            if ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nBroadcast:          $BROADCAST\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
+	    then
+		    USERHAPPY=1
+	    fi
+	done
         echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
         if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
         then
@@ -977,7 +976,7 @@ interactive_grub() {
                 # Maybe better we leave the user alone and poke him to use a grub
                 # shell if he want do something unusefull and not install grub in
                 # aech MBR of affected HD in raid array....
-                USERHAPPY=0
+                local USERHAPPY=0
                 while [ "$USERHAPPY" = 0 ]
                 do
                     ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed." required $DEVS DONE _
