@@ -14,16 +14,17 @@ TIMEZONE=
 # <mountpoint>:<partsize>:<fstype>[:+]
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 
-worker_select_source_title='Select Source'
-worker_set_editor_title='Set Editor'
-worker_runtime_network_title='Setup Network'
-worker_select_mirror_title='Choose Mirror'
-worker_set_clock_title='Set clock'
-worker_prepare_disks_title='Prepare Hard Drive(s)'
-worker_package_list_title='Select Packages'
-worker_install_packages_title='Install Packages'
-worker_configure_system_title='Configure System'
-worker_install_bootloader_title='Install Bootloader'
+declare -A workertitles
+workertitles['select_source']='Select source'
+workertitles['set_editor']='Set editor'
+workertitles['runtime_network']='Setup network'
+workertitles['select_mirror']='Select mirror'
+workertitles['set_clock']='Set clock'
+workertitles['prepare_disks']='Prepare hard drive(s)'
+workertitles['package_list']='Select packages'
+workertitles['install_packages']='Install packages'
+workertitles['configure_system']='Configure system'
+workertitles['install_bootloader']='Install bootloader'
 
 start_process ()
 {
@@ -48,17 +49,19 @@ mainmenu()
 {
 	default=no
 	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
+	menu_workers=(select_source set_editor set_clock prepare_disks package_list install_packages configure_system install_bootloader)
+	menu=()
+	for i in ${!menu_workers[@]}
+	do
+		let i+=1 # we count from 1 onwards, not from 0
+		worker=${menu_workers[$i]}
+		title=${workertitles[$worker]}
+		menu+=($i "$title")
+	done
+	let i+=1
+	menu+=($i "Exit Install")
 
-	ask_option $default "MAIN MENU" '' required \
-	"1" "$worker_select_source_title" \
-	"2" "$worker_set_editor_title" \
-	"3" "$worker_set_clock_title" \
-	"4" "$worker_prepare_disks_title" \
-	"5" "$worker_package_list_title" \
-	"6" "$worker_install_packages_title" \
-	"7" "$worker_configure_system_title" \
-	"8" "$worker_install_bootloader_title" \
-	"9" "Exit Install"
+	ask_option $default "MAIN MENU" '' required "${menu[@]}"
 	case $ANSWER_OPTION in
 	"1")
 		                                        execute worker select_source; local ret=$?; [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ] && execute worker select_source_extras_menu
