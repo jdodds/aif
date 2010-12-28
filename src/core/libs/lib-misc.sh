@@ -140,3 +140,15 @@ target_configure_initial_keymap_font ()
 	[ -n "$var_KEYMAP"      ] && sed -i "s/^KEYMAP=.*/KEYMAP=\"`basename $var_KEYMAP .map.gz`\"/"    ${var_TARGET_DIR}/etc/rc.conf
 	[ -n "$var_CONSOLEFONT" ] && sed -i "s/^CONSOLEFONT=.*/CONSOLEFONT=\"${var_CONSOLEFONT/\.*/}\"/" ${var_TARGET_DIR}/etc/rc.conf
 }
+
+# apped string after last line matching regex in a file.
+# $1 regex
+# $2 string (can contain "\n", "\t" etc)
+# $3 file
+append_after_last ()
+{
+	[ -r "$3" -a -w "$3" ] || return 1
+	line_no=$(sed -ne "$1=" "$3" | tail -n 1)
+	[ -n "$line_no" ] || return 1
+	sed -i ${line_no}a"$2" "$3"
+}

@@ -786,15 +786,16 @@ If any previous configuration you've done until now (like fancy filesystems) req
 # args: none
 # returns: 1 on failure
 interactive_runtime_network() {
-    INTERFACE=""
-    DHCP=""
     local ifaces
     ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
     [ -z "$ifaces" ] && show_warning "No network interfaces?" "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." && return 1
 
+    INTERACE_PREV=$INTERFACE
+    unset INTERFACE DHCP IPADDR SUBNET BROADCAST GW DNS PROXY_HTTP PROXY_FTP
     ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1
     INTERFACE=$ANSWER_OPTION
+    [ "$INTERFACE" = "$INTERFACE_PREV" ] && INTERFACE_PREV=
 
     if ask_yesno "Do you want to use DHCP?"
     then
@@ -826,7 +827,7 @@ interactive_runtime_network() {
             [ -n "$GW" ] && default_dns="$GW"
             [ -z "$GW" ] && default_dns="$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)"
             ask_string "Enter your DNS server IP" "$default_dns" || return 1
-            DNS=$ANSWER_STRING
+	    DNS=$ANSWER_STRING
             ask_string "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
             PROXY_HTTP=$ANSWER_STRING
             ask_string "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
@@ -858,7 +859,9 @@ interactive_runtime_network() {
         fi
         echo "nameserver $DNS" >/etc/resolv.conf
     fi
-    echo "INTERFACE=$INTERFACE
+
+    echo "INTERFACE_PREV=$INTERFACE_PREV
+          INTERFACE=$INTERFACE
           DHCP=$DHCP
           IPADDR=$IPADDR
           SUBNET=$SUBNET
