@@ -82,8 +82,7 @@ mainmenu()
 		                                                                                                                  execute worker auto_keymap_font;
 		                                                                                                                  true                        ; } && NEXTITEM=7 ;;
         "7")
-		check_depend worker install_packages && execute worker auto_network && \
-		                                        execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
+		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;
 		                                                                                                                  execute worker initialtime  ;
 		                                                                                                                  true                        ; } && NEXTITEM=8 ;;

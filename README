@@ -145,7 +145,9 @@ Notes:
  - you _must_ specify a procedure, to avoid errors. take 'interactive' if unsure
  - don't edit the base procedure (or any other core item), rather make your own. It's easy!
  - you're not supposed to define new phases. just override them. logic goes in workers/libariers
-
+ - workers and phases are pretty regular functions, except that they are invoked through a wrapper (the `execute` function), which tracks the exitcodes
+   this allows to get reports at the end of the install showing which steps completed successfully and where things failed.  Other then that, there is nothing
+   special about them.  It is even possible to have your workers function as a callback by having library functions invoking them.
 
 
 ** Extending AIF **

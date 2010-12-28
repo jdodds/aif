@@ -28,7 +28,6 @@ phase_basics=(\
 phase_system=(\
 	package_list \
 	install_packages \
-	auto_network \
 	auto_locale \
 	auto_keymap_font \
 	configure_system \

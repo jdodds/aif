@@ -20,6 +20,7 @@ check_depend ()
 # all logic in here is written to do the right thing in that case
 prefill_configs () {
 	target_configure_fstab || return $?
+	execute worker auto_network || return $?
 	# /etc/pacman.d/mirrorlist
 	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
 	if [ "$var_PKG_SOURCE_TYPE" = "net" -a -n "${var_SYNC_URL}" ]; then
