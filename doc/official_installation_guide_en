@@ -303,9 +303,16 @@ These menu entries are only available when choosing FTP Installation, for
 rather obvious reasons. After successful preparation, choose Return to Main
 Menu.
 
+### Set Editor
+
+Allows you to change your editor preference.
+You'll have the choice between nano and vi (and pico/joe/vim if you install those
+in a separate console).  You can skip this menu, but you will be asked again when
+needed.
+
 ####  Set Clock
 
-Set Clock will allow you to set up your system clock and date. 
+Set Clock will allow you to set up your system clock and date.
 First you have to say if your hardwareclock is (or should be) in UTC or
 localtime.
 UTC is preferred, but if you have an OS installed which cannot handle UTC
@@ -471,8 +478,6 @@ Configure System does multiple things:
   mkinitcpio.conf's HOOKS, keymap settings in rc.conf, pacman mirror etc)
 * preseed some configuration files after you agreed. (eg network settings)
 * allow you to manually change important config files for your target system.
-  You'll be asked which text editor you want to use.
-  You have the choice between nano, joe and vi
 * allow you to set the root password for the target.
 
 **Configuration Files**

@@ -65,10 +65,7 @@ prefill_configs () {
 
 interactive_configure_system()
 {
-	if [ -z "$EDITOR" ]
-	then
-		interactive_get_editor || return 1
-	fi
+	seteditor || return 1
 	FILE=""
 
 	prefill_configs
@@ -1150,12 +1147,9 @@ interactive_grub_menulst () {
 	generate_grub_menulst
 	helptext=
 	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
-    notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
-    if [ -z "$EDITOR" ]
-    then
-	interactive_get_editor || return 1
-    fi
-    $EDITOR $grubmenu
+	notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
+	seteditor || return 1
+	$EDITOR $grubmenu
 }
 
 interactive_grub_install () {
@@ -1260,23 +1254,6 @@ interactive_select_mirror() {
     fi
     echo "Using mirror: $var_SYNC_URL" >$LOG
 }
-
-# geteditor().
-# prompts the user to choose an editor
-# sets EDITOR global variable
-#
-interactive_get_editor() {
-	unset EDITOR_OPTS
-	declare -A editors=(["nano"]="nano (easier)" ["joe"]="joe (bit more powerful)" ["vi"]="vi (advanced)")
-	for editor in ${!editors[@]}
-	do
-		which $editor &>/dev/null && EDITOR_OPTS+=($editor "${editors[$editor]}")
-	done
-	ask_option nano "Text editor selection" "Select a Text Editor to Use" required "${EDITOR_OPTS[@]}" || return 1
-	EDITOR=nano
-	check_is_in "$ANSWER_OPTION" "${!editors[@]}" && EDITOR=$ANSWER_OPTION
-}
-
 
 select_source_extras_menu ()
 {
