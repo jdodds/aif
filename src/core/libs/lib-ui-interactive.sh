@@ -787,7 +787,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 # returns: 1 on failure
 interactive_runtime_network() {
     INTERFACE=""
-    S_DHCP=""
+    DHCP=""
     local ifaces
     ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
@@ -810,9 +810,9 @@ interactive_runtime_network() {
             show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
             return 1
         fi
-        S_DHCP=1
+        DHCP=1
     else
-    	S_DHCP=0
+	DHCP=0
         NETPARAMETERS=""
         while [ "$NETPARAMETERS" = "" ]; do
             ask_string "Enter your IP address" "192.168.0.2" || return 1
@@ -859,14 +859,14 @@ interactive_runtime_network() {
         echo "nameserver $DNS" >/etc/resolv.conf
     fi
     echo "INTERFACE=$INTERFACE
-          S_DHCP=$S_DHCP
+          DHCP=$DHCP
           IPADDR=$IPADDR
           SUBNET=$SUBNET
           BROADCAST=$BROADCAST
           GW=$GW
           DNS=$DNS
           PROXY_HTTP=$PROXY_HTTP
-          PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings
+          PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings || return 1
     notify "The network is configured."
     return 0
 }

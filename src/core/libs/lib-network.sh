@@ -1,17 +1,13 @@
 #!/bin/bash
 
-# auto_network().
 # configures network on host system according to installer settings
 # if some variables are not set, we handle that transparantly
-# $1 dhcp/fixed
-# $2 http proxy (optional. defaults to '')
-# $3 ftp proxy (optional. defaults to '')
+# however, at least $DHCP must be set, so we know what do to
+# we assume that you checked whether networking has been setup before calling us
 target_configure_network()
 {
-	[ "$1" != dhcp -a "$1" != fixed ] && die_error "target_configure_network \$1 must be 'dhcp' or 'fixed'"
-	PROXY_HTTP="$2"
-	PROXY_FTP="$3"
-	if [ "$1" = fixed ]; then
+	source $RUNTIME_DIR/aif-network-settings 2>/dev/null || return 1
+	if [ "$DHCP" = 0 ] ; then
 		sed -i "s/#eth0=\"eth0/eth0=\"eth0/g"                                                 ${var_TARGET_DIR}/etc/rc.conf || return 1
 		sed -i "s/^eth0=\"dhcp/#eth0=\"dhcp/g"                                                ${var_TARGET_DIR}/etc/rc.conf || return 1
 		sed -i "s#eth0=\"eth0#${INTERFACE:-eth0}=\"${INTERFACE:-eth0}#g"                      ${var_TARGET_DIR}/etc/rc.conf || return 1
