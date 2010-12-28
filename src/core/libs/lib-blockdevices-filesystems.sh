@@ -353,20 +353,15 @@ mapdev() {
 
 
 
-# auto_fstab(). taken from setup
 # preprocess fstab file
 # comments out old fields and inserts new ones
-# according to partitioning/formatting stage
-#
+# according to $TMP_FSTAB, set through process_filesystem calls
 target_configure_fstab()
 {
-	if [ -f $TMP_FSTAB ]
-	then
-		# comment out stray /dev entries
-		sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab
-		# append entries from new configuration
-		sort $TMP_FSTAB >>$var_TARGET_DIR/etc/fstab
-	fi
+	[ -f $TMP_FSTAB ] || return 0 # we can't do anything, but not really a failure
+	sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab || return 1
+	sort $TMP_FSTAB >> $var_TARGET_DIR/etc/fstab || return 1
+	return 0
 }
 
 
