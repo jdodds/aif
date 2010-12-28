@@ -15,16 +15,20 @@ check_depend ()
 	show_warning "Cannot Continue.  Going back to $2" "You must do $subject first before going here!." && return 1
 }
 
-
+# populate config files with what we know about the system
+# note that you could run this function multiple times (i.e. you change some stuff and then come back),
+# all logic in here is written to do the right thing in that case
 prefill_configs () {
-	#TODO: only need to do this once.  check 'ended_ok worker configure_system' is not good because this could be done already even if worker did not exit 0
 	target_configure_fstab || return $?
 	# /etc/pacman.d/mirrorlist
-	# add installer-selected mirror to the top of the mirrorlist
+	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
 	if [ "$var_PKG_SOURCE_TYPE" = "net" -a -n "${var_SYNC_URL}" ]; then
-		debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
-		mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
-		echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST"
+		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "${var_SYNC_URL}"
+		then
+			debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
+			echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST"
+		fi
 	fi
 
 	# /etc/rc.conf
@@ -40,8 +44,17 @@ prefill_configs () {
 	if get_anchestors_mount ';/;'
 	then
 		hooks=`echo "$ANSWER_DEVICES" | cut -d ' ' -f2 | egrep 'lvm-lv|dm_crypt' | sed -e 's/lvm-lv/lvm2/' -e 's/dm_crypt/encrypt/' | tac`
-		hooks=`echo $hooks`
-		[ -n "$hooks" ] && sed -i "/^HOOKS/ s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+		hooks=`echo $hooks` # $hooks is now a space separated, correctly ordered list of needed hooks
+		if [ -n "$hooks" ]
+		then
+			# for each hook we're about to add, remove it first if it's already in
+			for hook in $hooks
+			do
+				sed -i "/^HOOKS/ s/$hook //" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+			done
+			# now add the correctly ordered string
+			sed -i "/^HOOKS/ s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
+		fi
 	fi
 	# The lvm2 hook however is needed for any lvm LV, no matter the involved mountpoints, so include it if we still need to
 	if grep -q lvm-lv $TMP_BLOCKDEVICES && ! grep -q '^HOOKS.*lvm2'  ${var_TARGET_DIR}/etc/mkinitcpio.conf
