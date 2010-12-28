@@ -28,7 +28,6 @@ phase_basics=(\
 phase_system=(\
 	package_list \
 	install_packages \
-	auto_fstab \
 	auto_network \
 	auto_locale \
 	auto_keymap_font \
@@ -155,12 +154,6 @@ worker_install_packages ()
 {
 	target_prepare_pacman core
 	installpkg
-}
-
-
-worker_auto_fstab ()
-{
-	target_configure_fstab
 }
 
 
