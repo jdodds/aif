@@ -224,7 +224,6 @@ interactive_prepare_disks ()
 				;;
 			"3")
 				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
-				PARTFINISH=""
 				interactive_filesystems && ret=0 && default=5 && DISK_CONFIG_TYPE=manual
 				;;
 			"4")
