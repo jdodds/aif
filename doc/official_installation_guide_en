@@ -378,7 +378,7 @@ partition to continue the installation.
 
 In this menu all recognized partitions are listed.  On top of these you can
 create new filesystems.
-You should be aware of three things:
+You should be aware of these things:
 
 * All of this is just a model, everything will only be set up after you confirm.
 * Not all blockdevices support all filesystems (Eg you cannot put an LVM
@@ -394,6 +394,12 @@ You should be aware of three things:
   For example, to disable the journal on ext filesystems:
   * don't do: `^has_journal`
   * but rather: `-O ^has_journal`
+* Use 'dev' for the most straightforward way to refer to your disks in config
+  files such as fstab and the grub menu.lst (plain devicefiles).
+  Kernel updates can cause devices to be renamed, which can cause issues.
+  'uuid' is a hassle-free (albeit a bit ugly), solid way to refer to your
+  disks, 'label' will use filesystem labels - which you can choose - and
+  fallback to 'dev' if needed.
 
 When filesystems setup is complete, you can select 'Done'.  At this point a
 check will be run which will tell you any critical errors (such as no root
