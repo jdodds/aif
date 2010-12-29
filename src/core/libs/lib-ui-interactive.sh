@@ -160,11 +160,9 @@ interactive_time () {
 		# correct timezone.
 		[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
 
-	NEXTITEM=
         while true; do
 		current=$(date)
-                default=no
-                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                local default=no
                 #TODO: only propose if network ok
                 EXTRA=()
 		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
@@ -177,7 +175,7 @@ interactive_time () {
 			if ntpdate pool.ntp.org >/dev/null
 			then
 				notify "Synced clock with internet pool successfully."
-				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
+				dohwclock $HARDWARECLOCK systohc && default=3
 			else
 				show_warning 'Ntp failure' "An error has occured, time was not changed!"
 			fi
@@ -187,7 +185,7 @@ interactive_time () {
 			ask_datetime || continue
 			if date -s "$ANSWER_DATETIME"
 			then
-				dohwclock $HARDWARECLOCK systohc && NEXTITEM=3
+				dohwclock $HARDWARECLOCK systohc && default=3
 			else
 				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME" 
 			fi
@@ -201,15 +199,13 @@ interactive_prepare_disks ()
 {
 	DONE=0
 	local ret=1 # 1 means unsuccessful. 0 for ok
-	NEXTITEM=
 	DISK_CONFIG_TYPE=
 	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
 	while [ "$DONE" = "0" ]
 	do
 		rollbackstr=" (you don't need to do this)"
 		[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && rollbackstr=" (this will revert your last changes)"
-		default=no
-		[ -n "$NEXTITEM" ] && default="$NEXTITEM"
+		local default=no
 
 		ask_option $default "Prepare Hard Drive" '' required \
 			"1" "Auto-Prepare (erases an ENTIRE hard drive and sets up partitions, filesystems and mountpoints)" \
@@ -220,16 +216,16 @@ interactive_prepare_disks ()
 
 		case $ANSWER_OPTION in
 			"1")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
-				interactive_autoprepare && NEXTITEM=5 && ret=0 && DISK_CONFIG_TYPE=auto;;
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
+				interactive_autoprepare && default=5 && ret=0 && DISK_CONFIG_TYPE=auto;;
 			"2")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
-				interactive_partition && ret=1 && NEXTITEM=3 && DISK_CONFIG_TYPE=manual
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
+				interactive_partition && ret=1 && default=3 && DISK_CONFIG_TYPE=manual
 				;;
 			"3")
-				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && NEXTITEM=4 && continue
+				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
 				PARTFINISH=""
-				interactive_filesystems && ret=0 && NEXTITEM=5 && DISK_CONFIG_TYPE=manual
+				interactive_filesystems && ret=0 && default=5 && DISK_CONFIG_TYPE=manual
 				;;
 			"4")
 				interactive_rollback_filesystems;;

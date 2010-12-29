@@ -34,9 +34,7 @@ start_process ()
 	execute worker intro
 	execute worker sysprep
 
-	# menu item tracker- autoselect the next item
-	NEXTITEM="1"
-	
+	default=1
 	while true
 	do
     		mainmenu
@@ -46,8 +44,6 @@ start_process ()
 
 mainmenu()  
 {
-	default=no
-	[ -n "$NEXTITEM" ] && default="$NEXTITEM"
 	menu_workers=(select_source set_editor set_clock prepare_disks package_list install_packages configure_system install_bootloader)
 	menu=()
 	for i in ${!menu_workers[@]}
@@ -63,29 +59,29 @@ mainmenu()
 	ask_option $default "MAIN MENU" '' required "${menu[@]}"
 	case $ANSWER_OPTION in
 	"1")
-		                                        execute worker select_source   && execute worker runtime_packages                                         && NEXTITEM=2 ;;
+		                                        execute worker select_source   && execute worker runtime_packages                                         && default=2 ;;
 
 	"2")
-                                                        execute worker set_editor                                                                                 && NEXTITEM=3 ;;
+                                                        execute worker set_editor                                                                                 && default=3 ;;
         "3")
-		                                        execute worker set_clock                                                                                  && NEXTITEM=4 ;;
+		                                        execute worker set_clock                                                                                  && default=4 ;;
         "4")
-		                                        execute worker prepare_disks                                                                              && NEXTITEM=5 ;;
+		                                        execute worker prepare_disks                                                                              && default=5 ;;
         "5")
 		check_depend worker prepare_disks && \
-		check_depend worker select_source    && execute worker package_list                                                                               && NEXTITEM=6 ;;
+		check_depend worker select_source    && execute worker package_list                                                                               && default=6 ;;
         "6")
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_locale  ; \
 		                                                                                                                  execute worker auto_keymap_font;
-		                                                                                                                  true                        ; } && NEXTITEM=7 ;;
+		                                                                                                                  true                        ; } && default=7 ;;
         "7")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;
 		                                                                                                                  execute worker initialtime  ;
-		                                                                                                                  true                        ; } && NEXTITEM=8 ;;
+		                                                                                                                  true                        ; } && default=8 ;;
         "8")
-		check_depend worker configure_system && execute worker install_bootloader                                                                         && NEXTITEM=9 ;;
+		check_depend worker configure_system && execute worker install_bootloader                                                                         && default=9 ;;
         "9")
 		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
         *)
@@ -122,14 +118,13 @@ worker_select_source ()
 select_source_extras_menu ()
 {
         while true; do
-                default=no
-                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                local default=no
                 ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
                 "1" "${worker_titles['runtime_network']}" \
                 "2" "Select mirror" \
                 "3" "Return to Main Menu" || return 1
-                [ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && NEXTITEM=2
-                [ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && NEXTITEM=3
+                [ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && default=2
+                [ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && default=3
                 [ "$ANSWER_OPTION" = 3 ] && break
         done
 	return 1
