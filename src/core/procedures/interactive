@@ -24,6 +24,9 @@ workertitles['package_list']='Select packages'
 workertitles['install_packages']='Install packages'
 workertitles['configure_system']='Configure system'
 workertitles['install_bootloader']='Install bootloader'
+workertitles['msg_report']='Exit Install'
+
+menu_workers=(select_source set_editor set_clock prepare_disks package_list install_packages configure_system install_bootloader msg_report)
 
 start_process ()
 {
@@ -44,7 +47,6 @@ start_process ()
 
 mainmenu()  
 {
-	menu_workers=(select_source set_editor set_clock prepare_disks package_list install_packages configure_system install_bootloader)
 	menu=()
 	for i in ${!menu_workers[@]}
 	do
@@ -53,8 +55,6 @@ mainmenu()
 		title=${workertitles[$worker]}
 		menu+=($i "$title")
 	done
-	let i+=1
-	menu+=($i "Exit Install")
 
 	ask_option $default "MAIN MENU" '' required "${menu[@]}"
 	case $ANSWER_OPTION in
@@ -69,7 +69,7 @@ mainmenu()
 	     check_depend worker select_source    && execute worker install_packages    && default=7 ;;
 	"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
 	"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
-	"9") notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
+	"9") execute worker msg_report ;;
 	*)   execute worker abort_installer;;
     esac
 }
@@ -179,6 +179,27 @@ worker_auto_network ()
 		fi
 	fi
 	return 0
+}
+
+# override show_report because this procedure does not use phases, but it's own menu
+show_report ()
+{
+	data="Execution Report:"
+	data="$data\n-----------------"
+	for w in ${menu_workers[@]}
+	do
+		[ "$w" = 'msg_report' ] && continue # this worker is the one calling show_report, we can't know our exitcode yet
+		title=${workertitles[$w]}
+		exit_var=exit_worker_$w
+		ret=${!exit_var}
+		[ "$ret" = "0" ] && data="$data\n > Worker $worker ($title): Sucess"
+		[ "$ret" = "0" ] || data="$data\n > Worker $worker ($title): Failed"
+	done
+	notify "$data\nIf the install finished successfully, you can type 'reboot' to restart the system." || return $?
+}
+
+worker_msg_report () {
+	show_report && stop_installer
 }
 
 worker_abort_installer ()

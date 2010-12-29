@@ -787,8 +787,10 @@ number suffix.
 
 ####  Exit Install
 
-Exit the Installer, remove the media you used for the installation, type
-reboot at the command line and cross your fingers!
+You will be shown a summary of the installation, listing the steps and whether
+they executed successfully or not.
+If all went well, exit the installer, type reboot at the command line, remove
+your installation media and cross your fingers!
 
 
 ### Automatic Installation Procedure
