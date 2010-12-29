@@ -64,7 +64,6 @@ installpkg() {
 }
 
 
-# auto_locale(). taken from setup
 # enable glibc locales from rc.conf and build initial locale DB
 target_configure_initial_locale() 
 {

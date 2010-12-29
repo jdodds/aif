@@ -28,8 +28,6 @@ phase_basics=(\
 phase_system=(\
 	package_list \
 	install_packages \
-	auto_locale \
-	auto_keymap_font \
 	configure_system \
 	mkinitcpio \
 	locales \
@@ -157,20 +155,9 @@ worker_auto_network ()
 }
 
 
-worker_auto_locale ()
-{
-	target_configure_initial_locale
-}
-
-
-worker_auto_keymap_font ()
-{
-	target_configure_initial_keymap_font
-}
-
 worker_configure_system ()
 {
-	true
+	preconfigure_target
 }
 
 

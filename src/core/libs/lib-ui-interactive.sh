@@ -15,10 +15,12 @@ check_depend ()
 	show_warning "Cannot Continue.  Going back to $2" "You must do $subject first before going here!." && return 1
 }
 
-# populate config files with what we know about the system
+# populate config and data files with what we know about the target system
 # note that you could run this function multiple times (i.e. you change some stuff and then come back),
 # all logic in here is written to do the right thing in that case
-prefill_configs () {
+preconfigure_target () {
+	target_configure_initial_locale || return $?
+	target_configure_initial_keymap_font || return $?
 	target_configure_fstab || return $?
 	execute worker auto_network || return $?
 	# /etc/pacman.d/mirrorlist
@@ -83,7 +85,11 @@ interactive_configure_system()
 	seteditor || return 1
 	FILE=""
 
-	prefill_configs
+	if ! preconfigure_target
+	then
+		show_warning "Preconfigure failed" "Beware: I just tried to automatically configure some stuff, but something failed. Please report this. Continue at your own risk"
+		ask_yesno "Do you want to continue?" no || return 1
+	fi
 
 	# main menu loop
 	while true; do

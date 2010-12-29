@@ -19,7 +19,7 @@ worker_intro () {
 }
 
 worker_configure_system () {
-	prefill_configs
+	preconfigure_target
 	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-fancy-install"/' $var_TARGET_DIR/etc/rc.conf
 }
 

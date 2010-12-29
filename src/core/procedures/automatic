@@ -6,7 +6,7 @@
 # It should be:
 # phase_preparation=(configure intro sysprep select_source runtime_network runtime_repositories runtime_packages)
 # phase_basics=(set_clock prepare_disks)
-# phase_system=(package_list install_packages auto_locale auto_keymap_font configure_system mkinitcpio locales install_bootloader)
+# phase_system=(package_list install_packages configure_system mkinitcpio locales install_bootloader)
 # phase_finish=(msg_report)
 
 # In theory, the only manual thing should maybe be configuring the runtime network and putting the configfile in place
@@ -14,7 +14,7 @@
 # TODO: implement setting hostname, keymap, consolefont, network settings, root pass, etc
 # for a list of recognized variables, see examples/generic-install-on-sda
 
-depend_procedure core base
+depend_procedure core base # important, don't be confused when worker/variable definitions seem to be missing here.
 
 var_OPTS_STRING="c:"
 var_ARGS_USAGE="-c <config>: Specify a configfile (profile) to be used"
@@ -107,10 +107,6 @@ worker_set_clock ()
 	true
 }
 
-
-worker_configure_system () {
-	prefill_configs
-}
 
 worker_install_bootloader ()
 {

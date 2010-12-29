@@ -72,9 +72,7 @@ mainmenu()
 		check_depend worker select_source    && execute worker package_list                                                                               && default=6 ;;
         "6")
 		check_depend worker package_list && \
-		check_depend worker select_source    && execute worker install_packages   && {                                    execute worker auto_locale  ; \
-		                                                                                                                  execute worker auto_keymap_font;
-		                                                                                                                  true                        ; } && default=7 ;;
+		check_depend worker select_source    && execute worker install_packages                                                                           && default=7 ;;
         "7")
 		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
 		                                                                                                                  execute worker locales      ;
@@ -165,8 +163,7 @@ worker_package_list() {
 
 worker_install_packages ()
 {
-	installpkg && return 0
-	return 1
+	installpkg
 }
 
 
