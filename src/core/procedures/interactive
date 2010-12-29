@@ -74,10 +74,7 @@ mainmenu()
 		check_depend worker package_list && \
 		check_depend worker select_source    && execute worker install_packages                                                                           && default=7 ;;
         "7")
-		check_depend worker install_packages && execute worker configure_system   && {                                    execute worker mkinitcpio   ; \
-		                                                                                                                  execute worker locales      ;
-		                                                                                                                  execute worker initialtime  ;
-		                                                                                                                  true                        ; } && default=8 ;;
+		check_depend worker install_packages && execute worker configure_system                                                                           && default=8 ;;
         "8")
 		check_depend worker configure_system && execute worker install_bootloader                                                                         && default=9 ;;
         "9")

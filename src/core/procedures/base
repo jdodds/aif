@@ -29,8 +29,6 @@ phase_system=(\
 	package_list \
 	install_packages \
 	configure_system \
-	mkinitcpio \
-	locales \
 	install_bootloader)
 
 phase_finish=(msg_report)
@@ -158,24 +156,7 @@ worker_auto_network ()
 worker_configure_system ()
 {
 	preconfigure_target
-}
-
-
-worker_mkinitcpio ()
-{
-	run_mkinitcpio
-}
-
-
-worker_locales ()
-{
-	target_locale-gen
-}
-
-
-worker_initialtime ()
-{
-	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime
+	postconfigure_target
 }
 
 

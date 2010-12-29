@@ -479,6 +479,8 @@ Configure System does multiple things:
 * preseed some configuration files after you agreed. (eg network settings)
 * allow you to manually change important config files for your target system.
 * allow you to set the root password for the target.
+* automatically run some tools which use the updated configuration (locales,
+  mkinitcpio, time settings, etc)
 
 **Configuration Files**
 

@@ -80,6 +80,14 @@ preconfigure_target () {
 	# TODO: we should probably update /etc/crypttab if the user has non-/ encrypted disks.
 }
 
+# do some target configuration steps automatically, after user decided he configured his system.
+# as usual, this function is okay with being called multiple times
+postconfigure_target () {
+	target_run_mkinitcpio || return $?
+	target_locale-gen || return $?
+	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime || return $?
+}
+
 interactive_configure_system()
 {
 	seteditor || return 1
@@ -139,6 +147,12 @@ interactive_configure_system()
 
 	# temporary backup files are not useful anymore past this point.
 	find "${var_TARGET_DIR}/etc/" -name '*~' -delete &>/dev/null
+	if ! postconfigure_target
+	then
+		show_warning "Postconfigure failed" "Beware: I just tried to automatically configure some stuff, but something failed. Please report this. Continue at your own risk"
+		ask_yesno "Do you want to continue?" no || return 1
+	fi
+
 	return 0
 }
 

@@ -3,9 +3,8 @@
 TMP_MKINITCPIO_LOG=$LOG_DIR/mkinitcpio.log
 TMP_PACMAN_LOG=$LOG_DIR/pacman.log
 
-# run_mkinitcpio() taken from setup. adapted a lot
 # runs mkinitcpio on the target system, displays output
-run_mkinitcpio()  
+target_run_mkinitcpio()
 {
 	target_special_fs on
 

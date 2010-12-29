@@ -27,6 +27,7 @@ worker_intro () {
 worker_configure_system () {
 	preconfigure_target
 	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-generic-install"/' $var_TARGET_DIR/etc/rc.conf
+	postconfigure_target
 }
 
 
