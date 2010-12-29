@@ -176,27 +176,28 @@ start_process ()
 }
 
 
-show_report () #TODO: abstract UI method (cli/dia)
+show_report ()
 {
-	echo "Execution Report:"
-	echo "-----------------"
+	data="Execution Report:"
+	data="$data\n-----------------"
 	for phase in preparation basics system finish
 	do
 		object=phase_$phase
 		exit_var=exit_$object
 		local ret=${!exit_var}
-		echo -n "Phase $phase: "
-		[ "$ret" = "0" ] && echo "Success" || echo "Failed"
+		[ "$ret" = "0" ] && data="$data\nPhase $phase: Success"
+		[ "$ret" = "0" ] || data="$data\nPhase $phase: Failed"
 		eval phase_array=$(declare | grep -e "^${object}=" | cut -d"=" -f 2-)
 		for worker_str in "${phase_array[@]}"
 		do
 			worker=${worker_str%% *}
 			exit_var=exit_worker_$worker
 			ret=${!exit_var}
-			echo -n " > Worker $worker: "
-			[ "$ret" = "0" ] && echo "Success" || echo "Failed"
+			[ "$ret" = "0" ] && data="$data\n > Worker $worker: Sucess"
+			[ "$ret" = "0" ] || data="$data\n > Worker $worker: Failed"
 		done
 	done
+	inform "$data"
 }
 
 
