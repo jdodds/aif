@@ -58,29 +58,19 @@ mainmenu()
 
 	ask_option $default "MAIN MENU" '' required "${menu[@]}"
 	case $ANSWER_OPTION in
-	"1")
-		                                        execute worker select_source   && execute worker runtime_packages                                         && default=2 ;;
-
-	"2")
-                                                        execute worker set_editor                                                                                 && default=3 ;;
-        "3")
-		                                        execute worker set_clock                                                                                  && default=4 ;;
-        "4")
-		                                        execute worker prepare_disks                                                                              && default=5 ;;
-        "5")
-		check_depend worker prepare_disks && \
-		check_depend worker select_source    && execute worker package_list                                                                               && default=6 ;;
-        "6")
-		check_depend worker package_list && \
-		check_depend worker select_source    && execute worker install_packages                                                                           && default=7 ;;
-        "7")
-		check_depend worker install_packages && execute worker configure_system                                                                           && default=8 ;;
-        "8")
-		check_depend worker configure_system && execute worker install_bootloader                                                                         && default=9 ;;
-        "9")
-		notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
-        *)
-		execute worker abort_installer;;
+	"1")                                         execute worker select_source       && \
+	                                             execute worker runtime_packages    && default=2 ;;
+	"2")                                         execute worker set_editor          && default=3 ;;
+	"3")                                         execute worker set_clock           && default=4 ;;
+	"4")                                         execute worker prepare_disks       && default=5 ;;
+	"5") check_depend worker prepare_disks    && \
+	     check_depend worker select_source    && execute worker package_list        && default=6 ;;
+	"6") check_depend worker package_list     && \
+	     check_depend worker select_source    && execute worker install_packages    && default=7 ;;
+	"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
+	"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
+	"9") notify "If the install finished successfully, you can now type 'reboot' to restart the system." && stop_installer ;;
+	*)   execute worker abort_installer;;
     esac
 }
 
