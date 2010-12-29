@@ -18,7 +18,6 @@ declare -A workertitles
 workertitles['select_source']='Select source'
 workertitles['set_editor']='Set editor'
 workertitles['runtime_network']='Setup network'
-workertitles['select_mirror']='Select mirror'
 workertitles['set_clock']='Set clock'
 workertitles['prepare_disks']='Prepare hard drive(s)'
 workertitles['package_list']='Select packages'
@@ -64,8 +63,7 @@ mainmenu()
 	ask_option $default "MAIN MENU" '' required "${menu[@]}"
 	case $ANSWER_OPTION in
 	"1")
-		                                        execute worker select_source; local ret=$?; [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ] && execute worker select_source_extras_menu
-		                                                                                    [ $ret -eq 0 ] && execute worker runtime_packages             && NEXTITEM=2 ;;
+		                                        execute worker select_source   && execute worker runtime_packages                                         && NEXTITEM=2 ;;
 
 	"2")
                                                         execute worker set_editor                                                                                 && NEXTITEM=3 ;;
@@ -111,8 +109,29 @@ worker_prepare_disks()
 
 worker_select_source ()
 {
-	#TODO: how to handle user going here again? discard previous settings, warn him that he already done it?
-	interactive_select_source && return 0
+	interactive_select_source
+	local ret=$?;
+	if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ]
+	then
+		select_source_extras_menu || ret=$?
+	fi
+	# base/automatic procedure run a worker runtime_repositories, maybe we could do an interactive repo adder
+	return $ret
+}
+
+select_source_extras_menu ()
+{
+        while true; do
+                default=no
+                [ -n "$NEXTITEM" ] && default="$NEXTITEM"
+                ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
+                "1" "${worker_titles['runtime_network']}" \
+                "2" "Select mirror" \
+                "3" "Return to Main Menu" || return 1
+                [ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && NEXTITEM=2
+                [ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && NEXTITEM=3
+                [ "$ANSWER_OPTION" = 3 ] && break
+        done
 	return 1
 }
 
@@ -160,13 +179,6 @@ worker_install_packages ()
 worker_runtime_network() {
 	interactive_runtime_network
 }
-
-
-worker_select_mirror ()
-{
-	interactive_select_mirror
-}
-
 
 worker_install_bootloader ()
 {

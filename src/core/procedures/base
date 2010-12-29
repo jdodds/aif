@@ -68,19 +68,12 @@ worker_select_source ()
 	var_PKG_SOURCE_TYPE='cd'
 	var_FILE_URL="file:///src/core/pkg"
 	var_SYNC_URL= # optional, points to a repository string something like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/i686 (eg the same format as what you find in /etc/pacman.conf)
-	# if you override var_PKG_SOURCE_TYPE to 'net' (or ask user and he chooses ftp) don't forget to configure the network and to select_mirrors
-}
-
-
-worker_select_source_extras_menu ()
-{
-	select_source_extras_menu
 }
 
 
 worker_runtime_network ()
 {
-	#network is assumed to be functional for now because we do it first with /arch/setup. once that falls away, we'll need to implement it here
+	#override if needed
 	true
 }
 

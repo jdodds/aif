@@ -66,19 +66,6 @@ worker_select_source ()
         var_SYNC_URL=${SYNC_URL:-}
 }
 
-worker_runtime_network ()
-{
-	true # for now. we assume the user has taken care of this himself already. doing this interactively wouldn't be a good default anyway.
-	# maybe check if network works, if not, try dhcp. let user override by using a static config in his config file
-	#if ask_yesno "Do you want to (re)-configure your networking?"
-	#then
-	#	interactive_runtime_network
-	#else
-	#	inform "Ok. skipping network config"
-	#fi
-}
-
-
 worker_prepare_disks ()
 {
 	get_possible_fs
