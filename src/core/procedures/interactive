@@ -1,5 +1,5 @@
 #!/bin/bash
-depend_procedure core base # esp for auto_{network,locale,fstab}, intro and set_clock workers
+depend_procedure core base # esp for auto_network, intro and set_clock workers
 
 
 # This is a port of the original /arch/setup script.  It doesn't use aif phases but uses it's own menu-based flow (phase) control
