@@ -190,8 +190,8 @@ $ANSWER_DEVICES"
 # returns:    nothing
 getuuid()
 {
-	[ -z "$1" ] && die_error "getuuid needs an argument"
-	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s UUID -o value ${1})"
+	[ -n "$1" -a -b "$1" ] || die_error "getuuid needs a device file argument"
+	echo "$(blkid -s UUID -o value ${1})"
 }
 
 
@@ -201,8 +201,8 @@ getuuid()
 # returns:    nothing
 getlabel()
 {
-	[ -z "$1" ] && die_error "getlabel needs an argument"
-	[ "${1%%/[hs]d?[0-9]}" != "${1}" ] && echo "$(blkid -s LABEL -o value ${1})"
+	[ -n "$1" -a -b "$1" ] || die_error "getlabel needs a device file argument"
+	echo "$(blkid -s LABEL -o value ${1})"
 }
 
 # find partitionable blockdevices
