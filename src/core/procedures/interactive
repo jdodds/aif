@@ -14,7 +14,9 @@ TIMEZONE=
 # <mountpoint>:<partsize>:<fstype>[:+]
 DEFAULTFS="/boot:32:ext2:+ swap:256:swap /:7500:ext3 /home:*:ext3"
 
-declare -A workertitles
+# this is a workaround for bash <4.2, where associative arrays are inherently local
+# once we have 4.2 we can just declare this array global. eval $settitles where needed
+settitles="declare -A workertitles
 workertitles['select_source']='Select source'
 workertitles['set_editor']='Set editor'
 workertitles['runtime_network']='Setup network'
@@ -24,7 +26,7 @@ workertitles['package_list']='Select packages'
 workertitles['install_packages']='Install packages'
 workertitles['configure_system']='Configure system'
 workertitles['install_bootloader']='Install bootloader'
-workertitles['msg_report']='Exit Install'
+workertitles['msg_report']='Exit Install'"
 
 menu_workers=(select_source set_editor set_clock prepare_disks package_list install_packages configure_system install_bootloader msg_report)
 
@@ -47,6 +49,7 @@ start_process ()
 
 mainmenu()  
 {
+	eval $settitles
 	menu=()
 	for i in ${!menu_workers[@]}
 	do
@@ -184,6 +187,7 @@ worker_auto_network ()
 # override show_report because this procedure does not use phases, but it's own menu
 show_report ()
 {
+	eval $settitles
 	data="Execution Report:"
 	data="$data\n-----------------"
 	for w in ${menu_workers[@]}
