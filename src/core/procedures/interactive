@@ -196,8 +196,11 @@ show_report ()
 		title=${workertitles[$w]}
 		exit_var=exit_worker_$w
 		ret=${!exit_var}
-		[ "$ret" = "0" ] && data="$data\n > Worker $worker ($title): Sucess"
-		[ "$ret" = "0" ] || data="$data\n > Worker $worker ($title): Failed"
+		case "$ret" in
+			"")  data="$data\n > Worker $worker ($title): Skipped";;
+			"0") data="$data\n > Worker $worker ($title): Sucess";;
+			*)   data="$data\n > Worker $worker ($title): Failed";;
+		esac
 	done
 	notify "$data\nIf the install finished successfully, you can type 'reboot' to restart the system." || return $?
 }

@@ -193,8 +193,11 @@ show_report ()
 			worker=${worker_str%% *}
 			exit_var=exit_worker_$worker
 			ret=${!exit_var}
-			[ "$ret" = "0" ] && data="$data\n > Worker $worker: Sucess"
-			[ "$ret" = "0" ] || data="$data\n > Worker $worker: Failed"
+			case "$ret" in
+				"")  data="$data\n > Worker $worker: Skipped";;
+				"0") data="$data\n > Worker $worker: Sucess";;
+				*)   data="$data\n > Worker $worker: Failed";;
+			esac
 		done
 	done
 	inform "$data"
