@@ -190,11 +190,11 @@ show_report ()
 	eval "$settitles"
 	data="Execution Report:"
 	data="$data\n-----------------"
-	for w in ${menu_workers[@]}
+	for worker in ${menu_workers[@]}
 	do
-		[ "$w" = 'msg_report' ] && continue # this worker is the one calling show_report, we can't know our exitcode yet
-		title=${workertitles[$w]}
-		exit_var=exit_worker_$w
+		[ "$worker" = 'msg_report' ] && continue # this worker is the one calling show_report, we can't know our exitcode yet
+		title=${workertitles[$worker]}
+		exit_var=exit_worker_$worker
 		ret=${!exit_var}
 		case "$ret" in
 			"")  data="$data\n > Worker $worker ($title): Skipped";;
