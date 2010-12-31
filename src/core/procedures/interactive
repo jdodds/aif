@@ -108,7 +108,7 @@ select_source_extras_menu ()
         while true; do
                 local default=no
                 ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
-                "1" "${worker_titles['runtime_network']}" \
+                "1" "${workertitles['runtime_network']}" \
                 "2" "Select mirror" \
                 "3" "Return to Main Menu" || return 1
                 [ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && default=2
