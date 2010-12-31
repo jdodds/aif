@@ -49,7 +49,7 @@ start_process ()
 
 mainmenu()  
 {
-	eval $settitles
+	eval "$settitles"
 	menu=()
 	for i in ${!menu_workers[@]}
 	do
@@ -187,7 +187,7 @@ worker_auto_network ()
 # override show_report because this procedure does not use phases, but it's own menu
 show_report ()
 {
-	eval $settitles
+	eval "$settitles"
 	data="Execution Report:"
 	data="$data\n-----------------"
 	for w in ${menu_workers[@]}
