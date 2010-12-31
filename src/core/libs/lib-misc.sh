@@ -141,6 +141,15 @@ target_configure_initial_keymap_font ()
 	[ -n "$var_CONSOLEFONT" ] && sed -i "s/^CONSOLEFONT=.*/CONSOLEFONT=\"${var_CONSOLEFONT/\.*/}\"/" ${var_TARGET_DIR}/etc/rc.conf
 }
 
+target_configure_time () {
+	# /etc/rc.conf
+	# Make sure timezone and utc info are what we want
+	# NOTE: If a timezone string never contains more then 1 slash, we can use ${TIMEZONE/\//\\/}
+	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"${TIMEZONE//\//\\/}\"/g" \
+		-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
+		${var_TARGET_DIR}/etc/rc.conf
+}
+
 # apped string after last line matching regex in a file.
 # $1 regex
 # $2 string (can contain "\n", "\t" etc)

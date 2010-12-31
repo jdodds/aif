@@ -91,3 +91,22 @@ set_keymap ()
 		echo "$var_CONSOLEFONT" > $RUNTIME_DIR/aif-consolefont
 	fi
 }
+
+# $1 "topic"
+# shift 1; "$@" list of failed things
+warn_failed () {
+	local topic=$1
+	shift
+	if [ -n "$1" ]
+	then
+		local list_failed=
+		while [ -n "$1" ]
+		do
+			[ -n "$list_failed" ] && list_failed="$list_failed, "
+			list_failed="${list_failed}$1"
+			shift
+		done
+		show_warning "Preconfigure failed" "Beware: the following steps failed: $list_failed. Please report this. Continue at your own risk"
+	fi
+	return 0
+}

@@ -157,3 +157,17 @@ pkginfo ()
 {
 	PACKAGE_INFO=`LANG=C $PACMAN_TARGET -Si "$@" | awk '/^Name/{ printf("%s ",$3) } /^Version/{ printf("%s ",$3) } /^Group/{ printf("%s", $3) } /^Description/{ for(i=3;i<=NF;++i) printf(" %s",$i); printf ("\n")}'`
 }
+
+target_configure_mirrorlist () {
+	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
+	if [ "$var_PKG_SOURCE_TYPE" = "net" -a -n "${var_SYNC_URL}" ]; then
+		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "${var_SYNC_URL}"
+		then
+			debug 'PACMAN PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"` || return $?
+			echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" || return $?
+		fi
+	fi
+	return 0
+}
+

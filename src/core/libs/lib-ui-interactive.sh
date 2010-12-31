@@ -19,73 +19,29 @@ check_depend ()
 # note that you could run this function multiple times (i.e. you change some stuff and then come back),
 # all logic in here is written to do the right thing in that case
 preconfigure_target () {
-	target_configure_initial_locale || return $?
-	target_configure_initial_keymap_font || return $?
-	target_configure_fstab || return $?
-	execute worker auto_network || return $?
-	# /etc/pacman.d/mirrorlist
-	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
-	if [ "$var_PKG_SOURCE_TYPE" = "net" -a -n "${var_SYNC_URL}" ]; then
-		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "${var_SYNC_URL}"
-		then
-			debug 'PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
-			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"`
-			echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST"
-		fi
-	fi
-
-	# /etc/rc.conf
-	# Make sure timezone and utc info are what we want
-	# NOTE: If a timezone string never contains more then 1 slash, we can use ${TIMEZONE/\//\\/}
-	sed -i -e "s/^TIMEZONE=.*/TIMEZONE=\"${TIMEZONE//\//\\/}\"/g" \
-	-e "s/^HARDWARECLOCK=.*/HARDWARECLOCK=\"$HARDWARECLOCK\"/g" \
-	${var_TARGET_DIR}/etc/rc.conf
-
-	# Give initcpio the encrypt hook when / depends on an encrypted volume
-	# (other encrypted volumes, not related to / don't need the encrypt hook, afaik)
-	# If / also depends on lvm, this way the lvm2 hook will also be included in the right place
-	if get_anchestors_mount ';/;'
-	then
-		hooks=`echo "$ANSWER_DEVICES" | cut -d ' ' -f2 | egrep 'lvm-lv|dm_crypt' | sed -e 's/lvm-lv/lvm2/' -e 's/dm_crypt/encrypt/' | tac`
-		hooks=`echo $hooks` # $hooks is now a space separated, correctly ordered list of needed hooks
-		if [ -n "$hooks" ]
-		then
-			# for each hook we're about to add, remove it first if it's already in
-			for hook in $hooks
-			do
-				sed -i "/^HOOKS/ s/$hook //" ${var_TARGET_DIR}/etc/mkinitcpio.conf
-			done
-			# now add the correctly ordered string
-			sed -i "/^HOOKS/ s/filesystems/$hooks filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
-		fi
-	fi
-	# The lvm2 hook however is needed for any lvm LV, no matter the involved mountpoints, so include it if we still need to
-	if grep -q lvm-lv $TMP_BLOCKDEVICES && ! grep -q '^HOOKS.*lvm2'  ${var_TARGET_DIR}/etc/mkinitcpio.conf
-	then
-		sed -i "/^HOOKS/ s/filesystems/lvm2 filesystems/" ${var_TARGET_DIR}/etc/mkinitcpio.conf
-	fi
-
-	# if keymap/usbinput are not in mkinitcpio.conf, but encrypt is, we should probably add it
-	if line=`grep '^HOOKS.*encrypt' ${var_TARGET_DIR}/etc/mkinitcpio.conf`
-	then
-		if ! echo "$line" | grep -q keymap
-		then
-			sed -i '/^HOOKS/ s/encrypt/keymap encrypt/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
-		fi
-		if ! echo "$line" | grep -q usbinput
-		then
-			sed -i '/^HOOKS/ s/keymap/usbinput keymap/' ${var_TARGET_DIR}/etc/mkinitcpio.conf
-		fi
-	fi
+	local failed=()
+	target_configure_initial_locale || failed+=('initial locale')
+	target_configure_initial_keymap_font || failed+=('keymap/font setting')
+	target_configure_fstab || failed+=('fstab configuration')
+	execute worker auto_network || failed+=('network config export')
+	target_configure_mirrorlist || failed+=('mirrorlist configuration')
+	target_configure_time || failed+=('time configuration')
+	target_configure_initcpio || failed+=('initcpio configuration')
 	# TODO: we should probably update /etc/crypttab if the user has non-/ encrypted disks.
+
+	[ ${#failed[@]} -gt 0 ] && warn_failed 'Preconfigure' "${failed[@]}" && return 1
+	return 0
 }
 
 # do some target configuration steps automatically, after user decided he configured his system.
 # as usual, this function is okay with being called multiple times
 postconfigure_target () {
-	target_run_mkinitcpio || return $?
-	target_locale-gen || return $?
-	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime || return $?
+	local failed=()
+	target_run_mkinitcpio || failed+=('mkinitcpio creation')
+	target_locale-gen || failed+=('locale generation')
+	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime || failed+=('localtime copying')
+	[ ${#failed[@]} -gt 0 ] && warn_failed 'Postconfigure' "${failed[@]}" && return 1
+	return 0
 }
 
 interactive_configure_system()
@@ -95,7 +51,6 @@ interactive_configure_system()
 
 	if ! preconfigure_target
 	then
-		show_warning "Preconfigure failed" "Beware: I just tried to automatically configure some stuff, but something failed. Please report this. Continue at your own risk"
 		ask_yesno "Do you want to continue?" no || return 1
 	fi
 
@@ -149,7 +104,6 @@ interactive_configure_system()
 	find "${var_TARGET_DIR}/etc/" -name '*~' -delete &>/dev/null
 	if ! postconfigure_target
 	then
-		show_warning "Postconfigure failed" "Beware: I just tried to automatically configure some stuff, but something failed. Please report this. Continue at your own risk"
 		ask_yesno "Do you want to continue?" no || return 1
 	fi
 
