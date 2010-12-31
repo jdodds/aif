@@ -180,9 +180,9 @@ interactive_time () {
 		# correct timezone.
 		[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
 
+        local default=no
         while true; do
 		current=$(date)
-                local default=no
                 #TODO: only propose if network ok
                 EXTRA=()
 		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
@@ -221,11 +221,11 @@ interactive_prepare_disks ()
 	local ret=1 # 1 means unsuccessful. 0 for ok
 	DISK_CONFIG_TYPE=
 	[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && show_warning "Rollback may be needed" "It seems you already went here.  You should probably rollback previous changes before reformatting, otherwise stuff will probably fail"
+	local default=no
 	while [ "$DONE" = "0" ]
 	do
 		rollbackstr=" (you don't need to do this)"
 		[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && rollbackstr=" (this will revert your last changes)"
-		local default=no
 
 		ask_option $default "Prepare Hard Drive" '' required \
 			"1" "Auto-Prepare (erases an ENTIRE hard drive and sets up partitions, filesystems and mountpoints)" \
@@ -474,14 +474,12 @@ interactive_filesystem ()
 		# ask label, if relevant
 		if [ "$fs_create" == yes ] && check_is_in "$fs_type" "${fs_label_mandatory[@]}"
 		then
-			default=
-			[ -n "$fs_label" ] && default="$fs_label"
+			default="$fs_label" # can be empty
 			ask_string "Enter the label/name for this $fs_type on $part (Mandatory for this type of FS!)" "$default" || return 1 #TODO: check that you can't give LV's labels that have been given already or the installer will break.
 			fs_label=$ANSWER_STRING
 		elif [ "$fs_create" == yes ] && check_is_in "$fs_type" "${fs_label_optional[@]}"
 		then
-			default=
-			[ -n "$fs_label" ] && default="$fs_label"
+			default="$fs_label" # can be empty
 			ask_string "Enter the label for this $fs_type on $part (optional) [keep it short and don't use spaces]" "$default" 0
 			fs_label=${ANSWER_STRING// } # strip spaces to prevent problems in our bash code and to keep things simple.
 		fi
@@ -535,8 +533,7 @@ interactive_filesystem ()
 		# ask opts
 		if [ "$fs_create" == yes ]
 		then
-			default=
-			[ -n "$fs_opts" ] && default="$fs_opts"
+			default="$fs_opts" # can be empty
 			program="${filesystem_programs[$fs_type]}"
 			ask_string "Enter any additional opts for $program" "$default" 0
 			fs_opts="$ANSWER_STRING"

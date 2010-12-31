@@ -96,8 +96,8 @@ worker_runtime_packages ()
 
 worker_set_clock ()
 {
+	local default=no
         while true; do
-                local default=no
                 ask_option $default "Date/time configuration" '' required \
                 "1" "Select region and timezone" \
                 "2" "Set time and date" \
