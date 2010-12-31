@@ -11,6 +11,16 @@ These are the files in question:
 EOF
 ls -lh $RUNTIME_DIR/* 2>/dev/null
 ls -lh $LOG_DIR/* 2>/dev/null
+if ! ping -c 1 sprunge.us >/dev/null
+then
+	msg="Please setup your networking using one of
+* dhcpcd eth0 # or whatever your interface is
+* aif -p partial-configure-network
+
+If your networking works fine and you think sprunge.us is down, please upload the files to another pastebin"
+	show_warning "Connection error" "Cannot ping sprunge.us (pastebin server). $msg"
+	die_error "cannot reach pastebin"
+fi
 report="Uploaded data:"
 if ask_yesno "Send these files?"
 then
