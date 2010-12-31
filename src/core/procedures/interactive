@@ -50,9 +50,9 @@ mainmenu()
 	menu=()
 	for i in ${!menu_workers[@]}
 	do
-		let i+=1 # we count from 1 onwards, not from 0
 		worker=${menu_workers[$i]}
 		title=${workertitles[$worker]}
+		let i+=1 # in menu, we count from 1 onwards, not from 0
 		menu+=($i "$title")
 	done
 
