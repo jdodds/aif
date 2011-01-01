@@ -49,4 +49,5 @@ target_configure_network()
 		echo "export ftp_proxy=$PROXY_FTP" >> ${var_TARGET_DIR}/etc/profile.d/proxy.sh || return 1
 		chmod a+x ${var_TARGET_DIR}/etc/profile.d/proxy.sh || return 1
 	fi
+	return 0
 }

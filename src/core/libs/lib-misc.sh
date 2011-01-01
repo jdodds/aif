@@ -137,8 +137,14 @@ dohwclock() {
 
 target_configure_initial_keymap_font ()
 {
-	[ -n "$var_KEYMAP"      ] && sed -i "s/^KEYMAP=.*/KEYMAP=\"`basename $var_KEYMAP .map.gz`\"/"    ${var_TARGET_DIR}/etc/rc.conf
-	[ -n "$var_CONSOLEFONT" ] && sed -i "s/^CONSOLEFONT=.*/CONSOLEFONT=\"${var_CONSOLEFONT/\.*/}\"/" ${var_TARGET_DIR}/etc/rc.conf
+	ret=0
+	if [ -n "$var_KEYMAP" ]; then
+		sed -i "s/^KEYMAP=.*/KEYMAP=\"`basename $var_KEYMAP .map.gz`\"/" ${var_TARGET_DIR}/etc/rc.conf || ret=$?
+	fi
+	if [ -n "$var_CONSOLEFONT" ]; then
+		sed -i "s/^CONSOLEFONT=.*/CONSOLEFONT=\"${var_CONSOLEFONT/\.*/}\"/" ${var_TARGET_DIR}/etc/rc.conf || ret=$?
+	fi
+	return $ret
 }
 
 target_configure_time () {
