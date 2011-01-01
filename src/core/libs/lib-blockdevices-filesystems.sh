@@ -948,7 +948,7 @@ mdraid_slave0 ()
 # $1 md raid blockdevice (ex: /dev/md0)
 # return a list of array members from given md array
 # ex: /dev/md0 has slaves: "/dev/sda1 /dev/sdb2 /dev/sdc2"
-mdraid_all-slaves ()
+mdraid_all_slaves ()
 {
     local slave=
     local slaves=

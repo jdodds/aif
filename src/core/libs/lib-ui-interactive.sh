@@ -925,7 +925,7 @@ interactive_grub() {
             local ask_str="Do you want to install grub to the MBR of each harddisk from your BOOT array "$md" ? (recommended)"
             ask_yesno "$ask_str" yes
             if [ $? -eq 0 ]; then
-				slaves=$(mdraid_all-slaves $md)
+				slaves=$(mdraid_all_slaves $md)
                 for slave in $slaves; do
                     boothd=$(echo $slave | cut -c -8)
                     bootpart=$(mdraid_slave0 $md)
