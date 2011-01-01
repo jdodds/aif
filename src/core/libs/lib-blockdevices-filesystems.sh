@@ -920,7 +920,7 @@ get_blockdevice_size ()
 
 # $1 blockdevice (ex: /dev/md0 or /dev/sda1)
 # return true when blockdevice is an md raid, otherwise return a unset value
-mdraid_is-raid ()
+mdraid_is_raid()
 {
     local israid
     if [ -z $1 ]; then
