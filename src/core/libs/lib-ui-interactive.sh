@@ -76,7 +76,7 @@ interactive_configure_system()
 			"Root-Password"                 "Set the root password"
 			"Done"                          "Return to Main Menu"
 		)
-		ask_option $DEFAULT "Configuration" "$helptext" required "${list[@]}" || return 1
+		ask_option $default "Configuration" "$helptext" required "${list[@]}" || return 1
 		FILE=$ANSWER_OPTION
 		default=$FILE
 		if [ "$FILE" = "Done" ]; then       # exit
