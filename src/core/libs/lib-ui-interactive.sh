@@ -47,17 +47,14 @@ postconfigure_target () {
 interactive_configure_system()
 {
 	seteditor || return 1
-	FILE=""
 
 	if ! preconfigure_target
 	then
 		ask_yesno "Do you want to continue?" no || return 1
 	fi
 
-	# main menu loop
+	local default=no
 	while true; do
-		DEFAULT=no
-		[ -n "$FILE" ] &&  DEFAULT="$FILE"
 		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
 		grep -q dm_crypt $TMP_BLOCKDEVICES && crypt="/etc/crypttab Encryption_settings_for_non-root_encrypted_disks" # this simple grep will give some false positives. but oh well.
@@ -76,7 +73,7 @@ interactive_configure_system()
 		"Root-Password"                 "Set the root password" \
 		"Done"                          "Return to Main Menu" || return 1
 		FILE=$ANSWER_OPTION
-
+		default=$FILE
 		if [ "$FILE" = "Done" ]; then       # exit
 			break
 		elif [ "$FILE" = "Root-Password" ]; then            # non-file
