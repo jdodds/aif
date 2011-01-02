@@ -63,6 +63,7 @@ interactive_configure_system()
 			"/etc/mkinitcpio.conf"          "Initramfs Config"
 		)
 		grep -q dm_crypt $TMP_BLOCKDEVICES && list+=("/etc/crypttab" "Decryption for non-root encrypted disks") # this simple grep will give some false positives. but oh well.
+		[ -f ${var_TARGET_DIR}/etc/profile.d/proxy.sh ] && list+=("/etc/profile.d/proxy.sh" "Proxy setings")
 		list+=(
 			"/etc/modprobe.d/modprobe.conf" "Kernel Modules"
 			"/etc/resolv.conf"              "DNS Servers"
