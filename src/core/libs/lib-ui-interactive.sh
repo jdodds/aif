@@ -57,21 +57,25 @@ interactive_configure_system()
 	while true; do
 		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
-		grep -q dm_crypt $TMP_BLOCKDEVICES && crypt="/etc/crypttab Encryption_settings_for_non-root_encrypted_disks" # this simple grep will give some false positives. but oh well.
-		ask_option $DEFAULT "Configuration" "$helptext" required $crypt \
-		"/etc/rc.conf"                  "System Config" \
-		"/etc/fstab"                    "Filesystem Mountpoints" \
-		"/etc/mkinitcpio.conf"          "Initramfs Config" \
-		"/etc/modprobe.d/modprobe.conf" "Kernel Modules" \
-		"/etc/resolv.conf"              "DNS Servers" \
-		"/etc/hosts"                    "Network Hosts" \
-		"/etc/hosts.deny"               "Denied Network Services" \
-		"/etc/hosts.allow"              "Allowed Network Services" \
-		"/etc/locale.gen"               "Glibc Locales" \
-		"/etc/pacman.conf"              "Pacman.conf" \
-		"$var_MIRRORLIST"               "Pacman Mirror List" \
-		"Root-Password"                 "Set the root password" \
-		"Done"                          "Return to Main Menu" || return 1
+		list=(
+			"/etc/rc.conf"                  "System Config"
+			"/etc/fstab"                    "Filesystem Mountpoints"
+			"/etc/mkinitcpio.conf"          "Initramfs Config"
+		)
+		grep -q dm_crypt $TMP_BLOCKDEVICES && list+=("/etc/crypttab" "Decryption for non-root encrypted disks") # this simple grep will give some false positives. but oh well.
+		list+=(
+			"/etc/modprobe.d/modprobe.conf" "Kernel Modules"
+			"/etc/resolv.conf"              "DNS Servers"
+			"/etc/hosts"                    "Network Hosts"
+			"/etc/hosts.deny"               "Denied Network Services"
+			"/etc/hosts.allow"              "Allowed Network Services"
+			"/etc/locale.gen"               "Glibc Locales"
+			"/etc/pacman.conf"              "Pacman.conf"
+			"$var_MIRRORLIST"               "Pacman Mirror List"
+			"Root-Password"                 "Set the root password"
+			"Done"                          "Return to Main Menu"
+		)
+		ask_option $DEFAULT "Configuration" "$helptext" required "${list[@]}" || return 1
 		FILE=$ANSWER_OPTION
 		default=$FILE
 		if [ "$FILE" = "Done" ]; then       # exit
