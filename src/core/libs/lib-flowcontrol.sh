@@ -91,8 +91,8 @@ execute ()
 {
 	[ -z "$1" -o -z "$2" ] && debug 'MAIN' "execute $@" && die_error "Use the execute function like this: execute <type> <name> with type=phase/worker"
 	[ "$1" != phase -a "$1" != worker ] && debug 'MAIN' "execute $@" && die_error "execute's first argument must be a valid type (phase/worker)"
-	PWD_BACKUP=`pwd`
-	object=$1_$2
+	local PWD_BACKUP=`pwd`
+	local object=$1_$2
 
 	if [ "$1" = worker ]
 	then
@@ -102,7 +102,7 @@ execute ()
 			shift 2
 			$object "$@"
 			local ret=$?
-			exit_var=exit_$object
+			local exit_var=exit_$object
 			read $exit_var <<< $ret # maintain exit status of each worker
 		else
 			die_error "$object is not defined!"
@@ -110,7 +110,7 @@ execute ()
 	elif [ "$1" = phase ]
 	then
 		log "******* Executing phase $2"
-		exit_var=exit_$object
+		local exit_var=exit_$object
 		read $exit_var <<< 0
 		# TODO: for some reason the hack below does not work (tested in virtualbox), even though it really should.  Someday I must get indirect array variables working and clean this up...
 		# debug 'MAIN' "\$1: $1, \$2: $2, \$object: $object, \$exit_$object: $exit_object"
