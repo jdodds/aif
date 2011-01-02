@@ -142,17 +142,6 @@ worker_install_packages ()
 	installpkg
 }
 
-
-worker_auto_network ()
-{
-	if [ -f $RUNTIME_DIR/aif-network-settings ]
-	then
-		target_configure_network || return $?
-	fi
-	return 0
-}
-
-
 worker_configure_system ()
 {
 	preconfigure_target

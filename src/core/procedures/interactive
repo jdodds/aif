@@ -167,23 +167,6 @@ worker_install_bootloader ()
 	interactive_install_bootloader
 }
 
-
-worker_auto_network ()
-{
-	# if the user has been through networking setup, it may be useful to export the users' choices to the target system
-	# networking setup could have happened in a separate process (eg partial-configure-network), so check if the settings file was created to be sure
-	if [ -f $RUNTIME_DIR/aif-network-settings ]
-	then
-		ask_yesno "Do you want to use the network settings from the installer in rc.conf and resolv.conf?\n\nIf you used Proxy settings, they will be written to /etc/profile.d/proxy.sh" || return 0
-		if ! target_configure_network
-		then
-			show_warning "Automatic network settings propagation failed" "Failed to import current network settings into target system"
-			return 1
-		fi
-	fi
-	return 0
-}
-
 # override show_report because this procedure does not use phases, but it's own menu
 show_report ()
 {
