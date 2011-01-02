@@ -359,7 +359,7 @@ mapdev() {
 target_configure_fstab()
 {
 	[ -f $TMP_FSTAB ] || return 0 # we can't do anything, but not really a failure
-	sed -i 's/^\/dev/#\/dev/g' $var_TARGET_DIR/etc/fstab || return 1
+	sed -i 's!^\(/dev/\|LABEL=\|UUID=\)!#\1!' $var_TARGET_DIR/etc/fstab || return 1
 	sort $TMP_FSTAB >> $var_TARGET_DIR/etc/fstab || return 1
 	return 0
 }
