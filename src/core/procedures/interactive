@@ -115,7 +115,7 @@ select_source_extras_menu ()
                 [ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && default=3
                 [ "$ANSWER_OPTION" = 3 ] && break
         done
-	return 1
+	return 0
 }
 
 worker_set_editor ()
