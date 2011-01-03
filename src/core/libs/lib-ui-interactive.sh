@@ -1,6 +1,9 @@
 #!/bin/bash
 # A library which allows you to do backend stuff by using user interfaces
 
+# Global Variables
+grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
+
 # check if a worker has completed successfully. if not -> tell user he must do it + return 1
 # if ok -> don't warn anything and return 0
 check_depend ()
@@ -855,7 +858,6 @@ interactive_install_bootloader () {
 
 interactive_grub() {
 	get_grub_map
-	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
     debug FS "starting interactive_grub"
@@ -995,7 +997,6 @@ interactive_grub() {
 }
 
 generate_grub_menulst() {
-	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	get_device_with_mount '/' || return 1
 	local _rootpart=$ANSWER_DEVICE
 
@@ -1128,7 +1129,6 @@ EOF
 }
 
 interactive_grub_menulst () {
-	local grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
 	generate_grub_menulst
 	helptext=
 	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
