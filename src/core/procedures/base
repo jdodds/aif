@@ -10,6 +10,7 @@ var_MIRRORLIST="/etc/pacman.d/mirrorlist"
 var_UI_TYPE="cli" # set to cli or dia for dialog
 var_ARCH=`uname -m` #i686 or x86_64. NOTE: this assumes you want to install the same arch as the installation environment you're using. maybe we could decouple those someday..
 [ -z "$var_ARCH" ] && die_error "Could not determine your architecture"
+grubmenu="$var_TARGET_DIR$grubmenu"
 
 ###### Phases ( can be overridden by more specific procedures) ######
 phase_preparation=(\

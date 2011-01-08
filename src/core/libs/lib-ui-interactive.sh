@@ -2,7 +2,7 @@
 # A library which allows you to do backend stuff by using user interfaces
 
 # Global Variables
-grubmenu="$var_TARGET_DIR/boot/grub/menu.lst"
+grubmenu="/boot/grub/menu.lst" # be sure to override this if you have it somewhere else
 
 # check if a worker has completed successfully. if not -> tell user he must do it + return 1
 # if ok -> don't warn anything and return 0
