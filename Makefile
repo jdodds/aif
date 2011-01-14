@@ -24,5 +24,7 @@ install:
 
 uninstall:
 	rm -f  $(DESTDIR)/sbin/aif
+	rm -f  $(DESTDIR)/sbin/aif-test
+	rm -f  $(DESTDIR)/sbin/aif-report-issues.sh
 	rm -rf $(DESTDIR)/usr/share/aif
 	rm -rf $(DESTDIR)/usr/lib/aif
