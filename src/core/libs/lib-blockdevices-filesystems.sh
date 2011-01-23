@@ -919,19 +919,12 @@ get_blockdevice_size ()
 
 
 # $1 blockdevice (ex: /dev/md0 or /dev/sda1)
-# return true when blockdevice is an md raid, otherwise return a unset value
-mdraid_is_raid()
-{
-    local israid
-    if [ -z $1 ]; then
-        # Don't call mdadm on empty blockdevice parameter!
-        israid=""
-    elif [ "$(mdadm --query $1 | cut -d':' -f2)" == " is not an md array" ]; then
-        israid=""
-    else
-        israid=true
-    fi
-    echo $israid
+# All MD RAID block devices have a major id of 9
+device_is_raid() {
+    [[ -b "$1" ]] || die_error "device_is_raid needs a blockdevice as \$1 ($1 given)"
+    [[ -f /proc/mdstast ]] || return 1
+    local devmajor=$(stat -c %t "$1")
+    (( devmajor == 9 ))
 }
 
 # $1 md raid blockdevice (ex: /dev/md0)
