@@ -945,10 +945,14 @@ mdraid_slave0 ()
 # ex: /dev/md0 has slaves: "/dev/sda1 /dev/sdb2 /dev/sdc2"
 mdraid_all_slaves ()
 {
+    shopt -s nullglob
     local slave=
     local slaves=
-    for slave in $(ls /sys/class/block/$(basename $1)/slaves/); do
-        slaves=$slaves"/dev/"$slave" "
+    for slave in /sys/class/block/${1##*/}/slaves/*; do
+        source "$slave/uevent"
+        slaves="$slaves/dev/$DEVNAME "
+        unset DEVNAME
     done
+    shopt -u nullglob
     echo $slaves
 }
