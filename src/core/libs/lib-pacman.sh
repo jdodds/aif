@@ -1,35 +1,5 @@
 #!/bin/bash
 
-# taken and slightly modified from the quickinst script.
-# don't know why one should need a static pacman because we already have a working one on the livecd.
-assure_pacman_static ()
-{
-	PACMAN_STATIC=
-	[ -f /tmp/usr/bin/pacman.static ] && PACMAN_STATIC=/tmp/usr/bin/pacman.static
-	[ -f /usr/bin/pacman.static ] && PACMAN_STATIC=/usr/bin/pacman.static
-	if [ "$PACMAN_STATIC" = "" ]; then
-		cd /tmp
-		if [ "$var_PKG_SOURCE_TYPE" = "net" ]; then
-			echo "Downloading pacman..."
-			wget $PKGARG/pacman*.pkg.tar.gz
-			if [ $? -gt 0 ]; then
-				echo "error: Download failed"
-				exit 1
-			fi
-			tar -xzf pacman*.pkg.tar.gz
-		elif [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
-			echo "Unpacking pacman..."
-			tar -xzf $PKGARG/pacman*.pkg.tar.gz
-		fi
-	fi
-	[ -f /tmp/usr/bin/pacman.static ] && PACMAN_STATIC=/tmp/usr/bin/pacman.static
-	if [ "$PACMAN_STATIC" = "" ]; then
-		echo "error: Cannot find the pacman.static binary!"
-		exit 1
-	fi
-}
-
-
 # taken from the quickinst script. cd/net code merged together
 target_write_pacman_conf ()
 {
