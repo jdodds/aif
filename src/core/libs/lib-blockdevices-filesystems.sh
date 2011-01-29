@@ -257,10 +257,11 @@ findblockdevices() {
 		disk=$(basename $devpath)
 		echo -ne "/dev/$disk $1"
 		cd /sys/block/$disk
+		shopt -s nullglob
 		for part in $disk*
 		do
 			# check if not already assembled to a raid device.  TODO: what is the significance of the 5? ASKDEV
-			if ! grep -q $part /proc/mdstat 2>/dev/null && ! fstype 2>/dev/null </dev/$part | grep -q lvm2 && ! sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep -q '5'
+			if [ -n "$part" ] && ! grep -q $part /proc/mdstat 2>/dev/null && ! fstype 2>/dev/null </dev/$part | grep -q lvm2 && ! sfdisk -c /dev/$disk $(echo $part | sed -e "s#$disk##g") 2>/dev/null | grep -q '5'
 			then
 				if [ -d $part ]
 				then
@@ -268,6 +269,7 @@ findblockdevices() {
 				fi
 			fi
 		done
+		shopt -u nullglob
 	done
 	# mapped devices
 	for devpath in $(ls /dev/mapper 2>/dev/null | grep -v control)

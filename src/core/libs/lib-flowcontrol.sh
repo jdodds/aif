@@ -45,6 +45,7 @@ load_module ()
 				module=$(basename "$module")
 				load_${submodule} "$1" "$module"
 			done
+			shopt -u nullglob
 		fi
 	done
 			

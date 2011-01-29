@@ -31,6 +31,7 @@ then
 		bin=${bin/ /} # for some reason there is a space in the beginning
 		report="$report\n$i $bin"
 	done
+	shopt -u nullglob
 fi
 
 echo "It can also be useful to upload a list of currently mounted filesystems:"
