@@ -15,7 +15,6 @@ Homepage:    http://github.com/Dieterbe/aif
  - coreutils
  - grub
  - grep
- - mkinitcpio
  - awk
  - sed
  - libui-sh
