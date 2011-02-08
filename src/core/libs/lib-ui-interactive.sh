@@ -998,7 +998,8 @@ interactive_grub() {
 
 generate_grub_menulst() {
 	get_device_with_mount '/' || return 1
-	local _rootpart=$ANSWER_DEVICE
+	local rootpart=$ANSWER_DEVICE
+	local subdir=
 
 	# Determine what is the device that acts as grub's root
 	# This is the blockdevice where /boot lives, normally a seperate partition.
@@ -1009,39 +1010,34 @@ generate_grub_menulst() {
 	#
 	# We get at last in grubdev the blockdevice in grub-legacy notation (ex: (hd0,0)
 	#
-    # We do may things double here and in interactive_grub_install
-    # Better way would be to determine/ask neccassary things once and then
-    # fill (and present) menu.lst to user. If user mean there is something
-    # wrong with menu.lst settings (wrong boot device or wrong root=/device)
-    # he better should re-run the interactive grub install and select correct
-    # settings.
-    debug FS "Grub _rootpart: ${_rootpart}"
-    debug FS "Grub bootdev: "$bootdev
+	# We may do things double here and in interactive_grub_install
+	# Better way would be to determine/ask neccassary things once and then
+	# fill (and present) menu.lst to user. If user mean there is something
+	# wrong with menu.lst settings (wrong boot device or wrong root=/device)
+	# he better re-runs the interactive grub install and select correct settings.
+	debug FS "Grub rootpart: $rootpart"
+	debug FS "Grub bootdev: $bootdev"
+
 	# No seperate /boot partition
 	if [ -z $bootdev ]; then
-		# Special handling on md raid
-		if [ $onraid ]; then
-			grubdev=$(mapdev $(mdraid_slave0 ${_rootpart}))
-            debug FS "onraid no sep boot slave0: "$(mdraid_slave0 ${_rootpart})
-            debug FS "onraid no sep boot grubdev: "$grubdev
-		else
-			# No raid
-			grubdev=$(mapdev ${_rootpart})
-            debug FS "no sep boot grubdev: "$grubdev
-		fi
-		# Without seperate /boot partiton we have to specify this path
 		subdir="/boot"
+		if [ $onraid ]; then
+			grubdev=$(mapdev $(mdraid_slave0 $rootpart))
+			debug FS "onraid no sep boot slave0: $(mdraid_slave0 $rootpart)"
+			debug FS "onraid no sep boot grubdev: $grubdev"
+		else
+			grubdev=$(mapdev $rootpart)
+			debug FS "no sep boot grubdev: $grubdev"
+		fi
 	# with seperate /boot partition
 	else
-		# Special handling on md raid
 		if [ $onraid ]; then
 			grubdev=$(mapdev $(mdraid_slave0 $bootdev))
-            debug FS "onraid with sep boot slave0: "$(mdraid_slave0 $bootdev)
-            debug FS "onraid with sep boot grubdev: "$grubdev
+			debug FS "onraid with sep boot slave0: $(mdraid_slave0 $bootdev)"
+			debug FS "onraid with sep boot grubdev: $grubdev"
 		else
-			# No raid
 			grubdev=$(mapdev $bootdev)
-            debug FS "onraid with sep boot grubdev: "$grubdev
+			debug FS "onraid with sep boot grubdev: $grubdev"
 		fi
 	fi
 	# Now that we have our grub-legacy root device (grubdev).
@@ -1057,9 +1053,6 @@ generate_grub_menulst() {
 
 	get_kernel_parameters || return $?
 
-	# No seperate /boot partition
-	[[ -z "$bootdev" ]] && local subdir="/boot"
-	
 	cat >>$grubmenu <<EOF
 
 # (0) Arch Linux
@@ -1093,96 +1086,91 @@ interactive_grub_menulst () {
 
 interactive_grub_install () {
 	debug FS "interactive_grub_install called. P1 = $1, P2 = $2, P3 = $3"
-    # $1 = bootpart
-    # $2 = bootdev
-    # $3 = boothd
-    # To install grub we have to know:
-    # The bootpart - This is were /boot could be found
-    # The bootdev - This is were grub gets installed, usally the MBR
-    # The boothd - Only on md raid setups this differs from bootdev
-    # These values get parsed either from values we have already or from
-    # user input. Later they will converted to grub-legacy notation.
+	# $1 = bootpart
+	# $2 = bootdev
+	# $3 = boothd
+	# To install grub we have to know:
+	# The bootpart - This is where /boot could be found
+	# The bootdev - This is where grub gets installed, usally the MBR
+	# The boothd - Only on md raid setups this differs from bootdev
+	# These values get parsed either from values we have already or from
+	# user input. Later they will converted to grub-legacy notation.
     
-    # Convert to grub-legacy notation
-    local bootpart=$(mapdev $1)
-    if [ "$bootpart" = "" ]; then
-        notify "Error: Missing/Invalid root device: $bootpart"
-        return 1
-    fi
+	# Convert to grub-legacy notation
+	local bootpart=$(mapdev $1)
+	if [ -z "$bootpart" ]; then
+		notify "Error: Missing/Invalid root device: $bootpart"
+		return 1
+	fi
 	local bootdev=$(mapdev $2)
-    if [ "$bootpart" = "DEVICE NOT FOUND" -o "$bootdev" = "DEVICE NOT FOUND" ]; then
-        notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
-        return 1
-    fi
-    local boothd=$3
-    debug FS "bootpart: $bootpart"
-    debug FS "bootdev: $bootdev"
-    debug FS "boothd: $boothd"
-    #return 0
+	if [ "$bootpart" = "DEVICE NOT FOUND" -o "$bootdev" = "DEVICE NOT FOUND" ]; then
+		notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
+		return 1
+	fi
+	local boothd=$3
+	debug FS "bootpart: $bootpart"
+	debug FS "bootdev: $bootdev"
+	debug FS "boothd: $boothd"
     
-    $var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
+	$var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
 device $bootdev $boothd
 root $bootpart
 setup $bootdev
 quit
 EOF
-    cat /tmp/grub.log >$LOG
-    if grep "Error [0-9]*: " /tmp/grub.log >/dev/null; then
-        notify "Error installing GRUB. (see $LOG for output)"
-        return 1
-    fi
+	cat /tmp/grub.log >$LOG
+	if grep -q "Error [0-9]*: " /tmp/grub.log; then
+		notify "Error installing GRUB. (see $LOG for output)"
+		return 1
+	fi
 }
 
-get_kernel_parameters()
-{
-
+get_kernel_parameters() {
 	get_device_with_mount '/' || return 1
-	local _rootpart="$ANSWER_DEVICE"
+	local rootpart="$ANSWER_DEVICE"
 
 	case "$PART_ACCESS" in
 		label)
-			local _label="$(getlabel $_rootpart)"
-			[[ "${_label}" ]] && _rootpart="/dev/disk/by-label/${_label}"
-		;;
+			local label="$(getlabel $rootpart)" && \
+			rootpart="/dev/disk/by-label/$label" ;;
 		uuid)
-			local _uuid="$(getuuid $_rootpart)"
-			[[ "${_uuid}" ]] &&	_rootpart="/dev/disk/by-uuid/${_uuid}"
-		;;
+			local uuid="$(getuuid $rootpart)" && \
+			rootpart="/dev/disk/by-uuid/$uuid" ;;
 	esac
 
-	kernel_parameters="root=$_rootpart ro"
+	kernel_parameters="root=$rootpart ro"
 
 	local raw_device crypt_device lv_device 
-	
+
 	if get_anchestors_mount ';/;'; then
 		if echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'raw$'
-			then
-				debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on raw'
-				raw_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
-				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
-				kernel_parameters="root=$crypt_device cryptdevice=$raw_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
-			then
+		then
+			debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on raw'
+			raw_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
+			crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+			kernel_parameters="root=$crypt_device cryptdevice=$raw_device:`basename $crypt_device` ro"
+		elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
+		then
 			debug 'FS' 'get_kernel_parameters - Found / on lvm on dm_crypt on raw'
-				lv_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
-				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '4p' | cut -d ' ' -f1)"
-				raw_device="$(echo "$ANSWER_DEVICES" | sed -n '5p' | cut -d ' ' -f1)"
-				kernel_parameters="root=$lv_device cryptdevice=$raw_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
-			then
-				debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on lvm on raw'
-				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
-				lv_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
-				kernel_parameters="root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
-			then
-				debug 'FS' 'get_kernel_parameters - Found / on raw'
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'raw$'
-			then
-				debug 'FS' 'get_kernel_parameters - Found / on lvm on raw'
-			else
-				debug 'FS' 'get_kernel_parameters - Could not figure this one out'
-				show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
+			lv_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+			crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '4p' | cut -d ' ' -f1)"
+			raw_device="$(echo "$ANSWER_DEVICES" | sed -n '5p' | cut -d ' ' -f1)"
+			kernel_parameters="root=$lv_device cryptdevice=$raw_device:`basename $crypt_device` ro"
+		elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
+		then
+			debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on lvm on raw'
+			crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+			lv_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
+			kernel_parameters="root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
+		elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
+		then
+			debug 'FS' 'get_kernel_parameters - Found / on raw'
+		elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'raw$'
+		then
+			debug 'FS' 'get_kernel_parameters - Found / on lvm on raw'
+		else
+			debug 'FS' 'get_kernel_parameters - Could not figure this one out'
+			show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
 		fi
 	else
 		show_warning "Disk setup detection" "Could not find out where your / is.  Did you setup filesystems/blockdevices? manual/autoprepare?  If yes, please file a bug and tell us about this"
@@ -1196,8 +1184,7 @@ get_kernel_parameters()
 #
 # params: none
 # returns: nothing
-interactive_select_source()   
-{
+interactive_select_source() {
 	var_PKG_SOURCE_TYPE=
         var_FILE_URL="file:///src/core/pkg"
         var_SYNC_URL=

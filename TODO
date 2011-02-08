@@ -1,6 +1,5 @@
 See also the FIXME's and TODO's in the code, and http://bugs.archlinux.org/toplevel/proj6
 
-fix </boot>/vmlinuz depending on separate /boot -> $subdir wrong
 
 CURRENT ISSUES:
 * fix (hd0,0) not showing up in automatic procedure

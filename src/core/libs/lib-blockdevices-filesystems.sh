@@ -181,28 +181,26 @@ $ANSWER_DEVICES"
 }
 
 
-# getuuid(). taken and modified from setup. this can probably be more improved. return an exit code, rely on blkid's exit codes etc.
-# converts /dev/[hs]d?[0-9] devices to UUIDs
-#
 # parameters: device file
 # outputs:    UUID on success
 #             nothing on failure
-# returns:    nothing
-getuuid()
-{
+# returns:    0 if the attribute is found, 1 otherwise
+getuuid() {
 	[ -n "$1" -a -b "$1" ] || die_error "getuuid needs a device file argument"
-	echo "$(blkid -s UUID -o value ${1})"
+	uuid=$(blkid -s UUID -o value ${1})
+	echo $uuid
+	[ -n "$uuid" ]
 }
-
 
 # parameters: device file
 # outputs:    LABEL on success
 #             nothing on failure
-# returns:    nothing
-getlabel()
-{
+# returns:   0 if the attribute is found, 1 otherwise
+getlabel() {
 	[ -n "$1" -a -b "$1" ] || die_error "getlabel needs a device file argument"
-	echo "$(blkid -s LABEL -o value ${1})"
+	label=$(blkid -s LABEL -o value ${1})
+	echo "$label"
+	[ -n "$label" ]
 }
 
 # find partitionable blockdevices
@@ -858,17 +856,9 @@ process_filesystem ()
 	then
 		case "$PART_ACCESS" in
 			label)
-				local _label="$(getlabel $part)"
-				if [ -n "${_label}" ]; then
-					part="LABEL=${_label}"
-				fi
-				;;
+				local label="$(getlabel $part)" && part="LABEL=$label";;
 			uuid)
-				local _uuid="$(getuuid $part)"
-				if [ -n "${_uuid}" ]; then
-					part="UUID=${_uuid}"
-				fi
-				;;
+				local uuid="$(getuuid $part)" && part="UUID=$uuid";;
 		esac
 		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
