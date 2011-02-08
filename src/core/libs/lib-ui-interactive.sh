@@ -1040,9 +1040,7 @@ generate_grub_menulst() {
 			debug FS "onraid with sep boot grubdev: $grubdev"
 		fi
 	fi
-	# Now that we have our grub-legacy root device (grubdev).
-	# keep the file from being completely bogus
-	[ "$grubdev" = "DEVICE NOT FOUND" ] && grubdev=
+
 	if [ -z "$grubdev" ]; then
 		notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
 		grubdev="(hd0,0)"
@@ -1099,11 +1097,11 @@ interactive_grub_install () {
 	# Convert to grub-legacy notation
 	local bootpart=$(mapdev $1)
 	if [ -z "$bootpart" ]; then
-		notify "Error: Missing/Invalid root device: $bootpart"
+		notify "Error: Missing/Invalid root device for $1"
 		return 1
 	fi
 	local bootdev=$(mapdev $2)
-	if [ "$bootpart" = "DEVICE NOT FOUND" -o "$bootdev" = "DEVICE NOT FOUND" ]; then
+	if [ -z "$bootdev" ]; then
 		notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
 		return 1
 	fi

@@ -315,40 +315,40 @@ EOF
 # TODO: $1 is what?? ASKDEV
 # taken from setup. slightly edited.
 mapdev() {
-    partition_flag=0
-    device_found=0
-    devs=$( grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
-    linuxdevice=$(echo $1 | cut -b1-8)
-    if [ "$(echo $1 | egrep '[0-9]$')" ]; then
-        # /dev/hdXY
-        pnum=$(echo $1 | cut -b9-)
-        pnum=$(($pnum-1))
-        partition_flag=1
-    fi
-    for  dev in $devs
-    do
-        if [ "(" = $(echo $dev | cut -b1) ]; then
-        grubdevice="$dev"
-        else
-        if [ "$dev" = "$linuxdevice" ]; then
-            device_found=1
-            break
-        fi
-       fi
-    done
-    if [ "$device_found" = "1" ]; then
-        if [ "$partition_flag" = "0" ]; then
-            echo "$grubdevice"
-        else
-            grubdevice_stringlen=${#grubdevice}
-            grubdevice_stringlen=$(($grubdevice_stringlen - 1))
-            grubdevice=$(echo $grubdevice | cut -b1-$grubdevice_stringlen)
-            echo "$grubdevice,$pnum)"
-        fi
-    else
-        echo "DEVICE NOT FOUND" >&2
-        return 2
-    fi
+	partition_flag=0
+	device_found=0
+	devs=$( grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
+	linuxdevice=$(echo $1 | cut -b1-8)
+	if [ "$(echo $1 | egrep '[0-9]$')" ]; then
+		# /dev/hdXY
+		pnum=$(echo $1 | cut -b9-)
+		pnum=$(($pnum-1))
+		partition_flag=1
+	fi
+	for dev in $devs
+	do
+		if [ "(" = $(echo $dev | cut -b1) ]; then
+			grubdevice="$dev"
+		else
+			if [ "$dev" = "$linuxdevice" ]; then
+				device_found=1
+				break
+			fi
+		fi
+	done
+	if [ "$device_found" = "1" ]; then
+		if [ "$partition_flag" = "0" ]; then
+			echo "$grubdevice"
+		else
+			grubdevice_stringlen=${#grubdevice}
+			grubdevice_stringlen=$(($grubdevice_stringlen - 1))
+			grubdevice=$(echo $grubdevice | cut -b1-$grubdevice_stringlen)
+			echo "$grubdevice,$pnum)"
+		fi
+		return 0
+	else
+		return 1
+	fi
 }
 
 
