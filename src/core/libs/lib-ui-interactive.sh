@@ -1045,79 +1045,33 @@ generate_grub_menulst() {
 		fi
 	fi
 	# Now that we have our grub-legacy root device (grubdev).
-    # keep the file from being completely bogus
+	# keep the file from being completely bogus
 	[ "$grubdev" = "DEVICE NOT FOUND" ] && grubdev=
 	if [ -z "$grubdev" ]; then
-                notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
-                grubdev="(hd0,0)"
-            fi
-            # remove default entries by truncating file at our little tag (#-*)
-            sed -i -e '/#-\*/q' $grubmenu
+		notify "Your root boot device could not be autodetected by setup.  Ensure you adjust the 'root (hd0,0)' line in your GRUB config accordingly."
+		grubdev="(hd0,0)"
+	fi
 
-	# find label or uuid of the root partition
-	case $PART_ACCESS in
-		label)
-			local _label="$(getlabel $_rootpart)"
-			if [ -n "${_label}" ]; then
-			    _rootpart="/dev/disk/by-label/${_label}"
-			fi
-			;;
-		uuid)
-			local _uuid="$(getuuid $_rootpart)"
-			if [ -n "${_uuid}" ]; then
-			    _rootpart="/dev/disk/by-uuid/${_uuid}"
-			fi
-			;;
-	esac
+	# remove default entries by truncating file at our little tag (#-*)
+	sed -i -e '/#-\*/q' $grubmenu
 
-		# handle dmraid/mdadm,lvm,dm_crypt etc. replace entries where needed automatically
-		kernel="kernel $subdir/vmlinuz26 root=${_rootpart} ro"
-		if get_anchestors_mount ';/;'
-		then
-			if echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'raw$'
-			then
-				debug 'FS' 'Grub kernel line? Found / on dm_crypt on raw'
-				raw_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
-				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
-				kernel="kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$raw_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
-			then
-				debug 'FS' 'Grub kernel line? Found / on lvm on dm_crypt on raw'
-				lv_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
-				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '4p' | cut -d ' ' -f1`
-				raw_device=`echo "$ANSWER_DEVICES" | sed -n '5p' | cut -d ' ' -f1`
-				kernel="kernel $subdir/vmlinuz26 root=$lv_device cryptdevice=$raw_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
-			then
-				debug 'FS' 'Grub kernel line? Found / on dm_crypt on lvm on raw'
-				crypt_device=`echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1`
-				lv_device=`echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1`
-				kernel="kernel $subdir/vmlinuz26 root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
-			then
-				debug 'FS' 'Grub kernel line? Found / on raw'
-			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'raw$'
-			then
-				debug 'FS' 'Grub kernel line? Found / on lvm on raw'
-			else
-				debug 'FS' 'Grub kernel line? Could not figure this one out'
-				show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
-			fi
-		else
-			show_warning "Disk setup detection" "Could not find out where your / is.  Did you setup filesystems/blockdevices? manual/autoprepare?  If yes, please file a bug and tell us about this"
-		fi
-            cat >>$grubmenu <<EOF
+	get_kernel_parameters || return $?
+
+	# No seperate /boot partition
+	[[ -z "$bootdev" ]] && local subdir="/boot"
+	
+	cat >>$grubmenu <<EOF
 
 # (0) Arch Linux
 title  Arch Linux
 root   $grubdev
-$kernel
+kernel $subdir/vmlinuz26 $kernel_parameters
 initrd $subdir/kernel26.img
 
 # (1) Arch Linux
 title  Arch Linux Fallback
 root   $grubdev
-$kernel
+kernel $subdir/vmlinuz26 $kernel_parameters
 initrd $subdir/kernel26-fallback.img
 
 # (2) Windows
@@ -1177,6 +1131,63 @@ EOF
         notify "Error installing GRUB. (see $LOG for output)"
         return 1
     fi
+}
+
+get_kernel_parameters()
+{
+
+	get_device_with_mount '/' || return 1
+	local _rootpart="$ANSWER_DEVICE"
+
+	case "$PART_ACCESS" in
+		label)
+			local _label="$(getlabel $_rootpart)"
+			[[ "${_label}" ]] && _rootpart="/dev/disk/by-label/${_label}"
+		;;
+		uuid)
+			local _uuid="$(getuuid $_rootpart)"
+			[[ "${_uuid}" ]] &&	_rootpart="/dev/disk/by-uuid/${_uuid}"
+		;;
+	esac
+
+	kernel_parameters="root=$_rootpart ro"
+
+	local raw_device crypt_device lv_device 
+	
+	if get_anchestors_mount ';/;'; then
+		if echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'raw$'
+			then
+				debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on raw'
+				raw_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
+				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+				kernel_parameters="root=$crypt_device cryptdevice=$raw_device:`basename $crypt_device` ro"
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			then
+			debug 'FS' 'get_kernel_parameters - Found / on lvm on dm_crypt on raw'
+				lv_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '4p' | cut -d ' ' -f1)"
+				raw_device="$(echo "$ANSWER_DEVICES" | sed -n '5p' | cut -d ' ' -f1)"
+				kernel_parameters="root=$lv_device cryptdevice=$raw_device:`basename $crypt_device` ro"
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '5p' | grep -q 'raw$'
+			then
+				debug 'FS' 'get_kernel_parameters - Found / on dm_crypt on lvm on raw'
+				crypt_device="$(echo "$ANSWER_DEVICES" | sed -n '1p' | cut -d ' ' -f1)"
+				lv_device="$(echo "$ANSWER_DEVICES" | sed -n '2p' | cut -d ' ' -f1)"
+				kernel_parameters="root=$crypt_device cryptdevice=$lv_device:`basename $crypt_device` ro"
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'raw$'
+			then
+				debug 'FS' 'get_kernel_parameters - Found / on raw'
+			elif echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'lvm-lv$' && echo "$ANSWER_DEVICES" | sed -n '4p' | grep -q 'raw$'
+			then
+				debug 'FS' 'get_kernel_parameters - Found / on lvm on raw'
+			else
+				debug 'FS' 'get_kernel_parameters - Could not figure this one out'
+				show_warning "Disk setup detection" "Are you using some really fancy dm_crypt/lvm/softraid setup?\nI could not figure it out, so the kernel line will be the default: you'll probably need to edit it.\nPlease file a bug for this and supply all files from /tmp/aif/"
+		fi
+	else
+		show_warning "Disk setup detection" "Could not find out where your / is.  Did you setup filesystems/blockdevices? manual/autoprepare?  If yes, please file a bug and tell us about this"
+		return 1
+	fi
 }
 
 
