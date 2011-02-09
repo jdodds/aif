@@ -119,59 +119,55 @@ interactive_configure_system()
 
 interactive_timezone () {
 	ask_timezone || return 1
-        TIMEZONE=$ANSWER_TIMEZONE
-        inform "Setting Timezone to $TIMEZONE"
-		if [ -n "$TIMEZONE" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
-		then
-			# This changes probably also the systemtime (UTC->$TIMEZONE)!
-			# localtime users will have a false time after that!
-			/bin/rm -f /etc/localtime
-			/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-		fi
+	TIMEZONE=$ANSWER_TIMEZONE
+	inform "Setting Timezone to $TIMEZONE"
+	if [ -n "$TIMEZONE" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+	then
+		# This changes probably also the systemtime (UTC->$TIMEZONE)!
+		# localtime users will have a false time after that!
+		/bin/rm -f /etc/localtime
+		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+	fi
 }
 
 
 interactive_time () {
-        # utc or localtime?
-        ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" - "localtime" - || return 1
-        HARDWARECLOCK=$ANSWER_OPTION
-		# To avoid a false time for localtime users after above
-		# we must re-read the hwclock value again, but now into the
-		# correct timezone.
-		[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
+	# utc or localtime?
+	ask_option UTC "Clock configuration" "Is your hardware clock in UTC or local time? UTC is recommended" required "UTC" - "localtime" - || return 1
+	HARDWARECLOCK=$ANSWER_OPTION
+	# To avoid a false time for localtime users after above
+	# we must re-read the hwclock value again, but now into the
+	# correct timezone.
+	[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
 
-        local default=no
-        while true; do
+	local default=no
+	while true; do
 		current=$(date)
-                #TODO: only propose if network ok
-                EXTRA=()
+		#TODO: only propose if network ok
+		EXTRA=()
 		type ntpdate &>/dev/null && EXTRA=('ntp' 'Set time and date using ntp')
 
-                ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
-                "return" "Looks good. back to main menu" "${EXTRA[@]}" "manual" "Set time and date manually" || return 1
-                if [ "$ANSWER_OPTION" = ntp ]
-                then
+		ask_option $default "Date/time configuration" "According to your settings and your hardwareclock, the date should now be $current.  If this is incorrect, you can correct this now" required \
+		"return" "Looks good. back to main menu" "${EXTRA[@]}" "manual" "Set time and date manually" || return 1
+		if [ "$ANSWER_OPTION" = ntp ]; then
 			inform "Syncing clock with internet pool ..."
-			if ntpdate pool.ntp.org >/dev/null
-			then
+			if ntpdate pool.ntp.org >/dev/null; then
 				notify "Synced clock with internet pool successfully."
 				dohwclock $HARDWARECLOCK systohc && default=3
 			else
 				show_warning 'Ntp failure' "An error has occured, time was not changed!"
 			fi
 		fi
-		if [ "$ANSWER_OPTION" = manual ]
-		then
+		if [ "$ANSWER_OPTION" = manual ]; then
 			ask_datetime || continue
-			if date -s "$ANSWER_DATETIME"
-			then
+			if date -s "$ANSWER_DATETIME"; then
 				dohwclock $HARDWARECLOCK systohc && default=3
 			else
 				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME" 
 			fi
 		fi
-                [ "$ANSWER_OPTION" = return ] && break
-        done
+		[ "$ANSWER_OPTION" = return ] && break
+	done
 }
 
 
@@ -269,7 +265,7 @@ interactive_autoprepare()
 
 	ask_number "Enter the size (MiB) of your swap partition.  Recommended size: 256MiB\n\nDisk space left: $size_left MiB" 1 $size_left 256 || return 1
 	SWAP_PART_SIZE=$ANSWER_NUMBER
-        size_left=$(($size_left-$SWAP_PART_SIZE))
+	size_left=$(($size_left-$SWAP_PART_SIZE))
 
 	ROOT_PART_SET=""
 	while [ "$ROOT_PART_SET" = "" ]
@@ -281,7 +277,7 @@ interactive_autoprepare()
 		ROOT_PART_SIZE=$ANSWER_NUMBER
 		size_left=$(($size_left-$ROOT_PART_SIZE))
 		ask_yesno "$size_left MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
-        done
+	done
 
 	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required "${FSOPTS[@]}" || return 1
 	FSTYPE=$ANSWER_OPTION
@@ -317,7 +313,7 @@ interactive_autoprepare()
 
 
 interactive_partition() {
-    target_umountall
+	target_umountall
 
 	question_text="Select the disk you want to partition"
 	if [ -f "$TMP_PARTITIONS" ]
@@ -329,26 +325,26 @@ interactive_partition() {
 		fi
 	fi
 
-    # Select disk to partition
-    listblockfriendly
-    DISCS=("${BLOCKFRIENDLY[@]}" OTHER OTHER DONE DONE)
-    DISC=
-    while true; do
-        # Prompt the user with a list of known disks
-        ask_option no 'Disc selection' "$question_text (select DONE when finished)" required "${DISCS[@]}" || return 1
-        DISC=$ANSWER_OPTION
-        if [ "$DISC" = "OTHER" ]; then
-            ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
-            DISC=$ANSWER_STRING
-        fi
-        # Leave our loop if the user is done partitioning
-        [ "$DISC" = "DONE" ] && break
-        # Partition disc
-        notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
-        NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to the mountpoints selection step."
-        cfdisk $DISC
-    done
-    return 0
+	# Select disk to partition
+	listblockfriendly
+	DISCS=("${BLOCKFRIENDLY[@]}" OTHER OTHER DONE DONE)
+	DISC=
+	while true; do
+		# Prompt the user with a list of known disks
+		ask_option no 'Disc selection' "$question_text (select DONE when finished)" required "${DISCS[@]}" || return 1
+		DISC=$ANSWER_OPTION
+		if [ "$DISC" = "OTHER" ]; then
+			ask_string "Enter the full path to the device you wish to partition" "/dev/sda" || return 1
+			DISC=$ANSWER_STRING
+		fi
+		# Leave our loop if the user is done partitioning
+		[ "$DISC" = "DONE" ] && break
+		# Partition disc
+		notify "Now you'll be put into the cfdisk program where you can partition your hard drive. You should make a swap partition and as many data partitions as you will need.\
+		NOTE: cfdisk may tell you to reboot after creating partitions.  If you need to reboot, just re-enter this install program, skip this step and go on to the mountpoints selection step."
+		cfdisk $DISC
+	done
+	return 0
 }
 
 
@@ -382,8 +378,8 @@ interactive_filesystem ()
 		local old_fs_params="$fs_params"
 
 		ask_option edit "Change $fs_type filesystem settings on $part ?" \
-		                "Change $fs_type filesystem settings (create:$fs_create, label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
-		                edit EDIT delete DELETE
+						"Change $fs_type filesystem settings (create:$fs_create, label:$fs_label, mountpoint:$fs_mountpoint) on $part (type:$part_type, label:$part_label) ?" required \
+						edit EDIT delete DELETE
 
 		# Don't alter, and return if user cancels
 		[ $? -gt 0 ] && NEW_FILESYSTEM=$fs_string && return 0
@@ -445,15 +441,15 @@ interactive_filesystem ()
 		fi
 
 		# ask special params, if relevant
-                # lvm-vg: PV's to use
-                # lvm-lv: LV size
+		# lvm-vg: PV's to use
+		# lvm-lv: LV size
 		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg ]
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
 			pv=${part/+/}
 			if ! egrep -q "$pv(\$| )" <<< "$fs_params"; then
-			   [ -n "$fs_params" ] && fs_params="$fs_params "
-			   fs_params="$fs_params$pv"
+				[ -n "$fs_params" ] && fs_params="$fs_params "
+				fs_params="$fs_params$pv"
 			fi
 
 			list=()
@@ -759,80 +755,80 @@ If any previous configuration you've done until now (like fancy filesystems) req
 # args: none
 # returns: 1 on failure
 interactive_runtime_network() {
-    local ifaces
-    ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
+	local ifaces
+	ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
-    [ -z "$ifaces" ] && show_warning "No network interfaces?" "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." && return 1
+	[ -z "$ifaces" ] && show_warning "No network interfaces?" "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." && return 1
 
-    INTERACE_PREV=$INTERFACE
-    unset INTERFACE DHCP IPADDR SUBNET BROADCAST GW DNS PROXY_HTTP PROXY_FTP
-    ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1
-    INTERFACE=$ANSWER_OPTION
-    [ "$INTERFACE" = "$INTERFACE_PREV" ] && INTERFACE_PREV=
+	INTERACE_PREV=$INTERFACE
+	unset INTERFACE DHCP IPADDR SUBNET BROADCAST GW DNS PROXY_HTTP PROXY_FTP
+	ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1
+	INTERFACE=$ANSWER_OPTION
+	[ "$INTERFACE" = "$INTERFACE_PREV" ] && INTERFACE_PREV=
 
-    if ask_yesno "Do you want to use DHCP?"
-    then
-        inform "Please wait.  Polling for DHCP server on $INTERFACE..."
-        dhcpcd -k $INTERFACE >$LOG 2>&1
-        if ! dhcpcd $INTERFACE >$LOG 2>&1
-        then
-            show_warning "Dhcpcd problem" "Failed to run dhcpcd.  See $LOG for details."
-            return 1
-        fi
-        if ! ifconfig $INTERFACE | grep -q 'inet addr:'
+	if ask_yesno "Do you want to use DHCP?"
 	then
-            show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
-            return 1
-        fi
-        DHCP=1
-    else
-	DHCP=0
-        local USERHAPPY=0
-        while [ "$USERHAPPY" = 0 ]; do
-            ask_string "Enter your IP address" "192.168.0.2" || return 1
-            IPADDR=$ANSWER_STRING
-            ask_string "Enter your netmask" "255.255.255.0" || return 1
-            SUBNET=$ANSWER_STRING
-            ask_string "Enter your broadcast" "$(sed 's/\.[^.]*$/\.255/' <<< $IPADDR)" || return 1
-            BROADCAST=$ANSWER_STRING
-            ask_string "Enter your gateway (optional)" "$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)" 0 || return 1
-            GW=$ANSWER_STRING
-            [ -n "$GW" ] && default_dns="$GW"
-            [ -z "$GW" ] && default_dns="$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)"
-            ask_string "Enter your DNS server IP" "$default_dns" || return 1
-	    DNS=$ANSWER_STRING
-            ask_string "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
-            PROXY_HTTP=$ANSWER_STRING
-            ask_string "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
-            PROXY_FTP=$ANSWER_STRING
-            if ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nBroadcast:          $BROADCAST\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
-	    then
-		    USERHAPPY=1
-	    fi
-	done
-        echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
-        if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
-        then
-        	show_warning "Ifconfig problem" "Failed to setup interface $INTERFACE"
-        	return 1
-        fi
-        if [ -n "$GW" ]; then
-            route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
-        fi
-        if [ -z "$PROXY_HTTP" ]; then
-            unset http_proxy
-        else
-            export http_proxy=$PROXY_HTTP
-        fi
-        if [ -z "$PROXY_FTP" ]; then
-            unset ftp_proxy
-        else
-            export ftp_proxy=$PROXY_FTP
-        fi
-        echo "nameserver $DNS" >/etc/resolv.conf
-    fi
+		inform "Please wait.  Polling for DHCP server on $INTERFACE..."
+		dhcpcd -k $INTERFACE >$LOG 2>&1
+		if ! dhcpcd $INTERFACE >$LOG 2>&1
+		then
+			show_warning "Dhcpcd problem" "Failed to run dhcpcd.  See $LOG for details."
+			return 1
+		fi
+		if ! ifconfig $INTERFACE | grep -q 'inet addr:'
+	then
+			show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
+			return 1
+		fi
+		DHCP=1
+	else
+		DHCP=0
+		local USERHAPPY=0
+		while [ "$USERHAPPY" = 0 ]; do
+			ask_string "Enter your IP address" "192.168.0.2" || return 1
+			IPADDR=$ANSWER_STRING
+			ask_string "Enter your netmask" "255.255.255.0" || return 1
+			SUBNET=$ANSWER_STRING
+			ask_string "Enter your broadcast" "$(sed 's/\.[^.]*$/\.255/' <<< $IPADDR)" || return 1
+			BROADCAST=$ANSWER_STRING
+			ask_string "Enter your gateway (optional)" "$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)" 0 || return 1
+			GW=$ANSWER_STRING
+			[ -n "$GW" ] && default_dns="$GW"
+			[ -z "$GW" ] && default_dns="$(sed 's/\.[^.]*$/\.1/' <<< $IPADDR)"
+			ask_string "Enter your DNS server IP" "$default_dns" || return 1
+			DNS=$ANSWER_STRING
+			ask_string "Enter your HTTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
+			PROXY_HTTP=$ANSWER_STRING
+			ask_string "Enter your FTP proxy server, for example:\nhttp://name:port\nhttp://ip:port\nhttp://username:password@ip:port\n\n Leave the field empty if no proxy is needed to install." "" 0 || return 1
+			PROXY_FTP=$ANSWER_STRING
+			if ask_yesno "Are these settings correct?\n\nIP address:         $IPADDR\nNetmask:            $SUBNET\nBroadcast:          $BROADCAST\nGateway (optional): $GW\nDNS server:         $DNS\nHTTP proxy server:  $PROXY_HTTP\nFTP proxy server:   $PROXY_FTP"
+			then
+				USERHAPPY=1
+			fi
+		done
+		echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
+		if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
+		then
+				show_warning "Ifconfig problem" "Failed to setup interface $INTERFACE"
+				return 1
+			fi
+			if [ -n "$GW" ]; then
+				route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
+			fi
+			if [ -z "$PROXY_HTTP" ]; then
+				unset http_proxy
+			else
+				export http_proxy=$PROXY_HTTP
+			fi
+			if [ -z "$PROXY_FTP" ]; then
+				unset ftp_proxy
+			else
+				export ftp_proxy=$PROXY_FTP
+		fi
+		echo "nameserver $DNS" >/etc/resolv.conf
+	fi
 
-    echo "INTERFACE_PREV=$INTERFACE_PREV
+	echo "INTERFACE_PREV=$INTERFACE_PREV
           INTERFACE=$INTERFACE
           DHCP=$DHCP
           IPADDR=$IPADDR
@@ -842,18 +838,18 @@ interactive_runtime_network() {
           DNS=$DNS
           PROXY_HTTP=$PROXY_HTTP
           PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings || return 1
-    notify "The network is configured."
-    return 0
+	notify "The network is configured."
+	return 0
 }
 
 interactive_install_bootloader () {
 	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
-	                "Grub" "Use the GRUB bootloader (default)" \
-	                "None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" || return 1
+	"Grub" "Use the GRUB bootloader (default)" \
+	"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" || return 1
 
 	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
 	[ "$bl" != grub ] && return 0
-    GRUB_OK=0
+	GRUB_OK=0
 	interactive_grub
 }
 
@@ -861,140 +857,140 @@ interactive_grub() {
 	get_grub_map
 	[ ! -f $grubmenu ] && show_warning "No grub?" "Error: Couldn't find $grubmenu.  Is GRUB installed?" && return 1
 
-    debug FS "starting interactive_grub"
-    # try to auto-configure GRUB...
-    debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
+	debug FS "starting interactive_grub"
+	# try to auto-configure GRUB...
+	debug 'UI-INTERACTIVE' "install_grub \$PART_ROOT $PART_ROOT \$GRUB_OK $GRUB_OK"
 	if get_device_with_mount '/' && [ "$GRUB_OK" != '1' ] ; then
 		GRUB_OK=0
 		PART_ROOT=$ANSWER_DEVICE
 		# look for a separately-mounted /boot partition
-        # This could be used better, maybe we use a better variable name cause
-        # we use this later in many things in workflow.
-        # Currently we have bootdev as a device if we have a seperate /boot or empty
-        # if no seperate /boot. Where our /boot realy lives is important later
-        # to build the grub: root (hdx,y) part.
-        # So maybe we set a flag variable like: sepboot=true|false and set bootdev to either
-        # the partition with seperate /boot or to $PART_ROOT.
-        # So that bootdev is always our real partition with /boot....
-        bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
+		# This could be used better, maybe we use a better variable name cause
+		# we use this later in many things in workflow.
+		# Currently we have bootdev as a device if we have a seperate /boot or empty
+		# if no seperate /boot. Where our /boot realy lives is important later
+		# to build the grub: root (hdx,y) part.
+		# So maybe we set a flag variable like: sepboot=true|false and set bootdev to either
+		# the partition with seperate /boot or to $PART_ROOT.
+		# So that bootdev is always our real partition with /boot....
+		bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
 		# check if bootdev or PART_ROOT is on a md raid array
-        # This dialog is only shown when we detect / or /boot on a raid device.
+		# This dialog is only shown when we detect / or /boot on a raid device.
 		if device_is_raid $bootdev || device_is_raid $PART_ROOT; then
 			ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
 			if [ $? -eq 0 ]; then
 				onraid=true
-                debug FS "onraid is selected"
+				debug FS "onraid is selected"
 			fi
 		fi
-        # Create and edit the grub menu.lst
-        interactive_grub_menulst
+		# Create and edit the grub menu.lst
+		interactive_grub_menulst
 
-	DEVS="$(findblockdevices '_ ')"
-        if [ "$DEVS" = " " ]; then
-            notify "No hard drives were found"
-            return 1
-        fi
-        # copy initial grub files into installed system
-        cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
-        sync
-        # freeze xfs filesystems to enable grub installation on xfs filesystems
-        for xfsdev in $(blkid -t TYPE=xfs -o device); do
-            mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-            if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-                /usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
-            fi
-        done
-        
-        if [ ! $onraid ]; then
-            # Set boot partition to the device where our /boot lives.
-            [ -z $bootdev ] && bootpart=$PART_ROOT || bootpart=$bootdev
-            ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
-            bootdev=$ANSWER_OPTION
-            boothd=$(echo $bootdev | cut -c -8)
-            interactive_grub_install $bootpart $bootdev $boothd
-            if [ $? -eq 0 ]; then
-                GRUB_OK=1
-            fi
-        else
-            # Raid special
-            # The bootpart and bootdev should not be changed when setup grub on all raid array members.
-            # Instead the device is mapped via grub parameter device
-            # So a grub setup on MBR sda/sdb with /boot on sda1/sdb1 should always be done like:
-            # device (hd0) /dev/sd(a|b)
-            # root (hd0,0)
-            # setup (hd0)
-            
-            # get md device either if we use separate /boot or not.
-            [ -z $bootdev ] && local md=$PART_ROOT || local md=$bootdev
-            
-            local ask_str="Do you want to install grub to the MBR of each harddisk from your BOOT array "$md" ? (recommended)"
-            ask_yesno "$ask_str" yes
-            if [ $? -eq 0 ]; then
+		DEVS="$(findblockdevices '_ ')"
+		if [ "$DEVS" = " " ]; then
+			notify "No hard drives were found"
+			return 1
+		fi
+		# copy initial grub files into installed system
+		cp -a $var_TARGET_DIR/usr/lib/grub/i386-pc/* $var_TARGET_DIR/boot/grub/
+		sync
+		# freeze xfs filesystems to enable grub installation on xfs filesystems
+		for xfsdev in $(blkid -t TYPE=xfs -o device); do
+			mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+			if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+				/usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
+			fi
+		done
+
+		if [ ! $onraid ]; then
+			# Set boot partition to the device where our /boot lives.
+			[ -z $bootdev ] && bootpart=$PART_ROOT || bootpart=$bootdev
+			ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed (usually the MBR and not a partition)." required $DEVS || return 1
+			bootdev=$ANSWER_OPTION
+			boothd=$(echo $bootdev | cut -c -8)
+			interactive_grub_install $bootpart $bootdev $boothd
+			if [ $? -eq 0 ]; then
+				GRUB_OK=1
+			fi
+		else
+			# Raid special
+			# The bootpart and bootdev should not be changed when setup grub on all raid array members.
+			# Instead the device is mapped via grub parameter device
+			# So a grub setup on MBR sda/sdb with /boot on sda1/sdb1 should always be done like:
+			# device (hd0) /dev/sd(a|b)
+			# root (hd0,0)
+			# setup (hd0)
+
+			# get md device either if we use separate /boot or not.
+			[ -z $bootdev ] && local md=$PART_ROOT || local md=$bootdev
+
+			local ask_str="Do you want to install grub to the MBR of each harddisk from your BOOT array "$md" ? (recommended)"
+			ask_yesno "$ask_str" yes
+			if [ $? -eq 0 ]; then
 				slaves=$(mdraid_all_slaves $md)
-                for slave in $slaves; do
-                    boothd=$(echo $slave | cut -c -8)
-                    bootpart=$(mdraid_slave0 $md)
-                    bootdev=$(echo $bootpart | cut -c -8)
-                    interactive_grub_install $bootpart $bootdev $boothd
-                    if [ $? -eq 0 ]; then
-                        GRUB_OK=1
-                    fi
-                done
-            else
-                # This part needs more attention... User could select here only
-                # a other blockdevice to install grub into... But our grub rootdevice
-                # is not selectable, cause it is determined either from PART_ROOT or
-                # bootdev.
-                # Maybe better we leave the user alone and poke him to use a grub
-                # shell if he want do something unusefull and not install grub in
-                # aech MBR of affected HD in raid array....
-                local USERHAPPY=0
-                while [ "$USERHAPPY" = 0 ]
-                do
-                    ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed." required $DEVS DONE _
-                    [ $? -gt 0                 ] && USERHAPPY=1 && break
-                    [ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
-                    bootdev=$ANSWER_OPTION
-                    boothd=$(echo $bootdev | cut -c -8)
-                    bootpart=$(mdraid_slave0 $md)
-                    bootdev=$(echo $bootpart | cut -c -8)
-                    interactive_grub_install $bootpart $bootdev $boothd
-                    if [ $? -eq 0 ]; then
-                        GRUB_OK=1
-                    fi
-                done
+				for slave in $slaves; do
+					boothd=$(echo $slave | cut -c -8)
+					bootpart=$(mdraid_slave0 $md)
+					bootdev=$(echo $bootpart | cut -c -8)
+					interactive_grub_install $bootpart $bootdev $boothd
+					if [ $? -eq 0 ]; then
+						GRUB_OK=1
+					fi
+				done
+			else
+				# This part needs more attention... User could select here only
+				# a other blockdevice to install grub into... But our grub rootdevice
+				# is not selectable, cause it is determined either from PART_ROOT or
+				# bootdev.
+				# Maybe better we leave the user alone and poke him to use a grub
+				# shell if he want do something unusefull and not install grub in
+				# aech MBR of affected HD in raid array....
+				local USERHAPPY=0
+				while [ "$USERHAPPY" = 0 ]
+				do
+					ask_option no "Boot device selection" "Select the boot device where the GRUB bootloader will be installed." required $DEVS DONE _
+					[ $? -gt 0                 ] && USERHAPPY=1 && break
+					[ "$ANSWER_OPTION" == DONE ] && USERHAPPY=1 && break
+					bootdev=$ANSWER_OPTION
+					boothd=$(echo $bootdev | cut -c -8)
+					bootpart=$(mdraid_slave0 $md)
+					bootdev=$(echo $bootpart | cut -c -8)
+					interactive_grub_install $bootpart $bootdev $boothd
+					if [ $? -eq 0 ]; then
+						GRUB_OK=1
+					fi
+				done
 			fi
 
-            if [ "$bootpart" = "" ]; then
-                if [ "$PART_ROOT" = "" ]; then
-                    ask_string "Enter the full path to your root device" "/dev/sda3" || return 1
-                    bootpart=$ANSWER_STRING
-                else
-                    bootpart=$PART_ROOT
-                fi
-                boothd=$(echo $bootpart | cut -c -8)
-                interactive_grub_install $bootpart $bootdev $boothd
-                if [ $? -eq 0 ]; then
-                    GRUB_OK=1
-                fi
-            fi
-        fi
-        # unfreeze xfs filesystems
-        for xfsdev in $(blkid -t TYPE=xfs -o device); do
-            mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
-            if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-                /usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
-            fi
-        done
-        
-        if [ "$GRUB_OK" == "1" ]; then
-            notify "GRUB was successfully installed."
-        else
-            show_warning "Grub installation failure" "GRUB was NOT successfully installed."
-            return 1
-        fi
-        return 0
-    fi
+			if [ "$bootpart" = "" ]; then
+				if [ "$PART_ROOT" = "" ]; then
+					ask_string "Enter the full path to your root device" "/dev/sda3" || return 1
+					bootpart=$ANSWER_STRING
+				else
+					bootpart=$PART_ROOT
+				fi
+				boothd=$(echo $bootpart | cut -c -8)
+				interactive_grub_install $bootpart $bootdev $boothd
+				if [ $? -eq 0 ]; then
+					GRUB_OK=1
+				fi
+			fi
+		fi
+		# unfreeze xfs filesystems
+		for xfsdev in $(blkid -t TYPE=xfs -o device); do
+			mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
+			if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
+				/usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
+			fi
+		done
+
+		if [ "$GRUB_OK" == "1" ]; then
+			notify "GRUB was successfully installed."
+		else
+			show_warning "Grub installation failure" "GRUB was NOT successfully installed."
+			return 1
+		fi
+		return 0
+	fi
 }
 
 generate_grub_menulst() {
@@ -1094,7 +1090,7 @@ interactive_grub_install () {
 	# The boothd - Only on md raid setups this differs from bootdev
 	# These values get parsed either from values we have already or from
 	# user input. Later they will converted to grub-legacy notation.
-    
+
 	# Convert to grub-legacy notation
 	local bootpart=$(mapdev $1)
 	if [ -z "$bootpart" ]; then
@@ -1110,7 +1106,7 @@ interactive_grub_install () {
 	debug FS "bootpart: $bootpart"
 	debug FS "bootdev: $bootdev"
 	debug FS "boothd: $boothd"
-    
+
 	$var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
 device $bootdev $boothd
 root $bootpart
@@ -1185,31 +1181,31 @@ get_kernel_parameters() {
 # returns: nothing
 interactive_select_source() {
 	var_PKG_SOURCE_TYPE=
-        var_FILE_URL="file:///src/core/pkg"
-        var_SYNC_URL=
+	var_FILE_URL="file:///src/core/pkg"
+	var_SYNC_URL=
 
 	ask_option no "Source selection" "Please select an installation source" required \
-    "cd"  "CD-ROM or OTHER SOURCE" \
-    "net" "NET (FTP/HTTP)" || return 1
+	"cd"  "CD-ROM or OTHER SOURCE" \
+	"net" "NET (FTP/HTTP)" || return 1
 
-    case $ANSWER_OPTION in
-        "cd") var_PKG_SOURCE_TYPE="cd" ;;
-        "net") var_PKG_SOURCE_TYPE="net" ;;
-    esac
+	case $ANSWER_OPTION in
+		"cd") var_PKG_SOURCE_TYPE="cd" ;;
+		"net") var_PKG_SOURCE_TYPE="net" ;;
+	esac
 
-    if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
-        TITLE="Arch Linux CDROM or OTHER SOURCE Installation"
-        notify "Packages included on this disk have been mounted to /src/core/pkg. If you wish to use your own packages from another source, manually mount them there."
-        if [ ! -d /src/core/pkg ]; then
-            notify "Package directory /src/core/pkg is missing!"
-            return 1
-        fi
-        echo "Using CDROM for package installation" >$LOG
-    else
-        TITLE="Arch Linux NET (FTP/HTTP) Installation"
-        notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
-   fi
-   return 0
+	if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
+		TITLE="Arch Linux CDROM or OTHER SOURCE Installation"
+		notify "Packages included on this disk have been mounted to /src/core/pkg. If you wish to use your own packages from another source, manually mount them there."
+		if [ ! -d /src/core/pkg ]; then
+			notify "Package directory /src/core/pkg is missing!"
+			return 1
+		fi
+		echo "Using CDROM for package installation" >$LOG
+	else
+		TITLE="Arch Linux NET (FTP/HTTP) Installation"
+		notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
+	fi
+	return 0
 }
 
 
@@ -1217,19 +1213,19 @@ interactive_select_source() {
 # args: none
 # returns: nothing
 interactive_select_mirror() { 
-        notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
-        # FIXME: this regex doesn't honor commenting
-        MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
-        ask_option no "Mirror selection" "Select an FTP/HTTP mirror" required $MIRRORS "Custom" "_" || return 1
-    local _server=$ANSWER_OPTION
-    if [ "${_server}" = "Custom" ]; then
-        ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
-        var_SYNC_URL=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
-    else
-        # Form the full URL for our mirror by grepping for the server name in
-        # our mirrorlist and pulling the full URL out.
-        # Ensure that if it was listed twice we only return one line for the mirror.
-        var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
-    fi
-    echo "Using mirror: $var_SYNC_URL" >$LOG
+	notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
+	# FIXME: this regex doesn't honor commenting
+	MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
+	ask_option no "Mirror selection" "Select an FTP/HTTP mirror" required $MIRRORS "Custom" "_" || return 1
+	local _server=$ANSWER_OPTION
+	if [ "${_server}" = "Custom" ]; then
+		ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
+		var_SYNC_URL=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
+	else
+		# Form the full URL for our mirror by grepping for the server name in
+		# our mirrorlist and pulling the full URL out.
+		# Ensure that if it was listed twice we only return one line for the mirror.
+		var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
+	fi
+	echo "Using mirror: $var_SYNC_URL" >$LOG
 }

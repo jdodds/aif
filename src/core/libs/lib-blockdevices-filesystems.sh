@@ -414,14 +414,14 @@ partition()
 	sfdisk -D $DEVICE -uM >$LOG 2>&1 <<EOF
 $sfdisk_input
 EOF
-    if [ $? -gt 0 ]; then
-        notify "Error partitioning $DEVICE (see $LOG for details)"
-        printk on
-        return 1
-    fi
-    printk on
+	if [ $? -gt 0 ]; then
+		notify "Error partitioning $DEVICE (see $LOG for details)"
+		printk on
+		return 1
+	fi
+	printk on
 
-    return 0
+	return 0
 }
 
 
@@ -913,10 +913,10 @@ get_blockdevice_size ()
 # $1 blockdevice (ex: /dev/md0 or /dev/sda1)
 # All MD RAID block devices have a major id of 9
 device_is_raid() {
-    [[ -b "$1" ]] || die_error "device_is_raid needs a blockdevice as \$1 ($1 given)"
-    [[ -f /proc/mdstast ]] || return 1
-    local devmajor=$(stat -c %t "$1")
-    (( devmajor == 9 ))
+	[[ -b "$1" ]] || die_error "device_is_raid needs a blockdevice as \$1 ($1 given)"
+	[[ -f /proc/mdstast ]] || return 1
+	local devmajor=$(stat -c %t "$1")
+	(( devmajor == 9 ))
 }
 
 # $1 md raid blockdevice (ex: /dev/md0)
@@ -927,7 +927,7 @@ device_is_raid() {
 # This procedure is used to determine the grub value for root, ex: (hd0,0)
 mdraid_slave0 ()
 {
-    echo "/dev/"$(ls -ldgGQ /sys/class/block/$(basename $1)/md/rd0 | cut -d'"' -f4 | cut -d'-' -f2)
+	echo "/dev/"$(ls -ldgGQ /sys/class/block/$(basename $1)/md/rd0 | cut -d'"' -f4 | cut -d'-' -f2)
 }
 
 # $1 md raid blockdevice (ex: /dev/md0)
@@ -935,14 +935,14 @@ mdraid_slave0 ()
 # ex: /dev/md0 has slaves: "/dev/sda1 /dev/sdb2 /dev/sdc2"
 mdraid_all_slaves ()
 {
-    shopt -s nullglob
-    local slave=
-    local slaves=
-    for slave in /sys/class/block/${1##*/}/slaves/*; do
-        source "$slave/uevent"
-        slaves="$slaves/dev/$DEVNAME "
-        unset DEVNAME
-    done
-    shopt -u nullglob
-    echo $slaves
+	shopt -s nullglob
+	local slave=
+	local slaves=
+	for slave in /sys/class/block/${1##*/}/slaves/*; do
+		source "$slave/uevent"
+		slaves="$slaves/dev/$DEVNAME "
+		unset DEVNAME
+	done
+	shopt -u nullglob
+	echo $slaves
 }
