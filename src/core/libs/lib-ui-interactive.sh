@@ -57,6 +57,7 @@ interactive_configure_system()
 	fi
 
 	local default=no
+	local helptext
 	while true; do
 		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
 		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
@@ -1075,7 +1076,7 @@ EOF
 
 interactive_grub_menulst () {
 	generate_grub_menulst
-	helptext=
+	local helptext=
 	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
 	notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
 	seteditor || return 1
