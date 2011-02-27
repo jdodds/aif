@@ -883,7 +883,7 @@ interactive_grub() {
 			fi
 		fi
 		# Create and edit the grub menu.lst
-		interactive_grub_menulst
+		interactive_bootloader_menu "grub" $grubmenu
 
 		DEVS="$(find_usable_blockdevices '_ ')"
 		if [ "$DEVS" = " " ]; then
@@ -1070,15 +1070,6 @@ initrd $subdir/kernel26-fallback.img
 EOF
 }
 
-interactive_grub_menulst () {
-	generate_grub_menulst
-	local helptext=
-	grep -q '^/dev/mapper' $TMP_FSTAB && helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
-	notify "Before installing GRUB, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install GRUB.$helptext"
-	seteditor || return 1
-	$EDITOR $grubmenu
-}
-
 interactive_grub_install () {
 	debug FS "interactive_grub_install called. P1 = $1, P2 = $2, P3 = $3"
 	# $1 = bootpart
@@ -1118,6 +1109,21 @@ EOF
 		notify "Error installing GRUB. (see $LOG for output)"
 		return 1
 	fi
+}
+
+# $1 - Bootloader Name
+# $2 - Bootloader Configuration Files
+interactive_bootloader_menu() {
+	if [[ $1 = grub ]]; then
+		generate_grub_menulst
+	fi
+
+	grep -q '^/dev/mapper' $TMP_FSTAB && local helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
+	notify "Before installing $1, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install $1.$helptext"
+
+	seteditor || return 1
+
+	$EDITOR $2
 }
 
 get_kernel_parameters() {
