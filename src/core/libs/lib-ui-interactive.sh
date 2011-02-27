@@ -709,12 +709,13 @@ device type label size type create? mountpoint options label params" required "$
 # params: none
 # returns: 1 on error
 interactive_select_packages() {
+	local needed_pkgs=()
 
 	# set up our install location if necessary and sync up so we can get package lists
 	target_prepare_pacman || { show_warning 'Pacman preparation failure' "Pacman preparation failed! Check $LOG for errors."; return 1; }
 
 	repos=`list_pacman_repos target`
-	notify "Package selection is split into two stages.  First you will select package groups that contain packages you may be interested in.  Then you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
+	notify "Package selection is split into three stages. First, you will select a bootloader. Then, you will select package groups that contain packages that you may be interested in. Lastly, you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
 Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages.\n\n
 If any previous configuration you've done until now (like fancy filesystems) require extra packages, we've already preselected them for your convenience"
 
@@ -723,6 +724,14 @@ If any previous configuration you've done until now (like fancy filesystems) req
 	for i in $(list_package_groups | grep -v '^base$'); do
 		grouplist+=(${i} - OFF)
 	done
+
+	ask_option no "Choose bootloader" "Which bootloader would you like to use?" optional \
+	"grub" "GRUB bootloader"
+
+	bootloader=$ANSWER_OPTION
+
+	# Make sure selected bootloader is a supported_bootloader and mark bootloader for installation
+	check_is_in $bootloader "${supported_bootloaders[@]}" && needed_pkgs+=("$bootloader")
 
 	ask_checklist "Select Package groups\nDo not deselect base unless you know what you're doing!" 0 "${grouplist[@]}" || return 1
 	grouplist=("${ANSWER_CHECKLIST[@]}")
@@ -842,15 +851,15 @@ interactive_runtime_network() {
 	return 0
 }
 
+# bootloader is global variable that gets set in interactive_select_packages
 interactive_install_bootloader () {
-	ask_option Grub "Choose bootloader" "Which bootloader would you like to use?  Grub is the Arch default." required \
-	"Grub" "Use the GRUB bootloader (default)" \
-	"None" "\Zb\Z1Warning\Z0\ZB: you must install your own bootloader!" || return 1
-
-	bl=`tr '[:upper:]' '[:lower:]' <<< "$ANSWER_OPTION"`
-	[ "$bl" != grub ] && return 0
-	GRUB_OK=0
-	interactive_grub
+	if [[ $bootloader = grub ]]; then
+		GRUB_OK=0
+		interactive_grub || return 1
+	else
+		show_warning 'No Bootloader' 'You did not select a bootloader. No bootloader will be installed.'
+	fi
+	return 0
 }
 
 interactive_grub() {

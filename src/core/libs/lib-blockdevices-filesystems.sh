@@ -93,6 +93,7 @@ get_possible_fs () {
 	done
 }
 
+supported_bootloaders=('grub')
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
