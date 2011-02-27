@@ -557,7 +557,7 @@ interactive_filesystems() {
 	if [ ! -f $TMP_BLOCKDEVICES ] || ! ask_yesno "Previous blockdevice definitions found:\n`cat $TMP_BLOCKDEVICES`\n\
 		Use these as a starting point?  Make sure your disk(s) are partitioned correctly so your definitions can be applied. Pick 'no' when in doubt to start from scratch" no
 	then
-		findblockdevices 'raw no_label no_fs\n' > $TMP_BLOCKDEVICES
+		find_usable_blockdevices 'raw no_label no_fs\n' > $TMP_BLOCKDEVICES
 	fi
 
 	[ -z "$PART_ACCESS" ] && PART_ACCESS=dev
@@ -885,7 +885,7 @@ interactive_grub() {
 		# Create and edit the grub menu.lst
 		interactive_grub_menulst
 
-		DEVS="$(findblockdevices '_ ')"
+		DEVS="$(find_usable_blockdevices '_ ')"
 		if [ "$DEVS" = " " ]; then
 			notify "No hard drives were found"
 			return 1
