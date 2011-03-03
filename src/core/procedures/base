@@ -150,7 +150,7 @@ worker_configure_system ()
 }
 
 
-worker_install_bootlader ()
+worker_install_bootloader ()
 {
 	true
 }
