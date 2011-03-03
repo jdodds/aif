@@ -91,6 +91,7 @@ get_possible_fs () {
 	do
 		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" $fs)
 	done
+	true
 }
 
 supported_bootloaders=('grub')

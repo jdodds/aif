@@ -82,7 +82,6 @@ worker_prepare_disks ()
 	inform "Partitions and filesystems made successfully"
 
 	# TODO: fstab? auto-add to fstab with libs? auto mkdir's on target_dir?
-	true	
 }
 
 worker_package_list ()
@@ -91,13 +90,13 @@ worker_package_list ()
 	var_TARGET_GROUPS=$TARGET_GROUPS
 	var_TARGET_PACKAGES_EXCLUDE=$TARGET_PACKAGES_EXCLUDE
 	[ -z "$var_TARGET_PACKAGES" -a -z "$var_TARGET_GROUPS" ] && var_TARGET_GROUPS=base
+	true
 }
 
 
 worker_install_packages ()
 {
-	target_prepare_pacman core extra community
-	installpkg
+	target_prepare_pacman core extra community && installpkg
 }
 
 
@@ -110,11 +109,11 @@ worker_set_clock ()
 
 worker_install_bootloader ()
 {
-	get_grub_map
-	grub-install $var_GRUB_DEVICE --root-directory=/mnt
+	get_grub_map || return 1
+	grub-install $var_GRUB_DEVICE --root-directory=/mnt || return 1
 	# check if we have a seperate bootdev (/boot)
 	# ToDo: This is double-work, find a better place!
 	# See comment in generate_grub_menulst and interactive_grub
 	bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
-	generate_grub_menulst
+	generate_grub_menulst || return 1
 }

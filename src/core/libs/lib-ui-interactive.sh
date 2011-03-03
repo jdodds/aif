@@ -125,9 +125,10 @@ interactive_timezone () {
 	then
 		# This changes probably also the systemtime (UTC->$TIMEZONE)!
 		# localtime users will have a false time after that!
-		/bin/rm -f /etc/localtime
-		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+		/bin/rm -f /etc/localtime || return 1
+		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime || return 1
 	fi
+	return 0
 }
 
 
@@ -138,8 +139,12 @@ interactive_time () {
 	# To avoid a false time for localtime users after above
 	# we must re-read the hwclock value again, but now into the
 	# correct timezone.
-	[ "$HARDWARECLOCK" == "localtime" ] && dohwclock $HARDWARECLOCK hctosys
+	if [ "$HARDWARECLOCK" == "localtime" ]
+	then
+		dohwclock $HARDWARECLOCK hctosys || return $?
+	fi
 
+	timeset=
 	local default=no
 	while true; do
 		current=$(date)
@@ -153,21 +158,27 @@ interactive_time () {
 			inform "Syncing clock with internet pool ..."
 			if ntpdate pool.ntp.org >/dev/null; then
 				notify "Synced clock with internet pool successfully."
-				dohwclock $HARDWARECLOCK systohc && default=3
+				dohwclock $HARDWARECLOCK systohc && default=3 || return $?
+				timeset=1
 			else
 				show_warning 'Ntp failure' "An error has occured, time was not changed!"
+				timeset=0
 			fi
 		fi
 		if [ "$ANSWER_OPTION" = manual ]; then
 			ask_datetime || continue
 			if date -s "$ANSWER_DATETIME"; then
-				dohwclock $HARDWARECLOCK systohc && default=3
+				dohwclock $HARDWARECLOCK systohc && default=3 || return $?
+				timeset=1
 			else
 				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME" 
+				timeset=0
 			fi
 		fi
-		[ "$ANSWER_OPTION" = return ] && break
+		[ "$ANSWER_OPTION" = return ] && timeset=1 && break
 	done
+	[ "$timeset" = '0' ] && return 1
+	return 0
 }
 
 

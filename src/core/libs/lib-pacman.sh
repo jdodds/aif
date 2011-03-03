@@ -47,14 +47,20 @@ do
 	#TODO: this is a VERY, VERY dirty hack.  we fall back to net for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
 	if [ "$repo" != core ]
 	then
-		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST"
+		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST" || return 1
 	else
-		add_pacman_repo target ${repo} "Server = ${serverurl/\$repo/$repo}" # replace literal '$repo' in the serverurl string by "$repo" where $repo is our variable.
+		# replace literal '$repo' in the serverurl string by "$repo" where $repo is our variable.
+		add_pacman_repo target ${repo} "Server = ${serverurl/\$repo/$repo}" || return 1
 	fi
 done
 	# Set up the necessary directories for pacman use
-	[ ! -d "${var_TARGET_DIR}/var/cache/pacman/pkg" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/cache/pacman/pkg"
-	[ ! -d "${var_TARGET_DIR}/var/lib/pacman" ] && mkdir -m 755 -p "${var_TARGET_DIR}/var/lib/pacman"
+	for dir in var/cache/pacman/pkg var/lib/pacman
+	do
+		if [ ! -d "${var_TARGET_DIR}/$dir" ]
+		then
+			mkdir -m 755 -p "${var_TARGET_DIR}/$dir" || return 1
+		fi
+	done
 
 	inform "Refreshing package database..."
 	$PACMAN_TARGET -Sy >$LOG 2>&1 || return 1

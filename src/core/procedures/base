@@ -44,6 +44,7 @@ worker_intro ()
 	then
 		die_error "User aborted base profile execution"
 	fi
+	true
 }
 
 
@@ -81,8 +82,12 @@ worker_runtime_repositories ()
 	do
 		repo=${var_RUNTIME_REPOSITORIES[$(($i*2))]}
 		location=${var_RUNTIME_REPOSITORIES[$(($i*2+1))]}
-		list_pacman_repos runtime | grep -q $repo || add_pacman_repo runtime $repo "$location"
+		if ! list_pacman_repos runtime | grep -q $repo
+		then
+			add_pacman_repo runtime $repo "$location" || return 1
+		fi
 	done
+	return 0
 }
 
 
@@ -90,8 +95,9 @@ worker_runtime_packages ()
 {
 	for pkg in $var_RUNTIME_PACKAGES
 	do
-		$PACMAN -Sy --noconfirm --needed $pkg
+		$PACMAN -Sy --noconfirm --needed $pkg || return 1
 	done
+	return 0
 }
 
 
@@ -103,10 +109,16 @@ worker_set_clock ()
 		"1" "Select region and timezone" \
 		"2" "Set time and date" \
 		"3" "Return to Main Menu" || return 1
-		[ "$ANSWER_OPTION" = 1 ] && execute worker interactive_timezone && default=2
-		[ "$ANSWER_OPTION" = 2 ] && check_depend worker interactive_timezone && execute worker interactive_time && default=3
-		[ "$ANSWER_OPTION" = 3 ] && break
+		case $ANSWER_OPTION in
+			"1") execute worker interactive_timezone && default=2 || return 1 ;;
+			"2") if check_depend worker interactive_timezone
+			     then
+				execute worker interactive_time && default=3 || return 1
+			     fi ;;
+			"3") break ;;
+		esac
 	done
+	return 0
 }
 
 
@@ -124,8 +136,7 @@ worker_interactive_time ()
 
 worker_prepare_disks ()
 {
-	partition # use lib-archboot function by default
-	get_possible_fs
+	partition && get_possible_fs
 	# in official installer: autoprepare or diy first partitions, then mountpoints
 }
 
@@ -139,14 +150,12 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	target_prepare_pacman core
-	installpkg
+	target_prepare_pacman core && installpkg
 }
 
 worker_configure_system ()
 {
-	preconfigure_target
-	postconfigure_target
+	preconfigure_target && postconfigure_target
 }
 
 

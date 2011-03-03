@@ -122,17 +122,26 @@ cleanup_runtime ()
 dohwclock() {
 	# TODO: we probably only need to do this once and then actually use adjtime on next invocations
 	inform "Resetting hardware clock adjustment file"
-	[ ! -d /var/lib/hwclock ] && mkdir -p /var/lib/hwclock
+	[ -d /var/lib/hwclock ] || mkdir -p /var/lib/hwclock || return 1
 	if [ ! -f /var/lib/hwclock/adjtime ]; then
-		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime
+		echo "0.0 0 0.0" > /var/lib/hwclock/adjtime || return 1
 	fi
 
 	inform "Syncing clocks ($2), hc being $1 ..."
 	if [ "$1" = "UTC" ]; then
-		hwclock --$2 --utc
+		if ! hwclock --$2 --utc
+		then
+			show_warning 'Hwclock failure' "Could not hwclock --$2 --utc"
+			return 1
+		fi
 	else
-		hwclock --$2 --localtime
+		if ! hwclock --$2 --localtime
+		then
+			show_warning 'Hwclock failure' "Could not hwclock --$2 --localtime"
+			return 1
+		fi
 	fi
+	return 0
 }
 
 target_configure_initial_keymap_font ()
