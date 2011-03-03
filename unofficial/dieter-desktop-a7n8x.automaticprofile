@@ -107,11 +107,11 @@ worker_configure_home ()
 
 worker_set_clock ()
 {
-        #Not doing anything. hwclock is set already, configs are coming from svn anyway and we'll use ntp.
-        true
+	#Not doing anything. hwclock is set already, configs are coming from svn anyway and we'll use ntp.
+	true
 }
 
 worker_runtime_yaourt ()
 {
-        _yaourt_replace_pacman
+	_yaourt_replace_pacman
 }

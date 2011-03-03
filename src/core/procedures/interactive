@@ -42,7 +42,7 @@ start_process ()
 	default=1
 	while true
 	do
-    		mainmenu
+		mainmenu
 	done
 }
 
@@ -74,7 +74,7 @@ mainmenu()
 	"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
 	"9") execute worker msg_report ;;
 	*)   execute worker abort_installer;;
-    esac
+	esac
 }
 
 
@@ -106,15 +106,15 @@ worker_select_source ()
 select_source_extras_menu ()
 {
 	local default=no
-        while true; do
-                ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
-                "1" "${workertitles['runtime_network']}" \
-                "2" "Select mirror" \
-                "3" "Return to Main Menu" || return 1
-                [ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && default=2
-                [ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && default=3
-                [ "$ANSWER_OPTION" = 3 ] && break
-        done
+	while true; do
+		ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
+		"1" "${workertitles['runtime_network']}" \
+		"2" "Select mirror" \
+		"3" "Return to Main Menu" || return 1
+		[ "$ANSWER_OPTION" = 1 ] && execute worker runtime_network && default=2
+		[ "$ANSWER_OPTION" = 2 ] && interactive_select_mirror && default=3
+		[ "$ANSWER_OPTION" = 3 ] && break
+	done
 	return 0
 }
 

@@ -6,28 +6,28 @@ GRUB_DEVICE=/dev/sda
 
 worker_prepare_disks ()
 {
-        echo "$var_BLOCKDATA" > $TMP_BLOCKDEVICES
-        if process_filesystems
-        then
+	echo "$var_BLOCKDATA" > $TMP_BLOCKDEVICES
+	if process_filesystems
+	then
 		inform "disk processing ok"
-        else
+	else
 		show_warning 'disks processing' "PROCESSING FAILED"
 		return 1
-        fi
-        if rollback_filesystems
-        then
+	fi
+	if rollback_filesystems
+	then
 		inform "rollback ok"
-        else
+	else
 		show_warning 'disks rollback' "ROLLBACK FAILED"
 		return 1
-        fi
-        if process_filesystems
-        then
+	fi
+	if process_filesystems
+	then
 		inform "disk processing ok"
-        else
+	else
 		show_warning 'disk processing' "PROCESSING FAILED"
 		return 1
-        fi
+	fi
 }
 
 PARTITIONS=this_wont_be_used

@@ -23,5 +23,5 @@ worker_runtime_settings () #TODO: add to a phase
 	[ -z "$HOSTNAME" ] && ask_string "Hostname of target system?" &&
 	HOSTNAME=$ANSWER_STRING
 
-        return 0
+	return 0
 }
