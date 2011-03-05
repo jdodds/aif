@@ -47,6 +47,11 @@ The goal of AIF is not (yet) to:
 2) be more fancy then needed
 
 
+** Branches **
+-> master: "stable" tree, infrequent updates
+-> develop: unstable development tree, which may get rewritten at some points,
+   only when things have settled down (every x weeks/months), gets pushed to master
+-> optionally: more topic branches which are rewriteable and which come and go
 
 ** A bit of history **
 
