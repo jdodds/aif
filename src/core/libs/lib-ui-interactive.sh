@@ -1135,7 +1135,7 @@ EOF
 # $2 - Bootloader Configuration Files
 interactive_bootloader_menu() {
 	if [[ $1 = grub ]]; then
-		generate_grub_menulst
+		generate_grub_menulst || return
 	fi
 
 	grep -q '^/dev/mapper' $TMP_FSTAB && local helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
