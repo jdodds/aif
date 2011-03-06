@@ -905,7 +905,7 @@ interactive_grub() {
 		# Create and edit the grub menu.lst
 		interactive_bootloader_menu "grub" $grubmenu
 
-		DEVS="$(find_usable_blockdevices '_ ')"
+		DEVS="$(finddisks '_ ')"
 		if [ "$DEVS" = " " ]; then
 			notify "No hard drives were found"
 			return 1
