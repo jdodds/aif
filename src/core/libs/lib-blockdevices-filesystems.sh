@@ -244,8 +244,10 @@ finddisks() {
 }
 
 
-# find usable blockdevices, both partionable or not (i.e. partitions themselves)
-# $1 extra things to echo for each partition (optional) (backslash escapes will get interpreted)
+# find usable blockdevices: RAID + LVM volumes, partitioned and unpartitioned devices
+# Exclude devices/partitions that are part of a RAID or LVM volume
+# Exclude root block devices (ex. sda) that are partitioned
+# $1 extra things to echo for each device (optional) (backslash escapes will get interpreted)
 find_usable_blockdevices() {
 	shopt -s nullglob
 
