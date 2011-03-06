@@ -94,7 +94,8 @@ get_possible_fs () {
 	true
 }
 
-supported_bootloaders=('grub')
+syslinux_supported_fs=('ext2' 'ext3' 'ext4' 'btrfs' 'vfat')
+supported_bootloaders=('syslinux' 'grub')
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below

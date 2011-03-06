@@ -2,7 +2,9 @@
 # A library which allows you to do backend stuff by using user interfaces
 
 # Global Variables
-grubmenu="/boot/grub/menu.lst" # be sure to override this if you have it somewhere else
+# Be sure to override these if you have the configuration file elsewhere
+grubmenu="/boot/grub/menu.lst"
+syslinuxmenu="/boot/syslinux/syslinux.cfg"
 
 # check if a worker has completed successfully. if not -> tell user he must do it + return 1
 # if ok -> don't warn anything and return 0
@@ -737,7 +739,8 @@ If any previous configuration you've done until now (like fancy filesystems) req
 	done
 
 	ask_option no "Choose bootloader" "Which bootloader would you like to use?" optional \
-	"grub" "GRUB bootloader"
+	"grub" "GRUB bootloader" \
+	"syslinux" "Syslinux bootloader (${syslinux_supported_fs[*]})"
 
 	bootloader=$ANSWER_OPTION
 
@@ -867,6 +870,8 @@ interactive_install_bootloader () {
 	if [[ $bootloader = grub ]]; then
 		GRUB_OK=0
 		interactive_grub || return 1
+	elif [[ $bootloader = syslinux ]]; then
+		interactive_syslinux || return 1
 	else
 		show_warning 'No Bootloader' 'You did not select a bootloader. No bootloader will be installed.'
 	fi
@@ -1131,11 +1136,120 @@ EOF
 	fi
 }
 
+interactive_syslinux() {
+	debug FS "starting interactive_syslinux"
+
+	# Find and Store the device that has the root filesystem
+	get_device_with_mount '/' || return 1
+	PART_ROOT="$ANSWER_DEVICE"
+
+	# Gets boot device
+	get_device_with_mount '/boot'
+	bootdev="$ANSWER_DEVICE"
+
+	# Check to see if /boot or / (root) has a valid FS type and set bootpart
+	# bootpart == device with /boot dir
+	if [[ $bootdev ]]; then
+		filesystem="$(awk '/ \/boot /{print $4}' $TMP_FILESYSTEMS)"
+		debug FS "$bootdev - FS type: $filesystem"
+
+		local bootpart="$bootdev"
+	else
+		filesystem="$(awk '/ \/ /{print $4}' $TMP_FILESYSTEMS)"
+		debug FS "$PART_ROOT - FS type: $filesystem"
+
+		local bootpart="$PART_ROOT"
+	fi
+
+	if ! check_is_in "$filesystem" "${syslinux_supported_fs[@]}"; then
+		show_warning "Invalid FS" "Error: Syslinux does not support $filesystem.\n\nThe following filesystems are supported:\n  ${syslinux_supported_fs[@]}"
+		return 1
+	fi
+
+	# remove default entries by truncating file at our little tag (#-*)
+	sed -i -e '/#-\*/q' "$syslinuxmenu"
+
+	# Generate menu and prompt user to edit it
+	interactive_bootloader_menu "syslinux" "$syslinuxmenu"
+
+	if device_is_raid "$bootpart"; then
+		debug FS "Software RAID detected"
+		local onraid=true
+	fi
+
+	debug FS "Installing Syslinux ($var_TARGET_DIR/usr/sbin/syslinux-install_update -i -c /mnt)"
+	inform "Installing Syslinux..."
+	if ! "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -i -c /mnt >$LOG 2>&1; then
+		debug FS "FAILED: syslinux-install_update -i -c /mnt failed"
+		show_warning "FAILED" "syslinux-install_update -i -c /mnt failed"
+		return 1
+	fi
+
+	if ask_yesno "Set boot flag(s) and install the Syslinux MBR?" yes; then
+		inform "Setting Boot Flag(s)...\nThis could take a while. Please be patient.\n\n" syslinuxprog
+		if "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -a -c /mnt >$LOG 2>&1; then
+			debug FS "Successfully set boot flag(s)"
+		else
+			debug FS "Failde to set boot flag(s). syslinux-install_update -a failed with Error Code - $?"
+			show_warning "FAILED" "Failed to set boot flag(s). MBR not installed" && return 1
+		fi
+
+		inform "Installing Syslinux MBR..." syslinuxprog
+		if "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -m -c /mnt >$LOG 2>&1; then
+			debug FS "Successfully installed MBR(s)"
+		else
+			debug FS "Failed to install MBR. syslinux-install_update -m failed with Error Code - $?"
+			show_warning "FAILED" "Failed to install the MBR!" && return 1
+		fi
+	fi
+	notify "Syslinux Installation Successful"
+}
+
+generate_syslinux_menu () {
+	get_kernel_parameters || return
+
+	cat >>$syslinuxmenu <<EOF
+
+# (0) Arch Linux
+LABEL arch
+    MENU LABEL Arch Linux
+    LINUX ../vmlinuz26
+    APPEND $kernel_parameters
+    INITRD ../kernel26.img
+
+# (1) Arch Linux Fallback
+LABEL archfallback
+    MENU LABEL Arch Linux Fallback
+    LINUX ../vmlinuz26
+    APPEND $kernel_parameters
+    INITRD ../kernel26-fallback.img
+
+# (2) Windows
+#LABEL windows
+#COM32 chain.c32
+#APPEND hd0 0
+
+LABEL hdt
+    MENU LABEL HDT (Hardware Detection Tool)
+    COM32 hdt.c32
+
+LABEL reboot
+    MENU LABEL Reboot
+    COM32 reboot.c32
+
+LABEL off
+    MENU LABEL Power Off
+    COMBOOT poweroff.com
+EOF
+}
+
 # $1 - Bootloader Name
 # $2 - Bootloader Configuration Files
 interactive_bootloader_menu() {
 	if [[ $1 = grub ]]; then
 		generate_grub_menulst || return
+	elif [[ $1 = syslinux ]]; then
+		generate_syslinux_menu || return
 	fi
 
 	grep -q '^/dev/mapper' $TMP_FSTAB && local helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
