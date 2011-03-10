@@ -18,8 +18,7 @@ target_run_mkinitcpio()
 }
 
 
-# installpkg(). taken from setup. modified bigtime
-# performs package installation to the target system
+# perform package installation to the target system
 installpkg() {
 	ALL_PACKAGES=
 	[ -n "$var_TARGET_GROUPS" ] && ALL_PACKAGES=`list_packages group "$var_TARGET_GROUPS" | awk '{print $2}'`
