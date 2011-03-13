@@ -177,14 +177,11 @@ so make sure you don't have any important files on it before doing this.
 ### Pre-boot
 
 Make sure your BIOS is set in a way to allow booting from your CD-ROM or USB
-device.  
-Reboot your computer with the Arch Linux Installation CD in the drive
-or the USB stick plugged in the port. Once the installation medium has started
-booting you will see the Arch Linux logo and a grub menu waiting for your
-selection.    
-Most likely you can just hit enter at this point.  
-If Grub hangs, you're one of the unlucky few whose CD-rom drive doesn't work
-with grub and you should try the isolinux image.
+device. Reboot your computer with the Arch Linux Installation CD in the drive or
+the USB stick plugged in the port. Once the installation medium has started
+booting, you will see the Arch Linux logo and an Isolinux menu waiting for your
+selection. Most likely you can just hit enter at this point.
+
 
 ### Post-boot
 At the end of the boot procedure, you should be at a login prompt with some
