@@ -756,7 +756,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 
 	# build the list of options, sorted primarily by group, then by packagename (this is already). marking where appropriate
 	local pkglist=()
-	needed_pkgs=("${needed_pkgs_fs[@]}")
+	needed_pkgs+=("${needed_pkgs_fs[@]}")
 	while read pkgname pkgver pkggroup pkgdesc; do
 		mark=OFF
 		if check_is_in "$pkggroup" "${grouplist[@]}" || check_is_in $pkgname "${needed_pkgs[@]}"; then
