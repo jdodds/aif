@@ -457,13 +457,14 @@ hard disk preparations need to be undone.
 ####  Select Packages
 
 Select Packages will let you select the packages you wish to install from the
-CD, USB or your NET mirror. You have the opportunity to specify whole package
-groups from which you'd generally like to install packages, then fine-tune
-your coarse selection by (de)selecting individual packages from the groups you
-have chosen using the space bar. It is recommended that you install all the
-"base" packages, but not anything else at this point. The only exception to
-this rule is installing any packages you need for setting up Internet
-connectivity.
+CD, USB or your NET mirror. First, you are prompted to select a bootloader
+package (the bootloader will be configured later on in the "Install Bootloader"
+stage). After this, you can select package groups from which you'd generally
+like to install packages, then fine-tune your coarse selection by (de)selecting
+individual packages from the groups you have chosen using the space bar. It is
+recommended that you install all the "base" packages, but not anything else at
+this point. The only exception to this rule is installing any packages you need
+for setting up Internet connectivity.
 
 Once you're done selecting the packages you need, leave the selection screen
 and continue to the next step.
@@ -768,25 +769,25 @@ changes you made in mkinitcpio.conf.
 
 ####  Install Bootloader
 
-Install Bootloader will install a bootloader on your hard drive, either GRUB
-or NONE in case you have a bootloader already installed and want to use that
-one instead. If you choose to install GRUB, the setup script will want you to
-examine the appropriate configuration file to confirm the proper settings.
-
+Install Bootloader will install and help you configure the bootloader that you
+selected in the "Select Packages" stage.
 
 **/boot/grub/menu.lst**
+**/boot/syslinux/syslinux.cfg**
 
-You should check and modify this file to accommodate your boot setup if you
-want to use GRUB, otherwise you will have to modify your existing bootloader's
-configuration file. The installer will have pre-populated this file using UUID
-entries which you may have to change in the same cases you'd need to change
-them in your fstab.
+An editor will open, allowing you to edit the appropriate bootloader
+configuration file which the installer has pre-populated. You should check and
+modify this file, if needed, to accommodate your boot setup.
+
+Syslinux:
+After checking your bootloader configuration for correctness, you'll be asked to
+allow the installer to Set the Boot Flag and install the Syslinux MBR.
+
+Grub:
 
 After checking your bootloader configuration for correctness, you'll be
-prompted for a partition to install the loader to. Unless you're using yet
-another boot loader, you should install GRUB to the MBR of the installation
-disk, which is usually represented by the appropriate device name without a
-number suffix.
+prompted for a disk to install the loader to. You should install GRUB to the MBR
+of the installation disk.
 
 ####  Exit Install
 
