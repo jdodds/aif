@@ -898,9 +898,9 @@ interactive_grub() {
 		# the partition with seperate /boot or to $PART_ROOT.
 		# So that bootdev is always our real partition with /boot....
 		bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
-		# check if bootdev or PART_ROOT is on a md raid array
+		# check if PART_ROOT (or bootdev, if it is a blockdevice) is on a md raid array
 		# This dialog is only shown when we detect / or /boot on a raid device.
-		if device_is_raid $bootdev || device_is_raid $PART_ROOT; then
+		if device_is_raid $PART_ROOT || ( [ -n "$bootdev" ] && device_is_raid "$bootdev" ); then
 			ask_yesno "Do you have your system installed on software raid?\nAnswer 'YES' to install grub to another hard disk." no
 			if [ $? -eq 0 ]; then
 				onraid=true
