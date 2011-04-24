@@ -212,11 +212,11 @@ start_installer ()
 
 
 # use this function to stop the installation procedure.
-# $1 exit code (optional)
+# $1 exit code (optional, defaults to 0)
 stop_installer ()
 {
 	log "-------------- STOPPING INSTALLATION ----------"
 	cleanup_runtime
 	[ "$var_UI_TYPE" = dia ] && clear
-	exit $1
+	exit ${1:-0}
 }
