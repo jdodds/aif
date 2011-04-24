@@ -170,10 +170,12 @@ depend_procedure ()
 
 start_process ()
 {
-	execute phase preparation
-	execute phase basics
-	execute phase system
-	execute phase finish
+	ret=0
+	execute phase preparation || ret=$?
+	execute phase basics || ret=$?
+	execute phase system || ret=$?
+	execute phase finish || ret=$?
+	return $ret
 }
 
 

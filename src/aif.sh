@@ -146,4 +146,4 @@ start_installer
 
 start_process
 
-stop_installer
+stop_installer $?
