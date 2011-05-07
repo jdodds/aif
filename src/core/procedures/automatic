@@ -102,8 +102,8 @@ worker_install_packages ()
 
 worker_set_clock ()
 {
-	#TODO implement this
-	true
+	# uses $TIMEZONE, clock itself remains untouched.
+	copy_timezone_file
 }
 
 

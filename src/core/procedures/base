@@ -105,13 +105,14 @@ worker_runtime_packages ()
 worker_set_clock ()
 {
 	local default=no
+	local timezone_file_copied=0
 	while true; do
 		ask_option $default "Date/time configuration" '' required \
 		"1" "Select region and timezone" \
 		"2" "Set time and date" \
 		"3" "Return to Main Menu" || return 1
 		case $ANSWER_OPTION in
-			"1") execute worker interactive_timezone && default=2 || return 1 ;;
+			"1") execute worker interactive_timezone && copy_timezone_file && timezone_file_copied=1 && default=2 || return 1 ;;
 			"2") if check_depend worker interactive_timezone
 			     then
 				execute worker interactive_time && default=3 || return 1
@@ -119,6 +120,7 @@ worker_set_clock ()
 			"3") break ;;
 		esac
 	done
+	[ $timezone_file_copied -eq 1 ] || copy_timezone_file || return 1
 	return 0
 }
 

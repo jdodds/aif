@@ -165,6 +165,14 @@ target_configure_time () {
 		${var_TARGET_DIR}/etc/rc.conf
 }
 
+target_localtime () {
+	if [ -f /etc/localtime ]
+	then
+		cp /etc/localtime ${var_TARGET_DIR}/etc/localtime || return 1
+	fi
+	return 0
+}
+
 # apped string after last line matching regex in a file.
 # $1 regex
 # $2 string (can contain "\n", "\t" etc)

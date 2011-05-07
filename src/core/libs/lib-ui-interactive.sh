@@ -44,7 +44,7 @@ postconfigure_target () {
 	local failed=()
 	target_run_mkinitcpio || failed+=('mkinitcpio creation')
 	target_locale-gen || failed+=('locale generation')
-	cp /etc/localtime ${var_TARGET_DIR}/etc/localtime || failed+=('localtime copying')
+	target_localtime || failed+=('localtime copying')
 	[ ${#failed[@]} -gt 0 ] && warn_failed 'Postconfigure' "${failed[@]}" && return 1
 	return 0
 }
@@ -122,14 +122,23 @@ interactive_configure_system()
 interactive_timezone () {
 	ask_timezone || return 1
 	TIMEZONE=$ANSWER_TIMEZONE
-	inform "Setting Timezone to $TIMEZONE"
-	if [ -n "$TIMEZONE" -a -e "/usr/share/zoneinfo/$TIMEZONE" ]
+	return 0
+}
+
+# this should be executed, whether the user changed $TIMEZONE or not
+copy_timezone_file () {
+	if [ -z "$TIMEZONE" ]
 	then
-		# This changes probably also the systemtime (UTC->$TIMEZONE)!
-		# localtime users will have a false time after that!
-		/bin/rm -f /etc/localtime || return 1
-		/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime || return 1
+		debug UI-INTERACTIVE "\$TIMEZONE is empty, not creating/updating /etc/localtime"
+		return 0
 	fi
+	debug UI-INTERACTIVE "Setting Timezone to $TIMEZONE"
+	local file="/usr/share/zoneinfo/$TIMEZONE"
+	[ -e "$file" ] || die_error "No such timezone file: $file, did you choose a non-existing timezone?"
+	# This changes probably also the systemtime (UTC->$TIMEZONE)!
+	# localtime users will have a false time after that!
+	/bin/rm -f /etc/localtime || return 1
+	/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime || return 1
 	return 0
 }
 
