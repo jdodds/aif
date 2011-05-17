@@ -73,7 +73,7 @@ fs_on[lvm-pv]=${fs_on_lvm_pv[@]}
 fs_on[lvm-vg]=${fs_on_lvm_vg[@]}
 fs_on[dm_crypt]=${fs_on_dm_crypt[@]}
 
-fs_mountable=(ext2 ext3 ext4 nilfs2 xfs jfs vfat reiserfs)
+fs_mountable=(btrfs ext2 ext3 ext4 nilfs2 xfs jfs vfat reiserfs)
 fs_label_mandatory=('lvm-vg' 'lvm-lv' 'dm_crypt')
 fs_label_optional=('swap' 'ext2' 'ext3' 'ext4' 'reiserfs' 'nilfs2' 'xfs' 'jfs' 'vfat')
 
