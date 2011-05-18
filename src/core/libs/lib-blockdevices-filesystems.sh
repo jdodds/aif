@@ -214,18 +214,24 @@ finddisks() {
 
 	# Block Devices
 	for dev in /sys/block/*; do
-		if [[ -f $dev/device/type ]]; then
-			local type
-			read type < /sys/block/${dev##*/}/device/type
-			# Block Devices with size =< 0 may be an empty card reader
-			read size < /sys/block/${dev##*/}/size
-			# Type 5 is a ROM Device - Optical Drives
-			if [[ $type != 5 ]] && (( $size > 0 )); then
-				source "$dev/uevent"
-				echo -ne "/dev/$DEVNAME $1"
-				unset DEVNAME
-			fi
+		# devices without a size are no good
+		[[ -e $dev/size ]] || continue
+
+		# size <= 0 is stuff like empty card reader
+		read -r size < "$dev/size"
+		(( size )) || continue
+
+		# type 5 is a CDROM
+		if [[ -e $dev/device/type ]]; then
+			read -r type < "$dev/device/type"
+			(( type == 5 )) && continue
 		fi
+
+		unset DEVTYPE
+		. "$dev/uevent"
+		[[ $DEVTYPE = disk ]] || continue
+
+		printf '%s\n' "${dev##*/} $1"
 	done
 
 	# cciss controllers
