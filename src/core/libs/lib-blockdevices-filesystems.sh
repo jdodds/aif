@@ -576,7 +576,7 @@ process_filesystems ()
 		done < $TMP_FILESYSTEMS
 		[ $open_items -eq 0 ] && break
 	done
-	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't became available in 10 iterations, or process_filesystem failed" && returncode=1
+	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't appear in 10 iterations, or process_filesystem failed" && returncode=1
 
 
 
