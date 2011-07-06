@@ -14,35 +14,29 @@ target_configure_network()
 
 		source "$RUNTIME_DIR/aif-network-settings" 2>/dev/null || return 1
 
-		IFO=${INTERFACE_PREV:-eth0} # old iface: a previously entered one, or the arch default
 		IFN=${INTERFACE:-eth0} # new iface: a specified one, or the arch default
 
-		# comment out any existing uncommented entries, whether specified by us, or arch defaults.
-		for var in eth0 $IFO INTERFACES gateway ROUTES; do
-			sed -i "s/^$var=/#$var=/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
-		done
 		sed -i "s/^nameserver/#nameserver/" "${var_TARGET_DIR}/etc/resolv.conf" || return 1
-		if [[ -f "${var_TARGET_DIR}/etc/profile.d/proxy.sh" ]]
-		then
+		if [[ -f "${var_TARGET_DIR}/etc/profile.d/proxy.sh" ]]; then
 			sed -i "s/^export/#export/" "${var_TARGET_DIR}/etc/profile.d/proxy.sh" || return 1
 		fi
 
+		sed -i "s/^\(interface\)=/\1=$IFN/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 		if (( ! DHCP )); then
-			local line="$IFN=\"$IFN ${IPADDR:-192.168.0.2} netmask ${SUBNET:-255.255.255.0} broadcast ${BROADCAST:-192.168.0.255}\""
-			append_after_last "/$IFO\|eth0/" "$line" "${var_TARGET_DIR}/etc/rc.conf" || return 1
+			sed -i "s/^\(address\)=/\1=$IPADDR/;s/^\(netmask\)=/\1=$SUBNET/" "${var_TARGET_DIR}/etc/rc.conf"
+
+			if [[ $BROADCAST ]]; then
+				sed -i "s/^\(broadcast\)=/\1=$BROADCAST/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
+			fi
 
 			if [[ $GW ]]; then
-				append_after_last "/gateway/" "gateway=\"default gw $GW\"" "${var_TARGET_DIR}/etc/rc.conf" || return 1
-				append_after_last "/ROUTES/" "ROUTES=(gateway)" "${var_TARGET_DIR}/etc/rc.conf" || return 1
+				sed -i "s/^\(gateway\)=/\1=$GW/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 			fi
+
 			if [[ $DNS ]]; then
 				echo "nameserver $DNS" >> "${var_TARGET_DIR}/etc/resolv.conf" || return 2
 			fi
-		else
-			append_after_last "/$IFO\|eth0/" "$IFN=\"dhcp\"" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 		fi
-
-		append_after_last "/$IFO\|eth0/" "INTERFACES=($IFN)" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 
 		if [[ $PROXY_HTTP ]]; then
 			echo "export http_proxy=$PROXY_HTTP" >> "${var_TARGET_DIR}/etc/profile.d/proxy.sh" || return 1
