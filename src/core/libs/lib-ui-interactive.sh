@@ -1073,14 +1073,14 @@ generate_grub_menulst() {
 # (0) Arch Linux
 title  Arch Linux
 root   $grubdev
-kernel $subdir/vmlinuz26 $kernel_parameters
-initrd $subdir/kernel26.img
+kernel $subdir/vmlinuz-linux $kernel_parameters
+initrd $subdir/initramfs-linux.img
 
 # (1) Arch Linux
 title  Arch Linux Fallback
 root   $grubdev
-kernel $subdir/vmlinuz26 $kernel_parameters
-initrd $subdir/kernel26-fallback.img
+kernel $subdir/vmlinuz-linux $kernel_parameters
+initrd $subdir/initramfs-linux-fallback.img
 
 # (2) Windows
 #title Windows
