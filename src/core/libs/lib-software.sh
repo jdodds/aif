@@ -8,7 +8,7 @@ target_run_mkinitcpio()
 {
 	target_special_fs on
 
-	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p kernel26" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
+	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p linux" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
 
 	target_special_fs off
 
