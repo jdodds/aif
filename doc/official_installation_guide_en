@@ -504,8 +504,6 @@ In many cases, the Arch Linux [Wiki][46] and
   * /etc/modprobe.d/modprobe.conf
   * /etc/resolv.conf
   * /etc/hosts
-  * /etc/hosts.deny
-  * /etc/hosts.allow
   * /etc/locale.gen
   * /etc/pacman.d/mirrorlist
   * /etc/pacman.conf
@@ -694,26 +692,6 @@ here, but you might want to add the hostname and hostname + domain of the
 local machine to this file, resolving to the IP of your network interface.
 Some services, postfix for example, will bomb otherwise. If you don't know
 what you're doing, leave this file alone until you read man hosts.
-
-
-**/etc/hosts.deny**
-
-This file denies network services access. By default all network services are
-denied.
-
-
-     ALL: ALL: DENY
-
-
-
-**/etc/hosts.allow**
-
-This file allows network services access. Enter the services you want to allow
-here. eg. to allow all machines to connect via ssh:
-
-
-     sshd: ALL: ALLOW
-
 
 
 **/etc/locale.gen**

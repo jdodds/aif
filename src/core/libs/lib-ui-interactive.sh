@@ -74,8 +74,6 @@ interactive_configure_system()
 			"/etc/modprobe.d/modprobe.conf" "Kernel Modules"
 			"/etc/resolv.conf"              "DNS Servers"
 			"/etc/hosts"                    "Network Hosts"
-			"/etc/hosts.deny"               "Denied Network Services"
-			"/etc/hosts.allow"              "Allowed Network Services"
 			"/etc/locale.gen"               "Glibc Locales"
 			"/etc/pacman.conf"              "Pacman.conf"
 			"$var_MIRRORLIST"               "Pacman Mirror List"
