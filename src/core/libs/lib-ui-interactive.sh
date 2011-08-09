@@ -1220,16 +1220,16 @@ generate_syslinux_menu () {
 # (0) Arch Linux
 LABEL arch
     MENU LABEL Arch Linux
-    LINUX ../vmlinuz26
+    LINUX ../vmlinuz-linux
     APPEND $kernel_parameters
-    INITRD ../kernel26.img
+    INITRD ../initramfs-linux.img
 
 # (1) Arch Linux Fallback
 LABEL archfallback
     MENU LABEL Arch Linux Fallback
-    LINUX ../vmlinuz26
+    LINUX ../vmlinuz-linux
     APPEND $kernel_parameters
-    INITRD ../kernel26-fallback.img
+    INITRD ../initramfs-linux-fallback.img
 
 # (2) Windows
 #LABEL windows
