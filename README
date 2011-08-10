@@ -31,6 +31,7 @@ Optionally:
  - ntp: setting date with NTP
  - dialog: for ncurses support
  - curl: for the aif-report-issues.sh script
+ - syslinux: for syslinux support
 
 ** Goals **
 
