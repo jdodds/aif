@@ -16,20 +16,23 @@ target_configure_network()
 
 		IFN=${INTERFACE:-eth0} # new iface: a specified one, or the arch default
 
-		sed -i "s/^nameserver/#nameserver/" "${var_TARGET_DIR}/etc/resolv.conf" || return 1
 		if [[ -f "${var_TARGET_DIR}/etc/profile.d/proxy.sh" ]]; then
 			sed -i "s/^export/#export/" "${var_TARGET_DIR}/etc/profile.d/proxy.sh" || return 1
 		fi
 
-		sed -i "s/^\(interface\)=/\1=$IFN/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
+		sed -i "s/^\(interface\)=.*/\1=$IFN/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 		if (( ! DHCP )); then
-			sed -i -e "s/^\(address\)=/\1=$IPADDR/" \
-			       -e "s/^\(netmask\)=/\1=$SUBNET/" \
-			       -e "s/^\(broadcast\)=/\1=$BROADCAST/" \
-			       -e "s/^\(gateway\)=/\1=$GW/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
+			sed -i -e "s/^\(address\)=.*/\1=$IPADDR/" \
+			       -e "s/^\(netmask\)=.*/\1=$SUBNET/" \
+			       -e "s/^\(broadcast\)=.*/\1=$BROADCAST/" \
+			       -e "s/^\(gateway\)=.*/\1=$GW/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 
 			if [[ $DNS ]]; then
+				for prev_dns in "${auto_added_dns[@]}"; do
+					sed -i "/nameserver $prev_dns$/d" "${var_TARGET_DIR}/etc/resolv.conf"
+				done
 				echo "nameserver $DNS" >> "${var_TARGET_DIR}/etc/resolv.conf" || return 2
+				auto_added_dns+=("$DNS")
 			fi
 		fi
 
