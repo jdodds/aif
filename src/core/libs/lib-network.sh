@@ -23,15 +23,10 @@ target_configure_network()
 
 		sed -i "s/^\(interface\)=/\1=$IFN/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 		if (( ! DHCP )); then
-			sed -i "s/^\(address\)=/\1=$IPADDR/;s/^\(netmask\)=/\1=$SUBNET/" "${var_TARGET_DIR}/etc/rc.conf"
-
-			if [[ $BROADCAST ]]; then
-				sed -i "s/^\(broadcast\)=/\1=$BROADCAST/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
-			fi
-
-			if [[ $GW ]]; then
-				sed -i "s/^\(gateway\)=/\1=$GW/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
-			fi
+			sed -i -e "s/^\(address\)=/\1=$IPADDR/" \
+			       -e "s/^\(netmask\)=/\1=$SUBNET/" \
+			       -e "s/^\(broadcast\)=/\1=$BROADCAST/" \
+			       -e "s/^\(gateway\)=/\1=$GW/" "${var_TARGET_DIR}/etc/rc.conf" || return 1
 
 			if [[ $DNS ]]; then
 				echo "nameserver $DNS" >> "${var_TARGET_DIR}/etc/resolv.conf" || return 2
