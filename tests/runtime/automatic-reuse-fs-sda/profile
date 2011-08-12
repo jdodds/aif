@@ -1,5 +1,5 @@
 TARGET_PACKAGES='aif e2fsprogs'
-RUNTIME_REPOSITORIES=(testing "Server = ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH")
+RUNTIME_REPOSITORIES=(testing ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH)
 GRUB_DEVICE=/dev/sda
 
 # modify worker_prepare_disks: we don't want to repartition (process_disks). also we want to do a rollback + setup again

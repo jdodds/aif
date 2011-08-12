@@ -10,7 +10,7 @@
 
 
 # when checking out /etc, configs may be outdated (meant for older packages), and we have no pacnew/pacsave files. but this should not cause too much problems..
-var_RUNTIME_REPOSITORIES=(archlinuxfr "Server = http://repo.archlinux.fr/$var_ARCH")
+var_RUNTIME_REPOSITORIES=(archlinuxfr http://repo.archlinux.fr/$var_ARCH)
 var_RUNTIME_PACKAGES="svn yaourt"
 
 DEPLOY_CLASS=desktop-a7n8x
