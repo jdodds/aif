@@ -1,28 +1,5 @@
 #!/bin/bash
 
-# taken from the quickinst script. cd/net code merged together
-target_write_pacman_conf ()
-{
-	PKGFILE=/tmp/packages.txt
-	echo "[core]" >/tmp/pacman.conf
-	if [ "$var_PKG_SOURCE_TYPE" = "net" ]
-	then
-		wget $PKG_SOURCE/packages.txt -O /tmp/packages.txt || die_error " Could not fetch package list from server"
-		echo "Server = $PKGARG" >>/tmp/pacman.conf
-	fi
-	if [ "$var_PKG_SOURCE_TYPE" = "cd" ]
-	then
-		[ -f $PKG_SOURCE/packages.txt ] || die_error "error: Could not find package list: $PKGFILE"
-		cp $PKG_SOURCE/packages.txt /tmp/packages.txt
-		echo "Server = file://$PKGARG" >>/tmp/pacman.conf
-	fi
-	mkdir -p $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman &>/dev/null
-	rm -f /var/cache/pacman/pkg &>/dev/null
-	[ "$var_PKG_SOURCE_TYPE" = "net" ] && ln -sf $var_TARGET_DIR/var/cache/pacman/pkg /var/cache/pacman/pkg &>/dev/null
-	[ "$var_PKG_SOURCE_TYPE" = "cd" ]  && ln -sf $PKGARG                       /var/cache/pacman/pkg &>/dev/null
-}
-
-
 # target_prepare_pacman():
 # configures pacman to run from live environment, but working on target system.
 # syncs for the first time on destination system
