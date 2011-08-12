@@ -1,4 +1,4 @@
-TARGET_REPOSITORIES=(core file:///src/core/pkg)
+TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
 RUNTIME_REPOSITORIES=(testing ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH)
 RUNTIME_PACKAGES=
 
