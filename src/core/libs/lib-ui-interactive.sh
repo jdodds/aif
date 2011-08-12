@@ -1330,7 +1330,7 @@ get_kernel_parameters() {
 # returns: nothing
 interactive_select_source() {
 	NEED_REMOTE=0
-	repos_onboard=$(ls /src)
+	repos_onboard=$(ls /repo)
 	list=()
 	for repo in $repos_onboard; do
 		if [ $repo == 'core' ]; then
@@ -1340,7 +1340,7 @@ interactive_select_source() {
 		fi
 	done
 	for repo in $(list_possible_repos); do
-		if [ $repo == 'core' -a ! -d /src/core ]; then
+		if [ $repo == 'core' -a ! -d /repo/core ]; then
 			list+=($repo-remote "$repo on remote mirror" ON)
 		else
 			list+=($repo-remote "$repo on remote mirror" OFF)
@@ -1348,7 +1348,7 @@ interactive_select_source() {
 	done
 	# TODO: enable repositories in pacman.conf on target system based on this
 	warn="Be sure to select [core], that's the only must."
-	[ -d /src/core ] && warn="Be sure to select at least one [core] location,
+	[ -d /repo/core ] && warn="Be sure to select at least one [core] location,
 	having [core] available is the only must"
 	ask_checklist "Please select which repositories you want to activate.  $warn.
 	Note that this does not affect pacman.conf on the target system, you can
@@ -1374,7 +1374,7 @@ interactive_select_source() {
 	for repo in ${repos[@]}; do
 		if echo $repo | grep -q local; then
 			repo=$(echo $repo | sed 's/-local//')
-			TARGET_REPOSITORIES+=($repo 'file:///src/$repo/$arch')
+			TARGET_REPOSITORIES+=($repo 'file:///repo/$repo/$arch')
 		else
 			repo=$(echo $repo | sed 's/-remote//')
 			NEED_REMOTE=1

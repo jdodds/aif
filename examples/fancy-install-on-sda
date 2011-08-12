@@ -1,6 +1,6 @@
 # this config is like generic-install-on-sda (check out that file first), but more fancy
 
-TARGET_REPOSITORIES=(core file:///src/core/pkg)
+TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
 
 RUNTIME_REPOSITORIES=
 RUNTIME_PACKAGES=
