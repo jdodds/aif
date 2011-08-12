@@ -785,6 +785,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 # args: none
 # returns: 1 on failure
 interactive_runtime_network() {
+	notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
 	local ifaces
 	ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
 
@@ -1350,7 +1351,6 @@ interactive_select_source() {
 		echo "Using CDROM for package installation" >$LOG
 	else
 		TITLE="Arch Linux NET (FTP/HTTP) Installation"
-		notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
 	fi
 	return 0
 }
