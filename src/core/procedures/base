@@ -62,11 +62,11 @@ worker_configure ()
 }
 
 
+# this function must set TARGET_REPOSITORIES, which should contain at least 1
+# core repo
 worker_select_source ()
 {
-	var_PKG_SOURCE_TYPE='cd'
-	var_FILE_URL="file:///src/core/pkg"
-	var_SYNC_URL= # optional, points to a repository string something like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/i686 (eg the same format as what you find in /etc/pacman.conf)
+	true
 }
 
 
@@ -153,7 +153,7 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	target_prepare_pacman core && installpkg
+	target_prepare_pacman && installpkg
 }
 
 worker_configure_system ()

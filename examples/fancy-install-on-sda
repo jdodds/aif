@@ -1,8 +1,6 @@
 # this config is like generic-install-on-sda (check out that file first), but more fancy
 
-SOURCE=cd
-FILE_URL=file:///src/core/pkg
-SYNC_URL=
+TARGET_REPOSITORIES=(core file:///src/core/pkg)
 
 RUNTIME_REPOSITORIES=
 RUNTIME_PACKAGES=

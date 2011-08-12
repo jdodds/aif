@@ -3,34 +3,36 @@
 # target_prepare_pacman():
 # configures pacman to run from live environment, but working on target system.
 # syncs for the first time on destination system
-#
-# $@ repositories to enable (optional. default: core)
+# Enables all reposities specified by TARGET_REPOSITORIES
 # returns: 1 on error
 target_prepare_pacman() {   
-	[ "$var_PKG_SOURCE_TYPE" = "cd" ] && local serverurl="${var_FILE_URL}"
-	[ "$var_PKG_SOURCE_TYPE" = "net" ] && local serverurl="${var_SYNC_URL}"
-
-	[ -z "$1" ] && repos=core
-	[ -n "$1" ] && repos="$@"
 	# Setup a pacman.conf in /tmp
-	cat << EOF > /tmp/pacman.conf
-[options]
-CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg
-CacheDir = /src/core/pkg
-Architecture = auto
-EOF
+	echo "[options]" > /tmp/pacman.conf
+	echo "CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg" >> /tmp/pacman.conf
+	# construct real directory names from pseudonyms like (2 array elements):
+	# core file:///repo/$repo/$arch
+	# ideally, we would query those from pacman (which is also who interprets
+	# these), but pacman does not support something like that, so we do it a bit
+	# uglier.  See https://bugs.archlinux.org/task/25568
+	arch=$(uname -m)
+	for line in $(echo ${TARGET_REPOSITORIES[@]} | tr ' ' '\n' | grep -B 1 'file://' | grep -v '\-\-'); do
+		if ! echo $line | grep -q '^file://'; then
+			repo=$line
+		else
+			cachedir=$(echo $line | sed -e "s#file://##;s#\$repo#$repo#;s#\$arch#$arch#")
+			[ -d $cachedir ] || die_error "You specified $line (->$cachedir) as a directory to be used as repository, but it does not exist"
+			echo "CacheDir = $cachedir" >> /tmp/pacman.conf
+		fi
+	done
+	echo "Architecture = auto" >> /tmp/pacman.conf
 
-for repo in $repos
-do
-	#TODO: this is a VERY, VERY dirty hack.  we fall back to net for any non-core repo because we only have core on the CD. also user maybe didn't pick a mirror yet
-	if [ "$repo" != core ]
-	then
-		add_pacman_repo target ${repo} "Include = $var_MIRRORLIST" || return 1
-	else
-		# replace literal '$repo' in the serverurl string by "$repo" where $repo is our variable.
-		add_pacman_repo target ${repo} "Server = ${serverurl/\$repo/$repo}" || return 1
-	fi
-done
+    for i in `seq 0 $((${#TARGET_REPOSITORIES[@]}/2-1))`
+	do
+		repo=${TARGET_REPOSITORIES[$(($i*2))]}
+		location=${TARGET_REPOSITORIES[$(($i*2+1))]}
+		add_pacman_repo target $repo $location || return 1
+	done
+
 	# Set up the necessary directories for pacman use
 	for dir in var/cache/pacman/pkg var/lib/pacman
 	do
@@ -65,16 +67,24 @@ list_possible_repos ()
 # $1 target/runtime
 # $2 repo name
 # $3 string
+# automatically knows that if $3 contains the word 'mirrorlist', it should save
+# as 'Include = $3', otherwise as 'Server = $3' (for both local and remote)
 add_pacman_repo ()
 {
 	[ "$1" != runtime -a "$1" != target ] && die_error "add_pacman_repo needs target/runtime argument"
 	[ -z "$3" ] && die_error "target_add_repo needs \$2 repo-name and \$3 string (eg Server = ...)"
+	repo=$2
+	if echo "$3" | grep -q 'mirrorlist'; then
+		location="Include = $3"
+	else
+		location="Server = $3"
+	fi
 	[ "$1" = target  ] && conf=/tmp/pacman.conf
 	[ "$1" = runtime ] && conf=/etc/pacman.conf
 	cat << EOF >> $conf
 
-[${2}]
-${3}
+[$repo]
+$location
 EOF
 }
 
@@ -120,11 +130,11 @@ pkginfo ()
 
 target_configure_mirrorlist () {
 	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
-	if [ "$var_PKG_SOURCE_TYPE" = "net" -a -n "${var_SYNC_URL}" ]; then
-		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "${var_SYNC_URL}"
+	if [ "$NEED_REMOTE" -eq 1 -a -n "$MIRROR" ]; then
+		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "$MIRROR"
 		then
-			debug 'PACMAN PROCEDURE' "Adding choosen mirror (${var_SYNC_URL}) to ${var_TARGET_DIR}/$var_MIRRORLIST"
-			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "${var_SYNC_URL}"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"` || return $?
+			debug 'PACMAN PROCEDURE' "Adding choosen mirror ($MIRROR) to ${var_TARGET_DIR}/$var_MIRRORLIST"
+			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "$MIRROR"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"` || return $?
 			echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" || return $?
 		fi
 	fi

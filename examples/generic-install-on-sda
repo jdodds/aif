@@ -2,13 +2,20 @@
 # the variables are optional and we define their defaults here (so you could omit the
 # definitions), unless otherwise specified.
 
-SOURCE=cd #change to 'net' to do a network install
-FILE_URL=file:///src/core/pkg
-SYNC_URL= # optional, if you do netinstall use a repository string like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/$arch (the same format as what you find in /etc/pacman.conf)
+# Add all repositories you want to use here. Same style as for pacman.conf:
+# Local: file://...
+# Remote: something like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/$arch
+# You should list both the name of the repo as well as the location, as separate
+# elements.
+# You can add multiple repositories and even mix remote and local ones.
+# The order they are in here, will be the order in pacman.conf
+# This is a mandatory variable, which should contain at least 1 core repository
+TARGET_REPOSITORIES=(core file:///src/core/pkg)
+
 HARDWARECLOCK=localtime # UTC is the better option, but some OS'es don't support it (i.e. Windows)
 TIMEZONE=Canada/Pacific
 # Do you want to have additional pacman repositories or packages available at runtime (during installation)?
-# RUNTIME_REPOSITORIES = array like this ('name1' 'location of repo 1' ['name2' 'location of repo2',..])
+# RUNTIME_REPOSITORIES same format as TARGET_REPOSITORIES
 RUNTIME_REPOSITORIES=
 # space separated list
 RUNTIME_PACKAGES=

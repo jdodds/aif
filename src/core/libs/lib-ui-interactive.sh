@@ -736,7 +736,8 @@ interactive_select_packages() {
 
 	repos=`list_pacman_repos target`
 	notify "Package selection is split into three stages. First, you will select a bootloader. Then, you will select package groups that contain packages that you may be interested in. Lastly, you will be presented with a full list of packages for each group, allowing you to fine-tune.\n\n
-Note that right now the packages (and groups) selection is limited to the repos available at this time ($repos).  Once you have your Arch system up and running, you have access to more repositories and packages.\n\n
+Note that packages (and groups) selection are limited to the repos you enabled earlier ($repos)\n
+Once you have your Arch system up and running, you have access to more repositories and packages.\n\n
 If any previous configuration you've done until now (like fancy filesystems) require extra packages, we've already preselected them for your convenience"
 
 	# show group listing for group selection, base is ON by default, all others are OFF
@@ -757,8 +758,8 @@ If any previous configuration you've done until now (like fancy filesystems) req
 	ask_checklist "Select Package groups\nDo not deselect base unless you know what you're doing!" 0 "${grouplist[@]}" || return 1
 	grouplist=("${ANSWER_CHECKLIST[@]}")
 
-	# get sorted array of available packages, with their groups. TODO: we should use $repos here
-	local pkgall=($(list_packages repo core | cut -d ' ' -f2))
+	# get sorted array of available packages, with their groups.
+	local pkgall=($(list_packages repo "$repos" | cut -d ' ' -f2 | sort | uniq)) # list of all packages
 	pkginfo "${pkgall[@]}"
 
 	# build the list of options, sorted primarily by group, then by packagename (this is already). marking where appropriate
@@ -1323,40 +1324,68 @@ get_kernel_parameters() {
 
 
 # displays installation source selection menu
-# and sets up relevant config files
+# and sets up relevant configuration
 #
 # params: none
 # returns: nothing
 interactive_select_source() {
-	var_PKG_SOURCE_TYPE=
-	var_FILE_URL="file:///src/core/pkg"
-	var_SYNC_URL=
-
-	ask_option no "Source selection" "Please select an installation source" required \
-	"cd"  "CD-ROM or OTHER SOURCE" \
-	"net" "NET (FTP/HTTP)" || return 1
-
-	case $ANSWER_OPTION in
-		"cd") var_PKG_SOURCE_TYPE="cd" ;;
-		"net") var_PKG_SOURCE_TYPE="net" ;;
-	esac
-
-	if [ "$var_PKG_SOURCE_TYPE" = "cd" ]; then
-		TITLE="Arch Linux CDROM or OTHER SOURCE Installation"
-		notify "Packages included on this disk have been mounted to /src/core/pkg. If you wish to use your own packages from another source, manually mount them there."
-		if [ ! -d /src/core/pkg ]; then
-			notify "Package directory /src/core/pkg is missing!"
-			return 1
+	NEED_REMOTE=0
+	repos_onboard=$(ls /src)
+	list=()
+	for repo in $repos_onboard; do
+		if [ $repo == 'core' ]; then
+			list+=($repo-local "$repo mounted in install medium" ON)
+		else
+			list+=($repo-local "$repo mounted in install medium" OFF)
 		fi
-		echo "Using CDROM for package installation" >$LOG
-	else
-		TITLE="Arch Linux NET (FTP/HTTP) Installation"
+	done
+	for repo in $(list_possible_repos); do
+		if [ $repo == 'core' -a ! -d /src/core ]; then
+			list+=($repo-remote "$repo on remote mirror" ON)
+		else
+			list+=($repo-remote "$repo on remote mirror" OFF)
+		fi
+	done
+	# TODO: enable repositories in pacman.conf on target system based on this
+	warn="Be sure to select [core], that's the only must."
+	[ -d /src/core ] && warn="Be sure to select at least one [core] location,
+	having [core] available is the only must"
+	ask_checklist "Please select which repositories you want to activate.  $warn.
+	Note that this does not affect pacman.conf on the target system, you can
+	finetune repositories later in the \"Configure system\" step.
+	If you want to manually mount other repositories first, you can mount them under /repo and rerun this step." 0 "${list[@]}" || return 1
+	repos="${ANSWER_CHECKLIST[@]}"
+	if echo ${repos[@]} | grep -q remote; then
+		interactive_select_mirror
 	fi
+	if echo ${repos[@]} | grep -q local && echo ${repos[@]} | grep -q remote; then
+		ask_option local-first "Repository ordering" "How do you want to order
+		them?" '' \
+		"local_first" "Only consult remote when package is not found locally. Consumes less bandwith" \
+		"remote_first" "Consult local repository only when package is not found on remote.  Can yield more up-to-date system"
+		repo_ordering=$ANSWER_OPTION
+		if [ $repo_ordering = 'remote_first' ]; then
+			# we use the property that the reverse of remote ('etomer') sorts
+			# before the reverse of local
+			repos=($(echo ${repos[@]} | tr ' ' '\n' | rev | sort | rev | tr '\n' ' '))
+		fi
+	fi
+	TARGET_REPOSITORIES=()
+	for repo in ${repos[@]}; do
+		if echo $repo | grep -q local; then
+			repo=$(echo $repo | sed 's/-local//')
+			TARGET_REPOSITORIES+=($repo 'file:///src/$repo/$arch')
+		else
+			repo=$(echo $repo | sed 's/-remote//')
+			NEED_REMOTE=1
+			TARGET_REPOSITORIES+=($repo $var_MIRRORLIST)
+		fi
+	done
 	return 0
 }
 
 
-# Prompt user for preferred mirror and set $var_SYNC_URL
+# Prompt user for preferred mirror and set $MIRROR
 # args: none
 # returns: nothing
 interactive_select_mirror() { 
@@ -1367,12 +1396,12 @@ interactive_select_mirror() {
 	local _server=$ANSWER_OPTION
 	if [ "${_server}" = "Custom" ]; then
 		ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
-		var_SYNC_URL=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
+		MIRROR=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
 	else
 		# Form the full URL for our mirror by grepping for the server name in
 		# our mirrorlist and pulling the full URL out.
 		# Ensure that if it was listed twice we only return one line for the mirror.
-		var_SYNC_URL=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
+		MIRROR=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
 	fi
-	echo "Using mirror: $var_SYNC_URL" >$LOG
+	echo "Using mirror: $MIRROR" >$LOG
 }
