@@ -55,6 +55,12 @@ list_pacman_repos ()
 	grep '\[.*\]' $conf | grep -v options | grep -v '^#' | sed 's/\[//g' | sed 's/\]//g'
 }
 
+# returns all repositories you could possibly use (core, extra, testing, community, ...)
+list_possible_repos ()
+{
+	grep -B 1 'Include = /etc/' /etc/pacman.conf | grep '\[' | sed 's/#*\[\(.*\)\]/\1/'
+}
+
 
 # $1 target/runtime
 # $2 repo name
