@@ -23,8 +23,9 @@ target_write_pacman_conf ()
 }
 
 
-# target_prepare_pacman() taken from setup. modified a bit
-# configures pacman and syncs for the first time on destination system
+# target_prepare_pacman():
+# configures pacman to run from live environment, but working on target system.
+# syncs for the first time on destination system
 #
 # $@ repositories to enable (optional. default: core)
 # returns: 1 on error
