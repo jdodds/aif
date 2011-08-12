@@ -295,8 +295,8 @@ find_usable_blockdevices() {
 		fi
 	done
 
-	# mapped devices
-	for devpath in /dev/mapper/*; do
+	# mapped devices, excluding devices created by archiso (/dev/mapper/arch_*)
+	for devpath in /dev/mapper/!(arch_*); do
 		# Exclude /control directory and other non-block files (such as??)
 		if [[ -b $devpath ]]; then
 			echo -ne "$devpath $1"
