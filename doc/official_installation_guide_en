@@ -253,6 +253,9 @@ You can also mount your own repositories in the filesystem tree manually.
 If you are using a core image and don't have a fast internet connection, you
 probably want to use the included core archive, unless it's very outdated.
 The only requirement is you select a core repository.
+You can combine local and remote repositories but only do this if you know what
+you're doing.  (combining an older core archive with newer packages from a
+network mirror will result in broken packages)
 
 ##### Optional: only when using network mirror
 
