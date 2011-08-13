@@ -1349,7 +1349,8 @@ interactive_select_source() {
 	# TODO: enable repositories in pacman.conf on target system based on this
 	warn="Be sure to select [core], that's the only must."
 	[ -d /repo/core ] && warn="Be sure to select at least one [core] location,
-	having [core] available is the only must"
+	having [core] available is the only must.  DON'T combine a local repository
+	with remote mirrors unless you know what you're doing (this will cause BROKEN packages)!"
 	ask_checklist "Please select which repositories you want to activate.  $warn.
 	Note that this does not affect pacman.conf on the target system, you can
 	finetune repositories later in the \"Configure system\" step.
@@ -1360,7 +1361,7 @@ interactive_select_source() {
 	fi
 	if echo ${repos[@]} | grep -q local && echo ${repos[@]} | grep -q remote; then
 		ask_option local-first "Repository ordering" "How do you want to order
-		them?" '' \
+		them?  Like mentioned before, you are aware this will usually BREAK your system right?" '' \
 		"local_first" "Only consult remote when package is not found locally. Consumes less bandwith" \
 		"remote_first" "Consult local repository only when package is not found on remote.  Can yield more up-to-date system"
 		repo_ordering=$ANSWER_OPTION
