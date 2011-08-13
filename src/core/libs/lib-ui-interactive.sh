@@ -1348,7 +1348,8 @@ interactive_select_source() {
 	done
 	warn="Be sure to select [core], that's the only must."
 	[ -d /repo/core ] && warn="Be sure to select at least one [core] location,
-	having [core] available is the only must"
+	having [core] available is the only must.  DON'T combine a local repository
+	with remote mirrors unless you know what you're doing (this will cause BROKEN packages)!"
 	ask_checklist "Please select which repositories you want to activate.  $warn.
 	If you want to manually mount other repositories first, you can mount them under /repo and rerun this step." 0 "${list[@]}" || return 1
 	repos="${ANSWER_CHECKLIST[@]}"
