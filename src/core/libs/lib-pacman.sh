@@ -16,7 +16,7 @@ target_prepare_pacman() {
 	# uglier.  See https://bugs.archlinux.org/task/25568
 	arch=$(uname -m)
 	for line in $(echo ${TARGET_REPOSITORIES[@]} | tr ' ' '\n' | grep -B 1 'file://' | grep -v '\-\-'); do
-		if ! echo $line | grep -q '^file://'
+		if ! echo $line | grep -q '^file://'; then
 			repo=$line
 		else
 			cachedir=$(echo $line | sed -e "s/\$repo/$repo/" -e "s/\$arch/$arch/")
