@@ -10,7 +10,13 @@
 # You can add multiple repositories and even mix remote and local ones.
 # The order they are in here, will be the order in pacman.conf
 # This is a mandatory variable, which should contain at least 1 core repository
-TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
+# This example will do the most sensible thing on both core and netinstall images:
+if [ -d /repo/core ]; then
+	TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
+else
+	MIRROR='ftp://mirrors.kernel.org/archlinux/$repo/os/$arch'
+	TARGET_REPOSITORIES=(core $var_MIRRORLIST)
+fi
 
 HARDWARECLOCK=localtime # UTC is the better option, but some OS'es don't support it (i.e. Windows)
 TIMEZONE=Canada/Pacific
