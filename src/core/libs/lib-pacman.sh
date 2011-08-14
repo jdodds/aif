@@ -9,9 +9,20 @@ target_prepare_pacman() {
 	# Setup a pacman.conf in /tmp
 	echo "[options]" > /tmp/pacman.conf
 	echo "CacheDir = ${var_TARGET_DIR}/var/cache/pacman/pkg" >> /tmp/pacman.conf
-	for repo_can_be_used_as_cachedir in $(echo ${TARGET_REPOSITORIES[@]} | tr ' ' '\n' | grep 'file://' | sed 's#file://#'); do
-		[ -d $repo_can_be_used_as_cachedir ] || die_error "You specified $repo_can_be_used_as_cachedir as a directory to be used as repository, but it does not exist"
-		echo "CacheDir = $repo_can_be_used_as_cachedir" >> /tmp/pacman.conf
+	# construct real directory names from pseudonyms like (2 array elements):
+	# core file:///repo/$repo/$arch
+	# ideally, we would query those from pacman (which is also who interprets
+	# these), but pacman does not support something like that, so we do it a bit
+	# uglier.  See https://bugs.archlinux.org/task/25568
+	arch=$(uname -m)
+	for line in $(echo ${TARGET_REPOSITORIES[@]} | tr ' ' '\n' | grep -B 1 'file://' | grep -v '\-\-'); do
+		if ! echo $line | grep -q '^file://'
+			repo=$line
+		else
+			cachedir=$(echo $line | sed -e "s/\$repo/$repo/" -e "s/\$arch/$arch/")
+			[ -d $cachedir ] || die_error "You specified $line (->$cachedir) as a directory to be used as repository, but it does not exist"
+			echo "CacheDir = $cachedir" >> /tmp/pacman.conf
+		fi
 	done
 	echo "Architecture = auto" >> /tmp/pacman.conf
 
