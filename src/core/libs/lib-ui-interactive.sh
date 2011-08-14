@@ -759,7 +759,7 @@ If any previous configuration you've done until now (like fancy filesystems) req
 	grouplist=("${ANSWER_CHECKLIST[@]}")
 
 	# get sorted array of available packages, with their groups.
-	local pkgall=($(list_packages repo "$repos" | cut -d ' ' -f2 | sort))
+	local pkgall=($(list_packages repo "$repos" | cut -d ' ' -f2 | sort | uniq)) # list of all packages
 	pkginfo "${pkgall[@]}"
 
 	# build the list of options, sorted primarily by group, then by packagename (this is already). marking where appropriate
