@@ -96,8 +96,8 @@ list_package_groups ()
 
 
 # List the packages in one or more repos or groups. output is one or more lines, each line being like this:
-# <repo/group name> packagename [version, if $1=repo]
-# lines are sorted by packagename
+# <repo/group name> packagename [version, if $1=repo] [installed]
+# lines are sorted by packagename, per repo, repos in the order you gave them to us.
 # $1 repo or group
 # $2 one or more repo or group names
 list_packages ()
