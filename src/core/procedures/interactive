@@ -39,42 +39,42 @@ start_process ()
 	execute worker intro
 	execute worker sysprep
 
-	default=1
-	while true
-	do
-		mainmenu
-	done
+	mainmenu
 }
 
 
 mainmenu()  
 {
-	eval "$settitles"
-	menu=()
-	for i in ${!menu_workers[@]}
+	local default=1
+	while true
 	do
-		worker=${menu_workers[$i]}
-		title=${workertitles[$worker]}
-		let i+=1 # in menu, we count from 1 onwards, not from 0
-		menu+=($i "$title")
-	done
+		eval "$settitles"
+		menu=()
+		for i in ${!menu_workers[@]}
+		do
+			worker=${menu_workers[$i]}
+			title=${workertitles[$worker]}
+			let i+=1 # in menu, we count from 1 onwards, not from 0
+			menu+=($i "$title")
+		done
 
-	ask_option $default "MAIN MENU" '' required "${menu[@]}"
-	case $ANSWER_OPTION in
-	"1")                                         execute worker select_source       && \
-	                                             execute worker runtime_packages    && default=2 ;;
-	"2")                                         execute worker set_editor          && default=3 ;;
-	"3")                                         execute worker set_clock           && default=4 ;;
-	"4")                                         execute worker prepare_disks       && default=5 ;;
-	"5") check_depend worker prepare_disks    && \
-	     check_depend worker select_source    && execute worker package_list        && default=6 ;;
-	"6") check_depend worker package_list     && \
-	     check_depend worker select_source    && execute worker install_packages    && default=7 ;;
-	"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
-	"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
-	"9") execute worker msg_report ;;
-	*)   execute worker abort_installer;;
-	esac
+		ask_option $default "MAIN MENU" '' required "${menu[@]}"
+		case $ANSWER_OPTION in
+		"1")                                         execute worker select_source       && \
+													 execute worker runtime_packages    && default=2 ;;
+		"2")                                         execute worker set_editor          && default=3 ;;
+		"3")                                         execute worker set_clock           && default=4 ;;
+		"4")                                         execute worker prepare_disks       && default=5 ;;
+		"5") check_depend worker prepare_disks    && \
+			 check_depend worker select_source    && execute worker package_list        && default=6 ;;
+		"6") check_depend worker package_list     && \
+			 check_depend worker select_source    && execute worker install_packages    && default=7 ;;
+		"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
+		"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
+		"9") execute worker msg_report ;;
+		*)   execute worker abort_installer;;
+		esac
+	done
 }
 
 
