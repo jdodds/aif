@@ -1330,9 +1330,11 @@ get_kernel_parameters() {
 # returns: nothing
 interactive_select_source() {
 	NEED_REMOTE=0
-	repos_onboard=$(ls /repo)
+	shopt -s nullglob
+	repos_onboard=(/repo/*)
+	shopt -u nullglob
 	list=()
-	for repo in $repos_onboard; do
+	for repo in "${repos_onboard[@]##*/}"; do
 		if [ $repo == 'core' ]; then
 			list+=($repo-local "$repo mounted in install medium" ON)
 		else
