@@ -130,7 +130,7 @@ pkginfo ()
 
 target_configure_mirrorlist () {
 	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
-	if need_remote && [ -n "$MIRROR" ]; then
+	if [ -n "$MIRROR" ]; then
 		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "$MIRROR"
 		then
 			debug 'PACMAN PROCEDURE' "Adding choosen mirror ($MIRROR) to ${var_TARGET_DIR}/$var_MIRRORLIST"
@@ -139,29 +139,5 @@ target_configure_mirrorlist () {
 		fi
 	fi
 	return 0
-}
-
-# figure out whether we use one or more network repositories.
-# only call this after worker select_source has run
-# assumes that a location specifier that does not contain 'file://' means we
-# have a remote repository. Why?
-# 'Server = ' statement without file:// means network repository
-# 'Include = ' statement can technically point to a mirrorlist which only has a
-# local repository enabled, but we assume that doesn't happen.  Note that
-# mirrorlist doesn't need to be written yet at this point (happens in
-# preconfigure_target), so unless a user is doing an automatic install and
-# crafted his own mirrorlist holding local mirrors (in which case we falsely
-# think we'll need a network mirror, but that's not much of an issue, and this
-# is very unlikely), we can we sure we're doing it the AIF way, and aif will
-# only use the mirrorlist for network mirrors.
-need_remote ()
-{
-	for i in `seq 0 $((${#TARGET_REPOSITORIES[@]}/2-1))`; do
-		location=${TARGET_REPOSITORIES[$(($i*2+1))]}
-		if ! echo $location | grep -q '^file://'; then
-			return 0
-		fi
-	done
-	return 1
 }
 

@@ -63,7 +63,11 @@ worker_configure ()
 
 
 # this function must set TARGET_REPOSITORIES, which should contain at least 1
-# core repo
+# core repo  If you want to use a network mirror, $MIRROR should be
+# set, we will populate the needed mirrorlists after select_source. although
+# you can also use a remote repository directly without using a mirrorlist but
+# either way you should set $MIRROR so that we can know when networking is
+# needed, we do this in a few places in the code.
 worker_select_source ()
 {
 	true
