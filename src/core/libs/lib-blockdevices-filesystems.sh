@@ -803,7 +803,7 @@ process_filesystem ()
 				$program -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
 			jfs|reiserfs)
 				yes | $program $part        $fs_opts >$LOG 2>&1; ret=$? ;;
-			swap|ext2|ext3|ext4|nilfs2|vfat)
+			swap|ext2|ext3|ext4|nilfs2|vfat|btrfs)
 				$program $part              $fs_opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt)
 				[ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
@@ -834,7 +834,7 @@ process_filesystem ()
 	then
 		program="${label_programs[$fs_type]}"
 		case ${fs_type} in
-			swap|xfs|jfs|nilfs2|ext2|ext3|ext4)
+			swap|xfs|jfs|nilfs2|ext2|ext3|ext4|btrfs)
 				$program -L $fs_label $part		>$LOG 2>&1; ret=$?;;
 			reiserfs)
 				$program -l $fs_label $part		>$LOG 2>&1; ret=$?;;
