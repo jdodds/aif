@@ -819,7 +819,8 @@ process_filesystem ()
 			lvm-lv)
 				# $fs_params = size string (eg '5G')
 				$program -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
-			# don't handle anything else here, we will error later
+			*)
+				die_error "AIF error. somebody needs to update process_filesystem() to support $fs_type"
 		esac
 		# The udevadm settle is a workaround for a bug/racecondition in cryptsetup. See:
 		# http://mailman.archlinux.org/pipermail/arch-releng/2010-April/000974.html
@@ -840,6 +841,8 @@ process_filesystem ()
 				$program -l $fs_label $part		>$LOG 2>&1; ret=$?;;
 			vfat)
 				$program $part $fs_label		>$LOG 2>&1; ret=$?;;
+			*)
+				die_error "AIF error. somebody needs to update process_filesystem() to support $fs_type"
 		esac
 		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error setting label $fs_label on $part." ; return 1; }
 	fi
