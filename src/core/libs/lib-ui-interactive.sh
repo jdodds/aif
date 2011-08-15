@@ -1329,7 +1329,6 @@ get_kernel_parameters() {
 # params: none
 # returns: nothing
 interactive_select_source() {
-	NEED_REMOTE=0
 	shopt -s nullglob
 	repos_onboard=(/repo/*)
 	shopt -u nullglob
@@ -1380,7 +1379,6 @@ interactive_select_source() {
 			TARGET_REPOSITORIES+=($repo 'file:///repo/$repo/$arch')
 		else
 			repo=$(echo $repo | sed 's/-remote//')
-			NEED_REMOTE=1
 			TARGET_REPOSITORIES+=($repo $var_MIRRORLIST)
 		fi
 	done
