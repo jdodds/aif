@@ -1355,7 +1355,7 @@ interactive_select_source() {
 	with remote mirrors unless you know what you're doing (this will cause BROKEN packages)!"
 	ask_checklist "Please select which repositories you want to activate.  $warn.
 	Note that this does not affect pacman.conf on the target system, you can
-	finetune repositories later in the "Configure system" step.
+	finetune repositories later in the \"Configure system\" step.
 	If you want to manually mount other repositories first, you can mount them under /repo and rerun this step." 0 "${list[@]}" || return 1
 	repos="${ANSWER_CHECKLIST[@]}"
 	if echo ${repos[@]} | grep -q remote; then
