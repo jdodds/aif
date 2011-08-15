@@ -1361,7 +1361,7 @@ interactive_select_source() {
 	fi
 	if echo ${repos[@]} | grep -q local && echo ${repos[@]} | grep -q remote; then
 		ask_option local-first "Repository ordering" "How do you want to order
-		them?" '' \
+		them?  Like mentioned before, you are aware this will usually BREAK your system right?" '' \
 		"local_first" "Only consult remote when package is not found locally. Consumes less bandwith" \
 		"remote_first" "Consult local repository only when package is not found on remote.  Can yield more up-to-date system"
 		repo_ordering=$ANSWER_OPTION
