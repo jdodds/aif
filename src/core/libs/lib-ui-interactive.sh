@@ -29,7 +29,7 @@ preconfigure_target () {
 	target_configure_initial_keymap_font || failed+=('keymap/font setting')
 	target_configure_fstab || failed+=('fstab configuration')
 	target_configure_network || failed+=('network config export')
-	target_configure_mirrorlist || failed+=('mirrorlist configuration')
+	configure_mirrorlist target || failed+=('mirrorlist configuration')
 	target_configure_time || failed+=('time configuration')
 	target_configure_initcpio || failed+=('initcpio configuration')
 	# TODO: we should probably update /etc/crypttab if the user has non-/ encrypted disks.

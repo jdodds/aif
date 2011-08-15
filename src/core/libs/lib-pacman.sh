@@ -33,6 +33,10 @@ target_prepare_pacman() {
 		add_pacman_repo target $repo $location || return 1
 	done
 
+	if [ -n "$MIRROR" ]; then
+		configure_mirrorlist runtime || return 1
+	fi
+
 	# Set up the necessary directories for pacman use
 	for dir in var/cache/pacman/pkg var/lib/pacman
 	do
@@ -128,14 +132,18 @@ pkginfo ()
 	PACKAGE_INFO=`LANG=C $PACMAN_TARGET -Si "$@" | awk '/^Name/{ printf("%s ",$3) } /^Version/{ printf("%s ",$3) } /^Group/{ printf("%s", $3) } /^Description/{ for(i=3;i<=NF;++i) printf(" %s",$i); printf ("\n")}'`
 }
 
-target_configure_mirrorlist () {
+# $1 target/runtime
+configure_mirrorlist () {
+	[ "$1" != runtime -a "$1" != target ] && die_error "configure_mirrorlist needs target/runtime argument"
 	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
+	[ "$1" = 'runtime' ] && file="$var_MIRRORLIST"
+	[ "$1" = 'target' ] && file="${var_TARGET_DIR}/$var_MIRRORLIST"
 	if [ -n "$MIRROR" ]; then
-		if ! grep "^Server =" -m 1 "${var_TARGET_DIR}/$var_MIRRORLIST" | grep "$MIRROR"
+		if ! grep "^Server =" -m 1 "$file" | grep "$MIRROR"
 		then
-			debug 'PACMAN PROCEDURE' "Adding choosen mirror ($MIRROR) to ${var_TARGET_DIR}/$var_MIRRORLIST"
-			mirrorlist=`awk "BEGIN { printf(\"# Mirror used during installation\nServer = "$MIRROR"\n\n\") } 1 " "${var_TARGET_DIR}/$var_MIRRORLIST"` || return $?
-			echo "$mirrorlist" > "${var_TARGET_DIR}/$var_MIRRORLIST" || return $?
+			debug 'PACMAN PROCEDURE' "Adding choosen mirror ($MIRROR) to $file"
+			mirrorlist=`awk "BEGIN { printf(\"# Mirror selected during installation\nServer = "$MIRROR"\n\n\") } 1 " "$file"` || return $?
+			echo "$mirrorlist" > "$file" || return $?
 		fi
 	fi
 	return 0
