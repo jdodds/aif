@@ -161,7 +161,7 @@ show_report ()
 		[ "$worker" = 'msg_report' ] && continue # this worker is the one calling show_report, we can't know our exitcode yet
 		title=${workertitles[$worker]}
 		exit_var=exit_worker_$worker
-		ret=${!exit_var}
+		local ret=${!exit_var}
 		case "$ret" in
 			"")  data="$data\n > $title: Skipped";;
 			"0") data="$data\n > $title: Sucess";;
@@ -177,7 +177,7 @@ worker_msg_report () {
 
 worker_abort_installer ()
 {
-	ret=0
+	local ret=0
 	ask_yesno "Abort Installation?" || return
 	maybe_interactive_rollback_filesystems || ret=$?
 	stop_installer || ret=$?
