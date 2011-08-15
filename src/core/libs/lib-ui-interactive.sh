@@ -385,6 +385,7 @@ interactive_filesystem ()
 	local fs_opts=
 	local fs_label=
 	local fs_params=
+	local default
 	NEW_FILESYSTEM=
 	if [ -n "$fs_string" ]
 	then
@@ -425,8 +426,7 @@ interactive_filesystem ()
 			notify "Automatically picked the ${FSOPTS[1]} filesystem.  It's the only option for $part_type blockdevices"
 			fs_type=${FSOPTS[0]}
 		else
-			default=no
-			[ -n "$fs_type" ] && default="$fs_type"
+			default=${fs_type:-no}
 			extratext="Select a filesystem for $part:"
 			[ "$fs_create" == no ] && extratext="Select which filesystem $part is.  Make sure you get this right" #otherwise he'll be screwed when we try to mount it :)
 			ask_option $default "Select filesystem" "$extratext" required "${FSOPTS[@]}" || return 1
@@ -436,8 +436,7 @@ interactive_filesystem ()
 		# ask mountpoint, if relevant
 		if check_is_in $fs_type "${fs_mountable[@]}"
 		then
-			default=no
-			[ -n "$fs_mountpoint" ] && default="$fs_mountpoint"
+			default=${fs_mountpoint:-no}
 			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /home 'home directories' /var 'variable files' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
 			fs_mountpoint=$ANSWER_OPTION
 			[ "$default" == 'no' ] && default=
