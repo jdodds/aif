@@ -93,7 +93,7 @@ worker_prepare_disks()
 worker_select_source ()
 {
 	interactive_select_source || return $?
-	if need_remote; then
+	if [ -n "$MIRROR" ]; then
 		if ask_yesno "Make sure the network is ok before continuing the installer. ${workertitles['runtime_network']} now?"; then
 			execute worker runtime_network || return $?
 		fi

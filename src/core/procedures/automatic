@@ -62,7 +62,7 @@ worker_configure ()
 
 worker_select_source ()
 {
-	true # TARGET_REPOSITORIES is already sourced from config
+	true # TARGET_REPOSITORIES, MIRROR is already sourced from config
 }
 
 worker_prepare_disks ()
