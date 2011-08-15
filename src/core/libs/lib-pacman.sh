@@ -19,7 +19,7 @@ target_prepare_pacman() {
 		if ! echo $line | grep -q '^file://'; then
 			repo=$line
 		else
-			cachedir=$(echo $line | sed -e "s/\$repo/$repo/" -e "s/\$arch/$arch/")
+			cachedir=$(echo $line | sed -e "s#file://##;s#\$repo#$repo#;s#\$arch#$arch#")
 			[ -d $cachedir ] || die_error "You specified $line (->$cachedir) as a directory to be used as repository, but it does not exist"
 			echo "CacheDir = $cachedir" >> /tmp/pacman.conf
 		fi
