@@ -272,7 +272,7 @@ interactive_autoprepare()
 	fi
 
 	FSOPTS=()
-	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2
+	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2 btrfs
 	do
 		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
 	done
