@@ -32,6 +32,7 @@ TARGET_PACKAGES_EXCLUDE= # Exclude these packages if they are member of one of t
 TARGET_PACKAGES='openssh e2fsprogs' # you can also specify separate packages to install (this is empty by default)
 
 # you can optionally also override some functions...
+# This way you can change/extend/remove pretty much all functionality in AIF !
 worker_intro () {
 	inform "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
 	sleep 10
