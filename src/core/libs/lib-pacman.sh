@@ -134,6 +134,7 @@ pkginfo ()
 
 # $1 target/runtime
 configure_mirrorlist () {
+	local file
 	[ "$1" != runtime -a "$1" != target ] && die_error "configure_mirrorlist needs target/runtime argument"
 	# add installer-selected mirror to the top of the mirrorlist, unless it's already at the top. previously added mirrors are kept (a bit lower), you never know..
 	[ "$1" = 'runtime' ] && file="$var_MIRRORLIST"
