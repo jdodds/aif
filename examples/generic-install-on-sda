@@ -15,7 +15,7 @@ if [ -d /repo/core ]; then
 	TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
 else
 	MIRROR='ftp://mirrors.kernel.org/archlinux/$repo/os/$arch'
-	TARGET_REPOSITORIES=(core $var_MIRRORLIST)
+	TARGET_REPOSITORIES=(core $var_MIRRORLIST) # $var_MIRRORLIST is set by AIF
 fi
 
 HARDWARECLOCK=localtime # UTC is the better option, but some OS'es don't support it (i.e. Windows)
