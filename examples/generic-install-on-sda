@@ -44,6 +44,7 @@ worker_configure_system () {
 	postconfigure_target
 }
 
+PART_ACCESS= # can be set to 'uuid', 'dev', 'label', or leave empty for 'dev'
 
 # These variables are mandatory
 

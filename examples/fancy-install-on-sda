@@ -28,6 +28,8 @@ worker_configure_system () {
 	postconfigure_target
 }
 
+PART_ACCESS=
+
 # These variables are mandatory
 
 GRUB_DEVICE=/dev/sda
