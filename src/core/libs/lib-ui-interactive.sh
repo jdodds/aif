@@ -271,7 +271,8 @@ interactive_autoprepare()
 		DISC=${BLOCKFRIENDLY[0]}
 	fi
 
-	FSOPTS=()
+	local FSOPTS=()
+	local fs
 	for fs in ext2 ext3 ext4 reiserfs xfs jfs vfat nilfs2 btrfs
 	do
 		check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
@@ -411,7 +412,8 @@ interactive_filesystem ()
 	if [ "$NEW_FILESYSTEM" != no_fs ]
 	then
 		# Determine which filesystems/blockdevices are possible for this blockdevice
-		FSOPTS=()
+		local FSOPTS=()
+		local fs
 		for fs in ${fs_on[$part_type]}
 		do
 			check_is_in $fs "${possible_fs[@]}" && FSOPTS+=($fs "${filesystem_names[$fs]}")
@@ -465,13 +467,14 @@ interactive_filesystem ()
 		if [ "$fs_create" == yes ] && [ "$fs_type" = lvm-vg ]
 		then
 			# add $part to $fs_params if it's not in there because the user wants this enabled by default. TODO: we should find something out so you can't disable $part. (would be weird to have a vg listed on $part and not have $part it fs_params)
-			pv=${part/+/}
+			local pv=${part/+/}
 			if ! egrep -q "$pv(\$| )" <<< "$fs_params"; then
 				[ -n "$fs_params" ] && fs_params="$fs_params "
 				fs_params="$fs_params$pv"
 			fi
 
-			list=()
+			local list=()
+			local pv
 			for pv in $fs_params
 			do
 				list+=("$pv" ^ ON)
@@ -553,12 +556,13 @@ remove_blockdevice ()
 	local part_type=$2  # a part should always have a type
 	local part_label=$3 # must be given
 
-	target="$part $part_type $part_label"
+	local target="$part $part_type $part_label"
 	declare target_escaped=${target//\//\\/} # note: apparently no need to escape the '+' sign for sed.
 	declare target_escawk=${target_escaped/+/\\+} # ...but that doesn't count for awk
 	fs_string=`awk "/^$target_escawk / { print \$4}" $TMP_BLOCKDEVICES` #TODO: fs_string is the entire line, incl part?
 	debug 'UI-INTERACTIVE' "Cleaning up partition $part (type $part_type, label $part_label).  It has the following FS's on it: $fs_string"
 	sed -i "/$target_escaped/d" $TMP_BLOCKDEVICES || show_warning "blockdevice removal" "Could not remove partition $part (type $part_type, label $part_label).  This is a bug. please report it"
+	local fs
 	for fs in `sed 's/|/ /g' <<< $fs_string`
 	do
 		fs_type=`       cut -d ';' -f 1 <<< $fs`
@@ -572,7 +576,7 @@ remove_blockdevice ()
 
 
 interactive_filesystems() {
-
+	local PART_ACCESS
 	if [ ! -f $TMP_BLOCKDEVICES ] || ! ask_yesno "Previous blockdevice definitions found:\n`cat $TMP_BLOCKDEVICES`\n\
 		Use these as a starting point?  Make sure your disk(s) are partitioned correctly so your definitions can be applied. Pick 'no' when in doubt to start from scratch" no
 	then
@@ -585,7 +589,7 @@ interactive_filesystems() {
 		"label"	"by Disk-Label (Will use the filesystem labels where you give them, and fall back on 'dev' otherwise)" \
 		"uuid"	"by Universally Unique Identifier (You don't need to do anything, but doesn't look pretty)" || return 1
 	PART_ACCESS=$ANSWER_OPTION
-	ALLOK=0
+	local ALLOK=0
 	while [ "$ALLOK" = 0 ]
 	do
 		# Let the user make filesystems and mountpoints. USERHAPPY becomes 1 when the user hits DONE.
@@ -594,23 +598,24 @@ interactive_filesystems() {
 		while [ "$USERHAPPY" = 0 ]
 		do
 			# generate a menu based on the information in the datafile
-			menu_list=()
+			local menu_list=()
+			local part, type, label, fs
 			while read part type label fs
 			do
 				parse_filesystem_string "$fs" '' '-'
-				fs_create_display=N
+				local fs_create_display=N
 				[ "$fs_create" = yes ] && fs_create_display=Y
-				fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label $fs_params"
+				local fs_display="$fs_type $fs_create_display $fs_mountpoint $fs_opts $fs_label $fs_params"
 
-				part_label_display=-
-				part_size_display=-
+				local part_label_display=-
+				local part_size_display=-
 				[ "$label" != no_label ] && part_label_display="$label"
 				# add size in MiB for existing blockdevices (eg not for mapper devices that are not yet created yet)
 				if [ -b "${part/+/}" ] && get_blockdevice_size ${part/+/} MiB # test -b <-- exit's 0, test -b '' exits >0.
 				then
 					part_size_display="${BLOCKDEVICE_SIZE}MiB"
 				fi
-				part_display="$part $type $part_label_display $part_size_display"
+				local part_display="$part $type $part_label_display $part_size_display"
 				menu_list+=("$part_display" "$fs_display")
 			done < $TMP_BLOCKDEVICES
 
@@ -623,12 +628,16 @@ device type label size type create? mountpoint options label params" required "$
 
 			part=$(echo $ANSWER_OPTION | cut -d ' ' -f1)
 			getpartinfo $part ''
+			local fs=$PARTINFO_fs
+			local part_label=$PARTINFO_part_label
+			local part_type=$PARTINFO_part_type
 
 			if [ $part_type = lvm-vg ] # one lvm VG can host multiple LV's so that's a bit a special blockdevice...
 			then
-				list=()
+				local list=()
 				if [ -n "$fs" ]
 				then
+					local lv
 					for lv in `sed 's/|/ /g' <<< $fs`
 					do
 						label=$(cut -d ';' -f 6 <<< $lv)
@@ -638,7 +647,7 @@ device type label size type create? mountpoint options label params" required "$
 				fi
 				list+=(empty NEW)
 				ask_option empty "Manage LV's on this VG" "Edit/create new LV's on this VG:" required "${list[@]}" && {
-					EDIT_VG=$ANSWER_OPTION
+					local EDIT_VG=$ANSWER_OPTION
 					if [ "$ANSWER_OPTION" = empty  ]
 					then
 						# a new LV must be created on this VG
@@ -652,13 +661,14 @@ device type label size type create? mountpoint options label params" required "$
 						fi
 					else
 						# an existing LV will be edited and it's settings updated
+						local lv
 						for lv in `sed 's/|/ /g' <<< $fs`
 						do
 							label=$(cut -d ';' -f 6 <<< $lv)
 							[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
 						done
 						interactive_filesystem $part $part_type $part_label "$found_lv"
-						newfs=
+						local newfs, add
 						for lv in `sed 's/|/ /g' <<< $fs`
 						do
 							label=$(cut -d ';' -f 6 <<< $lv)
@@ -689,8 +699,8 @@ device type label size type create? mountpoint options label params" required "$
 		done
 
 		# Check all conditions that need to be fixed and ask the user if he wants to go back and correct them
-		errors=
-		warnings=
+		local errors=
+		local warnings=
 
 		grep -q ';/boot;' $TMP_BLOCKDEVICES || warnings="$warnings\n-No separate /boot filesystem"
 		grep -q ';/;'     $TMP_BLOCKDEVICES || errors="$errors\n-No filesystem with mountpoint /"
@@ -698,7 +708,7 @@ device type label size type create? mountpoint options label params" required "$
 
 		if [ -n "$errors$warnings" ]
 		then
-			str="The following issues have been detected:\n"
+			local str="The following issues have been detected:\n"
 			[ -n "$errors" ] && str="$str\n - Errors: $errors"
 			[ -n "$warnings" ] && str="$str\n - Warnings: $warnings"
 			[ -n "$errors" ] && str="$str\nIt is highly recommended you go back to fix at least the errors."

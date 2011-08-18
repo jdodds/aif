@@ -87,6 +87,7 @@ done
 # returns which filesystems you can create based on the locally available utilities
 get_possible_fs () {
 	possible_fs=
+	local fs
 	for fs in "${!filesystem_programs[@]}"
 	do
 		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" $fs)
@@ -457,15 +458,15 @@ process_disk ()
 # $1 partition to look for
 # $2 value to replace "no_foo" values with (optional) (can be '')
 getpartinfo () {
-	part=$1
+	local part=$1
 	declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
 	declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
-	part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
-	part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
-	fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
+	PARTINFO_part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
+	PARTINFO_part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
+	PARTINFO_fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
 	if [ -n "${2+2}" ]; then # checking if a var is defined, in bash.
-		[ "$part_label" = no_label ] && part_label=$2
-		[ "$fs"         = no_fs    ] && fs=$2
+		[ "$PARTINFO_part_label" = no_label ] && PARTINFO_part_label=$2
+		[ "$PARTINFO_fs"         = no_fs    ] && PARTINFO_fs=$2
 	fi
 }
 
@@ -475,7 +476,7 @@ getpartinfo () {
 #    when given, __ will be translated to ' ' as well
 parse_filesystem_string ()
 {
-	fs="$1"
+	local fs="$1"
 	fs_type=`       cut -s -d ';' -f 1 <<< $fs`
 	fs_create=`     cut -s -d ';' -f 2 <<< $fs`
 	fs_mountpoint=` cut -s -d ';' -f 3 <<< $fs`
@@ -512,6 +513,7 @@ generate_filesystem_list ()
 	do
 		if [ "$fs_string" != no_fs ]
 		then
+			local fs
 			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
 			do
 				parse_filesystem_string "$fs"
