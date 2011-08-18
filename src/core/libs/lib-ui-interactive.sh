@@ -1274,10 +1274,12 @@ get_kernel_parameters() {
 
 	case "$PART_ACCESS" in
 		label)
-			local label="$(getlabel $rootpart)" && \
+			local label
+			label="$(getlabel $rootpart)" && \
 			rootpart="/dev/disk/by-label/$label" ;;
 		uuid)
-			local uuid="$(getuuid $rootpart)" && \
+			local uuid
+			uuid="$(getuuid $rootpart)" && \
 			rootpart="/dev/disk/by-uuid/$uuid" ;;
 	esac
 

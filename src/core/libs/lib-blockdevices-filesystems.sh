@@ -871,9 +871,11 @@ process_filesystem ()
 	then
 		case "$PART_ACCESS" in
 			label)
-				local label="$(getlabel $part)" && part="LABEL=$label";;
+				local label
+				label="$(getlabel $part)" && part="LABEL=$label";;
 			uuid)
-				local uuid="$(getuuid $part)" && part="UUID=$uuid";;
+				local uuid
+				uuid="$(getuuid $part)" && part="UUID=$uuid";;
 		esac
 		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then
