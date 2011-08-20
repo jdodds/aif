@@ -232,7 +232,7 @@ or the AIF readme for more info.
 
 ### Interactive Installation Procedure
 
-Type `/arch/setup` (or `aif -p interactive`, which is the same) to start.
+Type `/arch/setup` (or `aif -p interactive -d -l`, which is the same) to start.
 
 After the welcome message and disclaimer you will be presented with the main
 installation menu. You can use UP and DOWN arrow to navigate menus. Use TAB to
