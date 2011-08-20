@@ -744,18 +744,17 @@ changes you made in mkinitcpio.conf.
 Install Bootloader will install and help you configure the bootloader that you
 selected in the "Select Packages" stage.
 
-**/boot/grub/menu.lst**
-**/boot/syslinux/syslinux.cfg**
 
 An editor will open, allowing you to edit the appropriate bootloader
 configuration file which the installer has pre-populated. You should check and
 modify this file, if needed, to accommodate your boot setup.
 
-Syslinux:
+**/boot/syslinux/syslinux.cfg** (Syslinux)
+
 After checking your bootloader configuration for correctness, you'll be asked to
 allow the installer to Set the Boot Flag and install the Syslinux MBR.
 
-Grub:
+**/boot/grub/menu.lst** (Grub)
 
 After checking your bootloader configuration for correctness, you'll be
 prompted for a disk to install the loader to. You should install GRUB to the MBR
