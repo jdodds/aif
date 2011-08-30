@@ -110,7 +110,7 @@ do
 	case $OPTION in
 	i)
 		[ -z "$OPTARG" ] && usage && exit 1 #TODO: check if it's necessary to do this. the ':' in $var_OPTS_STRING might be enough
-		[ "$OPTARG" != cli -a "$OPTARG" = !dia ] && die_error "-i must be dia or cli"
+		[ "$OPTARG" != cli -a "$OPTARG" != dia ] && die_error "-i must be dia or cli"
 		arg_ui_type=$OPTARG
 		ui_init
 		;;
