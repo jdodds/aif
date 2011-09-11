@@ -171,10 +171,6 @@ show_report ()
 	notify "$data\nIf the install finished successfully, you can type 'reboot' to restart the system." || return $?
 }
 
-worker_msg_report () {
-	show_report && stop_installer
-}
-
 worker_abort_installer ()
 {
 	local ret=0

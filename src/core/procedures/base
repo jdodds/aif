@@ -173,5 +173,5 @@ worker_install_bootloader ()
 
 worker_msg_report ()
 {
-	show_report
+	show_report && stop_installer
 }
