@@ -328,11 +328,13 @@ EOF
 # TODO: $1 is what?? ASKDEV
 # taken from setup. slightly edited.
 mapdev() {
-	partition_flag=0
-	device_found=0
-	devs=$( grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
+	local partition_flag=0
+	local device_found=0
+	local pnum
+	local devs=$(grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
+	local dev
 	linuxdevice=$(echo $1 | cut -b1-8)
-	if [ "$(echo $1 | egrep '[0-9]$')" ]; then
+	if echo $1 | egrep -q '[0-9]$'; then
 		# /dev/hdXY
 		pnum=$(echo $1 | cut -b9-)
 		pnum=$(($pnum-1))
@@ -349,8 +351,8 @@ mapdev() {
 			fi
 		fi
 	done
-	if [ "$device_found" = "1" ]; then
-		if [ "$partition_flag" = "0" ]; then
+	if ((device_found)); then
+		if !((partition_flag)); then
 			echo "$grubdevice"
 		else
 			grubdevice_stringlen=${#grubdevice}

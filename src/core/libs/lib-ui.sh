@@ -61,8 +61,9 @@ set_keymap ()
 	KBDDIR="/usr/share/kbd"
 
 	KEYMAPS=()
-	for i in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
-		KEYMAPS+=("${i##$KBDDIR/keymaps/}" -)
+	local keymap
+	for keymap in $(find $KBDDIR/keymaps -name "*.gz" | sort); do
+		KEYMAPS+=("${keymap##$KBDDIR/keymaps/}" -)
 	done
 	ask_option "${var_KEYMAP:-no}" "Select a keymap" '' optional "${KEYMAPS[@]}"
 	if [ -n "$ANSWER_OPTION" ]
@@ -73,13 +74,15 @@ set_keymap ()
 	fi
 
 	FONTS=()
-	for i in $(find $KBDDIR/consolefonts -maxdepth 1 -name "*.gz"  | sed 's|^.*/||g' | sort); do
-		FONTS+=("$i" -)
+	local font
+	for font in $(find $KBDDIR/consolefonts -maxdepth 1 -name "*.gz"  | sed 's|^.*/||g' | sort); do
+		FONTS+=("$font" -)
 	done
 	ask_option "${var_CONSOLEFONT:-no}" "Select a console font" '' optional "${FONTS[@]}"
 	if [ -n "$ANSWER_OPTION" ]
 	then
 		var_CONSOLEFONT=$ANSWER_OPTION
+		local i
 		for i in 1 2 3 4
 		do
 			if [ -d /dev/vc ]; then
