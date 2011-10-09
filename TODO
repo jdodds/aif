@@ -8,7 +8,6 @@ CURRENT ISSUES:
 * time choosing: put 'ok' at bottom again but make it default
 * implement depend_profile
 * add /var/lib/aif/profiles directory to packages and document it.
-*  check the existence of /src/core/pkg and based on that set a different default value. in interactive_select_source
 * > It displays the current time in UTC (if utc selected) not the users localtime (UTC +- TIMEZONE)
 * more vars for automatic profile: hostname (check that adding to /etc/hosts can be done procedure-independently), 
 LOCALE, HARDWARECLOCK, TIMEZONE, KEYMAP, MODULES, DAEMONS, network config? (or take the config from runtime)

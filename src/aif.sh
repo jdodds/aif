@@ -12,6 +12,7 @@ LOGFILE=$LOG_DIR/aif.log
 DISCLAIMER="Note that despite our careful coding and proper testing there may still be bugs in this software.\n
 When you are doing this installation on a system where some data must be preserved, we suggest you make a backup first"
 export LC_COLLATE=C # for consistent sorting behavior
+shopt -s extglob # used in find_usable_blockdevices() and useful in general. (shopt statement cannot be put inside function)
 
 ###### Early bootstrap ######
 

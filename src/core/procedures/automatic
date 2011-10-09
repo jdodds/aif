@@ -49,6 +49,7 @@ worker_configure ()
 	[ -z "$PARTITIONS" ] && die_error "You did not specify a partition scheme"
 	[ -z "$BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
 	[ -z "$GRUB_DEVICE" ] && die_error "You did not specify a grub device"
+	[ -z "$TARGET_REPOSITORIES" ] && die_error "You did not specify \$TARGET_REPOSITORIES"
 	# initialize internal variables based on variables set by the user (some of the vars are handled in other workers):
 	var_RUNTIME_REPOSITORIES=$RUNTIME_REPOSITORIES
 	var_RUNTIME_PACKAGES=$RUNTIME_PACKAGES
@@ -61,9 +62,7 @@ worker_configure ()
 
 worker_select_source ()
 {
-	var_PKG_SOURCE_TYPE=${SOURCE:-cd}
-	var_FILE_URL=${FILE_URL:-file:///src/core/pkg}
-	var_SYNC_URL=${SYNC_URL:-}
+	true # TARGET_REPOSITORIES, MIRROR is already sourced from config
 }
 
 worker_prepare_disks ()
@@ -96,7 +95,7 @@ worker_package_list ()
 
 worker_install_packages ()
 {
-	target_prepare_pacman core extra community && installpkg
+	target_prepare_pacman && installpkg
 }
 
 

@@ -59,15 +59,12 @@ in terms of supplied packages.
     These images are best suited for people who have an internet connection
     which is slow or difficult to set up.
 
-  * The "net" images contain no packages at all, and will use the network to
-    install packages.   
-    These images are preferred since you will end up with an up-
-    to-date system and they are best suited for people with fast internet
-    connections.
+  * The "net" images contain no packages at all,
+    and will always use the network to install packages.
 
-You can instruct the installer to obtain the packages via the internet (or
-any network) using either of these images, and all images can also be used as
-fully functioning recovery environments.  
+Both types of images can be used to perform a netinstall, yielding an up-
+to-date system, although with a "core" image you don't have to.
+All images can also be used as fully functioning recovery environments.
 The images run like any regular installed Arch Linux system.  
 In fact, they're exactly the same, just installed to a CD or USB image instead
 of a hard disk.   
@@ -235,7 +232,7 @@ or the AIF readme for more info.
 
 ### Interactive Installation Procedure
 
-Type `/arch/setup` (or `aif -p interactive`, which is the same) to start.
+Type `/arch/setup` (or `aif -p interactive -d -l`, which is the same) to start.
 
 After the welcome message and disclaimer you will be presented with the main
 installation menu. You can use UP and DOWN arrow to navigate menus. Use TAB to
@@ -247,27 +244,24 @@ you need to open another console to intervene manually for any reason.
 
 ####  Select Source
 
-As a first step you must choose the method you want to install Arch Linux. If
-you have a fast Internet connection, you might prefer the NET installation to
-ensure you get the latest packages instead of using the potentially outdated
-CD or USB image contents.  If you're using a NET image you don't have much
-choice ;-).
+As a first step you must choose repositories where to install Arch Linux from.
+If you have a fast Internet connection, you might prefer enabling network
+mirrors to ensure you get the latest packages instead of using the potentially
+outdated CD or USB image contents.
+If you're using a NET image you don't have much choice ;-).
+You can also mount your own repositories in the filesystem tree manually.
+If you are using a core image and don't have a fast internet connection, you
+probably want to use the included core archive, unless it's very outdated.
+The only requirement is you select a core repository.
+You can combine local and remote repositories but only do this if you know what
+you're doing.  (combining an older core archive with newer packages from a
+network mirror will result in broken packages)
 
-#####  CD-ROM or OTHER SOURCE
-
-When choosing a CD-ROM or OTHER SOURCE install you will only be able to
-install packages contained on the CD, which may be quite old, or packages
-stored on a medium you were able to mount (DVD, USB stick or similar)
-somewhere in the filesystem tree manually. Of course it has the advantage that
-you won't need an Internet connection, and is therefore the recommended choice
-for dialup users or those unable or unwilling to download the entire package
-set.
-
-##### NET (FTP/HTTP)
+##### Optional: only when using network mirror
 
 ######  Setup Network
 
-The first entry Setup Network will allow you to install and configure your
+The entry Setup Network will allow you to install and configure your
 network device. If you are using a wireless device you will still need to use
 the usual utilities to configure it manually, in which case this part of the
 installer isn't much use to you. A list of all currently available network
@@ -750,18 +744,17 @@ changes you made in mkinitcpio.conf.
 Install Bootloader will install and help you configure the bootloader that you
 selected in the "Select Packages" stage.
 
-**/boot/grub/menu.lst**
-**/boot/syslinux/syslinux.cfg**
 
 An editor will open, allowing you to edit the appropriate bootloader
 configuration file which the installer has pre-populated. You should check and
 modify this file, if needed, to accommodate your boot setup.
 
-Syslinux:
+**/boot/syslinux/syslinux.cfg** (Syslinux)
+
 After checking your bootloader configuration for correctness, you'll be asked to
 allow the installer to Set the Boot Flag and install the Syslinux MBR.
 
-Grub:
+**/boot/grub/menu.lst** (Grub)
 
 After checking your bootloader configuration for correctness, you'll be
 prompted for a disk to install the loader to. You should install GRUB to the MBR

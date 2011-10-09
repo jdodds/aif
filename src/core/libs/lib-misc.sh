@@ -78,7 +78,7 @@ run_background ()
 wait_for ()
 {
 	[ -z "$1" ] && die_error "wait_for needs an identifier to known on which command to wait!"
-	ret=0
+	local ret=0
 	while [ -f $RUNTIME_DIR/aif-$1-running ]
 	do
 		sleep 1
@@ -146,7 +146,7 @@ dohwclock() {
 
 target_configure_initial_keymap_font ()
 {
-	ret=0
+	local ret=0
 	if [ -n "$var_KEYMAP" ]; then
 		sed -i "s/^KEYMAP=.*/KEYMAP=\"`basename $var_KEYMAP .map.gz`\"/" ${var_TARGET_DIR}/etc/rc.conf || ret=$?
 	fi

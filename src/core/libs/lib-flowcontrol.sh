@@ -170,7 +170,7 @@ depend_procedure ()
 
 start_process ()
 {
-	ret=0
+	local ret=0
 	execute phase preparation || ret=$?
 	execute phase basics || ret=$?
 	execute phase system || ret=$?

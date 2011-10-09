@@ -87,6 +87,7 @@ done
 # returns which filesystems you can create based on the locally available utilities
 get_possible_fs () {
 	possible_fs=
+	local fs
 	for fs in "${!filesystem_programs[@]}"
 	do
 		which ${filesystem_programs[$fs]} &>/dev/null && possible_fs=("${possible_fs[@]}" $fs)
@@ -295,8 +296,8 @@ find_usable_blockdevices() {
 		fi
 	done
 
-	# mapped devices
-	for devpath in /dev/mapper/*; do
+	# mapped devices, excluding devices created by archiso (/dev/mapper/arch_*)
+	for devpath in /dev/mapper/!(arch_*); do
 		# Exclude /control directory and other non-block files (such as??)
 		if [[ -b $devpath ]]; then
 			echo -ne "$devpath $1"
@@ -457,15 +458,15 @@ process_disk ()
 # $1 partition to look for
 # $2 value to replace "no_foo" values with (optional) (can be '')
 getpartinfo () {
-	part=$1
+	local part=$1
 	declare part_escaped=${part//\//\\/} # escape all slashes otherwise awk complains
 	declare part_escaped=${part_escaped/+/\\+} # escape the + sign too
-	part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
-	part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
-	fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
+	PARTINFO_part_type=$( awk "/^$part_escaped / {print \$2}" $TMP_BLOCKDEVICES)
+	PARTINFO_part_label=$(awk "/^$part_escaped / {print \$3}" $TMP_BLOCKDEVICES)
+	PARTINFO_fs=$(        awk "/^$part_escaped / {print \$4}" $TMP_BLOCKDEVICES)
 	if [ -n "${2+2}" ]; then # checking if a var is defined, in bash.
-		[ "$part_label" = no_label ] && part_label=$2
-		[ "$fs"         = no_fs    ] && fs=$2
+		[ "$PARTINFO_part_label" = no_label ] && PARTINFO_part_label=$2
+		[ "$PARTINFO_fs"         = no_fs    ] && PARTINFO_fs=$2
 	fi
 }
 
@@ -475,7 +476,7 @@ getpartinfo () {
 #    when given, __ will be translated to ' ' as well
 parse_filesystem_string ()
 {
-	fs="$1"
+	local fs="$1"
 	fs_type=`       cut -s -d ';' -f 1 <<< $fs`
 	fs_create=`     cut -s -d ';' -f 2 <<< $fs`
 	fs_mountpoint=` cut -s -d ';' -f 3 <<< $fs`
@@ -512,6 +513,7 @@ generate_filesystem_list ()
 	do
 		if [ "$fs_string" != no_fs ]
 		then
+			local fs
 			for fs in `sed 's/|/ /g' <<< $fs_string` # this splits multiple fs'es up, or just takes the one if there is only one (lvm vg's can have more then one lv)
 			do
 				parse_filesystem_string "$fs"
@@ -529,7 +531,7 @@ process_filesystems ()
 	debug 'FS' "process_filesystems Called.  checking all entries in $TMP_BLOCKDEVICES"
 	rm -f $TMP_FSTAB
 	generate_filesystem_list
-	returncode=0
+	local ret=0
 
 	# phase 1: create all blockdevices and filesystems in the correct order (for each fs, the underlying block/lvm/devicemapper device must be available so dependencies must be resolved. for lvm:first pv's, then vg's, then lv's etc)
 	# don't let them mount yet. we take care of all that ourselves in the next phase
@@ -556,17 +558,17 @@ process_filesystems ()
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//__/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || returncode=1
+						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
 					else
 						debug 'FS' "$fs_id ->Cannot do right now..."
 						open_items=1
@@ -576,7 +578,7 @@ process_filesystems ()
 		done < $TMP_FILESYSTEMS
 		[ $open_items -eq 0 ] && break
 	done
-	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't appear in 10 iterations, or process_filesystem failed" && returncode=1
+	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't appear in 10 iterations, or process_filesystem failed" && ret=1
 
 
 
@@ -588,17 +590,17 @@ process_filesystems ()
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			inform "Mounting $part ($fs_type) on $fs_mountpoint" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || ret=1
 		elif [ "$fs_type" = swap ]
 		then
 			inform "Swaponning $part" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || returncode=1
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || ret=1
 		fi
 	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
 	BLOCK_ROLLBACK_USELESS=0
-	[ $returncode -eq 0 ] && inform "Done processing filesystems/blockdevices" disks 1 && return 0
-	return $returncode
+	[ $ret -eq 0 ] && inform "Done processing filesystems/blockdevices" disks 1 && return 0
+	return $ret
 }
 
 
@@ -803,7 +805,7 @@ process_filesystem ()
 				$program -f $part           $fs_opts >$LOG 2>&1; ret=$? ;;
 			jfs|reiserfs)
 				yes | $program $part        $fs_opts >$LOG 2>&1; ret=$? ;;
-			swap|ext2|ext3|ext4|nilfs2|vfat)
+			swap|ext2|ext3|ext4|nilfs2|vfat|btrfs)
 				$program $part              $fs_opts >$LOG 2>&1; ret=$? ;;
 			dm_crypt)
 				[ -z "$fs_params" ] && fs_params='-c aes-xts-plain -y -s 512';
@@ -819,7 +821,8 @@ process_filesystem ()
 			lvm-lv)
 				# $fs_params = size string (eg '5G')
 				$program -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
-			# don't handle anything else here, we will error later
+			*)
+				die_error "AIF error. somebody needs to update process_filesystem() to support $fs_type"
 		esac
 		# The udevadm settle is a workaround for a bug/racecondition in cryptsetup. See:
 		# http://mailman.archlinux.org/pipermail/arch-releng/2010-April/000974.html
@@ -834,12 +837,14 @@ process_filesystem ()
 	then
 		program="${label_programs[$fs_type]}"
 		case ${fs_type} in
-			swap|xfs|jfs|nilfs2|ext2|ext3|ext4)
+			swap|xfs|jfs|nilfs2|ext2|ext3|ext4|btrfs)
 				$program -L $fs_label $part		>$LOG 2>&1; ret=$?;;
 			reiserfs)
 				$program -l $fs_label $part		>$LOG 2>&1; ret=$?;;
 			vfat)
 				$program $part $fs_label		>$LOG 2>&1; ret=$?;;
+			*)
+				die_error "AIF error. somebody needs to update process_filesystem() to support $fs_type"
 		esac
 		[ "$ret" -gt 0 ] && { show_warning "process_filesystem error" "Error setting label $fs_label on $part." ; return 1; }
 	fi
@@ -868,9 +873,11 @@ process_filesystem ()
 	then
 		case "$PART_ACCESS" in
 			label)
-				local label="$(getlabel $part)" && part="LABEL=$label";;
+				local label
+				label="$(getlabel $part)" && part="LABEL=$label";;
 			uuid)
-				local uuid="$(getuuid $part)" && part="UUID=$uuid";;
+				local uuid
+				uuid="$(getuuid $part)" && part="UUID=$uuid";;
 		esac
 		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
 		then

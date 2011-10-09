@@ -39,42 +39,42 @@ start_process ()
 	execute worker intro
 	execute worker sysprep
 
-	default=1
-	while true
-	do
-		mainmenu
-	done
+	mainmenu
 }
 
 
 mainmenu()  
 {
-	eval "$settitles"
-	menu=()
-	for i in ${!menu_workers[@]}
+	local default=1
+	while true
 	do
-		worker=${menu_workers[$i]}
-		title=${workertitles[$worker]}
-		let i+=1 # in menu, we count from 1 onwards, not from 0
-		menu+=($i "$title")
-	done
+		eval "$settitles"
+		menu=()
+		for i in ${!menu_workers[@]}
+		do
+			worker=${menu_workers[$i]}
+			title=${workertitles[$worker]}
+			let i+=1 # in menu, we count from 1 onwards, not from 0
+			menu+=($i "$title")
+		done
 
-	ask_option $default "MAIN MENU" '' required "${menu[@]}"
-	case $ANSWER_OPTION in
-	"1")                                         execute worker select_source       && \
-	                                             execute worker runtime_packages    && default=2 ;;
-	"2")                                         execute worker set_editor          && default=3 ;;
-	"3")                                         execute worker set_clock           && default=4 ;;
-	"4")                                         execute worker prepare_disks       && default=5 ;;
-	"5") check_depend worker prepare_disks    && \
-	     check_depend worker select_source    && execute worker package_list        && default=6 ;;
-	"6") check_depend worker package_list     && \
-	     check_depend worker select_source    && execute worker install_packages    && default=7 ;;
-	"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
-	"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
-	"9") execute worker msg_report ;;
-	*)   execute worker abort_installer;;
-	esac
+		ask_option $default "MAIN MENU" '' required "${menu[@]}"
+		case $ANSWER_OPTION in
+		"1")                                         execute worker select_source       && \
+													 execute worker runtime_packages    && default=2 ;;
+		"2")                                         execute worker set_editor          && default=3 ;;
+		"3")                                         execute worker set_clock           && default=4 ;;
+		"4")                                         execute worker prepare_disks       && default=5 ;;
+		"5") check_depend worker prepare_disks    && \
+			 check_depend worker select_source    && execute worker package_list        && default=6 ;;
+		"6") check_depend worker package_list     && \
+			 check_depend worker select_source    && execute worker install_packages    && default=7 ;;
+		"7") check_depend worker install_packages && execute worker configure_system    && default=8 ;;
+		"8") check_depend worker configure_system && execute worker install_bootloader  && default=9 ;;
+		"9") execute worker msg_report ;;
+		*)   execute worker abort_installer;;
+		esac
+	done
 }
 
 
@@ -92,30 +92,12 @@ worker_prepare_disks()
 
 worker_select_source ()
 {
-	interactive_select_source
-	local ret=$?;
-	if [ $ret -eq 0 -a "$var_PKG_SOURCE_TYPE" = net ]
-	then
-		select_source_extras_menu || ret=$?
+	interactive_select_source || return $?
+	if [ -n "$MIRROR" ]; then
+		if ask_yesno "Make sure the network is ok before continuing the installer. ${workertitles['runtime_network']} now?"; then
+			execute worker runtime_network || return $?
+		fi
 	fi
-	# base/automatic procedure run a worker runtime_repositories, maybe we could do an interactive repo adder
-	return $ret
-}
-
-select_source_extras_menu ()
-{
-	local default=no
-	while true; do
-		ask_option $default "NET (HTTP/FTP) Installation" "Make sure the network is ok and you've selected a mirror before continuing the installer" required \
-		"1" "${workertitles['runtime_network']}" \
-		"2" "Select mirror" \
-		"3" "Return to Main Menu" || return 1
-		case $ANSWER_OPTION in
-			"1") execute worker runtime_network && default=2 || return 1 ;;
-			"2") interactive_select_mirror && default=3 || return 1 ;;
-			"3") break ;;
-		esac
-	done
 	return 0
 }
 
@@ -179,7 +161,7 @@ show_report ()
 		[ "$worker" = 'msg_report' ] && continue # this worker is the one calling show_report, we can't know our exitcode yet
 		title=${workertitles[$worker]}
 		exit_var=exit_worker_$worker
-		ret=${!exit_var}
+		local ret=${!exit_var}
 		case "$ret" in
 			"")  data="$data\n > $title: Skipped";;
 			"0") data="$data\n > $title: Sucess";;
@@ -195,7 +177,7 @@ worker_msg_report () {
 
 worker_abort_installer ()
 {
-	ret=0
+	local ret=0
 	ask_yesno "Abort Installation?" || return
 	maybe_interactive_rollback_filesystems || ret=$?
 	stop_installer || ret=$?
