@@ -1409,11 +1409,14 @@ interactive_select_mirror() {
 	if [ "${_server}" = "Custom" ]; then
 		ask_string "Enter the full URL to core repo." "ftp://ftp.archlinux.org/core/os/$var_ARCH" || return 1
 		MIRROR=${ANSWER_STRING/\/core\///\$repo/} #replace '/core/' by '/$repo/'
+		# MIRROR now something like ftp://ftp.archlinux.org/$repo/os/i686
 	else
+		# _server is something like ftp://archlinux.puzzle.ch
 		# Form the full URL for our mirror by grepping for the server name in
 		# our mirrorlist and pulling the full URL out.
 		# Ensure that if it was listed twice we only return one line for the mirror.
 		MIRROR=$(egrep -o "${_server}.*" "${var_MIRRORLIST}" | head -n1)
+		# MIRROR now something like ftp://archlinux.puzzle.ch/$repo/os/$arch
 	fi
 	echo "Using mirror: $MIRROR" >$LOG
 }
