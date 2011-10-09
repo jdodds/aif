@@ -926,7 +926,7 @@ interactive_grub() {
 			fi
 		fi
 		# Create and edit the grub menu.lst
-		interactive_bootloader_menu "grub" $grubmenu
+		interactive_bootloader_menu "grub" $grubmenu || return $?
 
 		DEVS="$(finddisks '_ ')"
 		if [ "$DEVS" = " " ]; then
@@ -1188,7 +1188,7 @@ interactive_syslinux() {
 	sed -i -e '/#-\*/q' "$syslinuxmenu"
 
 	# Generate menu and prompt user to edit it
-	interactive_bootloader_menu "syslinux" "$syslinuxmenu"
+	interactive_bootloader_menu "syslinux" "$syslinuxmenu" || return $?
 
 	if device_is_raid "$bootpart"; then
 		debug FS "Software RAID detected"
