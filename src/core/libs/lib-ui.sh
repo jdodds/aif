@@ -6,14 +6,14 @@ source /usr/lib/libui.sh
 # mandatory to call me when you want to use me. call me again after setting $var_UI_TYPE
 ui_init ()
 {
-	cats=(MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE)
+	cats="MAIN PROCEDURE UI UI-INTERACTIVE FS MISC NETWORK PACMAN SOFTWARE"
 	if [ "$LOG_TO_FILE" = '1' ]; then
 		logs="$LOG $LOGFILE"
 	else
 		logs=$LOG
 	fi
 	if [ "$DEBUG" = '1' ]; then
-		libui_sh_init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs" "${cats[@]}"
+		libui_sh_init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs" "$cats"
 	else
 		libui_sh_init ${var_UI_TYPE:-cli} "$RUNTIME_DIR" "$logs"
 	fi
