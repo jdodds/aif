@@ -140,7 +140,7 @@ configure_mirrorlist () {
 	[ "$1" = 'runtime' ] && file="$var_MIRRORLIST"
 	[ "$1" = 'target' ] && file="${var_TARGET_DIR}/$var_MIRRORLIST"
 	if [ -n "$MIRROR" ]; then
-		if ! grep "^Server =" -m 1 "$file" | grep "$MIRROR"
+		if ! grep "^Server =" -m 1 "$file" | grep -q "$MIRROR"
 		then
 			debug 'PACMAN PROCEDURE' "Adding choosen mirror ($MIRROR) to $file"
 			mirrorlist=`awk "BEGIN { printf(\"# Mirror selected during installation\nServer = "$MIRROR"\n\n\") } 1 " "$file"` || return $?
