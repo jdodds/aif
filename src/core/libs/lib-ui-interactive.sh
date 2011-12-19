@@ -864,7 +864,7 @@ interactive_runtime_network() {
 			return 1
 		fi
 		if [ -n "$GW" ]; then
-			ip route add default via $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
+			ip route add default via $GW >$LOG 2>&1 || { show_warning 'ip route problem' "Failed to setup your gateway. Check $LOG for errors."; return 1; }
 		fi
 		if [ -z "$PROXY_HTTP" ]; then
 			unset http_proxy
