@@ -116,10 +116,10 @@ These procedures are shipped by default:
 * partial-disks: Process disk subsystem or do a rollback
 * partial-keymap: change your keymap/console font settings. (aliased as `km`)
 
-The benefit of procedures such as partial-keymap and
-partial-configure-network over direct usage of tools such as loadkeys or
-ifconfig is that when running the interactive procedure, you will get asked
-if you want to apply your settings to the config files of the target system.
+The benefit of procedures such as partial-keymap and partial-configure-network
+over direct usage of tools such as loadkeys or ip is that when running the
+interactive procedure, you will be asked if you want to apply your settings
+to the config files of the target system.
 
 If you want to go further, you can also:
 
@@ -567,18 +567,20 @@ LVM groups
 part. This is totally your choice, as long as you stick to letters, digits and
 a few common special characters like the dash.
 
-**INTERFACES:** Here you define the settings for your networking interfaces.
-The default lines and the included comments explain the setup well enough. If
-you use DHCP, 'eth0="dhcp"' should work for you. If you do not use DHCP just
-keep in mind that the value of the variable (whose name must be equal to the
-name of the device which is supposed to be configured) equals the line which
-would be appended to the ifconfig command if you were to configure the device
-manually in the shell.
+**interface:** the name of the interface to setup, e.g. eth0
 
-**ROUTES:** You can define your own static network routes with arbitrary names
-here. Look at the example for a default gateway to get the idea. Basically the
-quoted part is identical to what you'd pass to a manual route add command,
-therefore reading man route is recommended or simply leave this alone.
+**address:** If you use DHCP, leave this blank. If you do not use DHCP, complete
+this with your ip.
+
+**netmask:** The subnet mask. Defaults to 255.255.255.0 if is blank.
+
+**broadcast:** Set the broadcast address for your network. If left blank,
+the host bits of the address will be set to 1 to form the broadcast address.
+This setting is sufficient for most user networks..
+
+**gateway:** The default route.
+
+Netmask, broadcast and gateway are optional and ignored when DHCP is used.
 
 **[ NET_PROFILES][49]:** Enables certain network profiles at bootup. Network
 profiles provide a convenient way of managing multiple network configurations,

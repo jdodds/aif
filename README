@@ -18,6 +18,7 @@ Homepage:    http://github.com/Dieterbe/aif
  - awk
  - sed
  - libui-sh
+ - iproute2
 Optionally:
  - markdown: to generate the html installation guide
  - cryptsetup: for encryption support

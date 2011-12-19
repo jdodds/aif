@@ -796,14 +796,17 @@ If any previous configuration you've done until now (like fancy filesystems) req
 # returns: 1 on failure
 interactive_runtime_network() {
 	notify "If you wish to load your ethernet modules manually, please do so now in an another terminal."
-	local ifaces
-	ifaces=$(ifconfig -a |grep "Link encap:Ethernet"|sed 's/ \+Link encap:Ethernet \+HWaddr \+/ /g')
+	local ifaces=()
+
+	for i in /sys/class/net/!(lo); do
+		ifaces+=(${i##*/} $(<"$i/address"))
+	done
 
 	[ -z "$ifaces" ] && show_warning "No network interfaces?" "Cannot find any ethernet interfaces. This usually means udev was\nunable to load the module and you must do it yourself. Switch to\nanother VT, load the appropriate module, and run this step again." && return 1
 
 	INTERACE_PREV=$INTERFACE
 	unset INTERFACE DHCP IPADDR SUBNET BROADCAST GW DNS PROXY_HTTP PROXY_FTP
-	ask_option no "Interface selection" "Select a network interface" required $ifaces || return 1
+	ask_option no "Interface selection" "Select a network interface" required "${ifaces[@]}" || return 1
 	INTERFACE=$ANSWER_OPTION
 	[ "$INTERFACE" = "$INTERFACE_PREV" ] && INTERFACE_PREV=
 
@@ -816,8 +819,8 @@ interactive_runtime_network() {
 			show_warning "Dhcpcd problem" "Failed to run dhcpcd.  See $LOG for details."
 			return 1
 		fi
-		if ! ifconfig $INTERFACE | grep -q 'inet addr:'
-	then
+		if ! ip -o addr show dev $INTERFACE | grep -q inet
+		then
 			show_warning "Dhcpcd problem" "DHCP request failed. dhcpcd returned 0 but no ip configured for $INTERFACE"
 			return 1
 		fi
@@ -847,24 +850,31 @@ interactive_runtime_network() {
 				USERHAPPY=1
 			fi
 		done
-		echo "running: ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up" >$LOG
-		if ! ifconfig $INTERFACE $IPADDR netmask $SUBNET broadcast $BROADCAST up >$LOG 2>&1
+
+		echo "running: ip link set dev $INTERFACE up" >$LOG
+		if ! ip link set dev $INTERFACE up
 		then
-				show_warning "Ifconfig problem" "Failed to setup interface $INTERFACE"
-				return 1
-			fi
-			if [ -n "$GW" ]; then
-				route add default gw $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
-			fi
-			if [ -z "$PROXY_HTTP" ]; then
-				unset http_proxy
-			else
-				export http_proxy=$PROXY_HTTP
-			fi
-			if [ -z "$PROXY_FTP" ]; then
-				unset ftp_proxy
-			else
-				export ftp_proxy=$PROXY_FTP
+			show_warning "ip link problem" "Failed to bring the interface $INTERFACE up"
+			return 1
+		fi
+		echo "running: ip addr add $IPADDR/${SUBNET:-24} broadcast ${BROADCAST:-+} dev $INTERFACE" >$LOG
+		if ! ip addr add $IPADDR/${SUBNET:-24} broadcast ${BROADCAST:-+} dev $INTERFACE >$LOG 2>&1
+		then
+			show_warning "ip addr problem" "Failed to setup interface $INTERFACE"
+			return 1
+		fi
+		if [ -n "$GW" ]; then
+			ip route add default via $GW >$LOG 2>&1 || notify "Failed to setup your gateway." || return 1
+		fi
+		if [ -z "$PROXY_HTTP" ]; then
+			unset http_proxy
+		else
+			export http_proxy=$PROXY_HTTP
+		fi
+		if [ -z "$PROXY_FTP" ]; then
+			unset ftp_proxy
+		else
+			export ftp_proxy=$PROXY_FTP
 		fi
 		echo "nameserver $DNS" >/etc/resolv.conf
 	fi
