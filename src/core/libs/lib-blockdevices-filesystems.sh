@@ -325,8 +325,7 @@ EOF
 }
 
 
-# TODO: $1 is what?? ASKDEV
-# taken from setup. slightly edited.
+# $1 : blockdevice
 mapdev() {
 	local partition_flag=0
 	local device_found=0
