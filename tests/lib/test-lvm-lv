@@ -3,5 +3,5 @@
 # $2 LV
 # $2 SIZE eg '800.00 MB'
 
-lvdisplay | grep -A 5 'LV Name.*/dev/mapper/'$1-$2 | grep -q available || exit 1
-lvdisplay | grep -A 7 'LV Name.*/dev/mapper/'$1-$2 | grep -q 'LV Size.*'"$2" || exit 2
+lvdisplay | grep -A 5 "LV Name.*/dev/$1/$2" | grep -q available || exit 1
+lvdisplay | grep -A 7 "LV Name.*/dev/$1/$2"| grep -q 'LV Size.*'"$2" || exit 2

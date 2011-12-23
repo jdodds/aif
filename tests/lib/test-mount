@@ -1,4 +1,4 @@
 #!/bin/bash
 # $1 mount output string
 
-mount | grep -q '/dev/mapper/cryptpool-crypthome on /home type xfs (rw)'
+mount | grep -q '/dev/cryptpool/crypthome on /home type xfs (rw)'

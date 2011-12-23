@@ -4,7 +4,7 @@ source /usr/share/aif/tests/lib/framework-runtime
 
 aiftest swap 19
 aiftest lvm-lv mypool root '800.00 MB'
-aiftest mount '/dev/mapper/mypool-rootcrypt on / type xfs (rw)'
+aiftest mount '/dev/mypool/rootcrypt on / type xfs (rw)'
 for i in /etc/ / /root/ /home/ /var/
 do
 	aiftest file "$i"test_file

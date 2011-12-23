@@ -62,7 +62,7 @@ interactive_configure_system()
 	local helptext
 	while true; do
 		helptext="\nNote that if you want to change any file not listed here (unlikely) you can go to another tty and update ${var_TARGET_DIR}/etc/<filename> yourself"
-		grep -q '^/dev/mapper' $TMP_FSTAB && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
+		ls -1 /sys/block | grep -q ^dm- && helptext="$helptext\n/dev/mapper/ users: Pay attention to HOOKS in mkinitcpio.conf"
 		list=(
 			"/etc/rc.conf"                  "System Config"
 			"/etc/fstab"                    "Filesystem Mountpoints"
@@ -530,7 +530,7 @@ interactive_filesystem ()
 		new_device=
 		[ "$fs_type" = lvm-vg   ] && new_device="/dev/mapper/$fs_label $fs_type $fs_label"
 		[ "$fs_type" = lvm-pv   ] && new_device="$part+ $fs_type no_label"
-		[ "$fs_type" = lvm-lv   ] && new_device="/dev/mapper/$part_label-$fs_label $fs_type $fs_label"
+		[ "$fs_type" = lvm-lv   ] && new_device="/dev/$part_label/$fs_label $fs_type $fs_label"
 		[ "$fs_type" = dm_crypt ] && new_device="/dev/mapper/$fs_label $fs_type no_label"
 		[ -n "$new_device" ] && ! grep -q "^$new_device " $TMP_BLOCKDEVICES && echo "$new_device no_fs" >> $TMP_BLOCKDEVICES
 	fi
@@ -540,10 +540,10 @@ interactive_filesystem ()
 	# Cascading remove theoretical blockdevice(s), if relevant ( eg if we just changed from vg->ext3, dm_crypt -> fat, or if we changed the label of a FS, causing a name change in a dm_mapper device)
 	if [[ $old_fs_type = lvm-* || $old_fs_type = dm_crypt ]] && [ "$NEW_FILESYSTEM" = no_fs -o "$old_fs_type" != "$fs_type" -o "$old_fs_label" != "$fs_label" ]
 	then
-		[ "$old_fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$old_fs_label"             "$old_fs_type" "$old_fs_label"
-		[ "$old_fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                                "$old_fs_type" "$old_fs_label"
-		[ "$old_fs_type" = lvm-lv   ] && remove_blockdevice "/dev/mapper/$part_label-$old_fs_label" "$old_fs_type" "$old_fs_label"
-		[ "$old_fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$old_fs_label"             "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$old_fs_label"      "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                         "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = lvm-lv   ] && remove_blockdevice "/dev/$part_label/$old_fs_label" "$old_fs_type" "$old_fs_label"
+		[ "$old_fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$old_fs_label"      "$old_fs_type" "$old_fs_label"
 	fi
 
 	return 0
@@ -567,10 +567,10 @@ remove_blockdevice ()
 	do
 		fs_type=`       cut -d ';' -f 1 <<< $fs`
 		fs_label=`      cut -d ';' -f 6 <<< $fs`
-		[ "$fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$fs_label"             "$fs_type" "$fs_label"
-		[ "$fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                            "$fs_type" "$fs_label"
-		[ "$fs_type" = lvm-lv   ] && remove_blockdevice "/dev/mapper/$part_label-$fs_label" "$fs_type" "$fs_label"
-		[ "$fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$fs_label"             "$fs_type" "$fs_label"
+		[ "$fs_type" = lvm-vg   ] && remove_blockdevice "/dev/mapper/$fs_label"      "$fs_type" "$fs_label"
+		[ "$fs_type" = lvm-pv   ] && remove_blockdevice "$part+"                     "$fs_type" "$fs_label"
+		[ "$fs_type" = lvm-lv   ] && remove_blockdevice "/dev/$part_label/$fs_label" "$fs_type" "$fs_label"
+		[ "$fs_type" = dm_crypt ] && remove_blockdevice "/dev/mapper/$fs_label"      "$fs_type" "$fs_label"
 	done
 }
 
@@ -1279,7 +1279,7 @@ interactive_bootloader_menu() {
 		generate_syslinux_menu || return
 	fi
 
-	grep -q '^/dev/mapper' $TMP_FSTAB && local helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
+	ls -1 /sys/block | grep -q ^dm- && local helptext="  /dev/mapper/ users: Pay attention to the kernel line!"
 	notify "Before installing $1, you must review the configuration file.  You will now be put into the editor.  After you save your changes and exit the editor, you can install $1.$helptext"
 
 	seteditor || return 1

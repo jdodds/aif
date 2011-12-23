@@ -147,7 +147,7 @@ get_device_with_mount () {
 # gives you a newline separated list of the blockdevice that hosts a certain filesystem, and below it, all underlying blockdevices supporting it, with also the blockdevice type.
 # example:
 # get_anchestors_mount ';/;' (suppose '/' is a filesystem on top of lvm on top of dm_crypt, you will get something like):
-# /dev/mapper/cryptpool-cryptroot lvm-lv
+# /dev/cryptpool/cryptroot lvm-lv
 # /dev/mapper/cryptpool lvm-vg
 # /dev/mapper/sda2crypt+ lvm-pv
 # /dev/mapper/sda2crypt dm_crypt
@@ -163,7 +163,7 @@ get_anchestors_mount () {
 	then
 		if [ $type == lvm-lv ]
 		then
-			lv=`echo $block | sed 's/.*-//'` # /dev/mapper/cryptpool-cryptroot -> cryptroot. TODO: this may give unexpected behavior of LV has a '-' in its name
+			lv=$(basename $block) # /dev/cryptpool/cryptroot -> cryptroot.
 			recognizer="lvm-lv;(yes|no);no_mountpoint;[^;]{1,};[^;]{1,};$lv;[^;]{1,}"
 		elif [ $type == lvm-vg ]
 		then
@@ -642,6 +642,7 @@ rollback_filesystems ()
 		open_items=0
 		while read part part_type part_label fs_string
 		do
+			check_is_in "$part_type" dm_crypt lvm-pv lvm-vg lvm-lv || continue
 
 			real_part=${part/+/}
 
@@ -733,7 +734,7 @@ rollback_filesystems ()
 			else
 				die_error "Unrecognised partition type $part_type for partition $part.  This should never happen. please report this"
 			fi
-		done < <(egrep '\+|mapper' $TMP_BLOCKDEVICES) #TODO: improve regex
+		done < $TMP_BLOCKDEVICES
 		[ $open_items -eq 0 ] && break
 	done
 
@@ -803,7 +804,7 @@ process_filesystem ()
 				$program $fs_opts $fs_label $fs_params      >$LOG 2>&1; ret=$? ;;
 			lvm-lv)
 				# $fs_params = size string (eg '5G')
-				$program -L $fs_params $fs_opts -n $fs_label `sed 's#/dev/mapper/##' <<< $part`   >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
+				$program -L $fs_params $fs_opts -n $fs_label $(basename $part) >$LOG 2>&1; ret=$? ;; #$fs_opts is usually something like -L 10G # Strip '/dev/mapper/' part because device file may not exist.  TODO: do i need to activate them?
 			*)
 				die_error "AIF error. somebody needs to update process_filesystem() to support $fs_type"
 		esac
