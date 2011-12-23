@@ -326,42 +326,25 @@ EOF
 }
 
 
+# for given blockdevice, echo grub notation in this form: (hd0) or (hd0,0) (if it's a partition)
 # $1 : blockdevice
+# returns 0 on success. 1 otherwise.
 mapdev() {
-	local device_found=0
 	local pnum
-	local devs=$(grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
-	local dev
-	linuxdevice=$(echo $1 | cut -b1-8)
-
+	local grubdevice
+	local blockdevice=$1
+	local blockdevice_nopart=$(echo $blockdevice | sed 's/[0-9]*$//') # remove partition info
 	# if blockdevice ends on a number (it's a partition). get it and subtract 1 (for grub)
-	if pnum=$(grep -oE '[0-9]+$' <<< $1); then
+	if pnum=$(grep -oE '[0-9]+$' <<< $blockdevice); then
 		pnum=$(($pnum -1))
 	fi
-	for dev in $devs
-	do
-		if [ "(" = $(echo $dev | cut -b1) ]; then
-			grubdevice="$dev"
-		else
-			if [ "$dev" = "$linuxdevice" ]; then
-				device_found=1
-				break
-			fi
-		fi
-	done
-	if ((device_found)); then
-		if [[ -z $pnum ]];
-			echo "$grubdevice"
-		else
-			grubdevice_stringlen=${#grubdevice}
-			grubdevice_stringlen=$(($grubdevice_stringlen - 1))
-			grubdevice=$(echo $grubdevice | cut -b1-$grubdevice_stringlen)
-			echo "$grubdevice,$pnum)"
-		fi
-		return 0
-	else
-		return 1
-	fi
+	# if the device doesn't occur in translation table, bail out
+	grep -q "$blockdevice_nopart$" $TMP_DEV_MAP || return 1
+
+	grubdevice=$(grep "$blockdevice_nopart$" $TMP_DEV_MAP | cut -f1)
+	[[ -z $pnum ]] && echo $grubdevice
+	[[ -n $pnum ]] && sed "s/)/,$pnum)/" <<< "$grubdevice"
+	return 0
 }
 
 
