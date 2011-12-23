@@ -327,17 +327,15 @@ EOF
 
 # $1 : blockdevice
 mapdev() {
-	local partition_flag=0
 	local device_found=0
 	local pnum
 	local devs=$(grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
 	local dev
 	linuxdevice=$(echo $1 | cut -b1-8)
-	if echo $1 | egrep -q '[0-9]$'; then
-		# /dev/hdXY
-		pnum=$(echo $1 | cut -b9-)
-		pnum=$(($pnum-1))
-		partition_flag=1
+
+	# if blockdevice ends on a number (it's a partition). get it and subtract 1 (for grub)
+	if pnum=$(grep -oE '[0-9]+$' <<< $1); then
+		pnum=$(($pnum -1))
 	fi
 	for dev in $devs
 	do
@@ -351,7 +349,7 @@ mapdev() {
 		fi
 	done
 	if ((device_found)); then
-		if !((partition_flag)); then
+		if [[ -z $pnum ]];
 			echo "$grubdevice"
 		else
 			grubdevice_stringlen=${#grubdevice}
