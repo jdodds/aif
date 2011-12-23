@@ -1124,29 +1124,27 @@ EOF
 }
 
 interactive_grub_install () {
-	debug FS "interactive_grub_install called. P1 = $1, P2 = $2, P3 = $3"
-	# $1 = bootpart
-	# $2 = bootdev
-	# $3 = boothd
+	debug FS "interactive_grub_install called. bootpart = $1, bootdev = $2, boothd = $3"
+	local bootpart=$1
+	local bootdev=$2
+	local boothd=$3
 	# To install grub we have to know:
-	# The bootpart - This is where /boot could be found
+	# The bootpart - holds /boot
 	# The bootdev - This is where grub gets installed, usally the MBR
 	# The boothd - Only on md raid setups this differs from bootdev
 	# These values get parsed either from values we have already or from
 	# user input. Later they will converted to grub-legacy notation.
 
 	# Convert to grub-legacy notation
-	local bootpart=$(mapdev $1)
-	if [ -z "$bootpart" ]; then
-		notify "Error: Missing/Invalid root device for $1"
+	local str="You will need to manually run the GRUB shell to install a bootloader.  And please report this bug using the aif-report-issues script"
+	if ! bootpart=$(mapdev $bootpart); then
+		show_warning "grub install" "Grub does not know boot partition notation for $bootpart. $str"
 		return 1
 	fi
-	local bootdev=$(mapdev $2)
-	if [ -z "$bootdev" ]; then
-		notify "GRUB root and setup devices could not be auto-located.  You will need to manually run the GRUB shell to install a bootloader."
+	if ! bootdev=$(mapdev $bootdev); then
+		show_warning "grub install" "Grub does not know boot device notation for $bootdev. $str"
 		return 1
 	fi
-	local boothd=$3
 	debug FS "bootpart: $bootpart"
 	debug FS "bootdev: $bootdev"
 	debug FS "boothd: $boothd"
@@ -1162,6 +1160,7 @@ EOF
 		notify "Error installing GRUB. (see $LOG for output)"
 		return 1
 	fi
+	return 0
 }
 
 interactive_syslinux() {
