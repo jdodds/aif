@@ -315,9 +315,10 @@ find_usable_blockdevices() {
 }
 
 
-# taken from setup
+# generate the grub device map, which is a translation table between grub devicenames and linux devicenames
+# hard disks get entries, but not their partitions
 get_grub_map() {
-	rm $TMP_DEV_MAP &>/dev/null #TODO: this doesn't exist? is this a problem? ASKDEV
+	rm $TMP_DEV_MAP &>/dev/null
 	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
 	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
 quit
