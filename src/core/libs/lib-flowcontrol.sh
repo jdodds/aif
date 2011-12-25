@@ -139,7 +139,7 @@ execute ()
 }
 
 
-# check if a phase/worker executed sucessfully
+# check if a phase/worker executed successfully
 # returns 0 if ok, the phase/workers' exit state otherwise (and returns 1 if not executed yet)
 # $1 phase/worker
 # $2 phase/worker name
@@ -198,7 +198,7 @@ show_report ()
 			ret=${!exit_var}
 			case "$ret" in
 				"")  data="$data\n > Worker $worker: Skipped";;
-				"0") data="$data\n > Worker $worker: Sucess";;
+				"0") data="$data\n > Worker $worker: Success";;
 				*)   data="$data\n > Worker $worker: Failed";;
 			esac
 		done

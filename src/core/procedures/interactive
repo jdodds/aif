@@ -164,7 +164,7 @@ show_report ()
 		local ret=${!exit_var}
 		case "$ret" in
 			"")  data="$data\n > $title: Skipped";;
-			"0") data="$data\n > $title: Sucess";;
+			"0") data="$data\n > $title: Success";;
 			*)   data="$data\n > $title: Failed";;
 		esac
 	done
