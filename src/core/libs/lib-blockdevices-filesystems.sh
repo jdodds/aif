@@ -229,7 +229,7 @@ finddisks() {
 
 		unset DEVTYPE
 		. "$dev/uevent"
-		[[ $DEVTYPE = disk ]] && echo -ne "/dev/$DEVNAME $1"
+		[[ $DEVTYPE = disk || $DEVTYPE = vbd ]] && echo -ne "/dev/$DEVNAME $1"
 	done
 
 	# cciss controllers
