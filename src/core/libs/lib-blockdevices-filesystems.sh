@@ -545,17 +545,20 @@ process_filesystems ()
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
+						BLOCK_ROLLBACK_USELESS=0
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
 					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
+						BLOCK_ROLLBACK_USELESS=0
+						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
 					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//__/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
 					then
 						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
 						inform "Making $fs_type filesystem on $part" disks
-						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || ret=1
+						BLOCK_ROLLBACK_USELESS=0
+						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
 					else
 						debug 'FS' "$fs_id ->Cannot do right now..."
 						open_items=1
@@ -565,7 +568,10 @@ process_filesystems ()
 		done < $TMP_FILESYSTEMS
 		[ $open_items -eq 0 ] && break
 	done
-	[ $open_items -eq 1 ] && show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't appear in 10 iterations, or process_filesystem failed" && ret=1
+	if ((open_items||ret)); then
+	       show_warning "Filesystem/blockdevice processor problem" "Warning: Could not create all needed filesystems.  Either the underlying blockdevices didn't appear in 10 iterations, or process_filesystem failed"
+	       return 1
+	fi
 
 
 
@@ -577,15 +583,16 @@ process_filesystems ()
 		if [ "$fs_mountpoint" != no_mountpoint ]
 		then
 			inform "Mounting $part ($fs_type) on $fs_mountpoint" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || ret=1
+			BLOCK_ROLLBACK_USELESS=0
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || {ret=1; break; }
 		elif [ "$fs_type" = swap ]
 		then
 			inform "Swaponning $part" disks
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || ret=1
+			BLOCK_ROLLBACK_USELESS=0
+			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || {ret=1; break; }
 		fi
 	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
-	BLOCK_ROLLBACK_USELESS=0
 	[ $ret -eq 0 ] && inform "Done processing filesystems/blockdevices" disks 1 && return 0
 	return $ret
 }
