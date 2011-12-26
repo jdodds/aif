@@ -42,7 +42,7 @@ preconfigure_target () {
 # as usual, this function is okay with being called multiple times
 postconfigure_target () {
 	local failed=()
-	target_run_mkinitcpio || failed+=('mkinitcpio creation')
+	target_run_mkinitcpio $(ask_mkinitcpio_preset $var_TARGET_DIR) || failed+=('mkinitcpio creation')
 	target_locale-gen || failed+=('locale generation')
 	target_localtime || failed+=('localtime copying')
 	[ ${#failed[@]} -gt 0 ] && warn_failed 'Postconfigure' "${failed[@]}" && return 1

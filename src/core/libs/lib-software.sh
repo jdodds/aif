@@ -4,11 +4,13 @@ TMP_MKINITCPIO_LOG=$LOG_DIR/mkinitcpio.log
 TMP_PACMAN_LOG=$LOG_DIR/pacman.log
 
 # runs mkinitcpio on the target system, displays output
+# $1 preset name. default: linux
 target_run_mkinitcpio()
 {
+	local preset=${1:-linux}
 	target_special_fs on
 
-	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p linux" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
+	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p $preset" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
 
 	target_special_fs off
 

@@ -113,3 +113,20 @@ warn_failed () {
 	fi
 	return 0
 }
+
+# $1 basedir. default: empty
+ask_mkinitcpio_preset () {
+	local basedir=$1
+	presets=($(for i in $(ls -1 $basedir/etc/mkinitcpio.d/*.preset | grep -v example\.preset); do basename $i .preset; echo '-'; done))
+	num_presets=$((${#presets[@]}/2))
+	if [[ $num_presets -lt 1 ]]; then
+		die_error "Not a single mkinitcpio preset found in $basedir/etc/mkinitcpio.d/ ? No kernel installed? WTF?"
+	elif [[ $num_presets -eq 1 ]]; then
+		# this is the most likely case: the user just installed 1 kernel..
+		echo ${presets[0]}
+	else
+		ask_option 'no' "Build initcpio for which preset/kernel?" '' '' "${presets[@]}"
+		echo $ANSWER_OPTION
+	fi
+	return 0
+}
