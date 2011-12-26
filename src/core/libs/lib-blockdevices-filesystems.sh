@@ -863,7 +863,7 @@ process_filesystem ()
 		then
 			debug 'FS' "swaponning $part"
 			swapon $part >$LOG 2>&1 || ( show_warning 'Swapon' "Error activating swap: swapon $part"  ; ret=1 )
-			fs_mountpoint="swap" # actually it's a hack to set the mountpoint in this (late) stage. this could be cleaner..
+			fs_mountpoint="none"
 		else
 			[ "$fs_mount" = runtime ] && dst=$fs_mountpoint
 			[ "$fs_mount" = target  ] && dst=$var_TARGET_DIR$fs_mountpoint
