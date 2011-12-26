@@ -98,11 +98,7 @@ worker_runtime_repositories ()
 
 worker_runtime_packages ()
 {
-	for pkg in $var_RUNTIME_PACKAGES
-	do
-		$PACMAN -Sy --noconfirm --needed $pkg || return 1
-	done
-	return 0
+	$PACMAN -Sy --noconfirm --needed $var_RUNTIME_PACKAGES
 }
 
 
