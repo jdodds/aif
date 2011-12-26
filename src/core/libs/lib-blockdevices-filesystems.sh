@@ -511,6 +511,27 @@ generate_filesystem_list ()
 
 }
 
+# $1: part_type of underlying device
+# $2: name of underlying device
+# $3: fs_params (needed because VG's have a list of needed lvm-pv's in there)
+underlying_exists () {
+	local part_type=$1
+	local part=$2
+	local fs_params=$3
+	if [ "$part_type" = lvm-vg ]; then
+		# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
+		# we can't use vgdisplay because that exists 0 when the requisted VG doesn't exist
+	       vgdisplay $part | grep -q 'VG Name'
+	       return
+       elif [ "$part_type" = lvm-pv ]; then
+	       # check if all needed pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
+	      pvdisplay ${fs_params//__/ } >/dev/null
+	      return
+	fi
+	# part type is raw (a physical disk), or dm_crypt or lvm-pv
+	[ -b "$part" ]
+	return
+}
 
 # process all entries in $TMP_BLOCKDEVICES, create all blockdevices and filesystems and mount them correctly
 process_filesystems ()
@@ -535,34 +556,24 @@ process_filesystems ()
 			then
 				if check_is_in "$fs_id" "${done_filesystems[@]}"
 				then
-					debug 'FS' "$fs_id ->Already done"
-				else
+					debug 'FS' "phase 1 iteration $i: $fs_id ->Already done"
+				elif underlying_exists $part_type $part $fs_params
+				then
+					debug 'FS' "phase 1 iteration $i: Creating $fs_type on $part_type $part ($fs_id)"
+					inform "Making $fs_type filesystem on $part" disks
 					needs_pkg=${filesystem_pkg[$fs_type]}
 					[ -n "$needs_pkg" ] && check_is_in $needs_pkg "${needed_pkgs_fs[@]}" || needed_pkgs_fs+=($needs_pkg)
-
-					# We can't always do -b on the lvm VG. because the devicefile sometimes doesn't exist for a VG. vgdisplay to the rescue!
-					if [ "$part_type" = lvm-vg ] && vgdisplay $part | grep -q 'VG Name' # $part is a lvm VG and it exists. note that vgdisplay exists 0 when the requested vg doesn't exist.
-					then
-						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a vg volume"
-						inform "Making $fs_type filesystem on $part" disks
-						BLOCK_ROLLBACK_USELESS=0
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
-					elif [ "$part_type" != lvm-pv -a -b "$part" ] # $part is not a lvm PV and it exists
-					then
-						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a non-pv volume"
-						inform "Making $fs_type filesystem on $part" disks
-						BLOCK_ROLLBACK_USELESS=0
-						process_filesystem $part $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
-					elif [ "$part_type" = lvm-pv ] && pvdisplay ${fs_params//__/ } >/dev/null # $part is a lvm PV. all needed lvm pv's exist. note that pvdisplay exits 5 as long as one of the args doesn't exist
-					then
-						debug 'FS' "$fs_id ->Still need to do it: Making the filesystem on a pv volume"
-						inform "Making $fs_type filesystem on $part" disks
-						BLOCK_ROLLBACK_USELESS=0
-						process_filesystem ${part/+/} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params && done_filesystems+=("$fs_id") || {ret=1; break 2; }
+					BLOCK_ROLLBACK_USELESS=0
+					if process_filesystem ${part/+} $fs_type $fs_create $fs_mountpoint no_mount $fs_opts $fs_label $fs_params; then
+						done_filesystems+=("$fs_id")
 					else
-						debug 'FS' "$fs_id ->Cannot do right now..."
-						open_items=1
+						debug 'FS' "phase 1 iteration $i: FAILED to reating $fs_type on $part_type $part ($fs_id)"
+						ret=1
+						break 2
 					fi
+				else
+					debug 'FS' "phase 1 iteration $i: Cannot create $fs_type yet on $part_type $part, because it is not yet available ($fs_id)"
+					open_items=1
 				fi
 			fi
 		done < $TMP_FILESYSTEMS
@@ -573,23 +584,23 @@ process_filesystems ()
 	       return 1
 	fi
 
-
-
 	# phase 2: mount all filesystems in the vfs in the correct order. (also swapon where appropriate)
 
 	inform "Phase 2: Mounting filesystems" disks
 	while read part part_type part_label fs_type fs_create fs_mountpoint fs_mount fs_opts fs_label fs_params
 	do
-		if [ "$fs_mountpoint" != no_mountpoint ]
-		then
-			inform "Mounting $part ($fs_type) on $fs_mountpoint" disks
+		if [[ $fs_mountpoint != no_mountpoint || $fs_type = swap ]]; then
+			debug 'FS' "phase 2: swapon/mounting $part - $fs_type"
+			[[ $fs_mountpoint != no_mountpoint ]] && inform "Mounting $part ($fs_type) on $fs_mountpoint" disks
+			[[ $fs_type = swap ]] &&  inform "Swaponning $part" disks
 			BLOCK_ROLLBACK_USELESS=0
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || {ret=1; break; }
-		elif [ "$fs_type" = swap ]
-		then
-			inform "Swaponning $part" disks
-			BLOCK_ROLLBACK_USELESS=0
-			process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params || {ret=1; break; }
+			if ! process_filesystem $part $fs_type no $fs_mountpoint $fs_mount $fs_opts $fs_label $fs_params; then
+				debug 'FS' "phase 2: FAILED to swapon/mount $part - $fs_type"
+				ret=1
+				break
+			fi
+		else
+			debug 'FS' "phase 2: no need to mount: $part - $fs_type"
 		fi
 	done < <(sort -t \  -k 6 $TMP_FILESYSTEMS)
 
