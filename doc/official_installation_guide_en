@@ -59,7 +59,7 @@ in terms of supplied packages.
     These images are best suited for people who have an internet connection
     which is slow or difficult to set up.
 
-  * The "net" images contain no packages at all,
+  * The "netinstall" images contain no packages at all,
     and will always use the network to install packages.
 
 Both types of images can be used to perform a netinstall, yielding an up-
