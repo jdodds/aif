@@ -508,100 +508,11 @@ In many cases, the Arch Linux [Wiki][46] and
 
 
 **/etc/rc.conf**
-
 This is the main configuration file for Arch Linux. It allows you to set your
 keyboard, timezone, hostname, network, daemons to run and modules to load at
-bootup, profiles, and more.
-
-**LOCALE:** This sets your system language, which will be used by all i18n-
-friendly applications and utilities. See locale.gen below for available
-options. This setting's default is fine for US English users.
-
-**HARDWARECLOCK:** Either UTC if your BIOS clock is set to UTC, or localtime
-if your BIOS clock is set to your local time. If you have an OS installed
-which cannot handle UTC BIOS times correctly, like Windows, choose localtime
-here, otherwise you should prefer UTC, which makes daylight savings time a
-non-issue and has a few other positive aspects.
-
-**USEDIRECTISA:** If set to "yes" it tells hwclock to use explicit I/O
-instructions to access the hardware clock. Otherwise, hwclock will try to use
-the /dev/rtc device it assumes to be driven by the rtc device driver. This
-setting's default "no" is fine for people not using an ISA machine.
-
-**TIMEZONE:** Specifies your time zone. Possible time zones are the relative
-path to a zoneinfo file starting from the directory /usr/share/zoneinfo. For
-example, a German timezone would be Europe/Berlin, which refers to the file
-/usr/share/zoneinfo/Europe/Berlin. If you don't know the exact name of your
-timezone file, worry about it later.
-
-**KEYMAP:** Defines the keymap to load with the loadkeys program on bootup.
-Possible keymaps are found in /usr/share/kbd/keymaps. Please note that this
-setting is only valid for your TTYs, not any graphical window managers or X!
-Again, the default is fine for US users.
-
-**CONSOLEFONT:** Defines the console font to load with the setfont program on
-bootup. Possible fonts are found in /usr/share/kbd/consolefonts.
-
-**CONSOLEMAP:** Defines the console map to load with the setfont program on
-bootup. Possible maps are found in /usr/share/kbd/consoletrans. Set this
-to a map suitable for the appropriate locale (8859-1 for Latin1, for example)
-if you're using an UTF-8 locale above, and use programs that generate 8-bit
-output. If you're using X11 for everyday work, don't bother, as it only
-affects the output of Linux console applications.
-
-**USECOLOR:** Enable (or disable) colorized status messages during boot-up.
-
-**MOD_AUTOLOAD:** If set to "yes", udev will be allowed to load modules as
-necessary upon bootup. If set to "no", it will not.
-
-**MODULES:** In this array you can list the names of modules you want to load
-during bootup without the need to bind them to a hardware device as in the
-modprobe.conf. Simply add the name of the module here, and put any options
-into modprobe.conf if need be. Prepending a module with a bang ('!') will
-blacklist the module, and not allow it to be loaded.
-
-**USELVM:** Set to "yes" to run a vgchange during sysinit, thus activating any
-LVM groups
-
-**HOSTNAME:** Set this to the hostname of the machine, without the domain
-part. This is totally your choice, as long as you stick to letters, digits and
-a few common special characters like the dash.
-
-**interface:** the name of the interface to setup, e.g. eth0
-
-**address:** If you use DHCP, leave this blank. If you do not use DHCP, complete
-this with your ip.
-
-**netmask:** The subnet mask. Defaults to 255.255.255.0 if is blank.
-
-**broadcast:** Set the broadcast address for your network. If left blank,
-the host bits of the address will be set to 1 to form the broadcast address.
-This setting is sufficient for most user networks..
-
-**gateway:** The default route.
-
-Netmask, broadcast and gateway are optional and ignored when DHCP is used.
-
-**[ NET_PROFILES][49]:** Enables certain network profiles at bootup. Network
-profiles provide a convenient way of managing multiple network configurations,
-and are intended to replace the standard INTERFACES/ROUTES setup that is still
-recommended for systems with only one network configuration. If your computer
-will be participating in various networks at various times (eg, a laptop) then
-you should take a look at the /etc/network-profiles/ directory to set up some
-profiles. There is a template file included there that can be used to create
-new profiles. This now requires the netcfg package.
-
-   [49]: /index.php/Network_Profiles (Network Profiles)
-
-**DAEMONS:** This array simply lists the names of those scripts contained in
-/etc/rc.d/ which are supposed to be started during the boot process. If a
-script name is prefixed with a bang (!), it is not executed. If a script is
-prefixed with an "at" symbol (@), then it will be executed in the background,
-ie. the startup sequence will not wait for successful completion before
-continuing. Usually you do not need to change the defaults to get a running
-system, but you are going to edit this array whenever you install system
-services like sshd, and want to start these automatically during bootup.
-
+bootup and more. This file is properly documented (man rc.conf).
+AIF will automatically fill the hostname in /etc/hosts based on what you
+enter here.
 
 **[ /etc/fstab][50]**
 
