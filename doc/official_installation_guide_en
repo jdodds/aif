@@ -563,7 +563,7 @@ line:
 
      alias eth0 8139too
 
-
+You can also use it to blacklist modules.  See "man modprobe.conf"
 Most people will not need to edit this file.
 
 
