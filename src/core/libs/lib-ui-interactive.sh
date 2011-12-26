@@ -599,7 +599,7 @@ interactive_filesystems() {
 		do
 			# generate a menu based on the information in the datafile
 			local menu_list=()
-			local part, type, label, fs
+			local part type label fs
 			while read part type label fs
 			do
 				parse_filesystem_string "$fs" '' '-'
@@ -668,7 +668,7 @@ device type label size type create? mountpoint options label params" required "$
 							[ "$label" = "$EDIT_VG" ] && found_lv="$lv"
 						done
 						interactive_filesystem $part $part_type $part_label "$found_lv"
-						local newfs, add
+						local newfs add
 						for lv in `sed 's/|/ /g' <<< $fs`
 						do
 							label=$(cut -d ';' -f 6 <<< $lv)
