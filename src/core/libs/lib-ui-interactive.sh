@@ -288,21 +288,15 @@ interactive_autoprepare()
 	SWAP_PART_SIZE=$ANSWER_NUMBER
 	size_left=$(($size_left-$SWAP_PART_SIZE))
 
-	ROOT_PART_SET=""
-	while [ "$ROOT_PART_SET" = "" ]
-	do
-		local suggest_root=7500
-		# if the disk is too small to hold a 7.5GB root and 5GB home (these are arbitrary numbers), just give root 3/4 of the size, if that's too small leave it up to the user
-		[ $(($suggest_root+5000)) -gt $size_left ] && suggest_root=$(($size_left*3/4))
-		ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $size_left MiB" 1 $size_left $suggest_root || return 1
-		ROOT_PART_SIZE=$ANSWER_NUMBER
-		size_left=$(($size_left-$ROOT_PART_SIZE))
-		ask_yesno "$size_left MiB will be used for your /home partition.  Is this OK?" yes && ROOT_PART_SET=1
-	done
+	local suggest_root=7500
+	# if the disk is too small to hold a 7.5GB root and 5GB home (these are arbitrary numbers), just give root 3/4 of the size, if that's too small leave it up to the user
+	[ $(($suggest_root+5000)) -gt $size_left ] && suggest_root=$(($size_left*3/4))
+	ask_number "Enter the size (MiB) of your / partition.  Recommended size:7500.  The /home partition will use the remaining space.\n\nDisk space left:  $size_left MiB" 1 $size_left $suggest_root || return 1
+	ROOT_PART_SIZE=$ANSWER_NUMBER
+	HOME_PART_SIZE=$(($size_left-$ROOT_PART_SIZE))
 
 	ask_option no 'Filesystem selection' "Select a filesystem for / and /home:" required "${FSOPTS[@]}" || return 1
 	FSTYPE=$ANSWER_OPTION
-
 
 	echo "$DISC $BOOT_PART_SIZE:ext2:+ $SWAP_PART_SIZE:swap $ROOT_PART_SIZE:$FSTYPE *:$FSTYPE" > $TMP_PARTITIONS
 
@@ -311,7 +305,13 @@ interactive_autoprepare()
 	echo "${DISC}3 raw no_label $FSTYPE;yes;/;target;no_opts;no_label;no_params"          >> $TMP_BLOCKDEVICES
 	echo "${DISC}4 raw no_label $FSTYPE;yes;/home;target;no_opts;no_label;no_params"      >> $TMP_BLOCKDEVICES
 
-	ask_yesno "$DISC will be COMPLETELY ERASED!  Are you absolutely sure?" || return 1
+msg="/boot $BOOT_PART_SIZE MiB
+swap  $SWAP_PART_SIZE MiB
+/     $ROOT_PART_SIZE MiB ($FSTYPE)
+/home $HOME_PART_SIZE MiB ($FSTYPE)
+
+$DISC will be COMPLETELY ERASED!  Are you absolutely sure?"
+	ask_yesno "$msg" || return 1
 
 	PART_ACCESS=uuid
 
