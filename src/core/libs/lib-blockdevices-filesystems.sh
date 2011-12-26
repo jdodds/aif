@@ -885,15 +885,12 @@ process_filesystem ()
 				local uuid
 				uuid="$(getuuid $part)" && part="UUID=$uuid";;
 		esac
-		if ! grep -q "$part $fs_mountpoint $fs_type defaults 0 " $TMP_FSTAB 2>/dev/null #$TMP_FSTAB may not exist yet
-		then
-			echo -n "$part $fs_mountpoint $fs_type defaults 0 " >> $TMP_FSTAB
-			if [ "$fs_type" = "swap" ]; then
-				echo "0" >>$TMP_FSTAB
-			else
-				echo "1" >>$TMP_FSTAB
-			fi
-		fi
+		fs_passno=2
+		[[ $fs_mountpoint = "/" ]] && fs_passno=1
+		[[ $fs_type = "swap" ]] && fs_passno=0
+		line="$part $fs_mountpoint $fs_type defaults 0 $fs_passno"
+		# the file $TMP_FSTAB might not exist yet
+		grep -q "$line" $TMP_FSTAB 2>/dev/null || echo "$line" >> $TMP_FSTAB
 	fi
 
 	return $ret
