@@ -49,7 +49,12 @@ PART_ACCESS= # can be set to 'uuid', 'dev', 'label', or leave empty for 'dev'
 # These variables are mandatory
 
 GRUB_DEVICE=/dev/sda
+# '*' means all the remaining space
+# '+' means the bootable flag
 PARTITIONS='/dev/sda 100:ext2:+ 512:swap *:ext4'
+# if you wanted everything other than swap and boot on an extended partition, you can do like this:
+PARTITIONS='/dev/sda 100:ext2:+ 512:swap :extended *:ext4'
+
 BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
 /dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
 /dev/sda3 raw no_label ext4;yes;/;target;no_opts;no_label;no_params'
