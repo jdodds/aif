@@ -576,7 +576,6 @@ remove_blockdevice ()
 
 
 interactive_filesystems() {
-	local PART_ACCESS
 	if [ ! -f $TMP_BLOCKDEVICES ] || ! ask_yesno "Previous blockdevice definitions found:\n`cat $TMP_BLOCKDEVICES`\n\
 		Use these as a starting point?  Make sure your disk(s) are partitioned correctly so your definitions can be applied. Pick 'no' when in doubt to start from scratch" no
 	then
