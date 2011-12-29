@@ -398,6 +398,7 @@ partition()
 		fstype=$(echo $fsspec | tr -d ' ' | cut -f2 -d:)
 		fstype_spec=","
 		[ "$fstype" = "swap" ] && fstype_spec=",S"
+		[ "$fstype" = "extended" ] && fstype_spec=",E"
 
 		bootflag=$(echo $fsspec | tr -d ' ' | cut -f3 -d:)
 		bootflag_spec=""
