@@ -98,7 +98,10 @@ worker_runtime_repositories ()
 
 worker_runtime_packages ()
 {
-	$PACMAN -Sy --noconfirm --needed $var_RUNTIME_PACKAGES
+	if [ -n "$var_RUNTIME_PACKAGES" ]
+	then
+		$PACMAN -Sy --noconfirm --needed $var_RUNTIME_PACKAGES
+	fi
 }
 
 
