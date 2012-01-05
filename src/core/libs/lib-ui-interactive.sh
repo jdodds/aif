@@ -103,6 +103,10 @@ interactive_configure_system()
 			then
 				sed -i "s/127\.0\.0\.1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
 			fi
+			if ! grep '\:\:1' ${var_TARGET_DIR}/etc/hosts | grep -q "$HOSTNAME"
+			then
+				sed -i "s/\:\:1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
+			fi
 		fi
 	done
 
