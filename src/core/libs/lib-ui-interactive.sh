@@ -83,30 +83,25 @@ interactive_configure_system()
 		ask_option $default "Configuration" "$helptext" required "${list[@]}" || return 1
 		FILE=$ANSWER_OPTION
 		default=$FILE
-		if [ "$FILE" = "Done" ]; then       # exit
+		if [ "$FILE" = "Done" ]; then
 			break
-		elif [ "$FILE" = "Root-Password" ]; then            # non-file
+		elif [ "$FILE" = "Root-Password" ]; then
 			while true; do
 				chroot ${var_TARGET_DIR} passwd root && break
 			done
-		else                                                #regular file
+		elif [ "$FILE" = "/etc/rc.conf" ]; then
+			HOSTNAME_PRE=$(source ${var_TARGET_DIR}${FILE} && echo $HOSTNAME)
 			$EDITOR ${var_TARGET_DIR}${FILE}
-		fi
-
-		# if user edited /etc/rc.conf, add the hostname to /etc/hosts if it's not already there.
-		# note that if the user edits rc.conf several times to change the hostname more then once, we will add them all to /etc/hosts.  this is not perfect, but to avoid this, too much code would be required (feel free to prove me wrong :))
-		# we could maybe do this just once after the user is really done here, but then he doesn't get to see the updated file while being in this menu...
-		if [ "$FILE" = "/etc/rc.conf" ]
-		then
-			HOSTNAME=$(source ${var_TARGET_DIR}${FILE} && echo $HOSTNAME)
-			if ! grep -q "127\.0\.0\.1.*$HOSTNAME" ${var_TARGET_DIR}/etc/hosts
-			then
-				sed -i "s/127\.0\.0\.1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
+			HOSTNAME_POST=$(source ${var_TARGET_DIR}${FILE} && echo $HOSTNAME)
+			if [ "$HOSTNAME_PRE" != "$HOSTNAME_POST" ]; then
+				# remove all occurences of old hostname in /etc/hosts:
+				sed -i "s# $HOSTNAME_PRE##" ${var_TARGET_DIR}/etc/hosts
+				# add new hostname to /etc/hosts except in the - admittedly unlikely, but anyway - event the user already added it himself
+				sed -i "/$HOSTNAME/"'!s'"/127\.0\.0\.1.*$HOSTNAME.*/& $HOSTNAME/" hosts
+				sed -i "/$HOSTNAME/"'!s'"/\:\:1.*$HOSTNAME.*/& $HOSTNAME/" hosts
 			fi
-			if ! grep -q "::1.*$HOSTNAME" ${var_TARGET_DIR}/etc/hosts
-			then
-				sed -i "s/\:\:1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
-			fi
+		else
+			$EDITOR ${var_TARGET_DIR}${FILE}
 		fi
 	done
 
