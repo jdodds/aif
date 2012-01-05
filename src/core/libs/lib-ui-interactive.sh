@@ -98,8 +98,8 @@ interactive_configure_system()
 		# we could maybe do this just once after the user is really done here, but then he doesn't get to see the updated file while being in this menu...
 		if [ "$FILE" = "/etc/rc.conf" ]
 		then
-			HOSTNAME=`sed -n '/^HOSTNAME/s/HOSTNAME=//p' ${var_TARGET_DIR}${FILE} | sed 's/"//g'`
-			if ! grep '127\.0\.0\.1' ${var_TARGET_DIR}/etc/hosts | grep -q "$HOSTNAME"
+			HOSTNAME=$(source ${var_TARGET_DIR}${FILE} && echo $HOSTNAME)
+			if ! grep -q "127\.0\.0\.1.*$HOSTNAME" ${var_TARGET_DIR}/etc/hosts
 			then
 				sed -i "s/127\.0\.0\.1.*/& $HOSTNAME/" ${var_TARGET_DIR}/etc/hosts
 			fi
@@ -216,12 +216,10 @@ interactive_prepare_disks ()
 				interactive_autoprepare && default=5 && ret=0 && DISK_CONFIG_TYPE=auto;;
 			"2")
 				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
-				interactive_partition && ret=1 && default=3 && DISK_CONFIG_TYPE=manual
-				;;
+				interactive_partition && ret=1 && default=3 && DISK_CONFIG_TYPE=manual;;
 			"3")
 				[ "$BLOCK_ROLLBACK_USELESS" = "0" ] && ask_yesno "You should probably rollback your last changes first, otherwise this will probably fail.  Go back to menu to do rollback?" && default=4 && continue
-				interactive_filesystems && ret=0 && default=5 && DISK_CONFIG_TYPE=manual
-				;;
+				interactive_filesystems && ret=0 && default=5 && DISK_CONFIG_TYPE=manual;;
 			"4")
 				interactive_rollback_filesystems;;
 			"5")
