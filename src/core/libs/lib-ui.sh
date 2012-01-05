@@ -130,3 +130,19 @@ ask_mkinitcpio_preset () {
 	fi
 	return 0
 }
+
+# $1 default option, or 'no' for none
+# $1 name of the filesystem (or partition/device) to ask for
+ask_mountpoint () {
+	local default=$1
+	local part=$2
+	local opts=(/ 'root' /boot 'files for booting' /home 'home directories' /var 'variable files' /tmp 'temporary files' custom 'enter a custom mountpoint')
+	ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required "${opts[@]}" || return 1
+	if [ "$ANSWER_OPTION" == custom ]; then
+		[ "$default" == 'no' ] && default=
+		ask_string "Enter the custom mountpoint for $part" "$default" || return 1
+		echo $ANSWER_STRING
+	else
+		echo $ANSWER_OPTION
+	fi
+}

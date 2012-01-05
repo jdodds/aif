@@ -437,13 +437,7 @@ interactive_filesystem ()
 		if check_is_in $fs_type "${fs_mountable[@]}"
 		then
 			default=${fs_mountpoint:-no}
-			ask_option $default "Select the mountpoint" "Select a mountpoint for $part" required / 'root' /boot 'files for booting' /home 'home directories' /var 'variable files' /tmp 'temporary files' custom 'enter a custom mountpoint' || return 1
-			fs_mountpoint=$ANSWER_OPTION
-			[ "$default" == 'no' ] && default=
-			if [ "$ANSWER_OPTION" == custom ]
-			then
-				ask_string "Enter the custom mountpoint for $part" "$default" && fs_mountpoint=$ANSWER_STRING || return 1
-			fi
+			fs_mountpoint=$(ask_mountpoint $default $part)
 		fi
 
 		# ask label, if relevant
