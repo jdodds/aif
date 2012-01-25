@@ -64,7 +64,7 @@ list_pacman_repos ()
 # returns all repositories you could possibly use (core, extra, testing, community, ...)
 list_possible_repos ()
 {
-	grep -B 1 'Include = /etc/' /etc/pacman.conf | grep '\[' | sed 's/#*\[\(.*\)\]/\1/'
+	grep -B 2 'Include = /etc/' /etc/pacman.conf | grep '\[' | sed 's/#*\[\(.*\)\]/\1/'
 }
 
 
