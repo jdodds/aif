@@ -25,6 +25,7 @@ target_prepare_pacman() {
 		fi
 	done
 	echo "Architecture = auto" >> /tmp/pacman.conf
+	echo "SigLevel = Never" >> /tmp/pacman.conf
 
     for i in `seq 0 $((${#TARGET_REPOSITORIES[@]}/2-1))`
 	do
