@@ -1,0 +1,44 @@
+# this config is like generic-install-on-sda (check out that file first), but installs a very simple LVM setup
+
+if [ -d /repo/core ]; then
+    TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
+else
+    MIRROR='ftp://mirrors.kernel.org/archlinux/$repo/os/$arch'
+    TARGET_REPOSITORIES=(core $var_MIRRORLIST)
+fi
+
+
+RUNTIME_REPOSITORIES=
+RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base
+TARGET_PACKAGES_EXCLUDE='reiserfsprogs'
+TARGET_PACKAGES='openssh e2fsprogs lvm2 xfsprogs'
+
+# you can optionally also override some functions...
+worker_intro () {
+	inform "Automatic procedure running the simple-lvm-install-on-sda example config. this will install an LVM system.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	sleep 10
+}
+
+worker_configure_system () {
+	preconfigure_target
+	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-simple-lvm-install"/' $var_TARGET_DIR/etc/rc.conf
+	postconfigure_target
+}
+
+PART_ACCESS=
+
+
+# very simple LVM setup:
+# sda1 gets an 100MB ext2 for /boot
+# sda2 becomes a PV, which hosts a VG named 'myvg', which hosts 1 5GB LV named myroot, which gets an ext4 mounted at /
+# These variables are mandatory
+GRUB_DEVICE=/dev/sda
+PARTITIONS='/dev/sda 100:ext2:+ *:ext4'
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label lvm-pv;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda2+ lvm-pv no_label lvm-vg;yes;no_mountpoint;target;no_opts;myvg;/dev/sda2
+/dev/mapper/myvg lvm-vg myvg lvm-lv;yes;no_mountpoint;target;no_opts;myroot;5G
+/dev/mapper/myvg-myroot lvm-lv no_label ext4;yes;/;target;no_opts;no_label;no_params'
