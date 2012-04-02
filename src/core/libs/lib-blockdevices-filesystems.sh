@@ -251,52 +251,45 @@ finddisks() {
 
 
 # find usable blockdevices: RAID + LVM volumes, partitioned and unpartitioned devices
-# Exclude devices/partitions that are part of a RAID or LVM volume
-# Exclude root block devices (ex. sda) that are partitioned
 # $1 extra things to echo for each device (optional) (backslash escapes will get interpreted)
+# $2,$3,$4 control whether the following should be included in output (in that order):
+# * devices/partitions that are part of a RAID or LVM volume
+#   (although we strongly encourage users to setup LVM in AIF, we want to make
+#   life a bit easier for those who have setup LVM/softraid before running AIF)
+# * root block devices (ex. sda) that are partitioned
+# * extended partitions
+# options: 1, 0 (default)
 find_usable_blockdevices() {
 	shopt -s nullglob
+	local include_dm=${2:-0}
+	local include_root=${3:-0}
+	local include_ext=${4:-0}
 
-	local parts
+	local has_parts
 
-	# Cycle through all root block devices (sda, sdb, etc...)
-	# Look for partitions and include them only if they are not part of a
-	# RAID or LVM configuration. Also, exclude extended partitions
 	for devpath in $(finddisks); do
-		hidebldev=
-		unset parts
+		has_parts=0
 
-		# Glob allows for following matches:
+		# Deal with partitions first
+		# Glob allows for following matches (not device itself):
 		# /dev/sda -> /dev/sda1
 		# /dev/cciss/c0d1 -> /dev/cciss/c0d1p1
 		for dev in ${devpath}*[[:digit:]]*; do
-			local disk="${dev%%[[:digit:]]*}"
-			local partnum="${dev##*[[:alpha:]]}"
+			has_parts=1
+			if ((include_ext)) || ! dev_is_extended_partition $dev; then
+				echo -ne "$dev $1"
+			fi
 
-			# Don't display extended partition (not logical parts)
-			[ "$(sfdisk -c "$disk" "$partnum" 2>/dev/null)" = 5 ] && continue;
-
-			# Don't list parts that are part of RAID or LVM volumes
-			# Although we strongly encourage users to setup LVM in AIF, we want to make
-			# life a bit easier for those who have setup LVM/softraid before running AIF
-			if grep -qsw "${dev##*/}" /proc/mdstat || { pvscan -s 2>/dev/null | grep -q "$dev"; }; then
-				hidebldev="True"
-			else
-				parts+=("$dev")
+			if ((include_dm)) || ! dev_is_in_softraid_or_lvmpv $dev; then
+				echo -ne "$dev $1"
 			fi
 		done
 
-		# If hidebldev is not set and we have no partitions then
-		# Echo root block device if root block device is not part of a LVM or RAID configuration
-		# Otherwise echo the partitions
-		if [[ -z $hidebldev ]] && (( ! ${#parts[@]} )); then
-			if ! grep -qsw "${devpath##*/}" /proc/mdstat && ! pvscan -s 2>/dev/null | grep -q "$devpath"; then
+		# Then deal with the "parent" device
+		if ((include_dm)) || ! dev_is_in_softraid_or_lvmpv $devpath; then
+			if ((include_root)) || ((! has_parts)); then
 				echo -ne "$devpath $1"
 			fi
-		elif (( ${#parts[@]} )); then
-			for part in ${parts[@]}; do
-				echo -ne "$part $1"
-			done
 		fi
 	done
 
@@ -316,6 +309,18 @@ find_usable_blockdevices() {
 	done
 
 	shopt -u nullglob
+}
+
+dev_is_extended_partition () {
+	local dev=$1
+	local disk="${dev%%[[:digit:]]*}"
+	local partnum="${dev##*[[:alpha:]]}"
+	[ "$(sfdisk -c "$disk" "$partnum" 2>/dev/null)" = 5 ]
+}
+
+dev_is_in_softraid_or_lvmpv () {
+	local dev=$1
+	grep -qsw "${dev##*/}" /proc/mdstat || { pvscan -s 2>/dev/null | grep -q "$dev"; }
 }
 
 
