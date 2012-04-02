@@ -227,14 +227,17 @@ finddisks() {
 			(( type == 5 )) && continue
 		fi
 
+
 		unset DEVTYPE
 		. "$dev/uevent"
+		dev_used_by_environment /dev/$DEVNAME && continue
 		[[ $DEVTYPE = disk || $DEVTYPE = vbd ]] && echo -ne "/dev/$DEVNAME $1"
 	done
 
 	# cciss controllers
 	for dev in /dev/cciss/*; do
 		if [[ $dev != *[[:digit:]]p[[:digit:]]* ]]; then
+			dev_used_by_environment $dev && continue
 			echo "$dev $1"
 		fi
 	done
@@ -242,6 +245,7 @@ finddisks() {
 	# Smart 2 Controller
 	for dev in /dev/ida/*; do
 		if [[ $dev != *[[:digit:]]p[[:digit:]]* ]]; then
+			dev_used_by_environment $dev && continue
 			echo "$dev $1"
 		fi
 	done
@@ -277,10 +281,12 @@ find_usable_blockdevices() {
 		for dev in ${devpath}*[[:digit:]]*; do
 			has_parts=1
 			if ((include_ext)) || ! dev_is_extended_partition $dev; then
+				dev_used_by_environment $dev && continue
 				echo -ne "$dev $1"
 			fi
 
 			if ((include_dm)) || ! dev_is_in_softraid_or_lvmpv $dev; then
+				dev_used_by_environment $dev && continue
 				echo -ne "$dev $1"
 			fi
 		done
@@ -293,8 +299,9 @@ find_usable_blockdevices() {
 		fi
 	done
 
-	# mapped devices, excluding devices created by archiso (/dev/mapper/arch_*)
-	for devpath in /dev/mapper/!(arch_*); do
+	# mapped devices
+	for devpath in /dev/mapper/*; do
+		dev_used_by_environment $devpath && continue
 		# Exclude /control directory and other non-block files (such as??)
 		if [[ -b $devpath ]]; then
 			echo -ne "$devpath $1"
@@ -303,12 +310,22 @@ find_usable_blockdevices() {
 
 	# raid md devices
 	for devpath in /dev/md[0-9]*; do
+		dev_used_by_environment $devpath && continue
 		if grep -qw "${devpath//\/dev\//}" /proc/mdstat; then
 			echo -ne "$devpath $1"
 		fi
 	done
 
 	shopt -u nullglob
+}
+
+# if the environment in which AIF runs consists of block devices which AIF has no business with,
+# they can be listed in /run/aif/ignore_block_devices (example: archiso does this)
+# most likely this is just some loop files, some /dev/mapper/arch_* files and maybe /dev/sr0
+# but in theory, could be anything
+dev_used_by_environment () {
+	local dev=$1
+	grep -q "^$dev$" /run/aif/ignore_block_devices 2>/dev/null
 }
 
 dev_is_extended_partition () {
