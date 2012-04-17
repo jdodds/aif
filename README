@@ -126,7 +126,7 @@ File locations:
 * core module   -> /usr/lib/aif/core
 * user modules  -> /usr/lib/aif/user/<module name> (put your own modules here)
 * runtime files -> /tmp/aif
-* logs          -> /var/log/aif
+* logs          -> /var/log/aif and $target/var/log/aif for things installed in the chroot
 
 
 

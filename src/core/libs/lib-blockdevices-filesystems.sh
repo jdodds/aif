@@ -34,6 +34,7 @@ TMP_FSTAB=$RUNTIME_DIR/aif-fstab
 TMP_PARTITIONS=$RUNTIME_DIR/aif-partitions
 TMP_FILESYSTEMS=$RUNTIME_DIR/aif-filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
 TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
+TMP_GRUB_LOG=$LOG_DIR/grub.log
 
 
 declare -A filesystem_programs=(["swap"]="mkswap" ["reiserfs"]="mkreiserfs" ["lvm-pv"]="pvcreate" ["lvm-vg"]="vgcreate" ["lvm-lv"]="lvcreate" ["dm_crypt"]="cryptsetup")
@@ -345,7 +346,7 @@ dev_is_in_softraid_or_lvmpv () {
 # hard disks get entries, but not their partitions
 get_grub_map() {
 	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
-	chroot $var_TARGET_DIR grub --no-floppy --device-map /boot/grub/device.map >/tmp/grub.log 2>&1 <<EOF
+	chroot $var_TARGET_DIR grub --no-floppy --device-map /boot/grub/device.map &>$TMP_GRUB_LOG <<EOF
 quit
 EOF
 	cp $var_TARGET_DIR/boot/grub/device.map $TMP_DEV_MAP

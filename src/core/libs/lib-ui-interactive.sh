@@ -1139,14 +1139,14 @@ interactive_grub_install () {
 	debug FS "bootdev: $bootdev"
 	debug FS "boothd: $boothd"
 
-	chroot $var_TARGET_DIR grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
+	chroot $var_TARGET_DIR grub --no-floppy --batch &>$TMP_GRUB_LOG <<EOF
 device $bootdev $boothd
 root $bootpart
 setup $bootdev
 quit
 EOF
-	cat /tmp/grub.log >$LOG
-	if grep -q "Error [0-9]*: " /tmp/grub.log; then
+	cat $var_TARGET_DIR/$TMP_GRUB_LOG >$LOG
+	if grep -q "Error [0-9]*: " $var_TARGET_DIR/$TMP_GRUB_LOG; then
 		notify "Error installing GRUB. (see $LOG for output)"
 		return 1
 	fi
