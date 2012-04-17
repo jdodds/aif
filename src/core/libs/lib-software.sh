@@ -10,7 +10,7 @@ target_run_mkinitcpio()
 	local preset=${1:-linux}
 	target_special_fs on
 
-	run_controlled mkinitcpio "chroot $var_TARGET_DIR /sbin/mkinitcpio -p $preset" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
+	run_controlled mkinitcpio "chroot $var_TARGET_DIR mkinitcpio -p $preset" $TMP_MKINITCPIO_LOG "Rebuilding initcpio images ..."
 
 	target_special_fs off
 

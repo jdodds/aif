@@ -344,11 +344,11 @@ dev_is_in_softraid_or_lvmpv () {
 # generate the grub device map, which is a translation table between grub devicenames and linux devicenames
 # hard disks get entries, but not their partitions
 get_grub_map() {
-	rm $TMP_DEV_MAP &>/dev/null
 	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
-	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
+	chroot $var_TARGET_DIR grub --no-floppy --device-map /boot/grub/device.map >/tmp/grub.log 2>&1 <<EOF
 quit
 EOF
+	cp $var_TARGET_DIR/boot/grub/device.map $TMP_DEV_MAP
 }
 
 

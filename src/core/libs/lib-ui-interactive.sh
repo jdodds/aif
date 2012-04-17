@@ -134,8 +134,8 @@ copy_timezone_file () {
 	[ -e "$file" ] || die_error "No such timezone file: $file, did you choose a non-existing timezone?"
 	# This changes probably also the systemtime (UTC->$TIMEZONE)!
 	# localtime users will have a false time after that!
-	/bin/rm -f /etc/localtime || return 1
-	/bin/cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime || return 1
+	rm -f /etc/localtime || return 1
+	cp "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime || return 1
 	return 0
 }
 
@@ -940,7 +940,7 @@ interactive_grub() {
 		for xfsdev in $(blkid -t TYPE=xfs -o device); do
 			mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
 			if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-				/usr/sbin/xfs_freeze -f $mnt > /dev/null 2>&1
+				xfs_freeze -f $mnt > /dev/null 2>&1
 			fi
 		done
 
@@ -1022,7 +1022,7 @@ interactive_grub() {
 		for xfsdev in $(blkid -t TYPE=xfs -o device); do
 			mnt=$(mount | grep $xfsdev | cut -d' ' -f 3)
 			if [ $mnt = "$var_TARGET_DIR/boot" -o $mnt = "$var_TARGET_DIR/" ]; then
-				/usr/sbin/xfs_freeze -u $mnt > /dev/null 2>&1
+				xfs_freeze -u $mnt > /dev/null 2>&1
 			fi
 		done
 
@@ -1139,7 +1139,7 @@ interactive_grub_install () {
 	debug FS "bootdev: $bootdev"
 	debug FS "boothd: $boothd"
 
-	$var_TARGET_DIR/sbin/grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
+	chroot $var_TARGET_DIR grub --no-floppy --batch >/tmp/grub.log 2>&1 <<EOF
 device $bootdev $boothd
 root $bootpart
 setup $bootdev
@@ -1194,17 +1194,17 @@ interactive_syslinux() {
 		local onraid=true
 	fi
 
-	debug FS "Installing Syslinux ($var_TARGET_DIR/usr/sbin/syslinux-install_update -i -c /mnt)"
+	debug FS "Installing Syslinux (chroot $var_TARGET_DIR syslinux-install_update -i)"
 	inform "Installing Syslinux..."
-	if ! "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -i -c /mnt >$LOG 2>&1; then
-		debug FS "FAILED: syslinux-install_update -i -c /mnt failed"
-		show_warning "FAILED" "syslinux-install_update -i -c /mnt failed"
+	if ! "chroot $var_TARGET_DIR syslinux-install_update" -i >$LOG 2>&1; then
+		debug FS "FAILED: syslinux-install_update -i failed"
+		show_warning "FAILED" "syslinux-install_update -i failed"
 		return 1
 	fi
 
 	if ask_yesno "Set boot flag(s) and install the Syslinux MBR?" yes; then
 		inform "Setting Boot Flag(s)...\nThis could take a while. Please be patient.\n\n" syslinuxprog
-		if "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -a -c /mnt >$LOG 2>&1; then
+		if "chroot $var_TARGET_DIR syslinux-install_update" -a >$LOG 2>&1; then
 			debug FS "Successfully set boot flag(s)"
 		else
 			debug FS "Failde to set boot flag(s). syslinux-install_update -a failed with Error Code - $?"
@@ -1212,7 +1212,7 @@ interactive_syslinux() {
 		fi
 
 		inform "Installing Syslinux MBR..." syslinuxprog
-		if "$var_TARGET_DIR/usr/sbin/syslinux-install_update" -m -c /mnt >$LOG 2>&1; then
+		if "chroot $var_TARGET_DIR syslinux-install_update" -m >$LOG 2>&1; then
 			debug FS "Successfully installed MBR(s)"
 		else
 			debug FS "Failed to install MBR. syslinux-install_update -m failed with Error Code - $?"
