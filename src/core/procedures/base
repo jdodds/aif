@@ -151,6 +151,7 @@ worker_prepare_disks ()
 worker_package_list ()
 {
 	var_TARGET_GROUPS=base
+	var_TARGET_PACKAGES=syslinux
 }
 
 
