@@ -180,7 +180,7 @@ interactive_time () {
 				dohwclock $HARDWARECLOCK systohc && default=3 || return $?
 				timeset=1
 			else
-				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME" 
+				show_warning "Date/time setting failed" "Something went wrong when doing date -s $ANSWER_DATETIME"
 				timeset=0
 			fi
 		fi
@@ -651,7 +651,7 @@ device type label size type create? mountpoint options label params" required "$
 					if [ "$ANSWER_OPTION" = empty  ]
 					then
 						# a new LV must be created on this VG
-						if interactive_filesystem $part $part_type $part_label '' 
+						if interactive_filesystem $part $part_type $part_label ''
 						then
 							if [ "$NEW_FILESYSTEM" != no_fs ]
 							then
@@ -870,15 +870,15 @@ interactive_runtime_network() {
 	fi
 
 	echo "INTERFACE_PREV=$INTERFACE_PREV
-          INTERFACE=$INTERFACE
-          DHCP=$DHCP
-          IPADDR=$IPADDR
-          SUBNET=$SUBNET
-          BROADCAST=$BROADCAST
-          GW=$GW
-          DNS=$DNS
-          PROXY_HTTP=$PROXY_HTTP
-          PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings || return 1
+	  INTERFACE=$INTERFACE
+	  DHCP=$DHCP
+	  IPADDR=$IPADDR
+	  SUBNET=$SUBNET
+	  BROADCAST=$BROADCAST
+	  GW=$GW
+	  DNS=$DNS
+	  PROXY_HTTP=$PROXY_HTTP
+	  PROXY_FTP=$PROXY_FTP" > $RUNTIME_DIR/aif-network-settings || return 1
 	notify "The network is configured."
 	return 0
 }
@@ -1295,7 +1295,7 @@ get_kernel_parameters() {
 
 	kernel_parameters="root=$rootpart ro"
 
-	local raw_device crypt_device lv_device 
+	local raw_device crypt_device lv_device
 
 	if get_anchestors_mount ';/;'; then
 		if echo "$ANSWER_DEVICES" | sed -n '1p' | grep -q 'dm_crypt$' && echo "$ANSWER_DEVICES" | sed -n '2p' | grep -q 'raw$'
@@ -1400,7 +1400,7 @@ interactive_select_source() {
 # Prompt user for preferred mirror and set $MIRROR
 # args: none
 # returns: nothing
-interactive_select_mirror() { 
+interactive_select_mirror() {
 	notify "Keep in mind ftp.archlinux.org is throttled.\nPlease select another mirror to get full download speed."
 	# FIXME: this regex doesn't honor commenting
 	MIRRORS=$(egrep -o '((ftp)|(http))://[^/]*' "${var_MIRRORLIST}" | sed 's|$| _|g')
