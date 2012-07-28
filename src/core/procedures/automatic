@@ -106,5 +106,6 @@ worker_set_clock ()
 
 worker_install_bootloader ()
 {
-	syslinux-install_update -iam
+	syslinux-install_update -iam || return 1
+	return 0
 }
