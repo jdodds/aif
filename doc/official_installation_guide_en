@@ -754,11 +754,6 @@ modify this file, if needed, to accommodate your boot setup.
 After checking your bootloader configuration for correctness, you'll be asked to
 allow the installer to Set the Boot Flag and install the Syslinux MBR.
 
-**/boot/grub/menu.lst** (Grub)
-
-After checking your bootloader configuration for correctness, you'll be
-prompted for a disk to install the loader to. You should install GRUB to the MBR
-of the installation disk.
 
 ####  Exit Install
 
