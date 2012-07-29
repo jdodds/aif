@@ -48,12 +48,10 @@ worker_configure ()
 	# Check mandatory options
 	[ -z "$PARTITIONS" ] && die_error "You did not specify a partition scheme"
 	[ -z "$BLOCKDATA"  ] && die_error "You did not specify a partition scheme"
-	[ -z "$GRUB_DEVICE" ] && die_error "You did not specify a grub device"
 	[ -z "$TARGET_REPOSITORIES" ] && die_error "You did not specify \$TARGET_REPOSITORIES"
 	# initialize internal variables based on variables set by the user (some of the vars are handled in other workers):
 	var_RUNTIME_REPOSITORIES=$RUNTIME_REPOSITORIES
 	var_RUNTIME_PACKAGES=$RUNTIME_PACKAGES
-	var_GRUB_DEVICE=$GRUB_DEVICE
 	var_PARTITIONS=$PARTITIONS
 	var_BLOCKDATA=$BLOCKDATA
 	HARDWARECLOCK=${HARDWARECLOCK:-localtime}
@@ -85,7 +83,7 @@ worker_prepare_disks ()
 
 worker_package_list ()
 {
-	var_TARGET_PACKAGES=$TARGET_PACKAGES
+	var_TARGET_PACKAGES="$TARGET_PACKAGES syslinux"
 	var_TARGET_GROUPS=$TARGET_GROUPS
 	var_TARGET_PACKAGES_EXCLUDE=$TARGET_PACKAGES_EXCLUDE
 	[ -z "$var_TARGET_PACKAGES" -a -z "$var_TARGET_GROUPS" ] && var_TARGET_GROUPS=base
@@ -108,11 +106,6 @@ worker_set_clock ()
 
 worker_install_bootloader ()
 {
-	get_grub_map || return 1
-	grub-install $var_GRUB_DEVICE --root-directory=/mnt || return 1
-	# check if we have a seperate bootdev (/boot)
-	# ToDo: This is double-work, find a better place!
-	# See comment in generate_grub_menulst and interactive_grub
-	bootdev=$(mount | grep $var_TARGET_DIR/boot | cut -d' ' -f 1)
-	generate_grub_menulst || return 1
+	syslinux-install_update -iam -c "$var_TARGET_DIR" || return 1
+	return 0
 }

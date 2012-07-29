@@ -13,7 +13,7 @@ Homepage:    http://github.com/Dieterbe/aif
  - bash >=4
  - pacman >=3.4
  - coreutils
- - grub
+ - syslinux
  - grep
  - awk
  - sed
@@ -31,7 +31,6 @@ Optionally:
  - ntp: setting date with NTP
  - dialog: for ncurses support
  - curl: for the aif-report-issues.sh script
- - syslinux: for syslinux support
 
 ** Goals **
 

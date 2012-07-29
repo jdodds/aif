@@ -96,7 +96,7 @@ get_possible_fs () {
 }
 
 syslinux_supported_fs=('ext2' 'ext3' 'ext4' 'btrfs' 'vfat')
-supported_bootloaders=('syslinux' 'grub')
+supported_bootloaders=('syslinux')
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -313,57 +313,6 @@ find_usable_blockdevices() {
 
 	shopt -u nullglob
 }
-
-
-# taken from setup
-get_grub_map() {
-	rm $TMP_DEV_MAP &>/dev/null #TODO: this doesn't exist? is this a problem? ASKDEV
-	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
-	$var_TARGET_DIR/sbin/grub --no-floppy --device-map $TMP_DEV_MAP >/tmp/grub.log 2>&1 <<EOF
-quit
-EOF
-}
-
-
-# TODO: $1 is what?? ASKDEV
-# taken from setup. slightly edited.
-mapdev() {
-	partition_flag=0
-	device_found=0
-	devs=$( grep -v fd $TMP_DEV_MAP | sed 's/ *\t/ /' | sed ':a;$!N;$!ba;s/\n/ /g')
-	linuxdevice=$(echo $1 | cut -b1-8)
-	if [ "$(echo $1 | egrep '[0-9]$')" ]; then
-		# /dev/hdXY
-		pnum=$(echo $1 | cut -b9-)
-		pnum=$(($pnum-1))
-		partition_flag=1
-	fi
-	for dev in $devs
-	do
-		if [ "(" = $(echo $dev | cut -b1) ]; then
-			grubdevice="$dev"
-		else
-			if [ "$dev" = "$linuxdevice" ]; then
-				device_found=1
-				break
-			fi
-		fi
-	done
-	if [ "$device_found" = "1" ]; then
-		if [ "$partition_flag" = "0" ]; then
-			echo "$grubdevice"
-		else
-			grubdevice_stringlen=${#grubdevice}
-			grubdevice_stringlen=$(($grubdevice_stringlen - 1))
-			grubdevice=$(echo $grubdevice | cut -b1-$grubdevice_stringlen)
-			echo "$grubdevice,$pnum)"
-		fi
-		return 0
-	else
-		return 1
-	fi
-}
-
 
 
 # preprocess fstab file
@@ -938,16 +887,6 @@ device_is_raid() {
 	(( devmajor == 9 ))
 }
 
-# $1 md raid blockdevice (ex: /dev/md0)
-# return the array member device which is slave 0 in the given array
-# ex: /dev/md0 is an array with /dev/sda1, /dev/sdb1,
-# so we would return /dev/sda1 as slave 0
-#
-# This procedure is used to determine the grub value for root, ex: (hd0,0)
-mdraid_slave0 ()
-{
-	echo "/dev/"$(ls -ldgGQ /sys/class/block/$(basename $1)/md/rd0 | cut -d'"' -f4 | cut -d'-' -f2)
-}
 
 # $1 md raid blockdevice (ex: /dev/md0)
 # return a list of array members from given md array
