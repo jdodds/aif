@@ -9,7 +9,6 @@ TARGET_PACKAGES='openssh aif e2fsprogs cryptsetup lvm2 xfsprogs'
 
 # These variables are mandatory
 
-GRUB_DEVICE=/dev/sda
 PARTITIONS='/dev/sda 40:ext2:+ *:ext4'
 BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
 /dev/sda2 raw no_label dm_crypt;yes;no_mountpoint;target;no_opts;sda2crypt;-c__aes-xts-plain__-y__-s__512

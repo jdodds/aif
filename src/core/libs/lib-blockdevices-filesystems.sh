@@ -34,8 +34,6 @@ TMP_FSTAB=$RUNTIME_DIR/aif-fstab
 TMP_PARTITIONS=$RUNTIME_DIR/aif-partitions
 TMP_FILESYSTEMS=$RUNTIME_DIR/aif-filesystems # Only used internally by this library.  Do not even think about using this as interface to this library.  it won't work
 TMP_BLOCKDEVICES=$RUNTIME_DIR/aif-blockdata
-TMP_GRUB_LOG=$LOG_DIR/grub.log
-
 
 declare -A filesystem_programs=(["swap"]="mkswap" ["reiserfs"]="mkreiserfs" ["lvm-pv"]="pvcreate" ["lvm-vg"]="vgcreate" ["lvm-lv"]="lvcreate" ["dm_crypt"]="cryptsetup")
 for simple in ext2 ext3 ext4 nilfs2 xfs jfs vfat btrfs
@@ -97,7 +95,7 @@ get_possible_fs () {
 }
 
 syslinux_supported_fs=('ext2' 'ext3' 'ext4' 'btrfs' 'vfat')
-supported_bootloaders=('syslinux' 'grub')
+supported_bootloaders=('syslinux')
 
 # procedural code from quickinst functionized and fixed.
 # there were functions like this in the setup script too, with some subtle differences.  see below
@@ -340,40 +338,6 @@ dev_is_in_softraid_or_lvmpv () {
 	local dev=$1
 	grep -qsw "${dev##*/}" /proc/mdstat || { pvscan -s 2>/dev/null | grep -q "$dev"; }
 }
-
-
-# generate the grub device map, which is a translation table between grub devicenames and linux devicenames
-# hard disks get entries, but not their partitions
-get_grub_map() {
-	inform "Generating GRUB device map...\nThis could take a while.\n\n Please be patient."
-	chroot $var_TARGET_DIR grub --no-floppy --device-map /boot/grub/device.map &>$TMP_GRUB_LOG <<EOF
-quit
-EOF
-	cp $var_TARGET_DIR/boot/grub/device.map $TMP_DEV_MAP
-}
-
-
-# for given blockdevice, echo grub notation in this form: (hd0) or (hd0,0) (if it's a partition)
-# $1 : blockdevice
-# returns 0 on success. 1 otherwise.
-mapdev() {
-	local pnum
-	local grubdevice
-	local blockdevice=$1
-	local blockdevice_nopart=$(echo $blockdevice | sed 's/[0-9]*$//') # remove partition info
-	# if blockdevice ends on a number (it's a partition). get it and subtract 1 (for grub)
-	if pnum=$(grep -oE '[0-9]+$' <<< $blockdevice); then
-		pnum=$(($pnum -1))
-	fi
-	# if the device doesn't occur in translation table, bail out
-	grep -q "$blockdevice_nopart$" $TMP_DEV_MAP || return 1
-
-	grubdevice=$(grep "$blockdevice_nopart$" $TMP_DEV_MAP | cut -f1)
-	[[ -z $pnum ]] && echo $grubdevice
-	[[ -n $pnum ]] && sed "s/)/,$pnum)/" <<< "$grubdevice"
-	return 0
-}
-
 
 
 # preprocess fstab file
@@ -965,16 +929,6 @@ device_is_raid() {
 	(( devmajor == 9 ))
 }
 
-# $1 md raid blockdevice (ex: /dev/md0)
-# return the array member device which is slave 0 in the given array
-# ex: /dev/md0 is an array with /dev/sda1, /dev/sdb1,
-# so we would return /dev/sda1 as slave 0
-#
-# This procedure is used to determine the grub value for root, ex: (hd0,0)
-mdraid_slave0 ()
-{
-	echo "/dev/"$(ls -ldgGQ /sys/class/block/$(basename $1)/md/rd0 | cut -d'"' -f4 | cut -d'-' -f2)
-}
 
 # $1 md raid blockdevice (ex: /dev/md0)
 # return a list of array members from given md array
