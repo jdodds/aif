@@ -48,7 +48,6 @@ PART_ACCESS= # can be set to 'uuid', 'dev', 'label', or leave empty for 'dev'
 
 # These variables are mandatory
 
-GRUB_DEVICE=/dev/sda
 # '*' means all the remaining space
 # '+' means the bootable flag
 PARTITIONS='/dev/sda 100:ext2:+ 512:swap *:ext4'
