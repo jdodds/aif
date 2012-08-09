@@ -1,4 +1,4 @@
-TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
+TARGET_REPOSITORIES=(core 'http://10.0.2.2:15678/request/$repo/$arch' aif 'file:///root/repo')
 RUNTIME_REPOSITORIES=(testing ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH)
 RUNTIME_PACKAGES=
 

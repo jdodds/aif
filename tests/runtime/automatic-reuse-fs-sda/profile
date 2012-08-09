@@ -1,3 +1,4 @@
+TARGET_REPOSITORIES=(aif 'file:///root/repo')
 TARGET_PACKAGES='aif e2fsprogs'
 RUNTIME_REPOSITORIES=(testing ftp://mir1.archlinuxfr.org/archlinux/testing/os/$var_ARCH)
 

@@ -1,0 +1,52 @@
+pkgname=aif
+pkgver=20120807
+pkgrel=1
+pkgdesc="The ArchLinux Installation Framework"
+arch=('any')
+url="http://projects.archlinux.org/?p=aif.git;a=summary"
+license=('GPL3')
+depends=('util-linux' 'bash' 'pacman' 'coreutils' 'grep' 'awk' 'sed' 'libui-sh')
+optdepends=('markdown: to generate the html installation guide'
+        'cryptsetup: for encryption support'
+        'lvm2: for LVM support'
+        'dhcpd: for dhcp networking support'
+        'btrfs-progs-unstable: Btrfs support'
+        'e2fsprogs: Ext support'
+        'jfsutils: JFS support'
+        'reiserfsprogs: ReiserFS support'
+        'nilfs-utils: Nilfs2 support'
+        'xfsprogs: XFS support'
+        'ntp: setting date with NTP'
+        'dialog: for ncurses support'
+        'curl: for the aif-report-issues.sh script'
+        'syslinux: syslinux support'
+)
+_gitroot='git://10.0.2.2/~your-user/path/to/aif'
+_gitname='aif'
+
+
+build() {
+        cd "$srcdir"
+        msg "Connecting to GIT server...."
+
+        if [[ -d "$_gitname" ]]; then
+                cd "$_gitname" && git pull origin
+                msg "The local files are updated."
+        else
+                git clone "$_gitroot" "$_gitname"
+        fi
+
+        msg "GIT checkout done or server timeout"
+        msg "Starting build..."
+
+        rm -rf "$srcdir/$_gitname-build"
+        git clone "$srcdir/$_gitname" "$srcdir/$_gitname-build"
+        cd "$srcdir/$_gitname-build"
+
+        make DESTDIR="$pkgdir"
+}
+
+package() {
+        cd "$srcdir/$_gitname-build"
+        make DESTDIR="$pkgdir" install
+}
