@@ -1,0 +1,59 @@
+# this config explains the (all) available options.
+# the variables are optional and we define their defaults here (so you could omit the
+# definitions), unless otherwise specified.
+
+# Add all repositories you want to use here. Same style as for pacman.conf:
+# Local: file://...
+# Remote: something like ftp://ftp.belnet.be/mirror/archlinux.org/$repo/os/$arch
+# You should list both the name of the repo as well as the location, as separate
+# elements.
+# You can add multiple repositories and even mix remote and local ones.
+# The order they are in here, will be the order in pacman.conf
+# This is a mandatory variable, which should contain at least 1 core repository
+# This example will do the most sensible thing on both core and netinstall images:
+if [ -d /repo/core ]; then
+	TARGET_REPOSITORIES=(core 'file:///repo/$repo/$arch')
+else
+	MIRROR='ftp://mirrors.kernel.org/archlinux/$repo/os/$arch'
+	TARGET_REPOSITORIES=(core 'http://10.0.2.2:15678/request/$repo/$arch')
+fi
+
+HARDWARECLOCK=localtime # UTC is the better option, but some OS'es don't support it (i.e. Windows)
+TIMEZONE=Canada/Pacific
+# Do you want to have additional pacman repositories or packages available at runtime (during installation)?
+# RUNTIME_REPOSITORIES same format as TARGET_REPOSITORIES
+RUNTIME_REPOSITORIES=
+# space separated list
+RUNTIME_PACKAGES=
+
+# packages to install
+TARGET_GROUPS=base       # all packages in this group will be installed (defaults to base if no group and no packages are specified)
+TARGET_PACKAGES_EXCLUDE= # Exclude these packages if they are member of one of the groups in TARGET_GROUPS.  example: 'nano reiserfsprogs' (they are in base)
+TARGET_PACKAGES='openssh e2fsprogs' # you can also specify separate packages to install (this is empty by default)
+
+# you can optionally also override some functions...
+# This way you can change/extend/remove pretty much all functionality in AIF !
+worker_intro () {
+	inform "Automatic procedure running the generic-install-on-sda example config.  THIS WILL ERASE AND OVERWRITE YOUR /DEV/SDA.  IF YOU DO NOT WANT THIS PRESS CTRL+C WITHIN 10 SECONDS"
+	sleep 10
+}
+
+worker_configure_system () {
+	preconfigure_target
+	sed -i 's/^HOSTNAME="myhost"/HOSTNAME="arch-generic-install"/' $var_TARGET_DIR/etc/rc.conf
+	postconfigure_target
+}
+
+PART_ACCESS= # can be set to 'uuid', 'dev', 'label', or leave empty for 'dev'
+
+# These variables are mandatory
+
+# '*' means all the remaining space
+# '+' means the bootable flag
+PARTITIONS='/dev/sda 100:ext2:+ 512:swap *:ext4'
+# if you wanted everything other than swap and boot on an extended partition, you can do like this:
+# PARTITIONS='/dev/sda 100:ext2:+ 512:swap :extended *:ext4'
+
+BLOCKDATA='/dev/sda1 raw no_label ext2;yes;/boot;target;no_opts;no_label;no_params
+/dev/sda2 raw no_label swap;yes;no_mountpoint;target;no_opts;no_label;no_params
+/dev/sda3 raw no_label ext4;yes;/;target;no_opts;no_label;no_params'
